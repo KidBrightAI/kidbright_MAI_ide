@@ -1,0 +1,24 @@
+{
+  "blocks": {
+    "languageVersion": 0,
+    "blocks": [
+      {
+        "type": "while_loop",
+        "id": "d|Ey.+!XP05Acv*:wybH",
+        "x": -110,
+        "y": -130,
+        "inputs": {
+          "condition": {
+            "shadow": {
+              "type": "logic_boolean",
+              "id": "~T.GrMA6l_oi2?lpl=4G",
+              "fields": {
+                "BOOL": "TRUE"
+              }
+            }
+          }
+        }
+      }
+    ]
+  }
+}

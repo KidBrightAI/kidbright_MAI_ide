@@ -1,0 +1,76 @@
+@import "@baklavajs/plugin-renderer-vue/dist/styles/variables.scss";
+// Controls
+$color-primary: #5379B5;
+$color-error: red;
+$color-control-dark-background: #2C2C2C;
+$color-control-dark-foreground: white;
+$color-control-dark-hover: #4C4C4C;
+$color-control-dark-active: #6C6C6C;
+$border-radius-control: 3px;
+
+// Sidebar
+$color-sidebar-background: #3f3f3f;
+$color-sidebar-foreground: white;
+
+// Nodes
+$color-node-background: #3f3f3fcc;
+$color-node-foreground: white;
+$color-node-selected: $color-primary;
+$color-node-title-background: #007e4e;
+$color-node-title-foreground: white;
+$border-radius-node: 4px;
+
+// Connections
+$color-connection-default: #005f05;
+$color-connection-allowed: green;
+$color-connection-forbidden: red;
+
+// Background pattern
+$color-pattern-default: #ffffff;
+$color-pattern-line: #e6e6e6;
+$color-pattern-black: #0000000a;
+@import "@baklavajs/plugin-renderer-vue/dist/styles/styles.scss";
+
+.node-interface {
+  .__port {
+      position: absolute;
+      width: 15px;
+      height: 15px;
+      background: white;
+      border-radius: 50%;
+      top: calc(50% - 5px);
+      cursor: crosshair;
+  }
+}
+.connection {
+    stroke: $color-connection-default;
+    stroke-width: 8px;
+    fill: none;
+    // stroke-dasharray: 8 8;
+    // stroke-dashoffset: 0;    
+    // animation: dash 1s linear infinite;
+    // transform: translateY(-1px);
+
+    &.--temporary {
+        stroke-width: 8px;
+        stroke-dasharray: 8 8;
+        stroke-dashoffset: 0;
+        animation: dash 1s linear infinite;
+        transform: translateY(-1px);
+    }
+
+    @keyframes dash {
+        to {
+            stroke-dashoffset: -16;
+        }
+    }
+
+    &.--allowed {
+        stroke: $color-connection-allowed;
+    }
+
+    &.--forbidden {
+        stroke: $color-connection-forbidden;
+    }
+
+}
