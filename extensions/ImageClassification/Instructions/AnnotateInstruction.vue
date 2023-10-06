@@ -1,7 +1,7 @@
 <template>
   <div class="hint">
     <div class="main-hint txt">
-      <p class="p-color font-weight-bold">ขั้นตอนที่ 2 Annotate</p>
+      <p class="p-color font-weight-bold">ขั้นตอนที่ 2 Annotate (Image Classification)</p>
       <p>ขั้นตอนนี้ใช้สำหรับติดป้ายกำกับให้กับรูปภาพ</p>
       <p>
         <br />1. กดปุ่ม

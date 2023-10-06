@@ -2,9 +2,9 @@
   <div class="hint">
     <div class="main-hint txt">
       <p class="p-color font-weight-bold">
-        ขั้นตอนที่ 3 Training<br />
+        ขั้นตอนที่ 3 Training<br />(Image Classification)
       </p>
-      <p>ขั้นตอนนี้เป็นการนำภาพที่ Annotate มาแล้วมาสร้างโมเดลปัญญาประดิษฐ์</p>
+      <p>ขั้นตอนนี้เป็นการนำภาพที่ Annotate มาแล้วมาสร้างโมเดลปัญญาประดิษฐ์เพื่อแยกแยะรูปภาพ</p>
       <p>
         <br />1. กดปุ่ม
         <span class="p-color">Train</span> เพื่อสร้างโมเดล

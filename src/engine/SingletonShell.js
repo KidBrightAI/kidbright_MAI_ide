@@ -63,6 +63,10 @@ export default class SingletonShell {
       this._instance.socketAbordController.abort();
     }
   }
+
+  getAdb() {
+    return this.adb;
+  }
   
   getWriter() {
     return this.writer;

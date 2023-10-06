@@ -12,11 +12,19 @@ export const useWorkspaceStore = defineStore({
       block: null,
       currentBoard: null,
       boards: [],
-      name: null,      
+      name: null,
+      id: null,
+      dataset:[],
+      projectType: null, //id of extension
+      projectTypeTitle: null, //this.models.find(el=>el.value == this.selectType).text,
+      lastUpdate: null,
+      extension: null,
+      model : null,
+      labels: [],
     }
   },
   persist: {
-    paths: ['mode', 'code', 'block', 'currentBoard', 'name'],
+    paths: ['mode', 'code', 'block', 'currentBoard', 'name', 'board', 'id', 'dataset', 'projectType', 'projectTypeTitle', 'lastUpdate', 'model', 'labels'],
   },
   actions: {
     async createNewProject(projectInfo) {
@@ -26,12 +34,18 @@ export const useWorkspaceStore = defineStore({
       this.block = null;
       this.name = projectInfo.name;
       this.currentBoard = this.boards.find(board => board.id == projectInfo.board);
-
+      this.id = projectInfo.id;
+      this.dataset = projectInfo.dataset;
+      this.labels = projectInfo.labels;
+      this.projectType = projectInfo.projectType;
+      this.projectTypeTitle = projectInfo.projectTypeTitle;
+      this.lastUpdate = projectInfo.lastUpdate;
+      this.extension = projectInfo.extension;
+      this.model = projectInfo.model;
+      
       //--------- load default code from board --------//
       if(projectInfo.block){
         this.block = projectInfo.block;        
-      }else if(this.currentBoard.defaultBlock){
-        this.block = this.currentBoard.defaultBlock;
       }
       if(projectInfo.code){
         this.code = projectInfo.code;

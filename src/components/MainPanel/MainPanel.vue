@@ -1,79 +1,65 @@
 <template>
   <div class="left-panel d-flex flex-column">
     <div class="l-title font-weight-bold">KidBright AI</div>
-    <main-menu></main-menu>
+    <main-menu @newProject="$emit('newProject')" @openProject="$emit('openProject')" @saveProject="$emit('saveProject')" @deleteProject="$emit('deleteProject')"></main-menu>
     <div class="left-bottom-content d-flex flex-fill position-relative">
       <div class="header-left-bar">
         <div class="proj-name">
-          {{ 'สร้างหรือเลือกโปรเจคใหม่' }}
+          {{ workspaceStore.name || 'สร้างหรือเลือกโปรเจคใหม่' }}
         </div>
         <div class="proj-type">
-          Type : {{ '-' }}
+          Type : {{ workspaceStore.projectTypeTitle || '-' }}
         </div>
 
-        <div class="header-action-button">
-          <b-button>
-            <VIcon class="mr-1" :icon="'wifi'"></VIcon>
-            {{ "ONLINE"}}
-          </b-button>
-
-          <b-button :disabled="true">
-            <b-icon class="mr-1" icon="laptop"></b-icon>
-            Kidbright Mai
-          </b-button>
+        <div v-if="workspaceStore.currentBoard" class="d-flex w-100 align-center justify-center mt-3">
+          <v-btn density="comfortable" class="mx-1" color="grey-lighten-3" icon="mdi-usb" @click="$emit('connectBoard')"></v-btn>
+          <v-btn density="comfortable" class="mx-1" color="grey-lighten-3" icon="mdi-wifi" @click="$emit('connectWifi')" :disabled="!isConnected"></v-btn>
+          <v-btn density="comfortable" class="mx-1" color="grey-lighten-3" icon="mdi-folder" @click="$emit('fileBrowser')" :disabled="!isConnected"></v-btn>
+          <v-btn density="comfortable" class="mx-1" color="grey-lighten-3" icon="mdi-console" @click="$emit('terminal')" :disabled="!isConnected"></v-btn>
+          <v-btn density="comfortable" class="mx-1" color="grey-lighten-3" icon="mdi-restart" @click="$emit('restartBoard')" :disabled="!isConnected"></v-btn>
         </div>
       </div>
       <ul class="step">
         <li
           :class="{
             current: selectedMenu === 1,
-            inactive: projectStore.project.id == null,
+            inactive: workspaceStore.id == null,
           }"
-          @click="projectStore.project.id && handleTabChange(1)"
+          @click="workspaceStore.id && handleTabChange(1)"
         >
           <img src="@/assets/images/png/capture.png" alt="" srcset="" />
         </li>
         <li
           v-bind:class="{
             current: selectedMenu === 2,
-            inactive: dataLength <= 0,
+            inactive: workspaceStore.id == null,
           }"
-          v-on:click="
-            if (dataLength > 0) {
-              handleTabChange(2);
-            }
-          "
+          @click="workspaceStore.id && handleTabChange(2)"
         >
           <img src="@/assets/images/png/annotate.png" alt="" srcset="" />
         </li>
         <li
           :class="{
             current: selectedMenu == 3,
-            inactive: getLabeledLength <= 0,
+            inactive: workspaceStore.id == null,
           }"
-          @click="
-            if (getLabeledLength > 0) {
-              handleTabChange(3);
-            }
-          "
+          @click="workspaceStore.id && handleTabChange(3)"
         >
           <img src="@/assets/images/png/train.png" alt="" srcset="" />
         </li>
         <li
           :class="{
             current: selectedMenu == 4,
-            inactive: currentDevice == 'BROWSER' && !project.tfjs && !project.trained,
+            inactive: workspaceStore.id == null,
           }"
-          @click="
-              handleTabChange(4);
-          "
+          @click="workspaceStore.id && handleTabChange(4)"
         >
           <img src="@/assets/images/png/code.png" alt="" srcset="" />
         </li>
       </ul>
-      <div v-if="projectStore.project.projectType == null" class="hint">
+      <div v-if="workspaceStore.projectType == null" class="hint">
         <div class="main-hint txt notype">
-          <p v-if="projectStore.project.projectType == null">
+          <p v-if="workspaceStore.projectType == null">
             เริ่มใช้งานโดยกด
             <img src="@/assets/images/png/Group 105.png" alt="" srcset="" />
             เพื่อสร้างโปรเจคและทำการเลือกประเภทการเรียนรู้
@@ -89,65 +75,65 @@
         </div>
         <div class="mascot">
           <img
-            v-if="!isRunning"
             src="@/assets/images/png/Mask Group 11.png"
             alt=""
             srcset=""
           />
         </div>
       </div>
-      <!--div v-if="selectedMenu === 1" class="d-contents">
-        <async-component
-          v-if="!projectStore.project.extension.instructions.capture"
-          target="./Instructions/CaptureInstruction.vue"
-        ></async-component>
+      <div v-if="selectedMenu === 1" class="pt-3 h-100">
+        <InstructionAsyncComponent
+          v-if="!workspaceStore.extension.instructions.capture"
+          target="CaptureInstruction.vue"
+        ></InstructionAsyncComponent>
         <extension-async-component
           v-else
-          :target="project.extension.instructions.capture"
+          :target="workspaceStore.extension.instructions.capture"
         ></extension-async-component>
       </div>
-      <div v-if="selectedMenu === 2" class="d-contents">
-        <async-component
-          v-if="!project.extension.instructions.annotate"
-          target="./Instructions/AnnatateInstruction.vue"
-        ></async-component>
+      <div v-if="selectedMenu === 2" class="pt-3 h-100">
+        <InstructionAsyncComponent
+          v-if="!workspaceStore.extension.instructions.annotate"
+          target="AnnatateInstruction.vue"
+        ></InstructionAsyncComponent>
         <extension-async-component
           v-else
-          :target="project.extension.instructions.annotate"
+          :target="workspaceStore.extension.instructions.annotate"
         ></extension-async-component>
       </div>
-      <div v-if="selectedMenu === 3" class="d-contents">
-        <async-component
-          v-if="!project.extension.instructions.train"
-          target="./Instructions/TrainInstruction.vue"
-        ></async-component>
+      <div v-if="selectedMenu === 3" class="pt-3 h-100">
+        <InstructionAsyncComponent
+          v-if="!workspaceStore.extension.instructions.train"
+          target="TrainInstruction.vue"
+        ></InstructionAsyncComponent>
         <extension-async-component
           v-else
-          :target="project.extension.instructions.train"
+          :target="workspaceStore.extension.instructions.train"
         ></extension-async-component>
       </div>
-      <div v-if="selectedMenu === 4" class="d-contents">
-        <async-component
-          v-if="!project.extension.instructions.coding"
-          target="./Instructions/CodingInstruction.vue"
-        ></async-component>
+      <div v-if="selectedMenu === 4" class="pt-3 h-100">
+        <InstructionAsyncComponent
+          v-if="!workspaceStore.extension.instructions.coding"
+          target="CodingInstruction.vue"
+        ></InstructionAsyncComponent>
         <extension-async-component
           v-else
-          :target="project.extension.instructions.coding"
+          :target="workspaceStore.extension.instructions.coding"
         ></extension-async-component>
-      </div-->
+      </div>
     </div>
   </div>
 </template>
 <script setup>
 import MainMenu from "@/components/MainPanel/MainMenu.vue";
 import { computed } from "vue";
-import AsyncComponent from "@/components/AsyncComponent.vue";
+import InstructionAsyncComponent from "@/components/InstructionAsyncComponent.vue";
 import ExtensionAsyncComponent from "@/components/ExtensionAsyncComponent.vue";
+import { useWorkspaceStore } from "@/store/workspace";
+import { useBoardStore } from "@/store/board";
 
-import { useProjectStore } from "@/store/project";
-
-const projectStore = useProjectStore();
+const workspaceStore = useWorkspaceStore();
+const boardStore = useBoardStore();
 
 const props = defineProps({
   selectedMenu : {
@@ -156,11 +142,15 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(["menuChange"]);
+const emit = defineEmits(["update:selectedMenu"]);
 //const exts = this.$extensions;
 const isOnline = computed(() => window.navigator.onLine);
 
 const handleTabChange = (tabIndex) => {
-  emit("menuChange", tabIndex);
+  emit("update:selectedMenu", tabIndex);
 };
+
+const isConnected = computed(() => {
+  return boardStore.isConnected();
+});
 </script>

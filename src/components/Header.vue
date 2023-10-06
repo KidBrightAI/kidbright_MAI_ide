@@ -5,7 +5,7 @@ import {toast} from "vue3-toastify";
 
 const workspaceStore = useWorkspaceStore();
 const projectName = ref(workspaceStore.name);
-const defineEmits = defineEmits(["new", "open", "save", "serial","example", "help", "firmware", "extraSave","plugin"]);
+const defineEmits = defineEmits(["serial","example", "help", "firmware", "extraSave","plugin"]);
 const loading = ref(false);
 
 const saveProjetName = () => {
@@ -25,30 +25,6 @@ watch(() => workspaceStore.name, (val) => {
 <template>  
   <v-app-bar color="primary" height="64">    
     <v-spacer></v-spacer>
-    <v-tooltip text="New Project">
-      <template v-slot:activator="{ props }">
-        <v-btn icon variant="tonal" color="white" class="mx-1" v-bind="props" @click="$emit('new')">
-          <v-icon>mdi-content-copy</v-icon>
-        </v-btn>
-      </template>
-    </v-tooltip>
-
-    <v-tooltip text="Open Project">
-      <template v-slot:activator="{ props }">
-        <v-btn icon variant="tonal" color="white" class="mx-1" v-bind="props" @click="$emit('open')">
-          <v-icon>mdi-folder-open</v-icon>
-        </v-btn>
-      </template>
-    </v-tooltip>
-
-    <v-tooltip text="Save Project">
-      <template v-slot:activator="{ props }">
-        <v-btn icon variant="tonal" color="white" class="mx-1" v-bind="props" @click="$emit('save')" @click.ctrl="$emit('extraSave')">
-          <v-icon>mdi-content-save</v-icon>
-        </v-btn>
-      </template>
-    </v-tooltip>
-
     <v-tooltip text="Plugins">
       <template v-slot:activator="{ props }">
         <v-btn icon variant="tonal" color="white" class="mx-1" v-bind="props" @click="$emit('plugin')">

@@ -1,6 +1,5 @@
 <script setup>
 import { onMounted, ref, shallowRef, nextTick } from "vue";
-import MonacoEditor from './MonacoEditor.vue';
 import Blockly from "blockly";
 import { pythonGenerator } from "blockly/python";
 import CustomCategory from "./CustomCategory";
@@ -140,16 +139,7 @@ defineExpose({ workspace,resizeWorkspace,undo,redo, reload, getSerializedWorkspa
 
 <template>
   <div style="width: 100%; height: 100%;">
-    <div v-show="workspaceStore.mode == 'block'" class="blocklyDiv" ref="blocklyDiv"></div>
-    <MonacoEditor
-      v-if="workspaceStore.mode == 'code'"
-      v-model:value="workspaceStore.code"
-      theme="vs-dark"
-      language="python"
-      :fontSize="18"
-      width="100%"
-      height="100%"
-    ></MonacoEditor>    
+    <div class="blocklyDiv" ref="blocklyDiv"></div>  
   </div>
 </template>
 

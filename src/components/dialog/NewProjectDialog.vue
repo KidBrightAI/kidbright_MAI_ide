@@ -1,13 +1,10 @@
 <script setup>
 import DialogCloseBtn from "@/components/dialog/DialogCloseBtn.vue";
 import { useBoardStore } from "@/store/board";
-import { useConfirm } from "@/components/comfirm-dialog";
 import { toast } from "vue3-toastify";
 import { useWorkspaceStore } from "@/store/workspace";
 import { onMounted } from "vue";
-
-import BlockProgramming from "@/assets/images/icons/jigsaw.png";
-import PythonProgramming from "@/assets/images/icons/python.png";
+import { randomId } from "../utils";
 
 const props = defineProps({
   isDialogVisible: Boolean,
@@ -17,14 +14,12 @@ const emit = defineEmits(['update:isDialogVisible','submit']);
 
 const boardStore = useBoardStore();
 const workspaceStore = useWorkspaceStore();
-const confirm = useConfirm();
 
-//TODO : edit this default assigned board
-const projectInfo = ref({  
-  name: 'EasyKids-IDE Project Demo',
-  board: 'easy-kids-robot-kit', //board id
-  mode: 'block',
-});
+const extensions = inject('extensions');
+const models = extensions.map((el) => ({title : el.title, value : el.id}))
+const modelOptions = Object.fromEntries(extensions.map(el=> el.options? [el.id,el.options] : null).filter(el=>el!=null));
+const selectType = ref(extensions[0].id);
+const projectName = ref("โปรเจค KidBright Micro AI");
 
 const refVForm = ref({});
 
@@ -35,7 +30,20 @@ const resetForm = () => {
 const onFormSubmit = async() => {
   let { valid: isValid } = await refVForm.value?.validate()  
   if (isValid) {
-    emit('submit', projectInfo.value);
+    let selectedExtension = extensions.find(el=>el.id == selectType.value);
+    let project = {
+      name: projectName.value,
+      id: projectName.value + "_" + randomId(),
+      projectType: selectType.value, //id of extension
+      projectTypeTitle: selectedExtension.name, //this.models.find(el=>el.value == this.selectType).text,
+      lastUpdate: new Date(),
+      extension: selectedExtension, 
+      model : null,
+      dataset: [],
+      labels: [],
+      board: "kidbright-mai"
+    };
+    emit('submit', project);
   }
 }
 
@@ -43,7 +51,7 @@ const onFormSubmit = async() => {
 
 <template>
   <VDialog
-    :width="$vuetify.display.smAndDown ? 'auto' : '1000'"
+    :width="$vuetify.display.smAndDown ? 'auto' : '600'"
     :model-value="props.isDialogVisible"
   >
     <VCard class="pa-sm-3 pa-3 bg-background">
@@ -53,90 +61,35 @@ const onFormSubmit = async() => {
         @click="resetForm"
       />
       <VCardItem>
-        <VCardTitle class="text-h5 text-center">
-          Create New Project
+        <VCardTitle class="text-h5">
+          สร้างโปรเจคใหม่
         </VCardTitle>
       </VCardItem>
       <VCardText class="pt-0">
-        <VCardSubtitle class="text-center mb-8">
-          Please select your board to create new project.
-        </VCardSubtitle>
         <VForm ref="refVForm" @submit.prevent="onFormSubmit">
           <VRow>
             <VCol cols="12">
+              <VSelect :items="models" label="ประเภทการเรียนรู้" v-model="selectType">
+              </VSelect>
+            </VCol>
+            <VCol cols="12">
               <VTextField
-                v-model="projectInfo.name"
-                label="Project Name"
+                v-model="projectName"
+                label="ชื่อโปรเจค"
                 outlined
                 dense
                 clearable
                 :rules="[
-                  (v) => !!v || 'Project name is required',
-                  (v) => (v && v.length <= 60) || 'Project name must be less than 60 characters',
+                  (v) => !!v || 'ต้องการชื่อโปรเจค',
+                  (v) => (v && v.length <= 60) || 'ชื่อโปรเจคต้องน้อยกว่า 60 ตัวอักษร',
                 ]"
               />
             </VCol>
           </VRow>
-          <VItemGroup mandatory class="mt-2" selected-class="bg-primary" v-model="projectInfo.mode">
-            <VRow>
-              <VCol cols="12" md="6">
-                <VItem value="block" v-slot="{ isSelected, selectedClass, toggle }">
-                  <VCard :class="[selectedClass]" @click="toggle">
-                    <VCardTitle class="text-h6 text-center">
-                      Block Programming
-                    </VCardTitle>
-                    <VCardItem class="d-flex justify-center">
-                      <img :src="BlockProgramming" width="60" height="60"/>
-                    </VCardItem>
-                    <VCardSubtitle class="text-center mb-3">
-                      Programming with block for beginner
-                    </VCardSubtitle>
-                  </VCard>
-                </VItem>
-              </VCol>
-              <VCol cols="12" md="6">
-                <VItem value="code" v-slot="{ isSelected, selectedClass, toggle }">
-                  <VCard :class="[selectedClass]" dark @click="toggle">
-                    <VCardTitle class="text-h6 text-center">
-                      Python Programming
-                    </VCardTitle>
-                    <VCardItem class="d-flex justify-center">
-                      <img :src="PythonProgramming" width="60" height="60"/>
-                    </VCardItem>
-                    <VCardSubtitle class="text-center mb-3">
-                      Programming with python for advanced user
-                    </VCardSubtitle>                    
-                  </VCard>
-                </VItem>
-              </VCol>
-            </VRow>
-          </VItemGroup>
-          <!--div class="text-h6 mt-3 mb-3">
-            Select your board
-          </div>
-          <VItemGroup mandatory selected-class="bg-primary">
-            <VRow>
-              <VCol v-for="(board,index) in workspaceStore.boards" cols="12" md="6">
-                <VItem :value="board.id" v-slot="{ isSelected, selectedClass, toggle }">
-                  <VCard class="pa-1" :class="[selectedClass]" dark @click="toggle">
-                    <VCardTitle class="text-h6">
-                      {{ board.name }}
-                    </VCardTitle>
-                    <VCardSubtitle class="">
-                      Version : {{ board.version }}
-                    </VCardSubtitle>
-                    <VCardItem class="d-flex justify-center">
-                      <img :src="`${board.path}/${board.image}`" height="200"/>
-                    </VCardItem>                                    
-                  </VCard>
-                </VItem>
-              </VCol>
-            </VRow>
-          </VItemGroup-->
           <VRow>
             <VCol cols="12" class="text-center mt-3">
               <VBtn type="submit" class="me-3" color="primary">
-                CREATE NEW PROJECT
+                สร้างโปรเจคใหม่
               </VBtn>
             </VCol>
           </VRow>

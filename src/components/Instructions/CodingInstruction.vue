@@ -22,25 +22,10 @@
     </div>
     <div class="mascot">
       <img
-        v-if="!isRunning"
-        src="~/assets/images/UI/png/Mask Group 11.png"
-        alt=""
-        srcset=""
-      />
-      <img
-        v-if="isRunning"
-        src="~/assets/images/UI/svg/Mask Group 10.svg"
+        src="@/assets/images/png/Mask Group 11.png"
         alt=""
         srcset=""
       />
     </div>
   </div>
 </template>
-<script>
-import { mapState, mapActions } from 'vuex';
-export default {
-  computed: {
-    ...mapState(['isRunning'])
-  }
-}
-</script>

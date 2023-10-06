@@ -29,6 +29,12 @@ import NewProjectDialog from "@/components/dialog/NewProjectDialog.vue";
 import ExampleDialog from "@/components/dialog/ExampleDialog.vue";
 import PluginDialog from "@/components/dialog/PluginDialog.vue";
 
+//-------import image --------//
+import RobotPoker from "@/assets/images/png/Mask Group 12.png";
+
+import ExtensionAsyncComponent from "@/components/ExtensionAsyncComponent.vue";
+
+
 const confirm = useConfirm();
 const workspaceStore = useWorkspaceStore();
 const boardStore = useBoardStore();
@@ -50,6 +56,7 @@ const bottomMaxPaneSize = ref(80);
 const bottomPaneSize = ref(5);
 let terminal = null;
 let fitAddon = null;
+let writer = null;
 // terminal read write stream
 const vm = getCurrentInstance();
 
@@ -59,12 +66,17 @@ const calculateMinBottomPlaneSize = () => {
   if(bottomPaneSize.value < minBottomPaneSize) {
     bottomPaneSize.value = minBottomPaneSize;
   }
-  //lock bottom pane size if serial panel is closed
-  if(!isSerialPanelOpen.value){
-    bottomPaneSize.value = bottomMinPaneSize.value;
-    bottomMaxPaneSize.value = bottomMinPaneSize.value;
+  if(selectedMenu.value == 4){
+    //lock bottom pane size if serial panel is closed
+    if(!isSerialPanelOpen.value){
+      bottomPaneSize.value = bottomMinPaneSize.value;
+      bottomMaxPaneSize.value = bottomMinPaneSize.value;
+    }else{
+      bottomMaxPaneSize.value = 80;
+    }
   }else{
-    bottomMaxPaneSize.value = 80;
+    bottomMaxPaneSize.value = 0;
+    bottomPaneSize.value = 0;
   }
 };
 
@@ -99,8 +111,33 @@ const redo = () => {
 
 const selectPort = async () => {
   console.log("selectPort");
+  let res = await boardStore.deviceConnect();
+  if(res){
+    //await serialMonitorBridge();
+    //toast.success("Connect success");
+    //mount serial monitor
+    //mountSerial();
+  }
   //toast.warning("ํYou must allow serial port permission to use this feature.");
-  await boardStore.connectStreaming();
+  
+  //await boardStore.connectStreaming();
+};
+let first = 10;
+const startStreaming = async () => {
+  console.log("startStreaming");
+  await boardStore.connectStreaming((chunk) => {
+    //display chunk as Image
+    if(first > 0){
+      //decode and print chunk
+      let readableText = new TextDecoder().decode(chunk);
+      console.log(readableText);
+      first--;
+    }
+    let img = document.getElementById("camera");
+    img.src = URL.createObjectURL(
+      new Blob([chunk], { type: 'image/jpg' })
+    );
+  });
 };
 
 const download = async () => {
@@ -139,25 +176,25 @@ const download = async () => {
   }
 };
 
-
-const newProject = async () => {
-  try {
-    await confirm({ title: "Confirm create project", content: "All code in this project will be delete, please save first!", dialogProps: { width: 'auto' } })
-    newProjectDialogOpen.value = true;
-  } catch (err) {
-    console.log("User cancelled")
-  }
-};
+//=====================================================================//
+//=========================== event project ===========================//
+//=====================================================================//
 
 const createdProject = async (projectInfo) => {
-  let res = await workspaceStore.createNewProject(projectInfo);  
-  blocklyComp.value.reload();
-  if (res) {
-    toast.success("Create new project success");
-  } else {
-    toast.error("Create new project failed");
+  try{
+    let res = await workspaceStore.createNewProject(projectInfo);  
+    //ต้องสร้าง event ไปบอกให้ reload
+    //blocklyComp.value.reload();
+    if (res) {
+      toast.success("สร้างโปรเจคเสร็จเรียบร้อย");
+    } else {
+      toast.error("สร้างโปรเจคไม่สำเร็จ");
+    }  
+  }catch(err){
+    toast.error("มีอย่างไม่ถูกต้อง : " + err.message);
+  } finally {
+    newProjectDialogOpen.value = false;
   }
-  newProjectDialogOpen.value = false;
 };
 
 const openProject = async () => {
@@ -193,6 +230,21 @@ const extraSave = async ($event) => {
     console.log(err);
   }
 };
+
+const deleteProject = async () => {
+  try {
+    await confirm({ title: "Confirm delete project", content: "All code in this project will be delete, please save first!", dialogProps: { width: 'auto' } });
+    let res = await workspaceStore.deleteProject();
+    blocklyComp.value.reload();
+    onResized();
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+//=====================================================================//
+//=========================== event boards ============================//
+//=====================================================================//
 
 const onSerial = async () => {
   console.log(`======= ${ isSerialPanelOpen.value? 'Close':'Open' } serial console =========`);
@@ -268,24 +320,23 @@ const onFirmware = async () => {
 
 const onResized = () => {
   calculateMinBottomPlaneSize();
-  blocklyComp.value.resizeWorkspace();
-  nextTick(() => {
-      setTimeout(() => {
-        let footerHeight = footer.value.$el.clientHeight;
-        console.log(`footerHeight: ${footerHeight}`);
-        let serialMonitorHeight = footerHeight - 68
-        footer.value.$refs.terminalDiv.style.height = `${serialMonitorHeight}px`;
-        if(fitAddon){      
-          fitAddon.fit();
-        }
-      }, 500);      
-  });
-  
+  // if(workspaceStore.currentBoard){
+  //   blocklyComp.value.resizeWorkspace();
+  //   nextTick(() => {
+  //       setTimeout(() => {
+  //         let footerHeight = footer.value.$el.clientHeight;
+  //         console.log(`footerHeight: ${footerHeight}`);
+  //         let serialMonitorHeight = footerHeight - 68
+  //         footer.value.$refs.terminalDiv.style.height = `${serialMonitorHeight}px`;
+  //         if(fitAddon){      
+  //           fitAddon.fit();
+  //         }
+  //       }, 500);      
+  //   });
+  // }
 };
 
-onMounted(() => {
-  window.addEventListener('resize', onResized);
-  // mount serial monitor
+const mountSerial = () => {
   terminal = new Terminal(
     {
       cursorBlink: true,
@@ -316,27 +367,70 @@ onMounted(() => {
   blocklyComp.value.workspace.addChangeListener(() => {    
     workspaceStore.block = blocklyComp.value.getSerializedWorkspace();
   });
+};
+onMounted(() => {
+  // if(workspaceStore.currentBoard){
+  //   mountSerial();
+  // }
+ // window.addEventListener('resize', onResized);
+  // mount serial monitor
+
+  // mount service
+  // stream.addEventListener('message', (event) => {
+  //   console.log(event.data);
+  // });
 });
+//--------- menu ----------//
+//console.log(workspaceStore.extension.components);
+const selectedMenu = ref(workspaceStore.currentBoard ? 1 : 0);
+
+//============= event from board ==============//
+
 
 </script>
 
 <template>
   <v-layout class="rounded rounded-md main-bg">
-    <v-navigation-drawer permanent width="320" class="main-bg">      
-      <MainPanel></MainPanel>
+    <v-navigation-drawer permanent width="320" class="main-bg">
+      <MainPanel v-model:selectedMenu="selectedMenu" 
+        @newProject="newProjectDialogOpen = true" 
+        @openProject="openProject" 
+        @saveProject="saveProject" 
+        @deleteProject="deleteProject"
+        @connectBoard="selectPort"
+        @connectWifi="startStreaming"
+        @fileBrowser=""
+        @terminal=""
+        @restartBoard=""
+      >
+      </MainPanel>
     </v-navigation-drawer>
-    <Header
-      @new="newProject" 
-      @open="openProject" 
-      @save="saveProject" 
-      @serial="onSerial" 
-      @help="onHelp" 
-      @firmware="onFirmware"
-      @example="exampleDialogOpen = true" 
-      @plugin="pluginDialogOpen = true"
-      @extraSave="extraSave">
-    </Header>
-    <v-main class="d-flex align-center justify-center" style="min-height: 310px;">
+    <v-main class="d-flex align-center justify-center" style="min-height: 310px; height: calc(100vh);">
+      <splitpanes ref="splitpanesRef" class="default-theme" horizontal style="height: calc(100vh)" @resized="onResized" @ready="onResized">
+        <pane v-if="workspaceStore.currentBoard" :size="100 - bottomPaneSize">
+          <extension-async-component v-if="selectedMenu === 1 && workspaceStore.extension" :target="workspaceStore.extension.components.Capture"></extension-async-component>
+          <extension-async-component v-else-if="selectedMenu === 2 && workspaceStore.extension" :target="workspaceStore.extension.components.Annotate"></extension-async-component>
+          <extension-async-component v-else-if="selectedMenu === 3 && workspaceStore.extension" :target="workspaceStore.extension.components.Train"></extension-async-component>
+          <extension-async-component v-else-if="selectedMenu === 4 && workspaceStore.extension" :target="workspaceStore.extension.components.Coding"></extension-async-component>
+        </pane>
+        <pane v-else :size="100 - bottomPaneSize">
+          <div class="d-flex flex-column align-center justify-center" style="height: calc(100vh);">
+            <img style="margin-top: 100px" width="400" :src="RobotPoker"/>
+            <span style="margin-top: 50px; display: block;text-align: center;font-size: 25px;"> สร้างโปรเจคใหม่ หรือ เลือกกดเมนูด้านซ้ายมือ</span>
+          </div>
+        </pane>
+        <pane :min-size="bottomMinPaneSize" :size="bottomPaneSize" :max-size="bottomMaxPaneSize">
+          <Footer ref="footer" @undo="undo" @redo="redo" @selectPort="selectPort" @download="download"></Footer>
+        </pane>
+      </splitpanes>
+      <!-- <Header
+        @serial="onSerial" 
+        @help="onHelp" 
+        @firmware="onFirmware"
+        @example="exampleDialogOpen = true" 
+        @plugin="pluginDialogOpen = true"
+        @extraSave="extraSave">
+      </Header>
       <splitpanes ref="splitpanesRef" class="default-theme" horizontal style="height: calc(100vh - 64px)" @resized="onResized" @ready="onResized">
         <pane :size="100 - bottomPaneSize">
           <BlocklyComponent ref="blocklyComp"></BlocklyComponent>    
@@ -344,7 +438,7 @@ onMounted(() => {
         <pane :min-size="bottomMinPaneSize" :size="bottomPaneSize" :max-size="bottomMaxPaneSize">
           <Footer ref="footer" @undo="undo" @redo="redo" @selectPort="selectPort" @download="download"></Footer>
         </pane>
-      </splitpanes>
+      </splitpanes> -->
     </v-main>
   </v-layout>
 
@@ -391,59 +485,6 @@ meta:
     background: #007e4e;
     width: 100%;
     padding: 10px 15px;
-    height: 102px;
-    .header-action-button {
-      display: flex;
-      button {
-        background: #003722;
-        border: none;
-        font-size: 10px;
-        border-radius: 15px;
-        text-transform: capitalize;
-        flex: 1;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        &:nth-of-type(1) {
-          margin-right: 5px;
-        }
-        // svg {
-        //   width: 12px;
-        //   height: 12px;
-        //   margin-right: 3px;
-        // }
-      }
-      .connection-robot {
-        background-color: #1a3700;
-        color: #f7ff00;
-        svg {
-          fill: #f7ff00;
-        }
-      }
-      .connection-computer {
-        background-color: #003137;
-        color: #00fff6;
-        svg {
-          fill: #00fff6;
-        }
-      }
-      .text-green {
-        color: #00ff77;
-        svg {
-          fill: #00ff77;
-        }
-      }
-      .inactive {
-        color: #517a52;
-        svg {
-          fill: #517a52;
-        }
-      }
-      .img-icon {
-        // width: 1em;
-        height: 1em;
-      }
-    }
   }
   .left-bottom-content{
     position: relative;
@@ -532,7 +573,7 @@ meta:
         left: 40px;
         width: 75px;
         height: 114px;
-        background: url("~/assets/images/UI/svg/light-bulb.svg") center no-repeat;
+        background: url("@/assets/images/png/light-bulb.png") center no-repeat;
         background-size: 75px 114px;
         opacity: 0.5;
       }

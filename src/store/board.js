@@ -29,6 +29,9 @@ export const useBoardStore = defineStore({
   },
 
   actions: {
+    isConnected(){
+      return this.$adb.transport != null;
+    },
     async deviceConnect(){
       console.log("deviceConnect");
       let currentBoard = useWorkspaceStore().currentBoard;
@@ -41,8 +44,11 @@ export const useBoardStore = defineStore({
       if(!this.$adb.transport){
         const devices = await Manager.getDevices();        
         if (devices.length === 0) {
-          toast.error("No device found");
-          return;
+          // no available devices are being registered
+          toast.warning("ยังไม่เคยขอสิทธิ์ใช้งาน USB หรือไม่ได้เสียบบอร์ดเข้ากับคอมพิวเตอร์มาก่อน")
+          toast.warning("กรุณาเลือกอุปกรณ์ USB ที่ต้องการเชื่อมต่อ")
+          //toast.error("No device found");
+          //return;
         }
         if (devices.length > 0) {
           for (let port of devices) {
@@ -68,14 +74,14 @@ export const useBoardStore = defineStore({
             credentialStore: new AdbWebCredentialStore(),
         });
         const adb = new Adb(transport);        
-        this.$adb.transport = transport;
         this.$adb.adb = adb;
-        //SingletonShell.getInstance(adb, null);
+        SingletonShell.getInstance(adb, null);
         toast.success("Device connected");
+        this.$adb.transport = transport;
         return true;
       }   
     },
-    async connectStreaming(){
+    async connectStreaming(callback){
       let currentBoard = useWorkspaceStore().currentBoard;
       
         if (!this.$adb.transport) {
@@ -90,37 +96,39 @@ export const useBoardStore = defineStore({
         }        
         //try open service
         //try{
-          //kill all python3
-          SingletonShell.write("killall python3\n");
-          //start service
-          //shell.write("python3 -c 'from maix import mjpg;mjpg.start(); &'\n");
-          SingletonShell.write("python3 /usr/lib/python3.8/site-packages/maix/mjpg.pyc &\n");
-          await sleep(10000);
-          let sock = await adb.createSocket("tcp:18811");
-          sock.readable.pipeTo(new WritableStream(
-          {
-            write : (chunk) => {
-              console.log(chunk);
+        //kill all python3
+        SingletonShell.write("killall python3\n");
+        //start service
+        //shell.write("python3 -c 'from maix import mjpg;mjpg.start(); &'\n");
+        SingletonShell.write("python3 /usr/lib/python3.8/site-packages/maix/mjpg.pyc &\n");
+        await sleep(3000);
+        let sock = await adb.createSocket("tcp:18811");
+        sock.readable.pipeTo(new WritableStream(
+        {
+          write : (chunk) => {
+            if(callback){
+              callback(chunk);
             }
-          }));
-          let reqText = "GET / HTTP/1.1\r\nHost: localhost:18811\r\n\r\n";
-          let writer = sock.writable.getWriter();
-          writer.write(new Consumable(encodeUtf8(reqText)));
-        // }catch(e){
-        //   if(e.message == "Socket open failed"){
-        //     console.log("cannot start service");
+          }
+        }));
+        let reqText = "GET / HTTP/1.1\r\nHost: localhost:18811\r\n\r\n";
+        let writer = sock.writable.getWriter();
+        writer.write(new Consumable(encodeUtf8(reqText)));
+      // }catch(e){
+      //   if(e.message == "Socket open failed"){
+      //     console.log("cannot start service");
 
-        //   }
-        //   console.log(e);
-        // }
-        // const list = await adb.reverse.list();
-        // console.log("list");
-        // console.log(list);
-        // const stream = await adb.reverse.add("usb:18812",()=>{
-        //   console.log("reverse callback");
-        // });
-        // console.log("stream");
-        // console.log(stream);        
+      //   }
+      //   console.log(e);
+      // }
+      // const list = await adb.reverse.list();
+      // console.log("list");
+      // console.log(list);
+      // const stream = await adb.reverse.add("usb:18812",()=>{
+      //   console.log("reverse callback");
+      // });
+      // console.log("stream");
+      // console.log(stream);        
     },
 
     async deviceDisconnect() {

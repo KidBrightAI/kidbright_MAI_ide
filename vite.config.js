@@ -1,6 +1,6 @@
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
-import monaco from 'rollup-plugin-monaco-editor'
+//import monaco from 'rollup-plugin-monaco-editor'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import DefineOptions from 'unplugin-vue-define-options/vite'
@@ -14,7 +14,7 @@ import vuetify from 'vite-plugin-vuetify'
 export default defineConfig({
   plugins: [
     vue(),
-    monaco({languages: ['python']}),
+    //monaco({languages: ['python']}),
     vueJsx(),
     // https://github.com/vuetifyjs/vuetify-loader/tree/next/packages/vite-plugin
     vuetify({
@@ -36,7 +36,7 @@ export default defineConfig({
       imports: ['vue', 'vue-router', '@vueuse/core', 'vue-i18n', 'pinia'],
       vueTemplate: true,
     }),
-    DefineOptions(),
+    DefineOptions()
   ],
   define: { 'process.env': {} },
   resolve: {
@@ -44,6 +44,7 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
       'boards': fileURLToPath(new URL('./boards', import.meta.url)),
       'plugins': fileURLToPath(new URL('./plugins', import.meta.url)),
+      'extensions': fileURLToPath(new URL('./extensions', import.meta.url)),
       '@core': fileURLToPath(new URL('./src/@core', import.meta.url)),
       '@layouts': fileURLToPath(new URL('./src/@layouts', import.meta.url)),
       '@configured-variables': fileURLToPath(new URL('./src/styles/variables/_template.scss', import.meta.url)),

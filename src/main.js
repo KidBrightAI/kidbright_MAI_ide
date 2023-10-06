@@ -21,7 +21,6 @@ import 'blockly/python'
 import "blockly/python_compressed.js"
 
 import { pythonGenerator } from 'blockly/python'
-import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker'
 import { usePluginStore } from './store/plugin'
 import { useWorkspaceStore } from './store/workspace'
 
@@ -51,6 +50,30 @@ pinia.use(({ store }) => {
 app.use(pinia);
 app.use(router)
 
+//==================== Load Extensions ====================//
+const extensions = import.meta.glob('extensions/*/config.js', { eager: true });
+const extensionComponents = import.meta.glob('extensions/*/Components/*.vue', { eager: false });
+let extensionList = [];
+for (const path in extensions) {
+  let extension = extensions[path].default;
+  extension.components = {};
+  //find corresponding components
+  for (const componentPath in extensionComponents) {
+    if (componentPath.startsWith(path.replace('config.js', ''))) {
+      // get file name from path
+      let fileName = componentPath.split('/').pop().split('.')[0];
+      extension.components[fileName] = componentPath.replace("/extensions/", "");
+    }
+  }
+  extensionList.push({ path: path.replace('config.js', ''), ...extension });
+}
+// load extension's components
+console.log("===== all extensions =====");
+console.log(extensionList);
+app.config.globalProperties.$extensions = extensionList;
+app.provide('extensions', extensionList);
+//=========================================================//
+
 // --------- init --------- //
 const boardModules = import.meta.glob('boards/*/index.js', { eager: true });
 const boardToolbox = import.meta.glob('boards/*/toolbox.js', { eager: true });
@@ -73,19 +96,6 @@ for (const path in boardModules) {
 console.log("===== all boards =====");
 console.log(boards);
 
-// ------- load current board from localStorage ------- //
-let currentBoard = boards[0];
-let currentBoardId = localStorage.getItem('currentBoardId');
-if (currentBoardId) {
-  console.log("===== current board =====");
-  console.log(currentBoardId);
-  currentBoard = boards.find(board => board.id == currentBoardId);
-} else {
-  // set current board to the first board
-  localStorage.setItem('currentBoard', currentBoard.id);
-  console.log("===== current board =====");
-  console.log(boards[0]);
-}
 //==================================================//
 //================= load plugins ===================//
 //==================================================//
@@ -120,9 +130,34 @@ pluginStore.plugins = plugins;
 //==================================================//
 
 const workspaceStore = useWorkspaceStore();
-workspaceStore.currentBoard = currentBoard;
 workspaceStore.boards = boards;
-//--------- init default blocks ----------//!SECTION
+const currentBoard = workspaceStore.currentBoard;
+console.log("current board ");
+console.log(currentBoard);
+
+if(!currentBoard){
+  // create new project
+  console.log("create new project with default board");
+  // await workspaceStore.createNewProject({
+  //   name: projectName.value,
+  //   id: projectName.value + "_" + randomId(),
+  //   projectType: selectType.value, //id of extension
+  //   projectTypeTitle: selectedExtension.name, //this.models.find(el=>el.value == this.selectType).text,
+  //   lastUpdate: new Date(),
+  //   extension: selectedExtension, 
+  //   model : null,
+  //   dataset: [],
+  //   labels: [],
+  //   board: "kidbright-mai"
+  // });
+}else{
+  // assign extension to workspace
+  console.log("assing extension to workspace");
+  console.log(extensionList.find(el=>el.id == workspaceStore.projectType));
+  workspaceStore.extension = extensionList.find(el=>el.id == workspaceStore.projectType);
+}
+
+//--------- init default blocks ----------//
 let defaultBlocks = import.meta.glob('@/blocks/*.js', { eager: false });
 for (const path in defaultBlocks) {
   fetch(path).then(
@@ -133,21 +168,15 @@ for (const path in defaultBlocks) {
     err => console.error(err)
   );
 }
-//---------init board ----------//!SECTION
-await loadBoard(currentBoard);
-await loadPlugin(pluginStore.installed);
+
+//---------init board ----------//
+if(currentBoard){
+  await loadBoard(currentBoard);
+  await loadPlugin(pluginStore.installed);
+}
 
 app.config.globalProperties.$boards = boards;
 app.config.globalProperties.$plugins = plugins;
 
-//---- setup monaco editor ----//
-self.MonacoEnvironment = {
-  getWorker(_, label) {
-    if (label === 'python') {
-      //return new pythonWorker();
-    }
-    return new editorWorker();
-  },
-};
 
 app.mount('#app')
