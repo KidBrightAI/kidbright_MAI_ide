@@ -25,6 +25,7 @@ export const useBoardStore = defineStore({
       isElectron: false,      
       firmwareUpdateMode: false,
       uploading: false,
+      connected: false,
     }
   },
 
@@ -62,7 +63,7 @@ export const useBoardStore = defineStore({
         if(!device){
           device = await Manager.requestDevice();
           if (!device) {
-            toast.error("No device selected");
+            toast.error("คุณไม่ได้เลือกอุปกรณ์");
             return;
           }
         }
@@ -76,8 +77,9 @@ export const useBoardStore = defineStore({
         const adb = new Adb(transport);        
         this.$adb.adb = adb;
         SingletonShell.getInstance(adb, null);
-        toast.success("Device connected");
+        toast.success("เชื่อมต่อบอร์ดสำเร็จ");
         this.$adb.transport = transport;
+        this.connected = true;
         return true;
       }   
     },

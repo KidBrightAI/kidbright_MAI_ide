@@ -4,7 +4,7 @@
       <splitpanes class="default-theme" style="width: 100%;">
         <pane size="80">
           <div class="d-flex flex-column h-100">
-            <div class="d-flex flex-fill aling-center justify-center view panel">
+            <div class="d-flex flex-fill aling-center justify-center view-panel">
               <image-display
                 v-if="current.length"
                 :id="current.slice(-1).pop()"
@@ -12,29 +12,29 @@
               <p class="d-flex align-center justify-center" v-if="!current.length">
                 No selected image, please click on the image below to select.
               </p>
-              <dataset-counter
+              <DatasetCounter
                 :current="
-                  current.length ? positionOf(current.slice(-1).pop()) + 1 : null
+                  current.length ? datasetStore.positionOf(current.slice(-1).pop()) + 1 : null
                 "
                 suffix="Image"
-              ></dataset-counter>
+              ></DatasetCounter>
             </div>
-            <image-dataset-list
+            <ImageDatasetList
               v-model="current"
               :multiple="true"
               :showInfo="true">
-            </image-dataset-list>
+            </ImageDatasetList>
           </div>
         </pane>
         <pane class="d-flex justify-center" size="20">
           <div class="side-panel">
-            <image-capture
+            <ImageCapture
               source=""
               ref="camera"
               @started="(_) => (cameraReady = true)"
               @stoped="(_) => (cameraReady = false)"
             >
-            </image-capture>
+            </ImageCapture>
             <div class="d-flex align-center justify-center flex-wrap">
               <img
                 v-on:click.prevent
@@ -65,71 +65,35 @@
 <script setup>
 import { Splitpanes, Pane } from 'splitpanes'
 import 'splitpanes/dist/splitpanes.css'
+import { randomId } from "@/components/utils";
 
 import ImageCapture from "@/components/InputConnection/ImageCapture.vue";
+import ImageDisplay from "@/components/InputConnection/ImageDisplay.vue";
+import ImageDatasetList from "@/components/InputConnection/ImageDatasetList.vue";
+import DatasetCounter from "@/components/InputConnection/DatasetCounter.vue";
+
+import { useDatasetStore } from '@/store/dataset';
+
+const datasetStore = useDatasetStore();
 
 const current = ref([]);
 const cameraReady = ref(false);
+const camera = ref({});
 
-// import ImageCapture from "@/components/InputConnection/ImageCapture.vue";
-// import ImageDisplay from "@/components/InputConnection/ImageDisplay.vue";
-// import ImageDatasetList from "@/components/InputConnection/ImageDatasetList.vue";
-// import DatasetCounter from "@/components/InputConnection/DatasetCounter.vue";
-// import ImportImages from "../Modals/ImportImages.vue";
-// import SimulatorController from "@/components/InputConnection/SimulatorController.vue";
-
-// export default {
-//   name: "Capture",
-//   components: {
-//     ImageCapture,
-//     ImageDisplay,
-//     ImageDatasetList,
-//     DatasetCounter,
-//     ImportImages,
-//     SimulatorController,
-//   },
-//   data() {
-//     return {
-//       mode: "CAM", //SIM or CAM
-//       current: [],
-//       cameraReady: false,
-//     };
-//   },
-//   computed: {
-//     ...mapGetters("dataset", ["positionOf"]),
-//   },
-//   methods: {
-//     ...mapActions("dataset", ["addData"]),
-//     async snapAndSave() {
-//       if (this.mode == "SIM") {
-//         let { image, thumbnail, width, height } =
-//           await this.$refs.simulator.snap();
-//         let data = {
-//           id: this.$helper.randomString(16),
-//           thumbnail: image,
-//           image: image,
-//           annotate: [],
-//           class: null,
-//           ext: "jpg",
-//         };
-//         let res = await this.addData(data);
-//       } else {
-//         let { image, thumbnail, width, height } =
-//           await this.$refs.camera.snap();
-//         let data = {
-//           id: this.$helper.randomString(16),
-//           thumbnail: thumbnail,
-//           image: image,
-//           annotate: [],
-//           class: null,
-//           ext: "jpg",
-//         };
-//         let res = await this.addData(data);
-//         this.current = [data.id];
-//       }
-//     },
-//   },
-// };
+const snapAndSave = async () => {
+  let { image, width, height } = await camera.value.snap();
+  let data = {
+    id : randomId(12),
+    image: image,
+    width: width,
+    height: height,
+    annotate: [],
+    class: null,
+    ext: "jpg",
+  };
+  await datasetStore.addData(data);
+  current.value = [data.id];
+};
 </script>
 <style lang="scss" scoped>
 $primary-color: #007e4e;

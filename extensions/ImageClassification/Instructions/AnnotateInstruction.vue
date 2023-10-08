@@ -10,7 +10,7 @@
       </p>
       <p>
         <br />2. กดปุ่ม
-        <img src="@/assets/images/png/interface-box.png" alt="" srcset="" />
+        <img src="@/assets/images/png/interface-2.png" alt="" srcset="" />
         หลังชื่อป้ายกำกับ เมื่อต้องการใช้ชื่อที่ตั้งไว้เเล้ว จะปรากฏป้ายกำกับบริเวณขวามือ
       </p>
     </div>

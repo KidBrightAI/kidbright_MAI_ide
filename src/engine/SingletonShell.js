@@ -63,6 +63,29 @@ export default class SingletonShell {
       this._instance.socketAbordController.abort();
     }
   }
+  static hasWriter() {
+    if(this._instance && this._instance.writer){
+      return true;
+    }
+    return false;
+  }
+
+  static waitWriter() {
+    return new Promise(async (resolve, reject) => {
+      let maxretry = 10;
+      while(--maxretry) {
+        if(this._instance && this._instance.writer){
+          break;
+        }
+        await sleep(1000);
+      }
+      if(this._instance && this._instance.writer){
+        resolve();
+      }else{
+        reject("shell is not ready");
+      }
+    });
+  }
 
   getAdb() {
     return this.adb;

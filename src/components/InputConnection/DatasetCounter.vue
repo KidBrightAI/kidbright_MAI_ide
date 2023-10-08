@@ -1,32 +1,27 @@
 <template>
   <div class="img-counter">
-    <span class="current-img">{{prefix}} </span>
-    <span class="ov-img">{{current || "-"}} {{seperator}} {{dataLength}} {{suffix}}{{dataLength > 1? "s" : ""}}</span>
+    <span class="current-img">{{props.prefix}} </span>
+    <span class="ov-img">{{props.current || "-"}} {{props.seperator}} {{datasetStore.dataLength}} {{props.suffix}}{{datasetStore.dataLength > 1? "s" : ""}}</span>
   </div>
 </template>
-<script>
-import { mapState, mapActions, mapMutations , mapGetters } from 'vuex';
-export default {
-  name: "DatasetCounter",
-  props : {
-    prefix : {
-      type : String
-    },
-    current : {
-    },
-    seperator : {
-      type: String,
-      default : "/"
-    },
-    suffix:{
-      type : String
-    },
+<script setup>
+import { useDatasetStore } from "@/store/dataset";
+const datasetStore = useDatasetStore();
+const props = defineProps({
+  prefix : {
+    type : String
   },
-  components: { },
-  computed: {
-    ...mapGetters("dataset",['dataLength','positionOf']),
+  current : {
+    type : [String, Number]
   },
-}
+  seperator : {
+    type: String,
+    default : "/"
+  },
+  suffix:{
+    type : String
+  },
+});
 </script>
 <style lang="scss" scoped>
 $primary-color: #007e4e;

@@ -2,6 +2,7 @@ import JSZip from "jszip";
 import { defineStore } from "pinia";
 import { loadBoard, loadPlugin } from "../engine/board";
 import { usePluginStore } from "./plugin";
+import { useDatasetStore } from "./dataset";
 
 export const useWorkspaceStore = defineStore({
   id: "workspace",
@@ -42,7 +43,15 @@ export const useWorkspaceStore = defineStore({
       this.lastUpdate = projectInfo.lastUpdate;
       this.extension = projectInfo.extension;
       this.model = projectInfo.model;
-      
+      //--------- create dataset for project --------//
+      const datasetStore = useDatasetStore();
+      let dataset = {
+        project: this.id,
+        datasetType: this.extension.id,
+        data: [],
+        baseURL: "",
+      };
+      await datasetStore.createDataset(dataset);
       //--------- load default code from board --------//
       if(projectInfo.block){
         this.block = projectInfo.block;        
@@ -51,8 +60,6 @@ export const useWorkspaceStore = defineStore({
         this.code = projectInfo.code;
       }
       console.log("create project with code");
-      console.log(this.code);
-      console.log(this.block);
       //--------- load board'blocks --------//
       if(projectInfo.plugin){
         const pluginStore = usePluginStore();

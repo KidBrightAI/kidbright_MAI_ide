@@ -52,7 +52,6 @@ const emit = defineEmits([
 
 const video = ref({});
 const source = ref(null);
-const canvas = ref(null);
 const camerasListEmitted = ref(false);
 const cameras = ref([]);
 
@@ -205,23 +204,34 @@ const loadCamera = (device) => {
     .catch(error => emit("error", error));
 };
 
-const capture = () => {
-  return getCanvas().toDataURL(props.screenshotFormat);
+const canvasToBlob = (canvas) => {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      resolve(blob);
+    },"image/jpeg", 0.8);
+  });
+};
+
+const capture = async () => {
+  let {canvas, width, height } = getCanvas();
+  return {
+    image: await canvasToBlob(canvas),
+    width: width,
+    height: height
+  };
 };
 
 const getCanvas = () => {
-  let video = video.value;
-  if (!canvas.value) {
-    let canvasElem = document.createElement("canvas");
-    canvasElem.height = video.videoHeight;
-    canvasElem.width = video.videoWidth;
-    canvas.value = canvasElem;
-
-    const ctx = canvasElem.getContext("2d");
-    ctx.drawImage(video, 0, 0, canvasElem.width, canvasElem.height);
-  }
-
-  return canvas.value;
+  let canvasElem = document.createElement("canvas");
+  canvasElem.height = video.value.videoHeight;
+  canvasElem.width = video.value.videoWidth;
+  const ctx = canvasElem.getContext("2d");
+  ctx.drawImage(video.value, 0, 0, canvasElem.width, canvasElem.height);
+  return {
+    canvas: canvasElem,
+    width: canvasElem.width,
+    height: canvasElem.height
+  };
 };
 
 watch(() => props.deviceId, (id) => {
@@ -235,7 +245,18 @@ onMounted(() => {
 onBeforeUnmount(() => {
   stop();
 });
-
+defineExpose({
+  capture,
+  pause,
+  resume,
+  stop,
+  start,
+  changeCamera,
+  loadCamera,
+  loadCameras,
+  testMediaAccess,
+  getCanvas
+});
 </script>
 <style scoped>
 video {

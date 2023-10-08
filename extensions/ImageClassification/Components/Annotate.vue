@@ -2,38 +2,31 @@
   <div class="w-100 h-100">
     <div class="d-flex w-100 h-100 outer-wrap">
       <div class="d-flex flex-fill flex-column main-panel bg-white">
-        <div class="d-flex flex-fill align-items-center justify-content-center view-panel">
-          <image-display v-if="current.length" :id="current.slice(-1).pop()"></image-display>
+        <div class="d-flex flex-fill align-center justify-center view-panel">
+          <ImageDisplay v-if="current.length" :id="current.slice(-1).pop()"></ImageDisplay>
           <p class="view-img-desc" v-if="!current.length">
             No selected image, please click on the image below to select.
           </p>
-          <dataset-counter class="second-counter" prefix="Labeled" seperator="of" :current="getLabeledLength" suffix="Image"></dataset-counter>
-          <dataset-counter prefix="Selected" seperator="of" :current="current.length" suffix="Image"></dataset-counter>
+          <DatasetCounter class="second-counter" prefix="Labeled" seperator="of" :current="getLabeledLength" suffix="Image"></DatasetCounter>
+          <DatasetCounter prefix="Selected" seperator="of" :current="current.length" suffix="Image"></DatasetCounter>
         </div>
-        <image-dataset-list v-model="current" :multiple="true" :showInfo="true"></image-dataset-list>
+        <ImageDatasetList v-model="current" :multiple="true" :showInfo="true"></ImageDatasetList>
       </div>
       <div class="side-panel">
         <div class="w-100">
           <h4 class="side-panel-ttl">LABEL</h4>
           <div class="feature-wrap">
-            <button @click="onNewLabel" class="btn btn-light new-label w-100">
-              New label
-              <b-icon-plus class="float-right"></b-icon-plus>
-            </button>
+            <v-btn block rounded="xl" @click="onNewLabel">
+              <VIcon>mdi-plus</VIcon> New label
+            </v-btn>
             <div class="pills w-100">
-              <button
-                type="button"
-                @click="selectLabel(cls.label)"
-                class="btn added-label w-100"
-                v-for="(cls, index) in getLabels"
-                :key="index"
-              >
+              <v-btn block rounded="xl" @click="selectLabel(cls.label)" v-for="(cls, index) in getLabels">
                 {{ cls.label }}
                 <div class="right-group">
-                  <b-avatar button @click="onChangeLabel(cls.label)" size="sm" icon="arrow-repeat" class="mr-1"></b-avatar>
-                  <b-avatar button @click="onRemoveLabel(cls.label)" size="sm" icon="x"></b-avatar>
+                  <v-avatar button @click="onChangeLabel(cls.label)" size="sm" icon="arrow-repeat" class="mr-1"></v-avatar>
+                  <v-avatar button @click="onRemoveLabel(cls.label)" size="sm" icon="x"></v-avatar>
                 </div>
-              </button>
+              </v-btn>
             </div>
           </div>
           <h4 class="side-panel-ttl">ANNOTATE</h4>
@@ -41,20 +34,20 @@
             <div class="annotate-cn-list w-100">
               <div
                 class="annotate-cn"
-                v-for="(item, idx) in getLabelByIds(current)"
+                v-for="(item, idx) in datasetStore.getLabelByIds(current)"
                 :key="'class-' + idx"
               >
                 <div class="annotate-cn-list-content">
                   <img
                     class="tag"
-                    src="~/assets/images/UI/svg/Group 177_green.svg"
+                    src="@/assets/images/png/Group 177_green.png"
                     height="24"
                   />
                   <span class="annotation-txt">{{ item }}</span>
                 </div>
                 <img
                   class="cancel-btn op-btn"
-                  src="~/assets/images/UI/svg/cancel-icon.svg"
+                  src="@/assets/images/UI/png/cancel-icon.png"
                   height="24"
                   @click="onRemoveAnnotatedLabel(item)"
                 />
@@ -68,60 +61,17 @@
   </div>
 </template>
 
-<script>
-import { mapState, mapActions, mapMutations , mapGetters } from 'vuex';
-import ImageDisplay from '~/components/InputConnection/ImageDisplay.vue';
-import ImageDatasetList from "~/components/InputConnection/ImageDatasetList.vue";
-import DatasetCounter from '~/components/InputConnection/DatasetCounter.vue';
+<script setup>
+import ImageDisplay from "@/components/InputConnection/ImageDisplay.vue";
+import ImageDatasetList from "@/components/InputConnection/ImageDatasetList.vue";
+import DatasetCounter from "@/components/InputConnection/DatasetCounter.vue";
+import { useDatasetStore } from "@/store/dataset";
+import { useConfirm } from "@/components/comfirm-dialog";
+import { onMounted, onBeforeUnmount } from "vue";
 
-export default {
-  name: "Anotate",
-  components: {
-    ImageDisplay,
-    ImageDatasetList,
-    DatasetCounter,
-  },
-  data() {
-    return {
-      current : [],
-    };
-  },
-  methods: {
-    ...mapActions("dataset",["setDataClass","changeDataClass","changeDataClassWhere"]),
-    ...mapMutations("project",["addLabel","removeLabel","changeLabel"]),
-    onNewLabel: async function () {
-      let label = await this.$dialog.prompt({ text: 'ชื่อป้ายกำกับ', title: 'ตั้งชื่อป้ายกำกับรูปภาพใหม่' });
-      if(label){
-        this.addLabel({label: label});
-      }
-    },
-    selectLabel: function (label) {
-      this.setDataClass({ids: this.current,label:label});
-    },
-    onRemoveLabel: async function (name) {
-      let confirm = await this.$dialog.confirm({ text: `หากลบ '${name}' ภาพที่ใช้ป้ายกำกับนี้จะถูกล้างค่า`, title : "ยืนยันการลบป้ายกำกับ"});
-      if(confirm){
-        this.changeDataClass( { oldLabel : name, newLabel : null});
-        this.removeLabel(name);
-      }
-    },
-    onChangeLabel: async function(name){
-      let label = await this.$dialog.prompt({ text: `ชื่อป้ายกำกับจาก '${name}' เป็น`, title: 'เปลี่ยนชื่อป้ายกำกับใหม่' });
-      if(label){
-         this.changeDataClass( { oldLabel : name, newLabel : label});
-         this.changeLabel({ oldLabel : name, newLabel : label});
-      }
-    },
-    onRemoveAnnotatedLabel: async function (label) {
-      //this.setDataClass({ids: this.current.filter(el=>el ),label:null});
-      this.changeDataClassWhere({ ids: this.current, oldLabel : label, newLabel : null });
-    },
-  },
-  computed: {
-    ...mapGetters("project",["getLabels"]),
-    ...mapGetters("dataset",["getLabelByIds","getLabeledLength"]),
-  },
-};
+const datasetStore = useDatasetStore();
+
+const current = ref([]);
 </script>
 
 <style lang="scss" scoped>
@@ -276,3 +226,4 @@ $primary-color: #007e4e;
   }
 }
 </style>
+

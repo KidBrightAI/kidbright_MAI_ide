@@ -1,4 +1,5 @@
 <script setup>
+import { onMounted, onBeforeUnmount, ref, computed, defineEmits } from "vue";
 import { sleep } from "@/engine/helper";
 import {
   WrapConsumableStream,
@@ -13,7 +14,10 @@ import SingletonShell from "@/engine/SingletonShell";
 
 import { useBoardStore } from "@/store/board";
 
+const emit = defineEmits(["started", "stoped"]);
+
 const boardStore = useBoardStore();
+const status = ref("disconnected");
 
 async function* Decoder(readableStream){
   const reader = readableStream.getReader();
@@ -72,32 +76,40 @@ const indexOfSubarray = (mainArray, subArray) => {
 
 const start = async () => {
   console.log("start streaming");
-  const shell = SingletonShell.getInstance();
-  const adb = shell.getAdb();
+  console.log("wait for shell ready");
+  status.value = "connecting";
+  try{
+    await SingletonShell.waitWriter();
+    console.log("shell ready");
+    const shell = SingletonShell.getInstance();
+    const adb = shell.getAdb();
 
-  SingletonShell.write("killall python3\n");
-  SingletonShell.write("python3 /usr/lib/python3.8/site-packages/maix/mjpg.pyc &\n");
-  await sleep(5000);
-  console.log("create socket");
-  let sock = null;
-  let retry = 15;
-  while (retry--) {
-    try {
-      sock = await adb.createSocket("tcp:18811");
-      break;
-    } catch (e) {
-      console.log(e);
-      await sleep(1000);
+    SingletonShell.write("killall python3\n");
+    SingletonShell.write("python3 /usr/lib/python3.8/site-packages/maix/mjpg.pyc &\n");
+    console.log("create socket");
+    let sock = null;
+    let retry = 15;
+    while (retry--) {
+      try {
+        sock = await adb.createSocket("tcp:18811");
+        break;
+      } catch (e) {
+        console.log(e);
+        await sleep(1000);
+      }
     }
-  }
-  //let sock = await adb.createSocket("tcp:18811");
-  let reqText = "GET / HTTP/1.1\r\nHost: localhost:18811\r\n\r\n";
-  let writer = sock.writable.getWriter();
-  writer.write(new Consumable(encodeUtf8(reqText)));
-
-  const decoder = Decoder(sock.readable);
-  for await (const frame of decoder) {
-    drawImage(frame);
+    //let sock = await adb.createSocket("tcp:18811");
+    let reqText = "GET / HTTP/1.1\r\nHost: localhost:18811\r\n\r\n";
+    let writer = sock.writable.getWriter();
+    writer.write(new Consumable(encodeUtf8(reqText)));
+    status.value = "streaming";
+    emit("started");
+    const decoder = Decoder(sock.readable);
+    for await (const frame of decoder) {
+      drawImage(frame);
+    }
+  }catch(e){
+    console.log(e);
   }
 };
 
@@ -112,20 +124,65 @@ const drawImage = (data, canvas) => {
 
   reader.readAsDataURL(blob);
 };
-
+const canvasToBlob = (canvas) => {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      resolve(blob);
+    },"image/jpeg", 0.8);
+  });
+};
+const capture = async (width = 240, height = 240) => {
+  const img = document.getElementById("cont");
+  const canvas = document.createElement("canvas");
+  // resize image to 224x224
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, width, height);
+  const data = await canvasToBlob(canvas);
+  return {
+    image: data,
+    width: width,
+    height: height
+  };
+}
 onMounted(async () => {
-  if(await boardStore.deviceConnect()){
-    return;
+  status.value = "disconnected";
+  if(boardStore.connected){
+    await start();
   }
-  await sleep(1000);
-  await start();
 });
 
 onBeforeUnmount(() => {
   console.log("stop streaming");
   SingletonShell.write("killall python3\n");
+  status.value = "disconnected";
+  emit("stoped");
+});
+
+watch(
+  () => boardStore.connected,
+  async (connected) => {
+    if (connected) {
+      //device connected start streaming
+      await start();
+    }
+  }
+);
+defineExpose({
+  capture,
 });
 </script>
 <template>
-  <img id="cont" style="width: 100%; height: 100%;"/>
+  <div v-if="status !=='streaming'" class="w-100 d-flex text-white align-center justify-center" style="height: 200px;">
+    <span v-if="status == 'disconnected'">กรุณาเชื่อมต่ออุปกรณ์</span>
+    <v-progress-circular
+      v-if="status == 'connecting'"
+      :width="7"
+      size="64"
+      color="green"
+      indeterminate
+    ></v-progress-circular>
+  </div>
+  <img v-else id="cont" style="width: 100%; height: 100%;"/>
 </template>

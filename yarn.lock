@@ -3972,6 +3972,11 @@
     "minipass" "^3.0.0"
     "yallist" "^4.0.0"
 
+"mitt@^2.1.0":
+  "integrity" "sha512-ILj2TpLiysu2wkBbWjAmww7TkZb65aiQO+DkVdUTBpBXq+MHYiETENkKFMtsJZX1Lf4pe4QOrTSjIfUwN5lRdg=="
+  "resolved" "https://registry.npmjs.org/mitt/-/mitt-2.1.0.tgz"
+  "version" "2.1.0"
+
 "mkdirp@^1.0.3":
   "integrity" "sha512-vVqVZQyf3WLx2Shd0qJ9xuvqgAyKPLAiqITEtqW0oIUjzo3PePDd6fW9iFz30ef7Ysp/oiWqbhszeGWW2T6Gzw=="
   "resolved" "https://registry.npmjs.org/mkdirp/-/mkdirp-1.0.4.tgz"
@@ -6050,10 +6055,20 @@
     "markdown-it" "^12.3.2"
     "vue" "^3.2.45"
 
+"vue-observe-visibility@^2.0.0-alpha.1":
+  "integrity" "sha512-flFbp/gs9pZniXR6fans8smv1kDScJ8RS7rEpMjhVabiKeq7Qz3D9+eGsypncjfIyyU84saU88XZ0zjbD6Gq/g=="
+  "resolved" "https://registry.npmjs.org/vue-observe-visibility/-/vue-observe-visibility-2.0.0-alpha.1.tgz"
+  "version" "2.0.0-alpha.1"
+
 "vue-prism-component@^2.0.0":
   "integrity" "sha512-1ofrL+GCZOv4HqtX5W3EgkhSAgadSeuD8FDTXbwhLy8kS+28RCR8t2S5VTeM9U/peAaXLBpSgRt3J25ao8KTeg=="
   "resolved" "https://registry.npmjs.org/vue-prism-component/-/vue-prism-component-2.0.0.tgz"
   "version" "2.0.0"
+
+"vue-resize@^2.0.0-alpha.1":
+  "integrity" "sha512-7+iqOueLU7uc9NrMfrzbG8hwMqchfVfSzpVlCMeJQe4pyibqyoifDNbKTZvwxZKDvGkB+PdFeKvnGZMoEb8esg=="
+  "resolved" "https://registry.npmjs.org/vue-resize/-/vue-resize-2.0.0-alpha.1.tgz"
+  "version" "2.0.0-alpha.1"
 
 "vue-router@^3.5.1 || ^ 4.0.11", "vue-router@^4.1.5":
   "integrity" "sha512-IsvoF5D2GQ/EGTs/Th4NQms9gd2NSqV+yylxIyp/OYp8xOwxmU8Kj/74E9DTSYAyH5LX7idVUngN3JSj1X4xcQ=="
@@ -6069,6 +6084,15 @@
   dependencies:
     "@volar/vue-language-core" "0.39.5"
     "@volar/vue-typescript" "0.39.5"
+
+"vue-virtual-scroller@^2.0.0-beta.8":
+  "integrity" "sha512-b8/f5NQ5nIEBRTNi6GcPItE4s7kxNHw2AIHLtDp+2QvqdTjVN0FgONwX9cr53jWRgnu+HRLPaWDOR2JPI5MTfQ=="
+  "resolved" "https://registry.npmjs.org/vue-virtual-scroller/-/vue-virtual-scroller-2.0.0-beta.8.tgz"
+  "version" "2.0.0-beta.8"
+  dependencies:
+    "mitt" "^2.1.0"
+    "vue-observe-visibility" "^2.0.0-alpha.1"
+    "vue-resize" "^2.0.0-alpha.1"
 
 "vue@^2.6.0 || ^3.2.0", "vue@^2.6.12 || ^3.2.4", "vue@^2.6.14 || ^3.3.0", "vue@^3.0.0", "vue@^3.0.0-0 || ^2.6.0", "vue@^3.0.11", "vue@^3.2.0", "vue@^3.2.25", "vue@^3.2.37", "vue@^3.2.45", "vue@^3.3.4", "vue@> 3.0.0", "vue@>=3.2.0", "vue@2 || 3", "vue@3.3.4", "vue@3.x":
   "integrity" "sha512-VTyEYn3yvIeY1Py0WaYGZsXnz3y5UnGi62GjVEqvEGPl6nxbOrCXbVOTQWBEJUqAyTUk2uJ5JLVnYJ6ZzGbrSw=="

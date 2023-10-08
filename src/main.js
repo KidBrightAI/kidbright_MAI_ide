@@ -13,6 +13,9 @@ import { createApp } from 'vue'
 import Vue3Toastify from 'vue3-toastify'
 import 'vue3-toastify/dist/index.css'
 
+import { RecycleScroller, DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller'
+import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
+
 import VuetifyUseDialog from '@/components/comfirm-dialog'
 import Blockly from "blockly"
 import "blockly/blocks"
@@ -25,6 +28,8 @@ import { usePluginStore } from './store/plugin'
 import { useWorkspaceStore } from './store/workspace'
 
 import { loadBoard, loadPlugin, parseExamples } from './engine/board'
+import Storage from './engine/storage';
+
 loadFonts()
 Blockly.Python = Blockly.Python || {};
 const app = createApp(App)
@@ -34,6 +39,7 @@ app.config.globalProperties.$adb = {
   adb: null,
   shell: null,
 };
+app.config.globalProperties.$fs = await Storage.newStorage();;
 
 //change blockly default color
 Blockly.Msg.BKY_LOGIC_HUE = 10;
@@ -42,10 +48,15 @@ app.use(Vue3Toastify, {
   autoClose: 3000,
 });
 app.use(VuetifyUseDialog);
+app.component('RecycleScroller', RecycleScroller);
+app.component('DynamicScroller', DynamicScroller);
+app.component('DynamicScrollerItem', DynamicScrollerItem);
+
 const pinia = createPinia();
 pinia.use(piniaPluginPersistedstate);
 pinia.use(({ store }) => {
   store.$adb = app.config.globalProperties.$adb
+  store.$fs = app.config.globalProperties.$fs;
 });
 app.use(pinia);
 app.use(router)

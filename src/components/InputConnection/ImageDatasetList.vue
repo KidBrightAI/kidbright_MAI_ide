@@ -1,10 +1,10 @@
 <template>
   <div class="img-slider" @mousewheel="scrollX">
     <div class="info-text">
-      <span>press 'A' - 'D' to move select</span>
+      <span>press 'A' - 'D' or 'Left Arrow' - 'Right Arrow' to move select</span>
     </div>
     <DynamicScroller
-      :items="dataList"
+      :items="datasetStore.data"
       :min-item-size="135"
       direction="horizontal"
       class="scroller"
@@ -12,7 +12,7 @@
     >
       <template v-slot="{ item, index, active }">
         <DynamicScrollerItem
-          :item="item.id"
+          :item="item"
           :active="active"
           :data-index="index"
           :data-active="active"
@@ -21,20 +21,20 @@
             :key="index"
             :class="{
               img: true,
-              active: multiple ? value.includes(item.id) : value === item.id,
+              active: props.multiple ? props.modelValue.includes(item.id) : props.modelValue === item.id,
             }"
             @click="selectImage($event, item.id, index)"
           >
-            <div v-if="showInfo && item.annotate.length" class="annotate-data">
+            <div v-if="props.showInfo && item.annotate.length" class="annotate-data">
               <span>{{ item.annotate.length }}</span>
             </div>
-            <b-img-lazy
+            <VImg
               class="thumb"
-              :src="`${getBaseURL}/${item.id}.${item.ext}`"
+              :src="`${datasetStore.baseURL}/${item.id}.${item.ext}`"
               alt=""
               srcset=""
             >
-            </b-img-lazy>
+            </VImg>
             <div v-if="showInfo && item.class" class="label-data">
               {{ item.class }}
             </div>
@@ -42,7 +42,7 @@
           <img
             title="กดปุ่ม CTRL ค้างไว้ เพื่อทำการลบรูปที่เลือก"
             class="cancel-btn"
-            src="~/assets/images/UI/png/cancel.png"
+            src="@/assets/images/png/cancel.png"
             @click="removeItem($event, item)"
           />
         </DynamicScrollerItem>
@@ -51,168 +51,156 @@
   </div>
 </template>
 
-<script>
-import { mapState, mapActions, mapMutations, mapGetters } from "vuex";
-export default {
-  name: "ImageDatasetList",
-  components: {},
-  props: {
-    value: {
-      //type : String,
-    },
-    multiple: {
-      type: Boolean,
-      default: false,
-    },
-    showInfo: {
-      type: Boolean,
-      default: false,
-    },
+<script setup>
+import { useDatasetStore } from "@/store/dataset";
+import { onMounted, onBeforeUnmount } from "vue";
+import { useConfirm } from "@/components/comfirm-dialog";
+
+const datasetStore = useDatasetStore();
+const confirm = useConfirm();
+
+const props = defineProps({
+  modelValue: {
+    type: [String, Array],
+    default: null,
   },
-  data() {
-    return {
-      selected: this.value,
-      lastSelectedIndex: 0,
-      //current : this.current,
-    };
+  multiple: {
+    type: Boolean,
+    default: false,
   },
-  computed: {
-    ...mapGetters("dataset", ["dataList", "getBaseURL", "positionOf"]),
+  showInfo: {
+    type: Boolean,
+    default: false,
   },
-  mounted() {
-    window.addEventListener("keypress", this.onKey);
-  },
-  beforeDestroy() {
-    window.removeEventListener("keypress", this.onKey);
-  },
-  methods: {
-    ...mapActions("dataset", [
-      "getDataList",
-      "deleteDatasetItem",
-      "deleteDatasetItems",
-    ]),
-    onKey(e) {
-      if (e.key == "d") {
-        if (
-          this.lastSelectedIndex >= 0 &&
-          this.lastSelectedIndex < this.dataList.length - 1
-        ) {
-          let nextPos = this.lastSelectedIndex + 1;
-          let item = this.dataList[nextPos].id;
-          if (this.multiple) {
-            this.selected = [item];
-            this.lastSelectedIndex = nextPos;
-            this.$emit("input", this.selected);
-          } else {
-            this.$emit("input", item);
-          }
-          this.scrollXBy(135);
-        }
-      } else if (e.key == "a") {
-        if (
-          this.lastSelectedIndex > 0 &&
-          this.lastSelectedIndex < this.dataList.length
-        ) {
-          let nextPos = this.lastSelectedIndex - 1;
-          let item = this.dataList[nextPos].id;
-          if (this.multiple) {
-            this.selected = [item];
-            this.lastSelectedIndex = nextPos;
-            this.$emit("input", this.selected);
-          } else {
-            this.$emit("input", item);
-          }
-          this.scrollXBy(-135);
-        }
-      }
-    },
-    selectImage(event, item, index) {
-      if (this.multiple) {
-        // ---- multiple select ---- //
-        if (event.shiftKey) {
-          let ds = this.dataList;
-          let range = null;
-          if (index < this.lastSelectedIndex) {
-            range = ds.slice(
-              index,
-              event.ctrlKey
-                ? this.lastSelectedIndex
-                : this.lastSelectedIndex + 1
-            );
-          } else if (index > this.lastSelectedIndex) {
-            range = ds.slice(
-              event.ctrlKey
-                ? this.lastSelectedIndex + 1
-                : this.lastSelectedIndex,
-              index + 1
-            );
-          }
-          if (range) {
-            this.selected = event.ctrlKey
-              ? this.selected.concat(range.map((el) => el.id))
-              : range.map((el) => el.id);
-          }
-        } else if (event.ctrlKey) {
-          let indexed = this.selected.indexOf(item);
-          if (indexed !== -1) {
-            //selected item contained, let remove
-            this.selected.splice(indexed, 1);
-          } else {
-            this.selected.push(item);
-          }
-          this.lastSelectedIndex = index;
-        } else {
-          this.selected = [item];
-          this.lastSelectedIndex = index;
-        }
-        // ---------------------- //
-        this.$emit("input", this.selected);
-      } else {
-        this.$emit("input", item);
-      }
-    },
-    async removeItem(e, item) {
-      if (this.multiple) {
-        // if(this.selected.length > 1){
-        //   let confirm = await this.$dialog.confirm({ text: 'ต้องการลบ', title : ""});
-        // }
-        if (e.ctrlKey) {
-          if (this.selected.length > 1) {
-            let confirm = await this.$dialog.confirm({
-              text: `ต้องการลบรูปที่เลือก ${this.selected.length} รูป`,
-              title: "ยืนยันการลบรูปภาพ",
-            });
-            if (confirm) {
-              await this.deleteDatasetItems(this.selected);
-              this.selected = [];
-              this.$emit("input", this.selected);
-            }
-          }
-        } else {
-          await this.deleteDatasetItem(item);
-          if (this.selected.includes(item.id)) {
-            this.selected = this.selected.filter((el) => el != item.id) || [];
-            this.$emit("input", this.selected);
-          }
-        }
-      } else {
-        await this.deleteDatasetItem(item);
-        if (item.id == this.value) {
-          this.$emit("input", null);
-        }
-      }
-    },
-    scrollX(e) {
-      e.preventDefault();
-      let el = document.getElementsByClassName("vue-recycle-scroller")[0];
-      el.scrollLeft += e.deltaY;
-    },
-    scrollXBy(px) {
-      let el = document.getElementsByClassName("vue-recycle-scroller")[0];
-      el.scrollLeft += px;
-    },
-  },
+});
+
+const emit = defineEmits(["update:modelValue"]);
+
+const selected = ref(props.value || []);
+const lastSelectedIndex = ref(0);
+
+
+const scrollX = (e) => {
+  e.preventDefault();
+  let el = document.getElementsByClassName("vue-recycle-scroller")[0];
+  el.scrollLeft += e.deltaY;
 };
+
+const scrollXBy = (px) => {
+  let el = document.getElementsByClassName("vue-recycle-scroller")[0];
+  el.scrollLeft += px;
+};
+
+const onKey = (e) => {
+  if (e.key == "d" || e.key == "ArrowRight") {
+    if (lastSelectedIndex.value >= 0 && lastSelectedIndex.value < datasetStore.data.length - 1) {
+      let nextPos = lastSelectedIndex.value + 1;
+      let item = datasetStore.data[nextPos].id;
+      if (props.multiple) {
+        selected.value = [item];
+        lastSelectedIndex.value = nextPos;
+        emit("update:modelValue", selected.value);
+      } else {
+        emit("update:modelValue", item);
+      }
+      scrollXBy(135);
+    }
+  } else if (e.key == "a" || e.key == "ArrowLeft") {
+    if (lastSelectedIndex.value > 0 && lastSelectedIndex.value < datasetStore.data.length) {
+      let nextPos = lastSelectedIndex.value - 1;
+      let item = datasetStore.data[nextPos].id;
+      if (props.multiple) {
+        selected.value = [item];
+        lastSelectedIndex.value = nextPos;
+        emit("update:modelValue", selected.value);
+      } else {
+        emit("update:modelValue", item);
+      }
+      scrollXBy(-135);
+    }
+  }
+};
+
+const selectImage = (event, item, index) => {
+  if (props.multiple) {
+    // ---- multiple select ---- //
+    if (event.shiftKey) {
+      let ds = datasetStore.data;
+      let range = null;
+      if (index < lastSelectedIndex.value) {
+        range = ds.slice(
+          index,
+          event.ctrlKey ? lastSelectedIndex.value : lastSelectedIndex.value + 1
+        );
+      } else if (index > lastSelectedIndex.value) {
+        range = ds.slice(
+          event.ctrlKey ? lastSelectedIndex.value + 1 : lastSelectedIndex.value,
+          index + 1
+        );
+      }
+      if (range) {
+        selected.value = event.ctrlKey
+          ? selected.value.concat(range.map((el) => el.id))
+          : range.map((el) => el.id);
+      }
+    } else if (event.ctrlKey) {
+      let indexed = selected.value.indexOf(item);
+      if (indexed !== -1) {
+        //selected item contained, let remove
+        selected.value.splice(indexed, 1);
+      } else {
+        selected.value.push(item);
+      }
+      lastSelectedIndex.value = index;
+    } else {
+      selected.value = [item];
+      lastSelectedIndex.value = index;
+    }
+    // ---------------------- //
+    emit("update:modelValue", selected.value);
+  } else {
+    emit("update:modelValue", item);
+  }
+};
+
+const removeItem = async (e, item) => {
+  if (props.multiple) {
+    if (e.ctrlKey) {
+      if (selected.value.length > 1) {
+        try{
+          await confirm({ title: `ยืนยันการลบรูปภาพ ต้องการลบรูปที่เลือก ${selected.value.length} รูป หรือไม่ ?`, dialogProps: { width: 'auto' } });
+          emit("update:modelValue", []);
+          await datasetStore.deleteDatasetItems(selected.value);
+          selected.value = [];
+        }catch(e){
+          console.log("user cancel delete");
+          //console.log(e);
+        }
+      }
+    } else {
+      if (selected.value.includes(item.id)) {
+        selected.value = selected.value.filter((el) => el != item.id) || [];
+        emit("update:modelValue", selected.value);
+      }
+      await datasetStore.deleteDatasetItem(item);
+    }
+  } else {
+    if (item.id == value) {
+      emit("update:modelValue", null);
+    }
+    await datasetStore.deleteDatasetItem(item);
+  }
+};
+
+onMounted(() => {
+  window.addEventListener("keydown", onKey);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener("keydown", onKey);
+});
+
+
 </script>
 <style lang="scss" scoped>
 $primary-color: #007e4e;

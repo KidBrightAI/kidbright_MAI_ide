@@ -9,17 +9,17 @@
       />
     </div>
     <div class="video-container">
-      <!-- <Webcam
-          :width="props.width"
-          :height="props.height"
-          ref="webcam"
-          @cameras="onCameras"
-          @started="onStarted"
-          @stopped="onStoped"
-          :deviceId="captureDevice"
-      /> -->
-      
-      <AdbCameraStreaming v-if="boardStore.isConnected()" ref="adbCameraStreaming"/>
+      <AdbCameraStreaming v-if="captureDevice.label == 'ADB'" ref="adbCameraStreaming" @started="onStarted" @stopped="onStoped"/>
+      <Webcam
+        v-show="captureDevice.label == 'WEBCAM'"
+        :width="props.width"
+        :height="props.height"
+        ref="webcam"
+        @cameras="onCameras"
+        @started="onStarted"
+        @stopped="onStoped"
+        :deviceId="captureDevice.id"
+      />
     </div>
   </div>
 </template>
@@ -37,19 +37,22 @@ const props = defineProps({
 const emit = defineEmits(["started", "stoped"]);
 
 const adbCameraStreaming = ref({});
-const captureDevices = ref([]);
+const webcam = ref({});
+const captureDevices = ref([{
+  id: "ADB",
+  label: "ADB",
+}]);
 const currentCaptureDeviceIndex = ref(0);
 const currentDevice = ref(null);
 
 const onCameras = (cameras) => {
   console.log("Capture Device Loaded : ", cameras);
-  captureDevices.value = cameras.map((camera) => {
-    return {
+  cameras.forEach((camera) => {
+    captureDevices.value.push({
       id: camera.deviceId,
-      label: camera.label,
-    };
+      label: "WEBCAM",
+    });
   });
-  currentCaptureDeviceIndex.value = 0;
 };
 
 const onStarted = (stream) => {
@@ -61,24 +64,35 @@ const onStoped = () => {
 };
 
 const nextCamera = () => {
-  currentCaptureDeviceIndex.value =
-    (currentCaptureDeviceIndex.value + 1) % captureDevices.value.length;
-  currentDevice.value =
-    captureDevices.value[currentCaptureDeviceIndex.value].label;
+  currentCaptureDeviceIndex.value = (currentCaptureDeviceIndex.value + 1) % captureDevices.value.length;
 };
 
 const captureDevice = computed(() => {
   if(Array.isArray(captureDevices.value) && captureDevices.value.length > 0){
-    return captureDevices.value[currentCaptureDeviceIndex.value].id;
+    return captureDevices.value[currentCaptureDeviceIndex.value];
   }else{
-    return null;
+    return {id : null, label : null};
   }
 });
-
 
 onMounted(() => {
   
 });
+
+const snap = async () => {
+  let src = null;
+  if(captureDevice.value.label == "ADB"){
+    src = await adbCameraStreaming.value.capture();
+  }else if(captureDevice.value.label == "WEBCAM"){
+    src = await webcam.value.capture();
+  }
+  return src;
+};
+
+defineExpose({
+  snap,
+});
+
 </script>
 <style lang="scss" scoped>
 .video-container {
@@ -96,7 +110,7 @@ onMounted(() => {
 .config-camera-float-button {
   display: inline;
   position: absolute;
-  margin-top: -38px;
+  margin-top: -50px;
   right: 20px;
 }
 
