@@ -25,9 +25,6 @@
             }"
             @click="selectImage($event, item.id, index)"
           >
-            <div v-if="props.showInfo && item.annotate.length" class="annotate-data">
-              <span>{{ item.annotate.length }}</span>
-            </div>
             <VImg
               class="thumb"
               :src="`${datasetStore.baseURL}/${item.id}.${item.ext}`"
@@ -35,6 +32,9 @@
               srcset=""
             >
             </VImg>
+            <div v-if="props.showInfo && item.annotate.length" class="annotate-data">
+              <span>{{ item.annotate.length }}</span>
+            </div>
             <div v-if="showInfo && item.class" class="label-data">
               {{ item.class }}
             </div>

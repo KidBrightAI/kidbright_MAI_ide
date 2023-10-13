@@ -81,7 +81,7 @@
           />
         </div>
       </div>
-      <div v-if="selectedMenu === 1" class="pt-3 h-100">
+      <div v-if="selectedMenu === 1" class="pt-3 h-100 overflow-hidden">
         <InstructionAsyncComponent
           v-if="!workspaceStore.extension.instructions.capture"
           target="CaptureInstruction.vue"
@@ -91,7 +91,7 @@
           :target="workspaceStore.extension.instructions.capture"
         ></extension-async-component>
       </div>
-      <div v-if="selectedMenu === 2" class="pt-3 h-100">
+      <div v-if="selectedMenu === 2" class="pt-3 h-100 overflow-hidden">
         <InstructionAsyncComponent
           v-if="!workspaceStore.extension.instructions.annotate"
           target="AnnatateInstruction.vue"
@@ -101,7 +101,7 @@
           :target="workspaceStore.extension.instructions.annotate"
         ></extension-async-component>
       </div>
-      <div v-if="selectedMenu === 3" class="pt-3 h-100">
+      <div v-if="selectedMenu === 3" class="pt-3 h-100 overflow-hidden">
         <InstructionAsyncComponent
           v-if="!workspaceStore.extension.instructions.train"
           target="TrainInstruction.vue"
@@ -111,7 +111,7 @@
           :target="workspaceStore.extension.instructions.train"
         ></extension-async-component>
       </div>
-      <div v-if="selectedMenu === 4" class="pt-3 h-100">
+      <div v-if="selectedMenu === 4" class="pt-3 h-100 overflow-hidden">
         <InstructionAsyncComponent
           v-if="!workspaceStore.extension.instructions.coding"
           target="CodingInstruction.vue"

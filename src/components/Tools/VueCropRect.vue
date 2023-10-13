@@ -1,5 +1,5 @@
 <template>
-  <div class="rect-bbox" :style="{display: showRect?'block':'none'}">
+  <div class="rect-bbox" :style="{display: showRect?'block':'none'}" ref="bbox">
     <div
       class="rect unselect"
       :style="rectStyle"
@@ -35,51 +35,62 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'VueCropRect',
-  props: {
-    initRect: {
-      type: Object,
-      default: () => {
-        return {
-          x1: -1,
-          y1: -1,
-          x2: -1,
-          y2: -1
-        };
-      }
-    },
-    showRect: {
-      type: Boolean,
-      default: true
-    },
-    resizeAble: {
-      type: Boolean,
-      default: true
-    },
-    aspectRatio: {
-      type: Number,
-      default: undefined
-    },
-    minWidth: {
-      type: Number,
-      default: undefined
-    },
-    maxWidth: {
-      type: Number,
-      default: undefined
-    },
-    minHeight: {
-      type: Number,
-      default: undefined
-    },
-    maxHeight: {
-      type: Number,
-      default: undefined
+<script setup>
+import { ref, computed, watch, getCurrentInstance } from 'vue';
+const props = defineProps({
+  initRect: {
+    type: Object,
+    default: () => {
+      return {
+        x1: -1,
+        y1: -1,
+        x2: -1,
+        y2: -1
+      };
     }
   },
-  // model: {
+  showRect: {
+    type: Boolean,
+    default: true
+  },
+  resizeAble: {
+    type: Boolean,
+    default: true
+  },
+  aspectRatio: {
+    type: Number,
+    default: undefined
+  },
+  minWidth: {
+    type: Number,
+    default: undefined
+  },
+  maxWidth: {
+    type: Number,
+    default: undefined
+  },
+  minHeight: {
+    type: Number,
+    default: undefined
+  },
+  maxHeight: {
+    type: Number,
+    default: undefined
+  }
+});
+
+const emit = defineEmits(['changed', 'remove']);
+
+const firstDrag = ref(true);
+const directionMark = ref(1);
+
+const x1 = ref(props.initRect.x1);
+const y1 = ref(props.initRect.y1);
+const x2 = ref(props.initRect.x2);
+const y2 = ref(props.initRect.y2);
+const modifyCoordinates = ref([]);
+const bbox = ref({});
+ // model: {
   //   prop: 'initRect',
   //   event: 'changed'
   // },
@@ -95,457 +106,456 @@ export default {
   // |             |
   // 口-----口-----口 end
   // vh2    vh3    x2,y2
-  data () {
-    return {
-      x1: this.initRect.x1,
-      y1: this.initRect.y1,
-      x2: this.initRect.x2,
-      y2: this.initRect.y2,
-      modifyCoordinates : []
-    };
-  },
-  computed: {
-    start () {
-      return { x: this.x1, y: this.y1 };
-    },
-    end () {
-      return { x: this.x2, y: this.y2 };
-    },
-    hv1 () {
-      let point = {
-        x: (this.x1 + this.x2) / 2,
-        y: this.y1
-      };
-      return point;
-    },
-    hv2 () {
-      let point = {
-        x: this.x2,
-        y: this.y1
-      };
-      return point;
-    },
-    hv3 () {
-      let point = {
-        x: this.x2,
-        y: (this.y1 + this.y2) / 2
-      };
-      return point;
-    },
-    vh1 () {
-      let point = {
-        x: this.x1,
-        y: (this.y1 + this.y2) / 2
-      };
-      return point;
-    },
-    vh2 () {
-      let point = {
-        x: this.x1,
-        y: this.y2
-      };
-      return point;
-    },
-    vh3 () {
-      let point = {
-        x: (this.x1 + this.x2) / 2,
-        y: this.y2
-      };
-      return point;
-    },
-    width () {
-      return Math.abs(this.x2 - this.x1);
-    },
-    height () {
-      return Math.abs(this.y2 - this.y1);
-    },
-    leftTopCorner () {
-      let leftTopCornerX = this.x1 > this.x2 ? this.x2 : this.x1;
-      let leftTopCornerY = this.y1 > this.y2 ? this.y2 : this.y1;
-      return { x: leftTopCornerX, y: leftTopCornerY };
-    },
-    rightBottomCorner () {
-      let rightBottomCornerX = this.x1 > this.x2 ? this.x1 : this.x2;
-      let rightBottomCornerY = this.y1 > this.y2 ? this.y1 : this.y2;
-      return { x: rightBottomCornerX, y: rightBottomCornerY };
-    },
-    leftBottomCorner () {
-      let leftBottomCornerX = this.x1 > this.x2 ? this.x2 : this.x1;
-      let leftBottomCornerY = this.y1 > this.y2 ? this.y1 : this.y2;
-      return { x: leftBottomCornerX, y: leftBottomCornerY };
-    },
-    rightTopCorner () {
-      let rightTopCornerX = this.x1 > this.x2 ? this.x1 : this.x2;
-      let rightTopCornerY = this.y1 > this.y2 ? this.y2 : this.y1;
-      return { x: rightTopCornerX, y: rightTopCornerY };
-    },
-    cursorMode () {
-      if ((this.x2 - this.x1) * (this.y2 - this.y1) > 0) {
-        return 'mode1';
-      } else {
-        return 'mode2';
-      }
-    },
-    rectStyle () {
-      let style = {
-        left: this.leftTopCorner.x + 'px',
-        top: this.leftTopCorner.y + 'px',
-        width: this.width + 'px',
-        height: this.height + 'px',
-        cursor: 'move',
-        backgroundColor: this.initRect.color || '#0000002f',
-      };
-      return style;
-    },
-    startStyle () {
-      let style = {
-        left: this.start.x + 'px',
-        top: this.start.y + 'px',
-        cursor: this.cursorMode === 'mode1' ? 'nw-resize' : 'ne-resize'
-      };
-      return style;
-    },
-    hv1Style () {
-      let style = {
-        left: this.hv1.x + 'px',
-        top: this.hv1.y + 'px',
-        cursor: 'n-resize'
-      };
-      return style;
-    },
-    hv2Style () {
-      let style = {
-        left: this.hv2.x + 'px',
-        top: this.hv2.y + 'px',
-        cursor: this.cursorMode === 'mode1' ? 'ne-resize' : 'nw-resize'
-      };
-      return style;
-    },
-    hv3Style () {
-      let style = {
-        left: this.hv3.x + 'px',
-        top: this.hv3.y + 'px',
-        cursor: 'e-resize'
-      };
-      return style;
-    },
-    vh1Style () {
-      let style = {
-        left: this.vh1.x + 'px',
-        top: this.vh1.y + 'px',
-        cursor: 'e-resize'
-      };
-      return style;
-    },
-    vh2Style () {
-      let style = {
-        left: this.vh2.x + 'px',
-        top: this.vh2.y + 'px',
-        cursor: this.cursorMode === 'mode1' ? 'ne-resize' : 'nw-resize'
-      };
-      return style;
-    },
-    vh3Style () {
-      let style = {
-        left: this.vh3.x + 'px',
-        top: this.vh3.y + 'px',
-        cursor: 'n-resize'
-      };
-      return style;
-    },
-    endStyle () {
-      let style = {
-        left: this.end.x + 'px',
-        top: this.end.y + 'px',
-        cursor: this.cursorMode === 'mode1' ? 'nw-resize' : 'ne-resize'
-      };
-      return style;
-    },
-    
-    outX1 () {
-      return this.x1 > this.x2 ? this.x2 : this.x1;
-    },
-    outX2 () {
-      return this.x1 > this.x2 ? this.x1 : this.x2;
-    },
-    outY1 () {
-      return this.y1 > this.y2 ? this.y2 : this.y1;
-    },
-    outY2 () {
-      return this.y1 > this.y2 ? this.y1 : this.y2;
-    },
-    rightXName () {
-      return this.x1 > this.x2 ? 'x1' : 'x2';
-    },
-    bottomYName () {
-      return this.y1 > this.y2 ? 'y1' : 'y2';
-    },
-    innerMinHeight () {
-      if (this.minHeight) {
-        return Math.max(this.minHeight, 0);
-      }
-      return 0;
-    },
-    innerMaxHeight () {
-      if (this.maxHeight) {
-        return Math.min(this.maxHeight, this.$parent.$el.offsetHeight);
-      }
-      return this.$parent.$el.offsetHeight;
-    },
-    innerMinWidth () {
-      if (this.minWidth) {
-        return Math.max(this.minWidth, 0);
-      } else {
-        return 0;
-      }
-    },
-    innerMaxWidth () {
-      if (this.maxWidth) {
-        return Math.min(this.maxWidth, this.$parent.$el.offsetWidth);
-      }
-      return this.$parent.$el.offsetWidth;
+
+const start = computed(() => {
+  return { x: x1.value, y: y1.value };
+});
+
+const end = computed(() => {
+  return { x: x2.value, y: y2.value };
+});
+const hv1 = computed(() => {
+  let point = {
+    x: (x1.value + x2.value) / 2,
+    y: y1.value
+  };
+  return point;
+});
+const hv2 = computed(() => {
+  let point = {
+    x: x2.value,
+    y: y1.value
+  };
+  return point;
+});
+const hv3 = computed(() => {
+  let point = {
+    x: x2.value,
+    y: (y1.value + y2.value) / 2
+  };
+  return point;
+});
+const vh1 = computed(() => {
+  let point = {
+    x: x1.value,
+    y: (y1.value + y2.value) / 2
+  };
+  return point;
+});
+const vh2 = computed(() => {
+  let point = {
+    x: x1.value,
+    y: y2.value
+  };
+  return point;
+});
+const vh3 = computed(() => {
+  let point = {
+    x: (x1.value + x2.value) / 2,
+    y: y2.value
+  };
+  return point;
+});
+const width = computed(() => {
+  return Math.abs(x2.value - x1.value);
+});
+const height = computed(() => {
+  return Math.abs(y2.value - y1.value);
+});
+const leftTopCorner = computed(() => {
+  let leftTopCornerX = x1.value > x2.value ? x2.value : x1.value;
+  let leftTopCornerY = y1.value > y2.value ? y2.value : y1.value;
+  return { x: leftTopCornerX, y: leftTopCornerY };
+});
+const rightBottomCorner = computed(() => {
+  let rightBottomCornerX = x1.value > x2.value ? x1.value : x2.value;
+  let rightBottomCornerY = y1.value > y2.value ? y1.value : y2.value;
+  return { x: rightBottomCornerX, y: rightBottomCornerY };
+});
+const leftBottomCorner = computed(() => {
+  let leftBottomCornerX = x1.value > x2.value ? x2.value : x1.value;
+  let leftBottomCornerY = y1.value > y2.value ? y1.value : y2.value;
+  return { x: leftBottomCornerX, y: leftBottomCornerY };
+});
+const rightTopCorner = computed(() => {
+  let rightTopCornerX = x1.value > x2.value ? x1.value : x2.value;
+  let rightTopCornerY = y1.value > y2.value ? y2.value : y1.value;
+  return { x: rightTopCornerX, y: rightTopCornerY };
+});
+const cursorMode = computed(() => {
+  if ((x2.value - x1.value) * (y2.value - y1.value) > 0) {
+    return 'mode1';
+  } else {
+    return 'mode2';
+  }
+});
+const rectStyle = computed(() => {
+  let style = {
+    left: leftTopCorner.value.x + 'px',
+    top: leftTopCorner.value.y + 'px',
+    width: width.value + 'px',
+    height: height.value + 'px',
+    cursor: 'move',
+    backgroundColor: props.initRect.color || '#0000002f',
+  };
+  return style;
+});
+const startStyle = computed(() => {
+  let style = {
+    left: start.value.x + 'px',
+    top: start.value.y + 'px',
+    cursor: cursorMode.value === 'mode1' ? 'nw-resize' : 'ne-resize'
+  };
+  return style;
+});
+const hv1Style = computed(() => {
+  let style = {
+    left: hv1.value.x + 'px',
+    top: hv1.value.y + 'px',
+    cursor: 'n-resize'
+  };
+  return style;
+});
+const hv2Style = computed(() => {
+  let style = {
+    left: hv2.value.x + 'px',
+    top: hv2.value.y + 'px',
+    cursor: cursorMode.value === 'mode1' ? 'ne-resize' : 'nw-resize'
+  };
+  return style;
+});
+const hv3Style = computed(() => {
+  let style = {
+    left: hv3.value.x + 'px',
+    top: hv3.value.y + 'px',
+    cursor: 'e-resize'
+  };
+  return style;
+});
+const vh1Style = computed(() => {
+  let style = {
+    left: vh1.value.x + 'px',
+    top: vh1.value.y + 'px',
+    cursor: 'e-resize'
+  };
+  return style;
+});
+const vh2Style = computed(() => {
+  let style = {
+    left: vh2.value.x + 'px',
+    top: vh2.value.y + 'px',
+    cursor: cursorMode.value === 'mode1' ? 'ne-resize' : 'nw-resize'
+  };
+  return style;
+});
+const vh3Style = computed(() => {
+  let style = {
+    left: vh3.value.x + 'px',
+    top: vh3.value.y + 'px',
+    cursor: 'n-resize'
+  };
+  return style;
+});
+const endStyle = computed(() => {
+  let style = {
+    left: end.value.x + 'px',
+    top: end.value.y + 'px',
+    cursor: cursorMode.value === 'mode1' ? 'nw-resize' : 'ne-resize'
+  };
+  return style;
+});
+const outX1 = computed(() => {
+  return x1.value > x2.value ? x2.value : x1.value;
+});
+const outX2 = computed(() => {
+  return x1.value > x2.value ? x1.value : x2.value;
+});
+const outY1 = computed(() => {
+  return y1.value > y2.value ? y2.value : y1.value;
+});
+const outY2 = computed(() => {
+  return y1.value > y2.value ? y1.value : y2.value;
+});
+const rightXName = computed(() => {
+  return x1.value > x2.value ? 'x1' : 'x2';
+});
+const bottomYName = computed(() => {
+  return y1.value > y2.value ? 'y1' : 'y2';
+});
+const innerMinHeight = computed(() => {
+  if (props.minHeight) {
+    return Math.max(props.minHeight, 0);
+  }
+  return 0;
+});
+const innerMaxHeight = computed(() => {
+  let parent = bbox.value.parentElement;
+  if (props.maxHeight) {
+    return Math.min(props.maxHeight, parent.offsetHeight);
+  }
+  return parent.offsetHeight;
+});
+const innerMinWidth = computed(() => {
+  if (props.minWidth) {
+    return Math.max(props.minWidth, 0);
+  } else {
+    return 0;
+  }
+});
+const innerMaxWidth = computed(() => {
+  let parent = bbox.value.parentElement;
+  if (props.maxWidth) {
+    return Math.min(props.maxWidth, parent.offsetWidth);
+  }
+  return parent.offsetWidth;
+});
+
+//mothods
+const remove = (e) => {
+  emit('remove');
+  e.preventDefault();
+  return false;
+};
+
+const readyForDrag = (coordinates) => {
+  firstDrag.value = true;
+  let newCoordinate = reSort(coordinates);
+  modifyCoordinates.value = newCoordinate;
+  window.document.addEventListener('mousemove', doDrag);
+};
+
+const getTargetCoordinates = (movement) => {
+  let modifyCoordinatesTemp = modifyCoordinates.value;
+  let targetCoordinates = {};
+  let targetWidth, targetHeight;
+  let mainDirection;
+  if (modifyCoordinatesTemp.length === 1) {
+    mainDirection = modifyCoordinatesTemp[0];
+    if (props.aspectRatio) {
+      let subDirection = mainDirection === 'x2' ? 'y2' : 'x2';
+      modifyCoordinatesTemp.push(subDirection);
     }
-  },
-  watch: {
-    initRect: {
-      handler (value) {
-        this.x1 = value.x1;
-        this.y1 = value.y1;
-        this.x2 = value.x2;
-        this.y2 = value.y2;
-      },
-      deep: true
-    },
-    showRect (value) {
-      if (value === false) {
-        this.x1 = -1;
-        this.x2 = -1;
-        this.y1 = -1;
-        this.y2 = -1;
-      } else {
-        this.x1 = this.initRect.x1;
-        this.y1 = this.initRect.y1;
-        this.x2 = this.initRect.x2;
-        this.y2 = this.initRect.y2;
+  } else {
+    mainDirection = Math.abs(movement.movementX) < Math.abs(movement.movementY) ? 'y2' : 'x2';
+  }
+  modifyAspectRation(mainDirection, movement);
+  let setTargetInfo = () => {
+    targetCoordinates = { x1: x1.value, x2: x2.value, y1: y1.value, y2: y2.value };
+    for (let coordinate of modifyCoordinatesTemp) {
+      let target = coordinate == 'x1' ? x1.value : (coordinate == 'x2' ? x2.value : (coordinate == 'y1' ? y1.value : y2.value));
+      targetCoordinates[coordinate] = target + movement['movement' + coordinate[0].toUpperCase()];
+    }
+    targetWidth = Math.abs(targetCoordinates.x2 - targetCoordinates.x1);
+    targetHeight = Math.abs(targetCoordinates.y2 - targetCoordinates.y1);
+  };
+  setTargetInfo();
+  let modifyMovementByDiff = (movement, moveDirction, diff) => {
+    let movementDirection = 'movement' + moveDirction.toUpperCase();
+    movement[movementDirection] = movement[movementDirection] > 0 ? (movement[movementDirection] - diff) : (movement[movementDirection] + diff);
+    modifyAspectRation(moveDirction + '2', movement);
+    setTargetInfo();
+  };
+  let validateMax = (target, max, direction) => {
+    if (target > max) {
+      let diff = target - max;
+      modifyMovementByDiff(movement, direction, diff);
+    }
+  };
+  let validateMin = (target, min, direction) => {
+    if (target < min) {
+      let diff = min - target;
+      modifyMovementByDiff(movement, direction, diff);
+    }
+  };
+  validateMax(targetWidth, innerMaxWidth.value, 'x');
+  validateMin(targetWidth, innerMinWidth.value, 'x');
+  validateMax(targetHeight, innerMaxHeight.value, 'y');
+  validateMin(targetHeight, innerMinHeight.value, 'y');
+  let parent = bbox.value.parentElement;
+  let maxX = parent.offsetWidth;
+  let minX = 0;
+  let maxY = parent.offsetHeight;
+  let minY = 0;
+  validateMax(targetCoordinates.x2, maxX, 'x');
+  validateMin(targetCoordinates.x2, minX, 'x');
+  validateMax(targetCoordinates.y2, maxY, 'y');
+  validateMin(targetCoordinates.y2, minY, 'y');
+  if (modifyCoordinates.value.length === 4) {
+    validateMax(targetCoordinates.x1, maxX, 'x');
+    validateMin(targetCoordinates.x1, minX, 'x');
+    validateMax(targetCoordinates.y1, maxY, 'y');
+    validateMin(targetCoordinates.y1, minY, 'y');
+  }
+  return targetCoordinates;
+};
+
+const doDrag = (e) => {
+  if (e.movementX === 0 && e.movementY === 0) {
+    return;
+  }
+  if (firstDrag.value) {
+    directionMark.value = 1;
+    if ((x1.value === x2.value) && (y1.value === y2.value)) {
+      let defaultX = 1;
+      let defaultY = 1;
+      let x = e.movementX || defaultX;
+      let y = e.movementY || defaultY;
+      if (x * y < 0) {
+        directionMark.value = -1;
+      }
+    } else {
+      if (
+        (x2.value === rightTopCorner.value.x && y2.value === rightTopCorner.value.y) ||
+        (x2.value === leftBottomCorner.value.x && y2.value === leftBottomCorner.value.y)
+      ) {
+        directionMark.value = -1;
       }
     }
-  },
-  mounted () {
-    const leaveOrUp = () => {
-      if (this.modifyCoordinates.length > 0) {
-        let res = this.getResult();
-        this.$emit('changed',
-          {
-            x1 : res.x1px, 
-            y1 : res.y1px, 
-            x2: res.x2px, 
-            y2: res.y2px,
-            label : this.initRect.label,
-            id : this.initRect.id
-          });
-      }
-      this.modifyCoordinates = [];
-      window.document.removeEventListener('mousemove', this.doDrag);
-    };
-    window.document.addEventListener('mouseup', leaveOrUp);
-    window.document.addEventListener('mouseleave', leaveOrUp);
-  },
-  methods: {
-    remove(e){
-      this.$emit("remove");
-      e.preventDefault();
-      return false;
-    },
-    readyForDrag (coordinates) {
-      this.firstDrag = true;
-      let newCoordinate = this.reSort(coordinates);
-      this.modifyCoordinates = newCoordinate;
-      window.document.addEventListener('mousemove', this.doDrag);
-    },
-    doDrag (e) {
-      if (e.movementX === 0 && e.movementY === 0) {
-        return;
-      }
-      if (this.firstDrag) {
-        this.directionMark = 1;
-        if ((this.x1 === this.x2) && (this.y1 === this.y2)) {
-          let defaultX = 1;
-          let defaultY = 1;
-          let x = e.movementX || defaultX;
-          let y = e.movementY || defaultY;
-          if (x * y < 0) {
-            this.directionMark = -1;
-          }
-        } else {
-          if (
-            (this.x2 === this.rightTopCorner.x && this.y2 === this.rightTopCorner.y) ||
-            (this.x2 === this.leftBottomCorner.x && this.y2 === this.leftBottomCorner.y)
-          ) {
-            this.directionMark = -1;
-          }
-        }
-      }
-      this.firstDrag = false;
-      let targetCoordinates = this.getTargetCoordinates({ movementX: e.movementX, movementY: e.movementY });
-      this.x1 = targetCoordinates.x1;
-      this.x2 = targetCoordinates.x2;
-      this.y1 = targetCoordinates.y1;
-      this.y2 = targetCoordinates.y2;
-    },
-    getTargetCoordinates (movement) {
-      let modifyCoordinates = this.modifyCoordinates;
-      let targetCoordinates = {};
-      let targetWidth, targetHeight;
-      let mainDirection;
-      if (modifyCoordinates.length === 1) {
-        mainDirection = modifyCoordinates[0];
-        if (this.aspectRatio) {
-          let subDirection = mainDirection === 'x2' ? 'y2' : 'x2';
-          modifyCoordinates.push(subDirection);
-        }
-      } else {
-        mainDirection = Math.abs(movement.movementX) < Math.abs(movement.movementY) ? 'y2' : 'x2';
-      }
-      this.modifyAspectRation(mainDirection, movement);
-      let setTargetInfo = () => {
-        targetCoordinates = { x1: this.x1, x2: this.x2, y1: this.y1, y2: this.y2 };
-        for (let coordinate of modifyCoordinates) {
-          targetCoordinates[coordinate] = this[coordinate] + movement['movement' + coordinate[0].toUpperCase()];
-        }
-        targetWidth = Math.abs(targetCoordinates.x2 - targetCoordinates.x1);
-        targetHeight = Math.abs(targetCoordinates.y2 - targetCoordinates.y1);
-      };
-      setTargetInfo();
-      let modifyMovementByDiff = (movement, moveDirction, diff) => {
-        let movementDirection = 'movement' + moveDirction.toUpperCase();
-        movement[movementDirection] = movement[movementDirection] > 0 ? (movement[movementDirection] - diff) : (movement[movementDirection] + diff);
-        this.modifyAspectRation(moveDirction + '2', movement);
-        setTargetInfo();
-      };
-      let validateMax = (target, max, direction) => {
-        if (target > max) {
-          let diff = target - max;
-          modifyMovementByDiff(movement, direction, diff);
-        }
-      };
-      let validateMin = (target, min, direction) => {
-        if (target < min) {
-          let diff = min - target;
-          modifyMovementByDiff(movement, direction, diff);
-        }
-      };
-      validateMax(targetWidth, this.innerMaxWidth, 'x');
-      validateMin(targetWidth, this.innerMinWidth, 'x');
-      validateMax(targetHeight, this.innerMaxHeight, 'y');
-      validateMin(targetHeight, this.innerMinHeight, 'y');
-      let maxX = this.$parent.$el.offsetWidth;
-      let minX = 0;
-      let maxY = this.$parent.$el.offsetHeight;
-      let minY = 0;
-      validateMax(targetCoordinates.x2, maxX, 'x');
-      validateMin(targetCoordinates.x2, minX, 'x');
-      validateMax(targetCoordinates.y2, maxY, 'y');
-      validateMin(targetCoordinates.y2, minY, 'y');
-      if (modifyCoordinates.length === 4) {
-        validateMax(targetCoordinates.x1, maxX, 'x');
-        validateMin(targetCoordinates.x1, minX, 'x');
-        validateMax(targetCoordinates.y1, maxY, 'y');
-        validateMin(targetCoordinates.y1, minY, 'y');
-      }
-      return targetCoordinates;
-    },
-    modifyAspectRation (mainDirection, movement) {
-      if (this.modifyCoordinates.length !== 4) {
-        let subDirection = mainDirection === 'x2' ? 'y2' : 'x2';
-        let mainMovementName = 'movement' + mainDirection[0].toUpperCase();
-        let subMovementName = 'movement' + subDirection[0].toUpperCase();
-        if (this.aspectRatio) {
-          if (mainDirection[0] === 'x') {
-            movement[subMovementName] = movement[mainMovementName] / this.aspectRatio * this.directionMark;
-          } else {
-            movement[subMovementName] = movement[mainMovementName] * this.aspectRatio * this.directionMark;
-          }
-        }
-      }
-    },
-    reSort (coordinates) {
-      let originCoordinate = {
-        x1: this.x1,
-        x2: this.x2,
-        y1: this.y1,
-        y2: this.y2
-      };
-      let direction, endPointPartner;
-      let newCoordinate = [];
-      if (coordinates.length === 1) {
-        direction = coordinates[0][0];
-        endPointPartner = direction === 'x' ? this.bottomYName : this.rightXName;
-        newCoordinate = [direction + '2'];
-      }
-      if (coordinates.length === 2) {
-        direction = coordinates[0][0];
-        endPointPartner = coordinates[1];
-        newCoordinate = [coordinates[0][0] + '2', coordinates[1][0] + '2'];
-      }
-      if (coordinates.length === 4) {
-        newCoordinate = coordinates;
-      }
-      if (coordinates.length !== 4) {
-        this[direction + '2'] = originCoordinate[coordinates[0]];
-        this[endPointPartner[0] + '2'] = originCoordinate[endPointPartner];
-        this[direction + '1'] = originCoordinate[this.getAgainstCoordinateName(coordinates[0])];
-        this[endPointPartner[0] + '1'] = originCoordinate[this.getAgainstCoordinateName(endPointPartner)];
-      }
-      return newCoordinate;
-    },
-    getAgainstCoordinateName (coordinateName) {
-      return coordinateName[1] === '1' ? (coordinateName[0] + '2') : (coordinateName[0] + '1');
-    },
-    startDrawNewCrop (e) {
-      if (!this.allowStartNewCrop) {
-        return;
-      }
-      let rect = this.$parent.$el.getBoundingClientRect();
-      let targetRect = e.target.getBoundingClientRect();
-      let pointX = e.offsetX - rect.left + targetRect.left;
-      let pointY = e.offsetY - rect.top + targetRect.top;
-      this.x1 = pointX;
-      this.y1 = pointY;
-      this.x2 = pointX;
-      this.y2 = pointY;
-      this.modifyCoordinates = ['x2', 'y2'];
-      this.firstDrag = true;
-      window.document.addEventListener('mousemove', this.doDrag);
-    },
-    getResult () {
-      let maxX = this.$parent.$el.offsetWidth;
-      let maxY = this.$parent.$el.offsetHeight;
-      let x = this.outX1 * 1000 / maxX;
-      let y = this.outY1 * 1000 / maxY;
-      let result = {
-        x1: x,
-        y1: y,
-        x: x,
-        y: y,
-        x2: this.outX2 * 1000 / maxX,
-        y2: this.outY2 * 1000 / maxY,
-        w: this.width * 1000 / maxX,
-        h: this.height * 1000 / maxY,
-        xpx: this.outX1,
-        ypx: this.outY1,
-        wpx: this.width,
-        hpx: this.height,
-        x1px: this.outX1,
-        y1px: this.outY1,
-        x2px: this.outX2,
-        y2px: this.outY2,
-        croperWidth: maxX,
-        croperHeight: maxY
-      };
-      return result;
+  }
+  firstDrag.value = false;
+  let targetCoordinates = getTargetCoordinates({ movementX: e.movementX, movementY: e.movementY });
+  x1.value = targetCoordinates.x1;
+  x2.value = targetCoordinates.x2;
+  y1.value = targetCoordinates.y1;
+  y2.value = targetCoordinates.y2;
+};
+
+const modifyAspectRation = (direction, movement) => {
+  if (props.aspectRatio) {
+    let movementDirection = 'movement' + direction[0].toUpperCase();
+    let movementValue = movement[movementDirection];
+    let movementDirection2 = 'movement' + direction[1].toUpperCase();
+    let movementValue2 = movement[movementDirection2];
+    let movementValue2Abs = Math.abs(movementValue2);
+    let movementValueAbs = Math.abs(movementValue);
+    if (movementValue2Abs > movementValueAbs) {
+      movement[movementDirection] = movementValue2Abs * directionMark.value;
+    } else {
+      movement[movementDirection2] = movementValueAbs * directionMark.value;
     }
   }
 };
+const getAgainstCoordinateName = (coordinateName) => {
+  return coordinateName[1] === '1' ? (coordinateName[0] + '2') : (coordinateName[0] + '1');
+}
+const reSort = (coordinates) => {
+  let originCoordinate = {
+    x1: x1.value,
+    x2: x2.value,
+    y1: y1.value,
+    y2: y2.value
+  };
+  let direction, endPointPartner;
+  let newCoordinate = [];
+  if (coordinates.length === 1) {
+    direction = coordinates[0][0];
+    endPointPartner = direction === 'x' ? bottomYName.value : rightXName.value;
+    newCoordinate = [direction + '2'];
+  }
+  if (coordinates.length === 2) {
+    direction = coordinates[0][0];
+    endPointPartner = coordinates[1];
+    newCoordinate = [coordinates[0][0] + '2', coordinates[1][0] + '2'];
+  }
+  if (coordinates.length === 4) {
+    newCoordinate = coordinates;
+  }
+  if (coordinates.length !== 4) {
+    if(direction === 'x'){
+      x2.value = originCoordinate[coordinates[0]];
+      x1.value = originCoordinate[getAgainstCoordinateName(coordinates[0])];
+    }
+    if(direction === 'y'){
+      y2.value = originCoordinate[coordinates[0]];
+      y1.value = originCoordinate[getAgainstCoordinateName(coordinates[0])];
+    }
+    if(endPointPartner[0] === 'x'){
+      x2.value = originCoordinate[endPointPartner];
+      x1.value = originCoordinate[getAgainstCoordinateName(endPointPartner)];
+    }
+    if(endPointPartner[0] === 'y'){
+      y2.value = originCoordinate[endPointPartner];
+      y1.value = originCoordinate[getAgainstCoordinateName(endPointPartner)];
+    }
+  }
+  return newCoordinate;
+};
+
+const getResult = () => {
+  let parent = bbox.value.parentElement;
+  let maxX = parent.offsetWidth;
+  let maxY = parent.offsetHeight;
+  let x = outX1.value * 1000 / maxX;
+  let y = outY1.value * 1000 / maxY;
+  let result = {
+    x1: x,
+    y1: y,
+    x: x,
+    y: y,
+    x2: outX2.value * 1000 / maxX,
+    y2: outY2.value * 1000 / maxY,
+    w: width.value * 1000 / maxX,
+    h: height.value * 1000 / maxY,
+    xpx: outX1.value,
+    ypx: outY1.value,
+    wpx: width.value,
+    hpx: height.value,
+    x1px: outX1.value,
+    y1px: outY1.value,
+    x2px: outX2.value,
+    y2px: outY2.value,
+    croperWidth: maxX,
+    croperHeight: maxY
+  };
+  return result;
+};
+
+// computed
+const leaveOrUp = () => {
+  if (modifyCoordinates.value.length > 0) {
+    let res = getResult();
+    emit('changed',
+      {
+        x1 : res.x1px, 
+        y1 : res.y1px, 
+        x2: res.x2px, 
+        y2: res.y2px,
+        label : props.initRect.label,
+        id : props.initRect.id
+      });
+  }
+  modifyCoordinates.value = [];
+  window.document.removeEventListener('mousemove', doDrag);
+};
+const delay = (ms) => {
+  return new Promise(resolve => setTimeout(resolve, ms));
+};
+
+onMounted(() => {
+  window.document.addEventListener('mouseup', leaveOrUp);
+  window.document.addEventListener('mouseleave', leaveOrUp);
+});
+
+onUnmounted(() => {
+  window.document.removeEventListener('mouseup', leaveOrUp);
+  window.document.removeEventListener('mouseleave', leaveOrUp);
+});
+
+watch(props.initRect, (val, oldVal) => {
+  x1.value = val.x1;
+  y1.value = val.y1;
+  x2.value = val.x2;
+  y2.value = val.y2;
+});
+
+// watch(() => props.showRect, (val, oldVal) => {
+//   if (val) {
+//     x1.value = props.initRect.x1;
+//     y1.value = props.initRect.y1;
+//     x2.value = props.initRect.x2;
+//     y2.value = props.initRect.y2;
+//   }
+// });
 </script>
 <style scoped>
 .draw-panel {

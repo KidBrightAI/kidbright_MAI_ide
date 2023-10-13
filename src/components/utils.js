@@ -3,6 +3,36 @@ import Blockly from "blockly";
 export function randomId(count = 7) {
     return Math.random().toString(36).substring(0,count);
 }
+export function getColorIndex(ind) {
+    let colors = [
+        "#3D642D",
+        "#CF3476",
+        "#FAD201",
+        "#633A34",
+        "#606E8C",
+        "#826C34",
+        "#063971",
+        "#316650",
+        "#FFA420",
+        "#015D52",
+        "#EA899A",
+        "#7FB5B5",
+        "#AEA04B",
+        "#6C4675",
+        "#C2B078",
+        "#587246",
+        "#45322E",
+    ];
+    //return colors[(Math.random() * colors.length) | 0];
+    if (ind >= colors.length) {
+        ind = 0;
+    }
+    return colors[ind];
+}
+export function addAlpha(color, opacity) {
+    const _opacity = Math.round(Math.min(Math.max(opacity || 1, 0), 1) * 255);
+    return color + _opacity.toString(16).toUpperCase();
+}
 
 export let updateBlockCategory = (toolboxTree, rootPath='') => {
     let toolboxTextXML = ``;

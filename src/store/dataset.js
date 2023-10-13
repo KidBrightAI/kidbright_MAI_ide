@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import storage from "@/engine/storage";
+import { useWorkspaceStore } from "./workspace";
 
 export const useDatasetStore = defineStore({
   id: "dataset",
@@ -36,12 +37,65 @@ export const useDatasetStore = defineStore({
               : [...prev, curr.class],
           []
         );
+    },
+    getLabeledLength: (state) => {
+      return state.data.filter(
+        (el) => el.class != null || el.annotate.length
+      ).length;
+    },
+    getAnnotateById: (state) => (id) => {
+      let found = state.data.find((el) => el.id == id);
+      return found ? found.annotate : null;
+    },
+    getAnnotateByIds: (state) => (ids) => {
+      if (!ids.length) {
+        return [];
+      }
+      return state.data
+        .filter((el) => ids.includes(el.id))
+        .reduce((prev, curr) => prev.concat(curr.annotate), []);
     }
   },
   persist: {
     paths: ['project', 'datasetType', 'data', 'baseURL'],
   },
   actions: {
+    addOrUpdateAnnotation({ id, annotation }) {
+      let ind = this.data.findIndex((el) => el.id == id);
+      if (ind >= 0) {
+        let found = this.data[ind].annotate.findIndex(
+          (el) => el.id == annotation.id
+        );
+        if (found >= 0) {
+          let newOne = JSON.parse(
+            JSON.stringify(this.data[ind].annotate)
+          );
+          newOne[found] = annotation;
+          this.data[ind].annotate = newOne; //make it reactive
+        } else {
+          this.data[ind].annotate.push(annotation);
+        }
+      }
+    },
+    removeAnnotation({ id, annotationId }) {
+      let ind = this.data.findIndex((el) => el.id == id);
+      if (ind >= 0) {
+        let found = this.data[ind].annotate.findIndex(
+          (el) => el.id == annotationId
+        );
+        if (found >= 0) {
+          this.data[ind].annotate.splice(found, 1);
+        }
+      }
+    },
+    removeDataAnnotationWhere({ids, annotationId}) {
+      let selectedItems = this.data.filter((el) => ids.includes(el.id));
+      for (let item of selectedItems) {
+        item.annotate = item.annotate.filter((el) =>
+          el.id != annotationId
+        );
+      }
+    },
     async prepareDataset(projectId){
       let dirEntry = await storage.createDir(this.$fs, projectId || this.project);
       return dirEntry;
@@ -107,6 +161,59 @@ export const useDatasetStore = defineStore({
       for (let item of selectedItems) {
         await storage.removeFile(this.$fs,`${this.project}/${item.id}.${item.ext}`);
       }
+    },
+
+    async addDataToFs(data) {
+      await storage.writeFile(this.$fs, `${this.project}/${data.id}.${data.ext}`, data.image);
+    },
+
+    async getData(filename) {
+      return await storage.readFile(
+        this.$fs,
+        `${this.project}/${filename}`
+      );
+    },
+    async getDataAsFile(filename) {
+      return await storage.readAsFile(
+        this.$fs,
+        `${this.project}/${filename}`
+      );
+    },
+
+    addDatasetItems(items) {
+      this.data = [...this.data, ...items];
+    },
+
+    addDatasetItem(item) {
+      this.data.push(item);
+    },
+
+    setClass({ ids, label }) {
+      // assign label to selected items
+      this.data = this.data.map((el) => {
+        if (ids.includes(el.id)) {
+          el.class = label;
+        }
+        return el;
+      });
+    },
+    changeClassData({ oldLabel, newLabel }) {
+      // change label of selected items
+      this.data = this.data.map((el) => {
+        if (el.class == oldLabel) {
+          el.class = newLabel;
+        }
+        return el;
+      });
+    },
+    changeClassDataWhere({ids, oldLabel, newLabel}) {
+      // change label of selected items
+      this.data = this.data.map((el) => {
+        if (ids.includes(el.id) && el.class == oldLabel) {
+          el.class = newLabel;
+        }
+        return el;
+      });
     }
   }
 });

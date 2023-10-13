@@ -3,12 +3,21 @@
     <div class="d-flex w-100 h-100 outer-wrap">
       <div class="d-flex flex-fill flex-column main-panel bg-white">
         <div class="d-flex flex-fill align-center justify-center view-panel">
-          <ImageDisplay v-if="current.length" :id="current.slice(-1).pop()"></ImageDisplay>
+          <ImageDisplay v-show="current.length" :id="current.slice(-1).pop()" ref="img"></ImageDisplay>
+          <div class="cropbox_container" :style="{width: cropboxSize[0] + 'px', height: cropboxSize[1]+'px'}">
+            <VueCrop
+              :disabled="!(cropboxSize[2] > 0 && cropboxSize[3] > 0 && currentLabel)"
+              :id="current.slice(-1).pop()"
+              :allowStartNewCrop="true"
+              :label="currentLabel"
+              :dimension="cropboxSize"
+              ref="cropbox"
+            >
+            </VueCrop>
+          </div>
           <p class="view-img-desc" v-if="!current.length">
             No selected image, please click on the image below to select.
           </p>
-          <DatasetCounter class="second-counter" prefix="Labeled" seperator="of" :current="datasetStore.getLabeledLength" suffix="Image"></DatasetCounter>
-          <DatasetCounter prefix="Selected" seperator="of" :current="current.length" suffix="Image"></DatasetCounter>
         </div>
         <ImageDatasetList v-model="current" :multiple="true" :showInfo="true"></ImageDatasetList>
       </div>
@@ -46,8 +55,9 @@
               <VIcon>mdi-plus</VIcon> New label
             </VBtn>
             <div class="pills w-100">
-              <button class="rounded-xl w-100 bg-secondary px-3 py-1 my-1" @click="selecteLabel(cls.label)" v-for="(cls, index) in workspaceStore.labels">
+              <button class="rounded-xl w-100 bg-secondary px-3 py-1 my-1" @click="selectLabel(cls.label)" v-for="(cls, index) in workspaceStore.labels">
                 <div class="d-flex align-center justify-space-between w-100">
+                  <div class="annotation-label-color" :style="{backgroundColor: getColorIndex(index)}"></div>
                   {{ cls.label }}
                   <div>
                     <v-btn density="compact" icon="mdi-rotate-left" variant="text" color="white" @click.stop="()=> {changeLabelName = cls.label, onLabelChangeDialog = true}">
@@ -62,111 +72,132 @@
           <div class="feature-wrap">
             <div class="annotate-cn-list w-100">
               <div
-                class="annotate-cn"
-                v-for="(item, idx) in datasetStore.getLabelByIds(current)"
+                class="annotate-cn active"
+                v-for="(item, idx) in datasetStore.getAnnotateByIds(current)"
                 :key="'class-' + idx"
               >
+                <div class="annotate-cn-list-ttl">
+                  <img src="@/assets/images/png/Group 177_white.svg"/>
+                  {{ item.label }}
+                </div>
                 <div class="annotate-cn-list-content">
-                  <img
-                    class="tag"
-                    src="@/assets/images/png/Group 177_green.svg"
-                    height="24"
-                  />
-                  <span class="annotation-txt">{{ item }}</span>
+                  <div class="d-flex flex-fill flex-column justify-content-between text-right">
+                    <div class="annotation-txt">X:{{ item.x1 }},Y:{{ item.y1 }}</div>
+                    <div class="annotation-txt">X:{{ item.x1 }},Y:{{ item.y2 }}</div>
+                  </div>
+                  <img src="@/assets/images/png/interface-1.png" width="60" class="ml-1 mr-1"/>
+                  <div class="d-flex flex-fill flex-column justify-content-between text-left">
+                    <div class="annotation-txt">  X:{{ item.x2 }},Y:{{ item.y1 }} </div>
+                    <div class="annotation-txt">  X:{{ item.x2 }},Y:{{ item.y2 }} </div>
+                  </div>
                 </div>
                 <img
                   class="cancel-btn op-btn"
                   src="@/assets/images/png/cancel.png"
                   height="24"
-                  @click="onRemoveAnnotatedLabel(item)"
+                  @click="onRemoveAnnotatedLabel(item.id)"
                 />
               </div>
             </div>
           </div>
+          <DatasetCounter class="second-counter" prefix="Labeled" seperator="of" :current="datasetStore.getLabeledLength" suffix="Image"></DatasetCounter>
+          <DatasetCounter prefix="Selected" seperator="of" :current="current.length" suffix="Image"></DatasetCounter>
         </div>
         <div class="w-100"></div>
       </div>
     </div>
-    <VDialog v-model="onLabelChangeDialog" width="500px">
-      <v-card>
-        <v-toolbar density="compact">
-          <v-toolbar-title>แก้ไขป้ายกำกับ</v-toolbar-title>
-          <v-spacer/> 
-          <v-btn icon @click="onLabelChangeDialog = false" density="compact">
-            <v-icon>mdi-close</v-icon>
-          </v-btn>
-        </v-toolbar>
-        <v-card-text>
-          <v-text-field
-            v-model="tobeChangeLabel"
-            :label="`เปลี่ยนชื่อป้ายกำกับจาก ${changeLabelName} ใหม่เป็น`"
-            outlined
-          ></v-text-field>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="primary" @click="onChangeLabel(changeLabelName)" variant="elevated" :disabled="!tobeChangeLabel.length">แก้ไขป้ายกำกับ</v-btn>
-        </v-card-actions>
-      </v-card>
-    </VDialog>
   </div>
 </template>
 
 <script setup>
+import { useDatasetStore } from '@/store/dataset';
+import { useWorkspaceStore } from '@/store/workspace';
 
-import ImageDisplay from "@/components/InputConnection/ImageDisplay.vue";
+import ImageDisplay from '@/components/InputConnection/ImageDisplay.vue';
 import ImageDatasetList from "@/components/InputConnection/ImageDatasetList.vue";
-import DatasetCounter from "@/components/InputConnection/DatasetCounter.vue";
-import { useDatasetStore } from "@/store/dataset";
-import { useWorkspaceStore } from "@/store/workspace";
-import { useConfirm } from "@/components/comfirm-dialog";
-
-const confirm = useConfirm();
+import DatasetCounter from '@/components/InputConnection/DatasetCounter.vue';
+import VueCrop from "@/components/Tools/VueCrop.vue";
+import { watch, nextTick } from 'vue';
+import { getColorIndex } from '@/components/utils';
 const datasetStore = useDatasetStore();
 const workspaceStore = useWorkspaceStore();
 
+const currentLabel = ref("");
 const current = ref([]);
+const cropboxSize = ref([0,0]);
+const img = ref({});
+const cropbox = ref({});
+
 const onLabelInputDialog = ref(false);
 const onLabelChangeDialog = ref(false);
 const labelName = ref("");
 const changeLabelName = ref("");
 const tobeChangeLabel = ref("");
 
-const onNewLabel = () => {
+const onNewLabel = async() => {
   workspaceStore.addLabel({label : labelName.value});
   onLabelInputDialog.value = false;
   labelName.value = "";
 };
-const selecteLabel = (label) => {
-  if (current.value.length) {
-    datasetStore.setClass({ids: current.value, label : label});
+
+const selectLabel = (label) => {
+  currentLabel.value = label;
+}
+
+const onRemoveLabel = async(name) => {
+  let confirm = await this.$dialog.confirm({ text: `หากลบ '${name}' ภาพที่ใช้ป้ายกำกับนี้จะถูกล้างค่า`, title : "ยืนยันการลบป้ายกำกับ"});
+  if(confirm){
+    this.removeDataAnnotation(name);
+    this.removeLabel(name);
   }
 };
-const onRemoveAnnotatedLabel = (label) => {
-  if (current.value.length) {
-    datasetStore.changeClassDataWhere({ids: current.value, oldLabel : label, newLabel : null});
+
+const onChangeLabel = async (name)=> {
+  let label = await this.$dialog.prompt({ text: `ชื่อป้ายกำกับจาก '${name}' เป็น`, title: 'เปลี่ยนชื่อป้ายกำกับใหม่' });
+  if(label){
+      this.changeDataAnnotation( { oldLabel : name, newLabel : label});
+      this.changeLabel({ oldLabel : name, newLabel : label});
+      this.processBbox();
   }
 };
-const onChangeLabel = (oldLabel) => {  
-  datasetStore.changeClassData({oldLabel : oldLabel, newLabel : tobeChangeLabel.value});
-  workspaceStore.changeLabel({oldLabel : oldLabel, newLabel : tobeChangeLabel.value});
-  onLabelChangeDialog.value = false;
-  tobeChangeLabel.value = "";
-  changeLabelName.value = "";
+
+const onRemoveAnnotatedLabel = async (id) => {
+  datasetStore.removeDataAnnotationWhere({ ids: current.value, annotationId : id });
 };
-const onRemoveLabel = async(label) => {
-  try{
-    await confirm({ title: "ยืนยันการลบป้ายกำกับ", content: `หากลบ '${label}' ภาพที่ใช้ป้ายกำกับนี้จะถูกล้างค่า`, dialogProps: { width: 'auto' } });
-    datasetStore.changeClassData({oldLabel : label, newLabel : null});
-    workspaceStore.removeLabel(label);
-  }catch(e){
-    return;
+
+const processBbox = async ()=>{
+  if(img.value){
+    let actualSize = await img.value.getActualSize();
+    cropboxSize.value = actualSize;
+    if(cropbox.value){
+      cropbox.value.loadBboxFromDataset(current.value.slice(-1).pop());
+    }
   }
 };
+
+watch(current, async (val, oldVal) => {
+  
+  // this.$nextTick(async ()=>{
+  //   await this.processBbox();
+  // });
+  //next tick in vue3
+  await nextTick();
+  await processBbox();
+});
 </script>
 
 <style lang="scss" scoped>
 $primary-color: #007e4e;
+.annotation-label-color{
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+  vertical-align: middle;
+}
+.cropbox_container{
+  display: block;
+  position: absolute;
+}
 .second-counter{
   margin-bottom: 50px;
 }
@@ -198,28 +229,25 @@ $primary-color: #007e4e;
   .annotate-cn-list-ttl {
     background-color: #aaa;
     padding: 5px 32px 5px 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     img {
       width: 30px;
       height: 30px;
-      &:last-child {
-        display: none;
-      }
+      // &:last-child {
+      //   display: none;
+      // }
     }
   }
   .annotate-cn-list-content {
     display: flex;
     padding: 15px 10px;
-    align-items: center;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    .tag {
-      margin-right: 5px;
-    }
   }
   .annotation-txt {
     color: $primary-color;
-    font-size: 1.3rem;
+    font-size: 12px;
+    font-weight: bold;
   }
   &:last-child {
     margin-bottom: 0;
@@ -249,6 +277,15 @@ $primary-color: #007e4e;
   right: 5px;
   top: 5px;
   cursor: pointer;
+}
+.right-group {
+  position: absolute;
+  right: 15px;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  vertical-align: middle;
+  align-items: center;
 }
 .added-label {
   position: relative;
@@ -308,4 +345,3 @@ $primary-color: #007e4e;
   }
 }
 </style>
-

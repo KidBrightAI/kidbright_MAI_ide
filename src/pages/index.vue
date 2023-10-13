@@ -210,8 +210,9 @@ const openProject = async () => {
 
 const saveProject = async ($event) => {
   try {
-    let workspaceState = Blockly.serialization.workspaces.save(blocklyComp.value.workspace);
-    let res = await workspaceStore.saveProjectToZip(JSON.stringify(workspaceState, null, 2));
+    //let workspaceState = Blockly.serialization.workspaces.save(blocklyComp.value.workspace);
+    //let res = await workspaceStore.saveProjectToZip(JSON.stringify(workspaceState, null, 2));
+    await workspaceStore.saveProject();
   } catch (err) {
     console.log(err);
   }
@@ -337,6 +338,7 @@ const onResized = () => {
 };
 
 const mountSerial = () => {
+  console.log("mount serial monitor");
   terminal = new Terminal(
     {
       cursorBlink: true,
@@ -363,15 +365,19 @@ const mountSerial = () => {
   terminal.write('\r\n')
   //termimal listen typing
   terminal.onData(serialMonitorWrite);
-  //listen block change and save to store
-  blocklyComp.value.workspace.addChangeListener(() => {    
-    workspaceStore.block = blocklyComp.value.getSerializedWorkspace();
-  });
 };
 onMounted(() => {
-  // if(workspaceStore.currentBoard){
-  //   mountSerial();
-  // }
+  if(workspaceStore.currentBoard){
+    mountSerial();
+  }
+  if(selectedMenu.value == 4){
+    //listen block change and save to store
+    nextTick(()=>{
+      blocklyComp.value.workspace.addChangeListener(() => {    
+        workspaceStore.block = blocklyComp.value.getSerializedWorkspace();
+      });
+    });
+  }
  // window.addEventListener('resize', onResized);
   // mount serial monitor
 
@@ -382,11 +388,13 @@ onMounted(() => {
 });
 //--------- menu ----------//
 //console.log(workspaceStore.extension.components);
-const selectedMenu = ref(workspaceStore.currentBoard ? 1 : 0);
-
+const selectedMenu = ref(workspaceStore.currentBoard ? 4 : 0);
 //============= event from board ==============//
 
-
+watch(selectedMenu, (val) => {
+  console.log("selectedMenu: " + val);
+  calculateMinBottomPlaneSize();
+});
 </script>
 
 <template>
@@ -406,12 +414,22 @@ const selectedMenu = ref(workspaceStore.currentBoard ? 1 : 0);
       </MainPanel>
     </v-navigation-drawer>
     <v-main class="d-flex align-center justify-center" style="min-height: 310px; height: calc(100vh);">
-      <splitpanes ref="splitpanesRef" class="default-theme" horizontal style="height: calc(100vh)" @resized="onResized" @ready="onResized">
+      <splitpanes ref="splitpanesRef" class="default-theme" horizontal :style="{ height: selectedMenu==4 ? 'calc(100vh - 64px)' : 'calc(100vh)'}" @resized="onResized" @ready="onResized">
         <pane v-if="workspaceStore.currentBoard" :size="100 - bottomPaneSize">
           <extension-async-component v-if="selectedMenu === 1 && workspaceStore.extension" :target="workspaceStore.extension.components.Capture"></extension-async-component>
           <extension-async-component v-else-if="selectedMenu === 2 && workspaceStore.extension" :target="workspaceStore.extension.components.Annotate"></extension-async-component>
           <extension-async-component v-else-if="selectedMenu === 3 && workspaceStore.extension" :target="workspaceStore.extension.components.Train"></extension-async-component>
-          <extension-async-component v-else-if="selectedMenu === 4 && workspaceStore.extension" :target="workspaceStore.extension.components.Coding"></extension-async-component>
+          <div v-if="selectedMenu == 4" class="w-100 h-100">
+            <Header
+              @serial="onSerial" 
+              @help="onHelp" 
+              @firmware="onFirmware"
+              @example="exampleDialogOpen = true" 
+              @plugin="pluginDialogOpen = true"
+              @extraSave="extraSave">
+            </Header>
+            <BlocklyComponent ref="blocklyComp"></BlocklyComponent> 
+          </div>
         </pane>
         <pane v-else :size="100 - bottomPaneSize">
           <div class="d-flex flex-column align-center justify-center" style="height: calc(100vh);">

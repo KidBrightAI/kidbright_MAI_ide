@@ -1,15 +1,11 @@
 <template>
-    <async-component :data="data" />
+    <async-component/>
 </template>
 <script setup>
 import { shallowRef } from 'vue';
 import { ref, defineAsyncComponent, watchEffect } from 'vue';
 
 const props = defineProps({
-  data: {
-    type: Object,
-    required: true,
-  },
   target: {
     type: String,
     required: true,

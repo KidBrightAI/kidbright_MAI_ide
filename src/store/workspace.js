@@ -22,12 +22,71 @@ export const useWorkspaceStore = defineStore({
       extension: null,
       model : null,
       labels: [],
+
+      saving: false,
+      savingProgress: 0,
     }
   },
   persist: {
     paths: ['mode', 'code', 'block', 'currentBoard', 'name', 'board', 'id', 'dataset', 'projectType', 'projectTypeTitle', 'lastUpdate', 'model', 'labels'],
   },
   actions: {
+    downloadBlob(filename, data) {
+      var a = document.createElement("a");
+      document.body.appendChild(a);
+      a.style = "display: none";
+      let url = window.URL.createObjectURL(data);
+      a.href = url;
+      a.download = filename;
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    },
+    async saveProject() {
+      this.saving = true;
+      this.savingProgress = 0;
+      console.log("saving project");
+      let zip = new JSZip();
+      zip.file("project.json", JSON.stringify(this.$state));
+      //---------- save dataset raw ------------//
+      const datasetStore = useDatasetStore();
+      let rawDataset = zip.folder("dataset");
+      let datasets = datasetStore.data;
+      for (let [i, data] of datasets.entries()) {
+        let filename = data.id + "." + data.ext;
+        console.log("saving file", filename);
+        let fileData = datasetStore.getDataAsFile(filename);
+        rawDataset.file(data.class + "/" + filename, fileData);
+        
+        if (this.projectType === "VOICE_CLASSIFICATION") {
+          //   let wavFile = data.id + "." + data.sound_ext;
+          //   let wavData = await dispatch("dataset/getDataAsFile", wavFile);
+          //   rawDataset.file(wavFile, wavData);
+          //   let mfccFile = data.id + "_mfcc.jpg";
+          //   let mfccData = await dispatch("dataset/getDataAsFile", mfccFile);
+          //   rawDataset.file(mfccFile, mfccData);
+          // }
+          //let progress = ((i + 1) / datasets.length) * 100;
+          //commit("setSavingProgress", progress - 5);
+        }
+      }
+        
+      this.savingProgress = 99;
+      //---------- save output (model) ---------//
+      const that = this;
+      zip
+        .generateAsync({
+          type: "blob",
+          compression: "STORE",
+        })
+        .then(function (content) {
+          that.downloadBlob("project.zip", content);
+        })
+        .finally(() => {
+          this.saving = false;
+          this.savingProgress = 100;
+        });
+    },
     async createNewProject(projectInfo) {
       
       this.mode = projectInfo.mode || 'block';
@@ -130,5 +189,17 @@ export const useWorkspaceStore = defineStore({
         this.block = null;
       }
     },
+    addLabel(label){
+      if (!this.labels.find((el) => el.label == label.label)) {
+        this.labels.push(label);
+      }
+    },
+    changeLabel({ oldLabel, newLabel }) {
+      let ind = this.labels.findIndex((el) => el.label == oldLabel);
+      this.labels[ind].label = newLabel;
+    },
+    removeLabel(label) {
+      this.labels = this.labels.filter((el) => el.label != label);
+    }
   }
 });

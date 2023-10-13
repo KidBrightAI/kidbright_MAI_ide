@@ -28,18 +28,23 @@ const getImage = () => {
 
 const getActualSize = () => {
   return new Promise((resolve,reject)=>{
-    let img = new Image();
-    img.onload = ()=>{
-      let ratio = img.naturalWidth/img.naturalHeight;
-      let width = $refs.img.height*ratio;
-      let height = $refs.img.height;
-      if (width > $refs.img.width) {
-        width = $refs.img.width;
-        height = $refs.img.width/ratio;
+    let imgSrc = new Image();
+    imgSrc.onload = ()=>{
+      let ratio = imgSrc.naturalWidth/imgSrc.naturalHeight;
+      let width = img.value.height*ratio;
+      let height = img.value.height;
+      if (width > img.value.width) {
+        width = img.value.width;
+        height = img.value.width/ratio;
       }
-      resolve([width, height,img.naturalWidth, img.naturalHeight]);
+      resolve([width, height,imgSrc.naturalWidth, imgSrc.naturalHeight]);
     };
-    img.src = `${datasetStore.baseURL}/${props.id}.${datasetStore.getExt(props.id)}`;
+    imgSrc.src = `${datasetStore.baseURL}/${props.id}.${datasetStore.getExt(props.id)}`;
   });  
 };
+
+defineExpose({
+  getImage,
+  getActualSize
+});
 </script>

@@ -85,6 +85,7 @@ const start = async () => {
     const adb = shell.getAdb();
 
     SingletonShell.write("killall python3\n");
+    await sleep(500);
     SingletonShell.write("python3 /usr/lib/python3.8/site-packages/maix/mjpg.pyc &\n");
     console.log("create socket");
     let sock = null;
