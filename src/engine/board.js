@@ -2,6 +2,7 @@ import Blockly from 'blockly';
 import "blockly/blocks_compressed.js";
 import 'blockly/python';
 import { pythonGenerator } from 'blockly/python';
+import python from 'blockly/python';
 import "blockly/python_compressed.js";
 
 export async function loadBoard(board) {
@@ -12,7 +13,7 @@ export async function loadBoard(board) {
     let scriptResponse = await fetch(scriptUrl);
     if(scriptResponse.ok){
       let scriptData = await scriptResponse.text();
-      eval(scriptData, pythonGenerator, Blockly);
+      eval(scriptData, python, pythonGenerator, Blockly);
     }
   }
 }
@@ -26,7 +27,7 @@ export async function loadPlugin(plugins) {
       let blockResponse = await fetch(blockFilePath);
       if(blockResponse.ok){
         let blockData = await blockResponse.text();
-        eval(blockData, pythonGenerator, Blockly);
+        eval(blockData, python, pythonGenerator, Blockly);
       }
     }
   }

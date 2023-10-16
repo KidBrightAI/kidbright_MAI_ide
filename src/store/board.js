@@ -84,38 +84,38 @@ export const useBoardStore = defineStore({
       }   
     },
     async connectStreaming(callback){
-      let currentBoard = useWorkspaceStore().currentBoard;
+      // let currentBoard = useWorkspaceStore().currentBoard;
       
-        if (!this.$adb.transport) {
-          if (!await this.deviceConnect()) {
-            return;
-          }
-          await sleep(300);
-        }
-        let adb = this.$adb.adb;
-        if(isProxy(adb)){
-          adb = toRaw(adb);
-        }        
-        //try open service
-        //try{
-        //kill all python3
-        SingletonShell.write("killall python3\n");
-        //start service
-        //shell.write("python3 -c 'from maix import mjpg;mjpg.start(); &'\n");
-        SingletonShell.write("python3 /usr/lib/python3.8/site-packages/maix/mjpg.pyc &\n");
-        await sleep(3000);
-        let sock = await adb.createSocket("tcp:18811");
-        sock.readable.pipeTo(new WritableStream(
-        {
-          write : (chunk) => {
-            if(callback){
-              callback(chunk);
-            }
-          }
-        }));
-        let reqText = "GET / HTTP/1.1\r\nHost: localhost:18811\r\n\r\n";
-        let writer = sock.writable.getWriter();
-        writer.write(new Consumable(encodeUtf8(reqText)));
+      //   if (!this.$adb.transport) {
+      //     if (!await this.deviceConnect()) {
+      //       return;
+      //     }
+      //     await sleep(300);
+      //   }
+      //   let adb = this.$adb.adb;
+      //   if(isProxy(adb)){
+      //     adb = toRaw(adb);
+      //   }        
+      //   //try open service
+      //   //try{
+      //   //kill all python3
+      //   SingletonShell.write("killall python3\n");
+      //   //start service
+      //   //shell.write("python3 -c 'from maix import mjpg;mjpg.start(); &'\n");
+      //   SingletonShell.write("python3 /usr/lib/python3.8/site-packages/maix/mjpg.pyc &\n");
+      //   await sleep(3000);
+      //   let sock = await adb.createSocket("tcp:18811");
+      //   sock.readable.pipeTo(new WritableStream(
+      //   {
+      //     write : (chunk) => {
+      //       if(callback){
+      //         callback(chunk);
+      //       }
+      //     }
+      //   }));
+      //   let reqText = "GET / HTTP/1.1\r\nHost: localhost:18811\r\n\r\n";
+      //   let writer = sock.writable.getWriter();
+      //   writer.write(new Consumable(encodeUtf8(reqText)));
       // }catch(e){
       //   if(e.message == "Socket open failed"){
       //     console.log("cannot start service");
@@ -147,7 +147,9 @@ export const useBoardStore = defineStore({
       }
 
       this.uploading = true;
-
+      // signal ctrl + c 
+      SingletonShell.write("\x03");
+      SingletonShell.write("\x03");
       let filesUpload = [];
       let extra_files = [];
       let uploadModuleList = findIncludeModuleNameInCode(code);
@@ -181,8 +183,6 @@ export const useBoardStore = defineStore({
         sync.dispose(); 
         SingletonShell.write("killall python3\n");
         SingletonShell.write("python3 /root/main2.py\n");       
-        //await adb.subprocess.spawn("killall python3");
-        //await adb.subprocess.spawn("python3 /root/main2.py");        
         return true;
       } catch (e) {
         throw e;

@@ -78,14 +78,16 @@ const start = async () => {
   console.log("start streaming");
   console.log("wait for shell ready");
   status.value = "connecting";
+  //await sleep(1000);
   try{
     await SingletonShell.waitWriter();
     console.log("shell ready");
     const shell = SingletonShell.getInstance();
     const adb = shell.getAdb();
-
+    //send ctrl + c
+    SingletonShell.write("\x03\n");
     SingletonShell.write("killall python3\n");
-    await sleep(500);
+    await sleep(1000);
     SingletonShell.write("python3 /usr/lib/python3.8/site-packages/maix/mjpg.pyc &\n");
     console.log("create socket");
     let sock = null;

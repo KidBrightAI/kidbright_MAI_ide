@@ -1,23 +1,23 @@
-Blockly.defineBlocksWithJsonArray(
-  [{
-    "type": "maix3_display_width",
-    "message0": "display width",
+Blockly.defineBlocksWithJsonArray([
+  {
+    "type": "maix3_camera_width",
+    "message0": "get camera width",
     "output": "Number",
-    "colour": 65,
+    "colour": 20,
     "tooltip": "",
     "helpUrl": ""
   },
   {
-    "type": "maix3_display_height",
-    "message0": "display height",
+    "type": "maix3_camera_height",
+    "message0": "get camera height",
     "output": "Number",
-    "colour": 65,
+    "colour": 20,
     "tooltip": "",
     "helpUrl": ""
   },
   {
-    "type": "maix3_display_resolution",
-    "message0": "display set resolution %1 width %2 height %3",
+    "type": "maix3_camera_resolution",
+    "message0": "set camera resolution %1 width %2 height %3",
     "args0": [
       {
         "type": "input_dummy"
@@ -36,37 +36,27 @@ Blockly.defineBlocksWithJsonArray(
     "inputsInline": true,
     "previousStatement": null,
     "nextStatement": null,
-    "colour": 65,
+    "colour": 20,
     "tooltip": "",
     "helpUrl": ""
   },
   {
-    "type": "maix3_display_get_image",
-    "message0": "get image from display",
+    "type": "maix3_camera_capture",
+    "message0": "camera capture",
     "inputsInline": true,
     "output": "Image",
-    "colour": 65,
+    "colour": 20,
     "tooltip": "",
     "helpUrl": ""
   },
   {
-    "type": "maix3_display_dislay",
-    "message0": "display %1 %2",
-    "args0": [
-      {
-        "type": "input_dummy"
-      },
-      {
-        "type": "input_value",
-        "name": "image",
-        "check": "Image"
-      }
-    ],
+    "type": "maix3_camera_close",
+    "message0": "camera close",
     "inputsInline": true,
     "previousStatement": null,
     "nextStatement": null,
-    "colour": 65,
+    "colour": 20,
     "tooltip": "",
     "helpUrl": ""
-  }]
-);
+  }
+]);

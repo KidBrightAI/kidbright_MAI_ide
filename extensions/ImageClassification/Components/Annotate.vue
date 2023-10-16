@@ -17,32 +17,7 @@
           <h4 class="side-panel-ttl">LABEL</h4>
           <div class="feature-wrap">
             <VBtn block rounded="xl">
-              <VDialog
-                v-model="onLabelInputDialog"
-                activator="parent"
-                width="500px"
-              >
-                <v-card>
-                  <v-toolbar density="compact">
-                    <v-toolbar-title>เพิ่มป้ายกำกับใหม่</v-toolbar-title>
-                    <v-spacer/> 
-                    <v-btn icon @click="onLabelInputDialog = false" density="compact">
-                      <v-icon>mdi-close</v-icon>
-                    </v-btn>
-                  </v-toolbar>
-                  <v-card-text>
-                    <v-text-field
-                      v-model="labelName"
-                      label="ตั้งชื่อป้ายกำกับ"
-                      outlined
-                    ></v-text-field>
-                  </v-card-text>
-                  <v-card-actions>
-                    <v-spacer></v-spacer>
-                    <v-btn color="primary" @click="onNewLabel" variant="elevated" :disabled="!labelName.length">เพิ่มป้ายกำกับ</v-btn>
-                  </v-card-actions>
-                </v-card>
-              </VDialog>
+              <NewLabelDialog @newLabel="onNewLabel"></NewLabelDialog>
               <VIcon>mdi-plus</VIcon> New label
             </VBtn>
             <div class="pills w-100">
@@ -117,6 +92,7 @@
 import ImageDisplay from "@/components/InputConnection/ImageDisplay.vue";
 import ImageDatasetList from "@/components/InputConnection/ImageDatasetList.vue";
 import DatasetCounter from "@/components/InputConnection/DatasetCounter.vue";
+import NewLabelDialog from "@/components/dialog/NewLabelDialog.vue";
 import { useDatasetStore } from "@/store/dataset";
 import { useWorkspaceStore } from "@/store/workspace";
 import { useConfirm } from "@/components/comfirm-dialog";
@@ -126,16 +102,12 @@ const datasetStore = useDatasetStore();
 const workspaceStore = useWorkspaceStore();
 
 const current = ref([]);
-const onLabelInputDialog = ref(false);
 const onLabelChangeDialog = ref(false);
-const labelName = ref("");
 const changeLabelName = ref("");
 const tobeChangeLabel = ref("");
 
-const onNewLabel = () => {
-  workspaceStore.addLabel({label : labelName.value});
-  onLabelInputDialog.value = false;
-  labelName.value = "";
+const onNewLabel = (label) => {
+  workspaceStore.addLabel({label : label});  
 };
 const selecteLabel = (label) => {
   if (current.value.length) {

@@ -9,7 +9,7 @@ const workspaceStore = useWorkspaceStore();
 const boardStore = useBoardStore();
 
 const terminalDiv = shallowRef();
-const defineEmits = defineEmits(["undo","redo","selectPort","download"]);
+const defineEmits = defineEmits(["undo","redo","download"]);
 </script>
 
 <template>
@@ -33,19 +33,11 @@ const defineEmits = defineEmits(["undo","redo","selectPort","download"]);
           </template>
         </v-tooltip>
 
-        <v-tooltip text="Select Port">
-          <template v-slot:activator="{ props }">
-            <v-btn icon variant="tonal" color="white" class="mx-1" v-bind="props" @click="$emit('selectPort')">
-              <v-icon>mdi-usb</v-icon>
-            </v-btn>
-          </template>
-        </v-tooltip>
-
         <v-tooltip text="Download and Run">
           <template v-slot:activator="{ props }">
             <v-btn 
               :loading="boardStore.uploading"
-              :disabled="boardStore.uploading"
+              :disabled="boardStore.uploading || !boardStore.isConnected()"
               prepend-icon="mdi-play" 
               size="large" 
               color="white" 

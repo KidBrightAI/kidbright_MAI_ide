@@ -146,6 +146,7 @@ defineExpose({ workspace,resizeWorkspace,undo,redo, reload, getSerializedWorkspa
 
 
 <style scoped>
+
 .switch-code {
   position: absolute;
   top: 75px;
@@ -186,6 +187,7 @@ defineExpose({ workspace,resizeWorkspace,undo,redo, reload, getSerializedWorkspa
   font-weight: bold;
   font-family: sans-serif;
   color: rgb(0, 0, 0);
+  padding-left: 15px;
 }
 /* Adds padding around the group of categories and separators. */
 .blocklyToolboxContents {

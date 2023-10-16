@@ -28,7 +28,9 @@ import FirmwareUpdateDialog from "@/components/dialog/FirmwareUpdateDialog.vue";
 import NewProjectDialog from "@/components/dialog/NewProjectDialog.vue";
 import ExampleDialog from "@/components/dialog/ExampleDialog.vue";
 import PluginDialog from "@/components/dialog/PluginDialog.vue";
+import ConnectWifiDialog from "@/components/dialog/ConnectWifiDialog.vue";
 
+import {sleep } from "@/engine/helper";
 //-------import image --------//
 import RobotPoker from "@/assets/images/png/Mask Group 12.png";
 
@@ -46,6 +48,7 @@ const firmwareUpdateDialogOpen = ref(false);
 const newProjectDialogOpen = ref(false);
 const exampleDialogOpen = ref(false);
 const pluginDialogOpen = ref(false);
+const connectWifiDialogOpen = ref(false);
 
 const footer = shallowRef();
 const isSerialPanelOpen = ref(false);
@@ -88,6 +91,7 @@ const serialMonitorWrite = async (data) => {
  SingletonShell.write(data);
 }
 const serialMonitorBridge = async () =>{
+  console.log("serial monitor bridge");
   let res = await boardStore.deviceConnect();
   if(res){
     try{
@@ -110,34 +114,7 @@ const redo = () => {
 };
 
 const selectPort = async () => {
-  console.log("selectPort");
-  let res = await boardStore.deviceConnect();
-  if(res){
-    //await serialMonitorBridge();
-    //toast.success("Connect success");
-    //mount serial monitor
-    //mountSerial();
-  }
-  //toast.warning("ํYou must allow serial port permission to use this feature.");
-  
-  //await boardStore.connectStreaming();
-};
-let first = 10;
-const startStreaming = async () => {
-  console.log("startStreaming");
-  await boardStore.connectStreaming((chunk) => {
-    //display chunk as Image
-    if(first > 0){
-      //decode and print chunk
-      let readableText = new TextDecoder().decode(chunk);
-      console.log(readableText);
-      first--;
-    }
-    let img = document.getElementById("camera");
-    img.src = URL.createObjectURL(
-      new Blob([chunk], { type: 'image/jpg' })
-    );
-  });
+  await serialMonitorBridge();
 };
 
 const download = async () => {
@@ -147,25 +124,17 @@ const download = async () => {
   if(!isSerialPanelOpen.value){
     await onSerial();
   }
+  await sleep(1000);
   //clear terminal screen
   terminal.reset();
+  
   //check mode
   let res = null;
-  if (workspaceStore.mode == 'block') {
-    //blockly generate python code
-    let code = pythonGenerator.workspaceToCode(blocklyComp.value.workspace);
-    console.log(code);
-    res = await boardStore.upload(code);
-  }else if(workspaceStore.mode == 'code'){
-    //check code is empty
-    if(workspaceStore.code == ''){
-      toast.warning("Code is empty");
-      return;
-    }
-    // upload source code to board
-    res = await boardStore.upload(workspaceStore.code);
-  }  
-
+  //blockly generate python code
+  let code = pythonGenerator.workspaceToCode(blocklyComp.value.workspace);
+  console.log(code);
+  res = await boardStore.upload(code);
+  
   if (res == "FIRMWARE_UPGRADE") {
     toast.warning("We found your board firmware is outdated or not Micropython.");
     firmwareUpdateDialogOpen.value = true;
@@ -184,6 +153,9 @@ const createdProject = async (projectInfo) => {
   try{
     let res = await workspaceStore.createNewProject(projectInfo);  
     //ต้องสร้าง event ไปบอกให้ reload
+    if(selectedMenu.value == 4){
+      blocklyComp.value.reload();
+    }
     //blocklyComp.value.reload();
     if (res) {
       toast.success("สร้างโปรเจคเสร็จเรียบร้อย");
@@ -321,20 +293,20 @@ const onFirmware = async () => {
 
 const onResized = () => {
   calculateMinBottomPlaneSize();
-  // if(workspaceStore.currentBoard){
-  //   blocklyComp.value.resizeWorkspace();
-  //   nextTick(() => {
-  //       setTimeout(() => {
-  //         let footerHeight = footer.value.$el.clientHeight;
-  //         console.log(`footerHeight: ${footerHeight}`);
-  //         let serialMonitorHeight = footerHeight - 68
-  //         footer.value.$refs.terminalDiv.style.height = `${serialMonitorHeight}px`;
-  //         if(fitAddon){      
-  //           fitAddon.fit();
-  //         }
-  //       }, 500);      
-  //   });
-  // }
+  if(workspaceStore.currentBoard && selectedMenu.value == 4){
+    blocklyComp.value.resizeWorkspace();
+    nextTick(() => {
+        setTimeout(() => {
+          let footerHeight = footer.value.$el.clientHeight;
+          console.log(`footerHeight: ${footerHeight}`);
+          let serialMonitorHeight = footerHeight - 68
+          footer.value.$refs.terminalDiv.style.height = `${serialMonitorHeight}px`;
+          if(fitAddon){      
+            fitAddon.fit();
+          }
+        }, 500);      
+    });
+  }
 };
 
 const mountSerial = () => {
@@ -366,34 +338,42 @@ const mountSerial = () => {
   //termimal listen typing
   terminal.onData(serialMonitorWrite);
 };
+
+const addChangeListener = () => {    
+  blocklyComp.value.workspace.addChangeListener(() => {    
+    workspaceStore.block = blocklyComp.value.getSerializedWorkspace();
+  });
+};
+
 onMounted(() => {
   if(workspaceStore.currentBoard){
     mountSerial();
   }
   if(selectedMenu.value == 4){
-    //listen block change and save to store
-    nextTick(()=>{
-      blocklyComp.value.workspace.addChangeListener(() => {    
-        workspaceStore.block = blocklyComp.value.getSerializedWorkspace();
-      });
-    });
+    console.log("add change listener");
+    addChangeListener();
   }
- // window.addEventListener('resize', onResized);
-  // mount serial monitor
-
-  // mount service
-  // stream.addEventListener('message', (event) => {
-  //   console.log(event.data);
-  // });
 });
 //--------- menu ----------//
-//console.log(workspaceStore.extension.components);
 const selectedMenu = ref(workspaceStore.currentBoard ? 4 : 0);
 //============= event from board ==============//
 
 watch(selectedMenu, (val) => {
   console.log("selectedMenu: " + val);
   calculateMinBottomPlaneSize();
+  if(val == 4){
+    
+    //mount serial monitor
+    //mountSerial();
+    //listen block change and save to store
+
+    nextTick(()=>{
+      onResized();
+      console.log("add change listener from watcher");
+      addChangeListener();
+    });    
+
+  }
 });
 </script>
 
@@ -406,7 +386,7 @@ watch(selectedMenu, (val) => {
         @saveProject="saveProject" 
         @deleteProject="deleteProject"
         @connectBoard="selectPort"
-        @connectWifi="startStreaming"
+        @connectWifi="connectWifiDialogOpen = true"
         @fileBrowser=""
         @terminal=""
         @restartBoard=""
@@ -438,28 +418,12 @@ watch(selectedMenu, (val) => {
           </div>
         </pane>
         <pane :min-size="bottomMinPaneSize" :size="bottomPaneSize" :max-size="bottomMaxPaneSize">
-          <Footer ref="footer" @undo="undo" @redo="redo" @selectPort="selectPort" @download="download"></Footer>
+          <Footer ref="footer" @undo="undo" @redo="redo" @download="download"></Footer>
         </pane>
       </splitpanes>
-      <!-- <Header
-        @serial="onSerial" 
-        @help="onHelp" 
-        @firmware="onFirmware"
-        @example="exampleDialogOpen = true" 
-        @plugin="pluginDialogOpen = true"
-        @extraSave="extraSave">
-      </Header>
-      <splitpanes ref="splitpanesRef" class="default-theme" horizontal style="height: calc(100vh - 64px)" @resized="onResized" @ready="onResized">
-        <pane :size="100 - bottomPaneSize">
-          <BlocklyComponent ref="blocklyComp"></BlocklyComponent>    
-        </pane>
-        <pane :min-size="bottomMinPaneSize" :size="bottomPaneSize" :max-size="bottomMaxPaneSize">
-          <Footer ref="footer" @undo="undo" @redo="redo" @selectPort="selectPort" @download="download"></Footer>
-        </pane>
-      </splitpanes> -->
     </v-main>
   </v-layout>
-
+  <ConnectWifiDialog v-model:isDialogVisible="connectWifiDialogOpen" />
   <FirmwareUpdateDialog v-model:isDialogVisible="firmwareUpdateDialogOpen" />
   <NewProjectDialog v-model:isDialogVisible="newProjectDialogOpen" @submit="createdProject" />
   <ExampleDialog v-model:isDialogVisible="exampleDialogOpen" @loadExample="onExampleOpen" />

@@ -1,154 +1,445 @@
 export default [
     {
         name: "Camera",
-        color: "#4FC3F7",
+        color: "#a5745b",
         icon: `images/icons/camera.png`,
         blocks: [
+          {
+            xml : `<block type="maix3_camera_width"></block>
+            <block type="maix3_camera_height"></block>
+            <block type="maix3_camera_resolution">
+              <value name="width">
+                <shadow type="math_number">
+                  <field name="NUM">240</field>
+                </shadow>
+              </value>
+              <value name="height">
+                <shadow type="math_number">
+                  <field name="NUM">240</field>
+                </shadow>
+              </value>
+            </block>
+            <block type="maix3_camera_capture"></block>
+            <block type="maix3_camera_close"></block>` 
+          }
         ]
     },
     {
         name: "Display",
-        color: "#4FC3F7",
+        color: "#9fa55b",
         icon: `images/icons/lcd.png`,
         blocks: [
+          {
+            xml : `<block type="maix3_display_width"></block>
+            <block type="maix3_display_height"></block>
+            <block type="maix3_display_resolution">
+              <value name="width">
+                <shadow type="math_number">
+                  <field name="NUM">240</field>
+                </shadow>
+              </value>
+              <value name="height">
+                <shadow type="math_number">
+                  <field name="NUM">240</field>
+                </shadow>
+              </value>
+            </block>
+            <block type="maix3_display_get_image"></block>
+            <block type="maix3_display_dislay"></block>`
+          }
         ]
     },
     {
         name: "Image Processing",
-        color: "#4FC3F7",
+        color: "#5ba55b",
         icon: `images/icons/image-processing.png`,
         blocks: [
+          {
+            xml : `<label text="create, load and save image"></label>
+            <block type="variables_set">
+              <field name="VAR">img1</field>
+              <value name="VALUE">
+                <block type="maix3_image_new">
+                  <field name="color">#000000</field>
+                  <value name="width">
+                    <shadow type="math_number">
+                      <field name="NUM">240</field>
+                    </shadow>
+                  </value>
+                  <value name="height">
+                    <shadow type="math_number">
+                      <field name="NUM">240</field>
+                    </shadow>
+                  </value>
+                </block>
+              </value>
+            </block>
+            <block type="variables_set">
+            <field name="VAR">img1</field>
+            <value name="VALUE">
+              <block type="maix3_image_open">
+                <field name="path">./tmp.png</field>
+              </block>
+            </value>
+          </block>
+          <block type="maix3_image_save">
+            <field name="path">./tmp.png</field>
+            <value name="image">
+              <block type="variables_get">
+                <field name="VAR">img1</field>
+              </block>
+            </value>
+          </block>
+          <label text="Image Manipulation"></label>
+          <block type="maix3_image_copy">
+            <value name="image">
+              <block type="variables_get">
+                <field name="VAR">img1</field>
+              </block>
+            </value>
+          </block>
+          <block type="maix3_image_resize">
+            <value name="image">
+              <block type="variables_get">
+                <field name="VAR">img1</field>
+              </block>
+            </value>
+            <value name="width">
+              <shadow type="math_number">
+                <field name="NUM">90</field>
+              </shadow>
+            </value>
+            <value name="height">
+              <shadow type="math_number">
+                <field name="NUM">90</field>
+              </shadow>
+            </value>
+          </block>
+          <block type="maix3_image_rotate">
+            <field name="angle">90</field>
+            <value name="image">
+              <block type="variables_get">
+                <field name="VAR">img1</field>
+              </block>
+            </value>
+          </block>
+          <block type="maix3_image_flip">
+            <field name="direction">1</field>
+            <value name="image">
+              <block type="variables_get">
+                <field name="VAR">img1</field>
+              </block>
+            </value>
+          </block>
+          <block type="maix3_image_crop">
+            <value name="image">
+              <block type="variables_get">
+                <field name="VAR">img1</field>
+              </block>
+            </value>
+            <value name="x1">
+              <shadow type="math_number">
+                <field name="NUM">10</field>
+              </shadow>
+            </value>
+            <value name="y1">
+              <shadow type="math_number">
+                <field name="NUM">10</field>
+              </shadow>
+            </value>
+            <value name="x2">
+              <shadow type="math_number">
+                <field name="NUM">50</field>
+              </shadow>
+            </value>
+            <value name="y2">
+              <shadow type="math_number">
+                <field name="NUM">50</field>
+              </shadow>
+            </value>
+          </block>
+          <label text="Image drawing"></label>
+          <block type="maix3_image_draw_string">
+            <field name="color">#ff0000</field>
+            <value name="image">
+              <block type="variables_get">
+                <field name="VAR">img1</field>
+              </block>
+            </value>
+            <value name="text">
+              <shadow type="text">
+                <field name="TEXT">hello world</field>
+              </shadow>
+            </value>
+            <value name="x">
+              <shadow type="math_number">
+                <field name="NUM">10</field>
+              </shadow>
+            </value>
+            <value name="y">
+              <shadow type="math_number">
+                <field name="NUM">10</field>
+              </shadow>
+            </value>
+            <value name="scale">
+              <shadow type="math_number">
+                <field name="NUM">1</field>
+              </shadow>
+            </value>
+            <value name="thickness">
+              <shadow type="math_number">
+                <field name="NUM">1</field>
+              </shadow>
+            </value>
+          </block>
+          <block type="maix3_image_draw_line">
+            <field name="color">#ff0000</field>
+            <value name="image">
+              <block type="variables_get">
+                <field name="VAR">img1</field>
+              </block>
+            </value>
+            <value name="x1">
+              <shadow type="math_number">
+                <field name="NUM">10</field>
+              </shadow>
+            </value>
+            <value name="y1">
+              <shadow type="math_number">
+                <field name="NUM">10</field>
+              </shadow>
+            </value>
+            <value name="x2">
+              <shadow type="math_number">
+                <field name="NUM">60</field>
+              </shadow>
+            </value>
+            <value name="y2">
+              <shadow type="math_number">
+                <field name="NUM">60</field>
+              </shadow>
+            </value>
+            <value name="thickness">
+              <shadow type="math_number">
+                <field name="NUM">3</field>
+              </shadow>
+            </value>
+          </block>
+          <block type="maix3_image_draw_rectangle">
+            <field name="color">#ff0000</field>
+            <value name="image">
+              <block type="variables_get">
+                <field name="VAR">img1</field>
+              </block>
+            </value>
+            <value name="x1">
+              <shadow type="math_number">
+                <field name="NUM">10</field>
+              </shadow>
+            </value>
+            <value name="y1">
+              <shadow type="math_number">
+                <field name="NUM">10</field>
+              </shadow>
+            </value>
+            <value name="x2">
+              <shadow type="math_number">
+                <field name="NUM">60</field>
+              </shadow>
+            </value>
+            <value name="y2">
+              <shadow type="math_number">
+                <field name="NUM">60</field>
+              </shadow>
+            </value>
+            <value name="thickness">
+              <shadow type="math_number">
+                <field name="NUM">3</field>
+              </shadow>
+            </value>
+          </block>
+          <block type="maix3_image_draw_circle">
+            <field name="color">#ff0000</field>
+            <value name="image">
+              <block type="variables_get">
+                <field name="VAR">img1</field>
+              </block>
+            </value>
+            <value name="x1">
+              <shadow type="math_number">
+                <field name="NUM">50</field>
+              </shadow>
+            </value>
+            <value name="y1">
+              <shadow type="math_number">
+                <field name="NUM">50</field>
+              </shadow>
+            </value>
+            <value name="radius">
+              <shadow type="math_number">
+                <field name="NUM">20</field>
+              </shadow>
+            </value>
+            <value name="thickness">
+              <shadow type="math_number">
+                <field name="NUM">3</field>
+              </shadow>
+            </value>
+          </block>
+          <block type="maix3_image_draw_ellipse">
+            <field name="color">#ff0000</field>
+            <value name="image">
+              <block type="variables_get">
+                <field name="VAR">img1</field>
+              </block>
+            </value>
+            <value name="x1">
+              <shadow type="math_number">
+                <field name="NUM">100</field>
+              </shadow>
+            </value>
+            <value name="y1">
+              <shadow type="math_number">
+                <field name="NUM">100</field>
+              </shadow>
+            </value>
+            <value name="radius_x">
+              <shadow type="math_number">
+                <field name="NUM">40</field>
+              </shadow>
+            </value>
+            <value name="radius_y">
+              <shadow type="math_number">
+                <field name="NUM">60</field>
+              </shadow>
+            </value>
+            <value name="rotate">
+              <shadow type="math_number">
+                <field name="NUM">0</field>
+              </shadow>
+            </value>
+            <value name="angle_start">
+              <shadow type="math_number">
+                <field name="NUM">0</field>
+              </shadow>
+            </value>
+            <value name="angle_end">
+              <shadow type="math_number">
+                <field name="NUM">360</field>
+              </shadow>
+            </value>
+            <value name="thickness">
+              <shadow type="math_number">
+                <field name="NUM">3</field>
+              </shadow>
+            </value>
+          </block>`
+          }
         ]
     },
     {
         name: "Artificial Intelligence",
-        color: "#4FC3F7",
+        color: "#5ba58c",
         icon: `images/icons/ai.png`,
         blocks: [
+          {
+            xml : `<label text="Image classification"></label>
+            <block type="maix3_nn_classify_load"></block>            
+            <block type="maix3_nn_classify_classify"></block>
+            <block type="maix3_nn_classify_get_result">
+              <field name="data">label</field>
+            </block>
+            <label text="Object detection"></label>
+            <block type="maix3_nn_yolo_load"></block>
+            <block type="maix3_nn_yolo_detect"></block>
+            <block type="variables_set">
+              <field name="VAR" id="xsUU7$so/X+8#g,JO*@n">detect_results</field>
+              <value name="VALUE">
+                <block type="maix3_nn_classify_get_result_array"></block>
+              </value>
+            </block>
+            <block type="controls_forEach">
+              <field name="VAR" id=":^0fttf6ikWaH|3XSBPO">obj</field>
+              <value name="LIST">
+                <block type="variables_get">
+                  <field name="VAR" id="xsUU7$so/X+8#g,JO*@n">detect_results</field>
+                </block>
+              </value>
+            </block>
+            <block type="maix3_nn_yolo_get">
+              <field name="data">center X</field>
+              <value name="obj">
+                <block type="variables_get">
+                  <field name="VAR" id=":^0fttf6ikWaH|3XSBPO">obj</field>
+                </block>
+              </value>
+            </block>`
+          }
         ]
     },
     {
       name: "GPIO I/O",
-      color: "#4FC3F7",
+      color: "#5b80a5",
       icon: `images/icons/gpio.png`,
       blocks: [
           {
-              xml: '<label text="Sensor"></label>',
-          },
-          "ultrasonic_read",
-          {
-              xml: '<label text="Switch"></label>',
-          },
-          "switch_on_pressed",
-          /*"switch_on_press",
-          "switch_on_release",*/
-          "switch_is_press",
-          "switch_is_release",
-          "switch_get_value",
-          {
-              xml: '<label text="Buzzer"></label>',
-          },
-          {
-              xml: `
-                  <block type="buzzer_tone">
-                      <value name="freq">
-                          <shadow type="math_number">
-                              <field name="NUM">2000</field>
-                          </shadow>
-                      </value>
-                      <value name="duration">
-                          <shadow type="math_number">
-                              <field name="NUM">1</field>
-                          </shadow>
-                      </value>
-                  </block>
-              `
-          },
-          {
-              xml: `
-                  <block type="buzzer_notes">
-                      <value name="notes">
-                          <block type="make_note">
-                              <field name="notes">C5</field>
-                          </block>
-                      </value>
-                      <field name="duration">1 / 2</field>
-                  </block>
-              `
-          },
-          {
-              xml: `
-                  <block type="buzzer_volume">
-                      <value name="level">
-                          <shadow type="math_number">
-                              <field name="NUM">50</field>
-                          </shadow>
-                      </value>
-                  </block>
-              `
-          },
-          {
-              xml: '<label text="I/O"></label>',
-          },
-          {
-              xml: `
-                  <block type="pin_digital_write">
-                      <value name="value">
-                          <shadow type="math_number">
-                              <field name="NUM">1</field>
-                          </shadow>
-                      </value>
-                      <value name="pin">
-                          <shadow type="math_number">
-                              <field name="NUM">25</field>
-                          </shadow>
-                      </value>
-                  </block>
-              `
-          },
-          {
-              xml: `
-                  <block type="pin_analog_write">
-                      <value name="value">
-                          <shadow type="math_number">
-                              <field name="NUM">1023</field>
-                          </shadow>
-                      </value>
-                      <value name="pin">
-                          <shadow type="math_number">
-                              <field name="NUM">25</field>
-                          </shadow>
-                      </value>
-                  </block>
-              `
-          },
-          {
-              xml: `
-                  <block type="pin_digital_read">
-                      <value name="pin">
-                          <shadow type="math_number">
-                              <field name="NUM">25</field>
-                          </shadow>
-                      </value>
-                  </block>
-              `
-          },
-          {
-              xml: `
-                  <block type="pin_analog_read">
-                      <value name="pin">
-                          <shadow type="math_number">
-                              <field name="NUM">A0</field>
-                          </shadow>
-                      </value>
-                  </block>
-              `
-          },
+              xml: `<block type="maixpy3_gpio_when_switch">
+              <field name="switch">S1</field>
+            </block>
+            <block type="maixpy3_gpio_switch">
+              <field name="switch">S1</field>
+            </block>
+            <block type="maixpy3_gpio_buzzer">
+              <value name="delay">
+                <shadow type="math_number">
+                  <field name="NUM">1</field>
+                </shadow>
+              </value>
+            </block>
+            <block type="maixpy3_gpio_get">
+              <field name="pin">PH14</field>
+            </block>
+            <block type="maixpy3_gpio_set">
+              <field name="pin">PH14</field>
+              <value name="value">
+                <shadow type="logic_boolean">
+                  <field name="BOOL">TRUE</field>
+                </shadow>
+              </value>
+            </block>
+            <block type="maixpy3_delay">
+              <value name="delay">
+                <shadow type="math_number">
+                  <field name="NUM">1</field>
+                </shadow>
+              </value>
+            </block>
+            <block type="maixpy3_gpio_rgb_hex">
+              <field name="color">#ff0000</field>
+            </block>
+            <block type="maixpy3_gpio_rgb">
+              <value name="r">
+                <shadow type="math_number">
+                  <field name="NUM">255</field>
+                </shadow>
+              </value>
+              <value name="g">
+                <shadow type="math_number">
+                  <field name="NUM">50</field>
+                </shadow>
+              </value>
+              <value name="b">
+                <shadow type="math_number">
+                  <field name="NUM">50</field>
+                </shadow>
+              </value>
+            </block>`,
+          }
       ]
     },
     {
       name: "Text",
-      color: "#4FC3F7",
+      color: "#5b67a5",
       icon: `images/icons/font.png`,
       blocks: [
         {
@@ -240,13 +531,13 @@ export default [
     },
     {
       name: "Variables",
-      color: "#4FC3F7",
+      color: "#745ba5",
       icon: `images/icons/var.png`,
       blocks: "VARIABLE"
     },
     {
       name: "List",
-      color: "#4FC3F7",
+      color: "#995ba5",
       icon: `images/icons/list.png`,
       blocks: [
             {
@@ -351,7 +642,7 @@ export default [
     },
     {
       name: "Math",
-      color: "#4FC3F7",
+      color: "#a55b80",
       icon: `images/icons/math.png`,
       blocks: [
           
@@ -443,11 +734,14 @@ export default [
     },
     {
       name: "Logic",
-      color: "#4FC3F7",
+      color: "#a55b5b",
       icon: `images/icons/logn.png`,
       blocks: [
           {
               xml: `
+              <block type="logic_boolean">
+                <field name="BOOL">TRUE</field>
+              </block>
               <block type="controls_if">
               <value name="IF0">
                 <block type="logic_compare">
@@ -541,11 +835,18 @@ export default [
     },
     {
       name: "Loops",
-      color: "#4FC3F7",
+      color: "#a56d5b",
       icon: `images/icons/loop.png`,
       blocks: [
           {
               xml: `
+              <block type="maixpy3_delay">
+                <value name="delay">
+                  <shadow type="math_number">
+                    <field name="NUM">1</field>
+                  </shadow>
+                </value>
+              </block>
               <block type="controls_repeat_ext">
               <value name="TIMES">
                 <shadow type="math_number">
@@ -555,6 +856,11 @@ export default [
             </block>
             <block type="controls_whileUntil">
               <field name="MODE">WHILE</field>
+              <value name="BOOL">
+                <shadow type="logic_boolean">
+                  <field name="BOOL">TRUE</field>
+                </shadow>
+              </value>
             </block>
             <block type="controls_for">
               <field name="VAR" id="oCd]8vxz-Mau~M!KFR_v">i</field>
@@ -588,16 +894,15 @@ export default [
                 </value>
             </block>
               `
-          },          
-          "controls_wait_until",          
+          }     
           // "controls_flow_statements",
       ]
     },
-    {
-      name: "Advanced",
-      color: "#4FC3F7",
-      icon: `images/icons/technological.png`,
-      blocks: []
-    },
+    // {
+    //   name: "Advanced",
+    //   color: "#4FC3F7",
+    //   icon: `images/icons/technological.png`,
+    //   blocks: []
+    // },
   ]
 

@@ -1,9 +1,11 @@
 <script setup>
 import logo from '@/assets/images/logos/logo.jpg';
 import { useWorkspaceStore } from "@/store/workspace";
+import { useBoardStore } from "@/store/board";
 import {toast} from "vue3-toastify";
 
 const workspaceStore = useWorkspaceStore();
+const boardStore = useBoardStore();
 const projectName = ref(workspaceStore.name);
 const defineEmits = defineEmits(["serial","example", "help", "firmware", "extraSave","plugin"]);
 const loading = ref(false);
@@ -43,7 +45,7 @@ watch(() => workspaceStore.name, (val) => {
 
     <v-tooltip text="Serial Console">
       <template v-slot:activator="{ props }">
-        <v-btn icon variant="tonal" color="white" class="mx-1" v-bind="props" @click="$emit('serial')">
+        <v-btn icon variant="tonal" color="white" class="mx-1" v-bind="props" @click="$emit('serial')" :disabled="!boardStore.isConnected()">
           <v-icon>mdi-console</v-icon>
         </v-btn>
       </template>
