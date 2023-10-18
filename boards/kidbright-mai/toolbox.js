@@ -414,27 +414,28 @@ export default [
                   <field name="NUM">1</field>
                 </shadow>
               </value>
-            </block>
-            <block type="maixpy3_gpio_rgb_hex">
-              <field name="color">#ff0000</field>
-            </block>
-            <block type="maixpy3_gpio_rgb">
-              <value name="r">
-                <shadow type="math_number">
-                  <field name="NUM">255</field>
-                </shadow>
-              </value>
-              <value name="g">
-                <shadow type="math_number">
-                  <field name="NUM">50</field>
-                </shadow>
-              </value>
-              <value name="b">
-                <shadow type="math_number">
-                  <field name="NUM">50</field>
-                </shadow>
-              </value>
-            </block>`,
+            </block>            
+            `,
+            // <block type="maixpy3_gpio_rgb_hex">
+            //   <field name="color">#ff0000</field>
+            // </block>
+            // <block type="maixpy3_gpio_rgb">
+            //   <value name="r">
+            //     <shadow type="math_number">
+            //       <field name="NUM">255</field>
+            //     </shadow>
+            //   </value>
+            //   <value name="g">
+            //     <shadow type="math_number">
+            //       <field name="NUM">50</field>
+            //     </shadow>
+            //   </value>
+            //   <value name="b">
+            //     <shadow type="math_number">
+            //       <field name="NUM">50</field>
+            //     </shadow>
+            //   </value>
+            // </block>
           }
       ]
     },
