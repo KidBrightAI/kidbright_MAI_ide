@@ -134,7 +134,7 @@ export const useWorkspaceStore = defineStore({
       return new Promise((resolve, reject) => {
         let input = document.createElement("input");
         input.type = "file";
-        input.accept = ".ezk";     
+        input.accept = ".zip";     
         let that = this;
         input.addEventListener("change", function () {
           // console.log(this.files);
@@ -175,7 +175,7 @@ export const useWorkspaceStore = defineStore({
       }));
       zip.file("workspace.json", workspace);
       let content = await zip.generateAsync({ type: "blob" });      
-      this.saveAs(content, (this.name || 'EasyKidProject') + ".ezk");
+      this.saveAs(content, (this.name || 'KidBrightProject') + ".zip");
     },
 
     switchMode(mode) {

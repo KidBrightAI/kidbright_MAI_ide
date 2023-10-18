@@ -24,7 +24,6 @@ import MainPanel from "@/components/MainPanel/MainPanel.vue";
 import { getCurrentInstance } from 'vue'
 import SingletonShell from "@/engine/SingletonShell";
 
-import FirmwareUpdateDialog from "@/components/dialog/FirmwareUpdateDialog.vue";
 import NewProjectDialog from "@/components/dialog/NewProjectDialog.vue";
 import ExampleDialog from "@/components/dialog/ExampleDialog.vue";
 import PluginDialog from "@/components/dialog/PluginDialog.vue";

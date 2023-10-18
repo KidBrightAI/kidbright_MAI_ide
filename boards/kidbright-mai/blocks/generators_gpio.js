@@ -34,10 +34,9 @@ python.pythonGenerator.forBlock['maixpy3_gpio_switch'] = function(block, generat
 };
 
 python.pythonGenerator.forBlock['maixpy3_gpio_buzzer'] = function(block, generator) {
-  generator.definitions_['from_maix_import_gpio'] = 'from maix import gpio';  
-  var value_delay = generator.valueToCode(block, 'delay', python.Order.ATOMIC);
-  
-  var code = '...\n';
+  generator.definitions_['import_os'] = 'import os';
+  var value_delay = generator.valueToCode(block, 'delay', python.Order.ATOMIC);  
+  var code = "os.system('speaker-test -t sine -f 4000 -l 1 > /dev/null & sleep "+ value_delay+" && kill -9 $!')\n";
   return code;
 };
 

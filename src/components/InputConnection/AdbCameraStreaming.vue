@@ -140,8 +140,10 @@ const capture = async (width = 240, height = 240) => {
   // resize image to 224x224
   canvas.width = width;
   canvas.height = height;
+  console.log("canvas size", canvas.width, canvas.height);
+  console.log("image width", img.width, img.height);
   const ctx = canvas.getContext("2d");
-  ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, width, height);
+  ctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight, 0, 0, width, height);
   const data = await canvasToBlob(canvas);
   return {
     image: data,

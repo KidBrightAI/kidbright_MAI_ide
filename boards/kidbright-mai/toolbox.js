@@ -55,25 +55,25 @@ export default [
         icon: `images/icons/image-processing.png`,
         blocks: [
           {
-            xml : `<label text="create, load and save image"></label>
-            <block type="variables_set">
-              <field name="VAR">img1</field>
-              <value name="VALUE">
-                <block type="maix3_image_new">
-                  <field name="color">#000000</field>
-                  <value name="width">
-                    <shadow type="math_number">
-                      <field name="NUM">240</field>
-                    </shadow>
-                  </value>
-                  <value name="height">
-                    <shadow type="math_number">
-                      <field name="NUM">240</field>
-                    </shadow>
-                  </value>
-                </block>
-              </value>
-            </block>
+            // <block type="variables_set">
+            //   <field name="VAR">img1</field>
+            //   <value name="VALUE">
+            //     <block type="maix3_image_new">
+            //       <field name="color">#000000</field>
+            //       <value name="width">
+            //         <shadow type="math_number">
+            //           <field name="NUM">240</field>
+            //         </shadow>
+            //       </value>
+            //       <value name="height">
+            //         <shadow type="math_number">
+            //           <field name="NUM">240</field>
+            //         </shadow>
+            //       </value>
+            //     </block>
+            //   </value>
+            // </block>
+            xml : `<label text="create, load and save image"></label>            
             <block type="variables_set">
             <field name="VAR">img1</field>
             <value name="VALUE">
@@ -383,9 +383,10 @@ export default [
       icon: `images/icons/gpio.png`,
       blocks: [
           {
-              xml: `<block type="maixpy3_gpio_when_switch">
-              <field name="switch">S1</field>
-            </block>
+            // <block type="maixpy3_gpio_when_switch">
+            //   <field name="switch">S1</field>
+            // </block>            
+              xml: `
             <block type="maixpy3_gpio_switch">
               <field name="switch">S1</field>
             </block>

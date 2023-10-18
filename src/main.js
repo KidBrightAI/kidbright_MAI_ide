@@ -90,7 +90,7 @@ const boardModules = import.meta.glob('boards/*/index.js', { eager: true });
 const boardToolbox = import.meta.glob('boards/*/toolbox.js', { eager: true });
 const workspaces = import.meta.glob('boards/*/workspace.json', { eager: true });
 // load examples folder
-const examples = import.meta.glob('boards/*/examples/*/readme.md', { eager: false });
+const examples = import.meta.glob('boards/*/examples/*/readme.md', { eager: false, as : "raw" });
 const parsedExamples = await parseExamples(examples);
 let boards = [];
 for (const path in boardModules) {
