@@ -110,7 +110,7 @@ console.log(boards);
 //==================================================//
 //================= load plugins ===================//
 //==================================================//
-const pluginModules = import.meta.glob('plugins/*/extension.js', { eager: true });
+const pluginModules = import.meta.glob('plugins/*/index.js', { eager: true });
 const pluginBlocks = import.meta.glob('plugins/*/blocks/*.js', { eager: false });
 const pluginCodes = import.meta.glob('plugins/*/modules/*.py', { eager: false });
 let plugins = [];
@@ -119,18 +119,18 @@ for (const path in pluginModules) {
   //find corresponding blocks
   let blockFiles = [];
   for (const blockPath in pluginBlocks) {
-    if (blockPath.startsWith(path.replace('extension.js', ''))) {
+    if (blockPath.startsWith(path.replace('index.js', ''))) {
       blockFiles.push(blockPath);
     }
   }
   //find corresponding codes
   let codeFiles = [];
   for (const codePath in pluginCodes) {
-    if (codePath.startsWith(path.replace('extension.js', ''))) {
+    if (codePath.startsWith(path.replace('index.js', ''))) {
       codeFiles.push(codePath);
     }
   }
-  plugins.push({ path: path.replace('extension.js', ''), codeFiles: codeFiles,  blockFiles: blockFiles, ...plugin });
+  plugins.push({ path: path.replace('index.js', ''), codeFiles: codeFiles,  blockFiles: blockFiles, ...plugin });
 }
 console.log("===== all plugins =====");
 console.log(plugins);

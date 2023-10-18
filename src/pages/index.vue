@@ -30,6 +30,7 @@ import PluginDialog from "@/components/dialog/PluginDialog.vue";
 import ConnectWifiDialog from "@/components/dialog/ConnectWifiDialog.vue";
 
 import {sleep } from "@/engine/helper";
+import { loadPlugin } from "@/engine/board"
 //-------import image --------//
 import RobotPoker from "@/assets/images/png/Mask Group 12.png";
 
@@ -43,7 +44,6 @@ const pluginStore = usePluginStore();
 
 const blocklyComp = ref();
 //dialog state
-const firmwareUpdateDialogOpen = ref(false);
 const newProjectDialogOpen = ref(false);
 const exampleDialogOpen = ref(false);
 const pluginDialogOpen = ref(false);
@@ -134,10 +134,7 @@ const download = async () => {
   console.log(code);
   res = await boardStore.upload(code);
   
-  if (res == "FIRMWARE_UPGRADE") {
-    toast.warning("We found your board firmware is outdated or not Micropython.");
-    firmwareUpdateDialogOpen.value = true;
-  } else if (res === true) {
+  if (res === true) {
     toast.success("Upload success");
   } else {
     toast.error("Upload failed");
@@ -153,6 +150,7 @@ const createdProject = async (projectInfo) => {
     let res = await workspaceStore.createNewProject(projectInfo);  
     //ต้องสร้าง event ไปบอกให้ reload
     if(selectedMenu.value == 4){
+      console.log("reload workspace");
       blocklyComp.value.reload();
     }
     //blocklyComp.value.reload();
@@ -255,12 +253,18 @@ const onInstallPlugin = async( plugin )=>{
   console.log("====== install plugin ======");
   // change status of plugin to installing
   plugin.installing = true;  
-  // execute plugin block script
-  setTimeout(() => {
-    // install plugin
+  
+  setTimeout(async() => {
+    // install plugin    
     pluginStore.installed.push(plugin);
+    // execute plugin blocks and generators
+    await loadPlugin(pluginStore.installed);
     plugin.installing = false;        
     toast.success("Install plugin success");
+    if(selectedMenu.value == 4){
+      console.log("reload workspace");
+      blocklyComp.value.reload();
+    }
   }, 1000);
 };
 
@@ -275,19 +279,17 @@ const onUninstallPlugin = async( plugin )=>{
     if(index > -1){
       pluginStore.installed.splice(index, 1);
     }
-    plugin.installing = false;        
+    plugin.installing = false;            
     toast.success("Uninstall plugin success");
+    if(selectedMenu.value == 4){
+      console.log("reload workspace");
+      blocklyComp.value.reload();
+    }
   }, 1000);
 };
 
 const onHelp = () => {
   console.log("onHelp");
-};
-
-const onFirmware = async () => {
-  console.log("onFirmware");
-  await boardStore.serialConnect();
-  firmwareUpdateDialogOpen.value = true;
 };
 
 const onResized = () => {
@@ -402,7 +404,6 @@ watch(selectedMenu, (val) => {
             <Header
               @serial="onSerial" 
               @help="onHelp" 
-              @firmware="onFirmware"
               @example="exampleDialogOpen = true" 
               @plugin="pluginDialogOpen = true"
               @extraSave="extraSave">
@@ -423,7 +424,6 @@ watch(selectedMenu, (val) => {
     </v-main>
   </v-layout>
   <ConnectWifiDialog v-model:isDialogVisible="connectWifiDialogOpen" />
-  <FirmwareUpdateDialog v-model:isDialogVisible="firmwareUpdateDialogOpen" />
   <NewProjectDialog v-model:isDialogVisible="newProjectDialogOpen" @submit="createdProject" />
   <ExampleDialog v-model:isDialogVisible="exampleDialogOpen" @loadExample="onExampleOpen" />
   <PluginDialog v-model:isDialogVisible="pluginDialogOpen" @installPlugin="onInstallPlugin" @uninstallPlugin="onUninstallPlugin" />

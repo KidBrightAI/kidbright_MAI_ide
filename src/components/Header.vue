@@ -35,13 +35,13 @@ watch(() => workspaceStore.name, (val) => {
       </template>
     </v-tooltip>
 
-    <v-tooltip text="Examples">
+    <!-- <v-tooltip text="Examples">
       <template v-slot:activator="{ props }">
         <v-btn icon variant="tonal" color="white" class="mx-1" v-bind="props" @click="$emit('example')">
           <v-icon>mdi-book-education</v-icon>
         </v-btn>
       </template>
-    </v-tooltip>
+    </v-tooltip> -->
 
     <v-tooltip text="Serial Console">
       <template v-slot:activator="{ props }">
