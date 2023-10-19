@@ -31,8 +31,7 @@ Blockly.defineBlocksWithJsonArray([
         "text": "0x44"
       }
     ],
-    "previousStatement": null,
-    "nextStatement": null,
+    "output": "I2CDevice",
     "colour": 45,
     "tooltip": "",
     "helpUrl": ""
@@ -42,26 +41,9 @@ Blockly.defineBlocksWithJsonArray([
     "message0": "I2C device  %1 write data %2",
     "args0": [
       {
-        "type": "field_dropdown",
+        "type": "input_value",
         "name": "device",
-        "options": [
-          [
-            "2",
-            "2"
-          ],
-          [
-            "0",
-            "0"
-          ],
-          [
-            "1",
-            "1"
-          ],
-          [
-            "3",
-            "3"
-          ]
-        ]
+        "check": "I2CDevice"
       },
       {
         "type": "field_input",
@@ -77,32 +59,12 @@ Blockly.defineBlocksWithJsonArray([
   },
   {
     "type": "pylibi2c_read",
-    "message0": "I2C device  %1 %2 read data # %3 byte(s)",
+    "message0": "I2C device  %1 read data # %2 byte(s)",
     "args0": [
       {
-        "type": "field_dropdown",
+        "type": "input_value",
         "name": "device",
-        "options": [
-          [
-            "2",
-            "2"
-          ],
-          [
-            "0",
-            "0"
-          ],
-          [
-            "1",
-            "1"
-          ],
-          [
-            "3",
-            "3"
-          ]
-        ]
-      },
-      {
-        "type": "input_dummy"
+        "check": "I2CDevice"
       },
       {
         "type": "input_value",
