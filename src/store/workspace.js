@@ -52,7 +52,10 @@ export const useWorkspaceStore = defineStore({
       this.savingProgress = 0;
       console.log("saving project");
       let zip = new JSZip();
-      zip.file("project.json", JSON.stringify(this.$state));
+      zip.file("project.json", JSON.stringify({
+        ...this.$state, 
+        plugin : usePluginStore().installed
+      }));
       //---------- save dataset raw ------------//
       const datasetStore = useDatasetStore();
       
@@ -248,6 +251,12 @@ export const useWorkspaceStore = defineStore({
         datasetStore.data = datasetData.data;
         datasetStore.baseURL = datasetData.baseURL;
 
+        if(projectData.plugin){
+          const pluginStore = usePluginStore();
+          pluginStore.installed = projectData.plugin;
+          await loadPlugin(projectData.plugin);
+        }
+        await loadBoard(this.currentBoard);
 
         this.openingProgress = 100;
         this.opening = false;
