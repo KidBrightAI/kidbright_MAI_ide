@@ -343,7 +343,14 @@ export default [
         icon: `images/icons/ai.png`,
         blocks: [
           {
-            xml : `<label text="Image classification"></label>
+            xml : `<block type="text_print">
+              <value name="TEXT">
+                <shadow type="text">
+                  <field name="TEXT">abc</field>
+                </shadow>
+              </value>
+            </block>
+            <label text="Image classification"></label>
             <block type="maix3_nn_classify_load"></block>            
             <block type="maix3_nn_classify_classify"></block>
             <block type="maix3_nn_classify_get_result">

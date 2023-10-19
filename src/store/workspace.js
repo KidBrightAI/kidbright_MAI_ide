@@ -3,6 +3,9 @@ import { defineStore } from "pinia";
 import { loadBoard, loadPlugin } from "../engine/board";
 import { usePluginStore } from "./plugin";
 import { useDatasetStore } from "./dataset";
+import { sleep } from "@/engine/helper";
+import storage from "@/engine/storage";
+import { md5 } from 'hash-wasm';
 
 export const useWorkspaceStore = defineStore({
   id: "workspace",
@@ -19,9 +22,9 @@ export const useWorkspaceStore = defineStore({
       projectType: null, //id of extension
       projectTypeTitle: null, //this.models.find(el=>el.value == this.selectType).text,
       lastUpdate: null,
-      extension: null,
-      model : null,
+      extension: null,      
       labels: [],
+      model : null,
 
       saving: false,
       savingProgress: 0,
@@ -69,8 +72,19 @@ export const useWorkspaceStore = defineStore({
           //let progress = ((i + 1) / datasets.length) * 100;
           //commit("setSavingProgress", progress - 5);
         }
+        //await sleep(1000);
+        //saving progress map to 1-97
+        this.savingProgress = 1 + Math.round(((i + 1) / datasets.length) * 97);
       }
-        
+      //saving model
+      this.savingProgress = 98;
+      if(this.model){
+        let modelFolder = zip.folder("model");
+        let modelBinaries = await storage.readAsFile(this.$fs, `${this.id}/model.bin`);
+        let modelParams = await storage.readAsFile(this.$fs, `${this.id}/model.param`);
+        modelFolder.file("model.bin", modelBinaries);
+        modelFolder.file("model.param", modelParams);
+      }
       this.savingProgress = 99;
       //---------- save output (model) ---------//
       const that = this;
@@ -88,7 +102,6 @@ export const useWorkspaceStore = defineStore({
         });
     },
     async createNewProject(projectInfo) {
-      
       this.mode = projectInfo.mode || 'block';
       this.code = null;
       this.block = null;
@@ -128,31 +141,80 @@ export const useWorkspaceStore = defineStore({
       await loadBoard(this.currentBoard);      
       return true;
     },
-
-    // open select file dialog and read ziped file
-    openProjectFromZip() {
+    selectAndReadZipFile() {      
       return new Promise((resolve, reject) => {
         let input = document.createElement("input");
         input.type = "file";
-        input.accept = ".zip";     
-        let that = this;
+        input.accept = ".zip";
         input.addEventListener("change", function () {
-          // console.log(this.files);
+          console.log("user loaded file");
+          document.body.removeChild(input);
           let fr = new FileReader();
           fr.onload = async () => {
-            let zip = new JSZip();
-            await zip.loadAsync(fr.result);
-            let data = await zip.file("project.json").async("string");                        
-            let workspace = await zip.file("workspace.json").async("string");
-            let projectData = JSON.parse(data);
-            projectData.block = workspace;
-            await that.createNewProject(projectData);          
-            resolve(true);
+            resolve(fr.result);
           };
-          fr.readAsArrayBuffer(this.files[0]);
-        }, false);
-        input.click();
-      });      
+          fr.readAsArrayBuffer(this.files[0]);          
+        });
+        document.body.appendChild(input);
+        setTimeout(() => {
+          input.click();
+          const onFocus = () => {
+            window.removeEventListener("focus", onFocus);
+            document.body.addEventListener("mousemove", onMouseMove);
+          };
+          const onMouseMove = () => {
+            document.body.removeEventListener("mousemove", onMouseMove);
+            if(!input.files.length) {
+              document.body.removeChild(input);
+              console.log("no file selected");
+              reject("NOFILE");
+            }
+          }
+          window.addEventListener("focus", onFocus);
+        },0);
+      });
+    },
+    // open select file dialog and read ziped file
+    async openProjectFromZip() {
+      try{
+        let data = await this.selectAndReadZipFile();
+        let zip = new JSZip();
+        await zip.loadAsync(data);
+        let projectData = await zip.file("project.json").async("string");
+        projectData = JSON.parse(projectData);
+        await this.createNewProject(projectData);
+      }catch(e){
+        if(e == "NOFILE"){
+          console.log('no file selected');
+        }        
+      }
+    },
+
+    async importModelFromZip(){
+      try{
+        let data = await this.selectAndReadZipFile();
+        let zip = new JSZip();
+        await zip.loadAsync(data);
+        let modelBinaries = await zip.file("modelv831/opt_int8.bin").async("arraybuffer");
+        let modelParams = await zip.file("modelv831/opt_int8.param").async("arraybuffer");
+        await storage.writeFile(this.$fs, `${this.id}/model.bin`, new Blob([modelBinaries]));
+        await storage.writeFile(this.$fs, `${this.id}/model.param`, new Blob([modelParams]));
+        let hash = await md5(new Uint8Array(modelBinaries));
+        this.model = {
+          name: 'model',
+          type: 'bin',
+          hash: hash,
+        };
+        console.log("model data", this.model);
+        return true;
+      }catch(e){
+        if(e == "NOFILE"){
+          console.log('no file selected');
+        }else{
+          console.log(e);
+          return false;
+        }        
+      }
     },
     
     saveAs(content, filename) {
@@ -161,21 +223,6 @@ export const useWorkspaceStore = defineStore({
       link.download = filename
       link.click()
       URL.revokeObjectURL(link.href)
-    },
-    
-    async saveProjectToZip(workspace) {
-      const pluginStore = usePluginStore();
-      let zip = new JSZip();
-      zip.file("project.json", JSON.stringify({
-        mode: this.mode,
-        board: this.currentBoard.id,
-        code: this.code,
-        name: this.name,
-        plugin: pluginStore.installed
-      }));
-      zip.file("workspace.json", workspace);
-      let content = await zip.generateAsync({ type: "blob" });      
-      this.saveAs(content, (this.name || 'KidBrightProject') + ".zip");
     },
 
     switchMode(mode) {

@@ -21,7 +21,7 @@
       </VCardItem>
       <VCardItem class="text-center">
         <h4>ขั้นตอนที่ 3 นำเข้าโมเดลที่สอนเสร็จเรียบร้อยแล้ว</h4>
-        <VBtn class="my-3">นำเข้าโมเดล</VBtn><br>
+        <VBtn class="my-3" @click="importModel">นำเข้าโมเดล</VBtn><br>
         <p class="mt-2">
           เมื่อทำการสอนโมเดลเรียบร้อย ให้ทำการนำเข้าโมเดลที่บันทึกจาก Google COLAB เพื่อใช้ในบอร์ดต่อไป
         </p>
@@ -29,7 +29,19 @@
     </VCard>
   </div>
 </template>
+
 <script setup>
+import { useWorkspaceStore } from '@/store/workspace';
+import { toast } from "vue3-toastify";
+const workspaceStore = useWorkspaceStore();
+const importModel = async()=>{
+  let res = await workspaceStore.importModelFromZip();
+  if(res){
+    toast.success("นำเข้าโมเดลเรียบร้อยแล้ว");
+  }else if(res === false){
+    toast.error("เกิดข้อผิดพลาดในการนำเข้าโมเดล");
+  }
+}
 
 </script>
 <style lang="scss" scoped>

@@ -28,6 +28,7 @@ import NewProjectDialog from "@/components/dialog/NewProjectDialog.vue";
 import ExampleDialog from "@/components/dialog/ExampleDialog.vue";
 import PluginDialog from "@/components/dialog/PluginDialog.vue";
 import ConnectWifiDialog from "@/components/dialog/ConnectWifiDialog.vue";
+import SavingProjectDialog from "@/components/dialog/SavingProjectDialog.vue";
 
 import {sleep } from "@/engine/helper";
 import { loadPlugin } from "@/engine/board"
@@ -147,13 +148,11 @@ const download = async () => {
 
 const createdProject = async (projectInfo) => {
   try{
-    let res = await workspaceStore.createNewProject(projectInfo);  
-    //ต้องสร้าง event ไปบอกให้ reload
+    let res = await workspaceStore.createNewProject(projectInfo);
     if(selectedMenu.value == 4){
       console.log("reload workspace");
       blocklyComp.value.reload();
     }
-    //blocklyComp.value.reload();
     if (res) {
       toast.success("สร้างโปรเจคเสร็จเรียบร้อย");
     } else {
@@ -168,7 +167,8 @@ const createdProject = async (projectInfo) => {
 
 const openProject = async () => {
   try {
-    await confirm({ title: "Confirm open project", content: "All code in this project will be delete, please save first!", dialogProps: { width: 'auto' } });
+    let message = "ข้อมูลโปรเจคปัจจุบันจะถูกลบทั้งหมด คุณต้องการเปิดโปรเจคใหม่หรือไม่";
+    await confirm({ title: "ยืนยันการเปิดโปรเจค" , content: message , dialogProps: { width: 'auto' } });
     let res = await workspaceStore.openProjectFromZip();
     blocklyComp.value.reload();
     onResized();
@@ -178,24 +178,8 @@ const openProject = async () => {
 };
 
 const saveProject = async ($event) => {
-  try {
-    //let workspaceState = Blockly.serialization.workspaces.save(blocklyComp.value.workspace);
-    //let res = await workspaceStore.saveProjectToZip(JSON.stringify(workspaceState, null, 2));
+  try {    
     await workspaceStore.saveProject();
-  } catch (err) {
-    console.log(err);
-  }
-};
-
-const extraSave = async ($event) => {
-  try {
-    let workspaceState = blocklyComp.value.getSerializedWorkspace();
-    const blob = new Blob([workspaceState], { type: 'application/json' })
-    const link = document.createElement('a')
-    link.href = URL.createObjectURL(blob)
-    link.download = "workspace.json"
-    link.click()
-    URL.revokeObjectURL(link.href)
   } catch (err) {
     console.log(err);
   }
@@ -203,7 +187,8 @@ const extraSave = async ($event) => {
 
 const deleteProject = async () => {
   try {
-    await confirm({ title: "Confirm delete project", content: "All code in this project will be delete, please save first!", dialogProps: { width: 'auto' } });
+    let message = "ข้อมูลโปรเจคปัจจุบันจะถูกลบทั้งหมด คุณต้องการลบโปรเจคหรือไม่";
+    await confirm({ title: "ยืนยันการลบโปรเจค", content: message , dialogProps: { width: 'auto' } });
     let res = await workspaceStore.deleteProject();
     blocklyComp.value.reload();
     onResized();
@@ -389,8 +374,8 @@ watch(selectedMenu, (val) => {
         @connectBoard="selectPort"
         @connectWifi="connectWifiDialogOpen = true"
         @fileBrowser=""
-        @terminal=""
-        @restartBoard=""
+        @terminal="onSerial"
+        @restartBoard="boardStore.rebootBoard"
       >
       </MainPanel>
     </v-navigation-drawer>
@@ -405,8 +390,7 @@ watch(selectedMenu, (val) => {
               @serial="onSerial" 
               @help="onHelp" 
               @example="exampleDialogOpen = true" 
-              @plugin="pluginDialogOpen = true"
-              @extraSave="extraSave">
+              @plugin="pluginDialogOpen = true">
             </Header>
             <BlocklyComponent ref="blocklyComp"></BlocklyComponent> 
           </div>
@@ -423,6 +407,7 @@ watch(selectedMenu, (val) => {
       </splitpanes>
     </v-main>
   </v-layout>
+  <SavingProjectDialog></SavingProjectDialog>
   <ConnectWifiDialog v-model:isDialogVisible="connectWifiDialogOpen" />
   <NewProjectDialog v-model:isDialogVisible="newProjectDialogOpen" @submit="createdProject" />
   <ExampleDialog v-model:isDialogVisible="exampleDialogOpen" @loadExample="onExampleOpen" />

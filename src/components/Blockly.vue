@@ -76,8 +76,7 @@ const reload = (initBlock) => {
   //-------- load toolbox from installed plugin ----------//
   let installedPlugins = pluginStore.installed;
   // add blockly toolbox separator and note as plugin
-  toolboxXml += `<sep css-container="blocklySeperatorToolbox">test</sep>
-<label text="Plugins" web-class="blocklyToolboxCategory"></label>`;
+  toolboxXml += `<sep css-container="blocklySeperatorToolbox">test</sep>`;
   if (installedPlugins) {
     toolboxXml += updateBlockCategory(installedPlugins);         
   }

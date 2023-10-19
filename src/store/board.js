@@ -2,6 +2,7 @@ import { findIncludeModuleNameInCode, sleep } from "@/engine/helper";
 import { defineStore } from "pinia";
 import { toast } from "vue3-toastify";
 import { useWorkspaceStore } from "./workspace";
+import storage from "@/engine/storage";
 
 import {
   WrapConsumableStream,
@@ -83,61 +84,55 @@ export const useBoardStore = defineStore({
         return true;
       }   
     },
-    async connectStreaming(callback){
-      // let currentBoard = useWorkspaceStore().currentBoard;
-      
-      //   if (!this.$adb.transport) {
-      //     if (!await this.deviceConnect()) {
-      //       return;
-      //     }
-      //     await sleep(300);
-      //   }
-      //   let adb = this.$adb.adb;
-      //   if(isProxy(adb)){
-      //     adb = toRaw(adb);
-      //   }        
-      //   //try open service
-      //   //try{
-      //   //kill all python3
-      //   SingletonShell.write("killall python3\n");
-      //   //start service
-      //   //shell.write("python3 -c 'from maix import mjpg;mjpg.start(); &'\n");
-      //   SingletonShell.write("python3 /usr/lib/python3.8/site-packages/maix/mjpg.pyc &\n");
-      //   await sleep(3000);
-      //   let sock = await adb.createSocket("tcp:18811");
-      //   sock.readable.pipeTo(new WritableStream(
-      //   {
-      //     write : (chunk) => {
-      //       if(callback){
-      //         callback(chunk);
-      //       }
-      //     }
-      //   }));
-      //   let reqText = "GET / HTTP/1.1\r\nHost: localhost:18811\r\n\r\n";
-      //   let writer = sock.writable.getWriter();
-      //   writer.write(new Consumable(encodeUtf8(reqText)));
-      // }catch(e){
-      //   if(e.message == "Socket open failed"){
-      //     console.log("cannot start service");
 
-      //   }
-      //   console.log(e);
-      // }
-      // const list = await adb.reverse.list();
-      // console.log("list");
-      // console.log(list);
-      // const stream = await adb.reverse.add("usb:18812",()=>{
-      //   console.log("reverse callback");
-      // });
-      // console.log("stream");
-      // console.log(stream);        
+    rebootBoard(){
+      SingletonShell.write("reboot\n");
+      this.connected = false;
+      this.$adb.transport = null;
+      this.$adb.adb = null;
     },
 
     async deviceDisconnect() {
       toast.warning("Serial port disconnect");
       this.device = null;
     },
-
+    async uploadModelIfNeeded(sync){
+      const workspaceStore = useWorkspaceStore();
+      let model = workspaceStore.model;
+      // check board has model 
+      //let stat = await sync.lstat("/home/model/" + model.hash + ".param");
+      try{
+        let stat = await sync.lstat("/home/model/" + model.hash + ".param");
+        console.log(stat);
+      }catch(e){
+        toast.warn("ไม่พบไฟล์โมเดลบนบอร์ด กำลังอัพโหลดโมเดลใหม่");
+        let modelBinaries = await storage.readAsFile(this.$fs, `${workspaceStore.id}/model.bin`);
+        let modelParams = await storage.readAsFile(this.$fs, `${workspaceStore.id}/model.param`);
+        try{
+          await sync.write({
+            filename: "/home/model/" + model.hash + ".param",
+            file: new WrapReadableStream(modelParams.stream())
+                    .pipeThrough(new WrapConsumableStream()),
+            type: LinuxFileType.File,
+            permission: 0o666,
+            mtime: Date.now() / 1000,
+          });
+          await sync.write({
+            filename: "/home/model/" + model.hash + ".bin",
+            file: new WrapReadableStream(modelBinaries.stream())
+                    .pipeThrough(new WrapConsumableStream()),
+            type: LinuxFileType.File,
+            permission: 0o666,
+            mtime: Date.now() / 1000,
+          });
+          toast.success("อัพโหลดโมเดลสำเร็จ");
+        }catch(e){
+          console.log(e);
+          toast.error("อัพโหลดโมเดลไม่สำเร็จ");
+          return;
+        }        
+      }
+    },
     async upload(code, skipFirmwareUpgrade = false) {
       if (!this.$adb.transport) {
         if (!await this.deviceConnect()) {
@@ -150,6 +145,7 @@ export const useBoardStore = defineStore({
       // signal ctrl + c 
       SingletonShell.write("\x03");
       SingletonShell.write("\x03");
+      
       let filesUpload = [];
       let extra_files = [];
       let uploadModuleList = findIncludeModuleNameInCode(code);
@@ -167,7 +163,12 @@ export const useBoardStore = defineStore({
         if(isProxy(adb)){
           adb = toRaw(adb);
         }
-        const sync = await adb.sync();    
+        const sync = await adb.sync();        
+        // upload model 
+        
+        await this.uploadModelIfNeeded(sync);
+
+        // upload files
         for (let file of filesUpload) {
           let fileT = new File([file.content], file.file);        
           let fileStream = new WrapReadableStream(fileT.stream());

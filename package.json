@@ -26,6 +26,7 @@
         "crypto-js": "^4.1.1",
         "eslint-import-resolver-alias": "^1.1.2",
         "esptool-js": "^0.3.0",
+        "hash-wasm": "^4.10.0",
         "jszip": "^3.10.1",
         "jwt-decode": "^3.1.2",
         "monaco-editor": "0.21.2",

@@ -4,16 +4,18 @@ import 'blockly/python';
 import { pythonGenerator } from 'blockly/python';
 import python from 'blockly/python';
 import "blockly/python_compressed.js";
+import { useWorkspaceStore } from '@/store/workspace';
 
 export async function loadBoard(board) {
   // load scripts
+  const workspaceStore = useWorkspaceStore();
   let scripts = [...board.blocks || [], ...board.scripts || []];
   for (const script of scripts) {
     let scriptUrl = `${board.path}/${script}`;
     let scriptResponse = await fetch(scriptUrl);
     if(scriptResponse.ok){
       let scriptData = await scriptResponse.text();
-      eval(scriptData, python, pythonGenerator, Blockly);
+      eval(scriptData, python, pythonGenerator, Blockly, workspaceStore);
     }
   }
 }
