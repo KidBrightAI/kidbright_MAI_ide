@@ -43,14 +43,14 @@
                   'op-btn',
                   { 'op-btn-disable': !cameraReady },
                 ]"
-                src="@/assets/images/png/Group 198.png"
+                src="@/assets/images/png/Group198.png"
                 height="96"
                 @click="snapAndSave"
               />
               <img
                 v-on:click.prevent="showImportDialog = true"
                 class="mt-2 op-btn"
-                src="@/assets/images/png/Group 199.png"
+                src="@/assets/images/png/Group199.png"
                 height="96"
               />
             </div>

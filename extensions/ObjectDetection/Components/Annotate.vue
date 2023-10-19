@@ -77,7 +77,7 @@
                 :key="'class-' + idx"
               >
                 <div class="annotate-cn-list-ttl">
-                  <img src="@/assets/images/png/Group 177_white.svg"/>
+                  <img src="@/assets/images/png/Group_177_white.svg"/>
                   {{ item.label }}
                 </div>
                 <div class="annotate-cn-list-content">

@@ -5,7 +5,7 @@
       <p>ขั้นตอนนี้ใช้สำหรับติดป้ายกำกับให้กับรูปภาพ</p>
       <p>
         <br />1. กดปุ่ม
-        <img src="@/assets/images/png/Group 97.png" alt="" srcset="" />
+        <img src="@/assets/images/png/Group_97.png" alt="" srcset="" />
         เพื่อตั้งชื่อป้ายกำกับให้กับรูปแต่ละประเภท
       </p>
       <p>
@@ -15,7 +15,7 @@
       </p>
     </div>
     <div class="mascot">
-      <img src="@/assets/images/png/Mask Group 11.png" alt="" srcset="" />
+      <img src="@/assets/images/png/Mask_Group_11.png" alt="" srcset="" />
     </div>
   </div>
 </template>

@@ -44,7 +44,7 @@
                 <div class="annotate-cn-list-content">
                   <img
                     class="tag"
-                    src="@/assets/images/png/Group 177_green.svg"
+                    src="@/assets/images/png/Group_177_green.svg"
                     height="24"
                   />
                   <span class="annotation-txt">{{ item }}</span>

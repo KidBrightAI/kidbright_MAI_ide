@@ -34,7 +34,7 @@ import OpeningProjectDialog from "@/components/dialog/OpeningProjectDialog.vue";
 import {sleep } from "@/engine/helper";
 import { loadPlugin } from "@/engine/board"
 //-------import image --------//
-import RobotPoker from "@/assets/images/png/Mask Group 12.png";
+import RobotPoker from "@/assets/images/png/Mask_Group_12.png";
 
 import ExtensionAsyncComponent from "@/components/ExtensionAsyncComponent.vue";
 

@@ -32,7 +32,7 @@
       </p>
     </div>
     <div class="mascot">
-      <img src="@/assets/images/png/Mask Group 11.png" alt="" srcset="" />
+      <img src="@/assets/images/png/Mask_Group_11.png" alt="" srcset="" />
     </div>
   </div>
 </template>

@@ -5,12 +5,12 @@
       <p>ขั้นตอนนี้ใช้สำหรับกำหนดขอบเขตและติดป้ายกำกับให้วัตถุ</p>
       <p>
         <br />1. กดปุ่ม
-        <img src="@/assets/images/png/Group 97.png" alt="" srcset="" />
+        <img src="@/assets/images/png/Group_97.png" alt="" srcset="" />
         เพื่อตั้งชื่อป้ายกำกับให้กับวัตถุแต่ละชนิด 
       </p>
       <p>
         <br />2. กำหนดขอบเขตของวัตถุ โดยทำการลากคลุมวัตถุให้อยู่ภายในกรอบสี่เหลี่ยม
-        <img src="@/assets/images/png/Group 96.png" alt="" srcset="" />
+        <img src="@/assets/images/png/Group_96.png" alt="" srcset="" />
         ที่กำหนดพอดี ไม่ตีกรอบใหญ่หรือเล็กเกินไป 
       </p>
       <p>
@@ -23,7 +23,7 @@
       </p>
     </div>
     <div class="mascot">
-      <img src="@/assets/images/png/Mask Group 11.png" alt="" srcset="" />
+      <img src="@/assets/images/png/Mask_Group_11.png" alt="" srcset="" />
     </div>
   </div>
 </template>

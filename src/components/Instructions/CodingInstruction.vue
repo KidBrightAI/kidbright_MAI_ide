@@ -22,7 +22,7 @@
     </div>
     <div class="mascot">
       <img
-        src="@/assets/images/png/Mask Group 11.png"
+        src="@/assets/images/png/Mask_Group_11.png"
         alt=""
         srcset=""
       />

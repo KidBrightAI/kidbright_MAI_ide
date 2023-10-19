@@ -61,7 +61,7 @@
         <div class="main-hint txt notype">
           <p v-if="workspaceStore.projectType == null">
             เริ่มใช้งานโดยกด
-            <img src="@/assets/images/png/Group 105.png" alt="" srcset="" />
+            <img src="@/assets/images/png/Group_105.png" alt="" srcset="" />
             เพื่อสร้างโปรเจคและทำการเลือกประเภทการเรียนรู้
             <span class="p-color">Object Detection</span> หรือ
             <span class="p-color">Image Classification</span
@@ -75,7 +75,7 @@
         </div>
         <div class="mascot">
           <img
-            src="@/assets/images/png/Mask Group 11.png"
+            src="@/assets/images/png/Mask_Group_11.png"
             alt=""
             srcset=""
           />
