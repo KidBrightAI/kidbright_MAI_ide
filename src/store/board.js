@@ -101,36 +101,39 @@ export const useBoardStore = defineStore({
       let model = workspaceStore.model;
       // check board has model 
       //let stat = await sync.lstat("/home/model/" + model.hash + ".param");
-      try{
-        let stat = await sync.lstat("/home/model/" + model.hash + ".param");
-        console.log(stat);
-      }catch(e){
-        toast.warn("ไม่พบไฟล์โมเดลบนบอร์ด กำลังอัพโหลดโมเดลใหม่");
-        let modelBinaries = await storage.readAsFile(this.$fs, `${workspaceStore.id}/model.bin`);
-        let modelParams = await storage.readAsFile(this.$fs, `${workspaceStore.id}/model.param`);
+      console.log(model);
+      if(model != null){
         try{
-          await sync.write({
-            filename: "/home/model/" + model.hash + ".param",
-            file: new WrapReadableStream(modelParams.stream())
-                    .pipeThrough(new WrapConsumableStream()),
-            type: LinuxFileType.File,
-            permission: 0o666,
-            mtime: Date.now() / 1000,
-          });
-          await sync.write({
-            filename: "/home/model/" + model.hash + ".bin",
-            file: new WrapReadableStream(modelBinaries.stream())
-                    .pipeThrough(new WrapConsumableStream()),
-            type: LinuxFileType.File,
-            permission: 0o666,
-            mtime: Date.now() / 1000,
-          });
-          toast.success("อัพโหลดโมเดลสำเร็จ");
+          let stat = await sync.lstat("/home/model/" + model.hash + ".param");
+          console.log(stat);
         }catch(e){
-          console.log(e);
-          toast.error("อัพโหลดโมเดลไม่สำเร็จ");
-          return;
-        }        
+          toast.warn("ไม่พบไฟล์โมเดลบนบอร์ด กำลังอัพโหลดโมเดลใหม่");
+          let modelBinaries = await storage.readAsFile(this.$fs, `${workspaceStore.id}/model.bin`);
+          let modelParams = await storage.readAsFile(this.$fs, `${workspaceStore.id}/model.param`);
+          try{
+            await sync.write({
+              filename: "/home/model/" + model.hash + ".param",
+              file: new WrapReadableStream(modelParams.stream())
+                      .pipeThrough(new WrapConsumableStream()),
+              type: LinuxFileType.File,
+              permission: 0o666,
+              mtime: Date.now() / 1000,
+            });
+            await sync.write({
+              filename: "/home/model/" + model.hash + ".bin",
+              file: new WrapReadableStream(modelBinaries.stream())
+                      .pipeThrough(new WrapConsumableStream()),
+              type: LinuxFileType.File,
+              permission: 0o666,
+              mtime: Date.now() / 1000,
+            });
+            toast.success("อัพโหลดโมเดลสำเร็จ");
+          }catch(e){
+            console.log(e);
+            toast.error("อัพโหลดโมเดลไม่สำเร็จ");
+            return;
+          }        
+        }
       }
     },
     async upload(code, skipFirmwareUpgrade = false) {

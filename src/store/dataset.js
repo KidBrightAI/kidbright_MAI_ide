@@ -77,6 +77,7 @@ export const useDatasetStore = defineStore({
         }
       }
     },
+
     removeAnnotation({ id, annotationId }) {
       let ind = this.data.findIndex((el) => el.id == id);
       if (ind >= 0) {
@@ -88,6 +89,7 @@ export const useDatasetStore = defineStore({
         }
       }
     },
+
     removeDataAnnotationWhere({ids, annotationId}) {
       let selectedItems = this.data.filter((el) => ids.includes(el.id));
       for (let item of selectedItems) {
@@ -96,6 +98,7 @@ export const useDatasetStore = defineStore({
         );
       }
     },
+
     async prepareDataset(projectId){
       let dirEntry = await storage.createDir(this.$fs, projectId || this.project);
       return dirEntry;
@@ -185,6 +188,7 @@ export const useDatasetStore = defineStore({
         return el;
       });
     },
+
     changeClassData({ oldLabel, newLabel }) {
       // change label of selected items
       this.data = this.data.map((el) => {
@@ -194,6 +198,7 @@ export const useDatasetStore = defineStore({
         return el;
       });
     },
+    
     changeClassDataWhere({ids, oldLabel, newLabel}) {
       // change label of selected items
       this.data = this.data.map((el) => {

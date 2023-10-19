@@ -86,7 +86,9 @@ const calculateMinBottomPlaneSize = () => {
 
 const serialMonitorCallback = (chank) => {  
   let readableText = new TextDecoder().decode(chank);
-  terminal.write(readableText);
+  if(terminal){
+    terminal.write(readableText);
+  }  
 }
 const serialMonitorWrite = async (data) => {
  SingletonShell.write(data);
@@ -99,6 +101,7 @@ const serialMonitorBridge = async () =>{
       const adb = vm.appContext.config.globalProperties.$adb.adb;      
       const shell = SingletonShell.getInstance(adb);
       shell.setCallback(serialMonitorCallback);
+      await SingletonShell.waitWriter();
       writer = shell.getWriter();
     }catch(err){
       console.log(err);
@@ -112,10 +115,6 @@ const undo = () => {
 
 const redo = () => {
   blocklyComp.value.redo();
-};
-
-const selectPort = async () => {
-  await serialMonitorBridge();
 };
 
 const download = async () => {
@@ -153,9 +152,14 @@ const createdProject = async (projectInfo) => {
     if(selectedMenu.value == 4){
       console.log("reload workspace");
       blocklyComp.value.reload();
+      mountSerial();
     }
     if (res) {
       toast.success("สร้างโปรเจคเสร็จเรียบร้อย");
+      selectedMenu.value = 4;
+      setTimeout(() => {
+        location.reload();
+      }, 1000);
     } else {
       toast.error("สร้างโปรเจคไม่สำเร็จ");
     }  
@@ -175,6 +179,7 @@ const openProject = async () => {
       selectedMenu.value = 4;
       blocklyComp.value.reload();
       onResized();
+
     }
   } catch (err) {
     console.log(err);
@@ -375,7 +380,7 @@ watch(selectedMenu, (val) => {
         @openProject="openProject" 
         @saveProject="saveProject" 
         @deleteProject="deleteProject"
-        @connectBoard="selectPort"
+        @connectBoard="serialMonitorBridge"
         @connectWifi="connectWifiDialogOpen = true"
         @fileBrowser=""
         @terminal="onSerial"

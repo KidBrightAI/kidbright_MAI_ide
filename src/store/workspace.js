@@ -3,7 +3,7 @@ import { defineStore } from "pinia";
 import { loadBoard, loadPlugin } from "../engine/board";
 import { usePluginStore } from "./plugin";
 import { useDatasetStore } from "./dataset";
-import { sleep } from "@/engine/helper";
+import { sleep, generatePascalVocFromDataset } from "@/engine/helper";
 import storage from "@/engine/storage";
 import { md5 } from 'hash-wasm';
 
@@ -68,24 +68,40 @@ export const useWorkspaceStore = defineStore({
 
       let rawDataset = zip.folder("dataset");
       let datasets = datasetStore.data;
-      for (let [i, data] of datasets.entries()) {
-        let filename = data.id + "." + data.ext;
-        console.log("saving file", filename);
-        let fileData = datasetStore.getDataAsFile(filename);
-        rawDataset.file(data.class + "/" + filename, fileData);
+
+      if(this.projectType === "OBJECT_DETECTION"){        
+        var annotations = rawDataset.folder("Annotations");
+        var images = rawDataset.folder("JPEGImages");
+        var imageSets = rawDataset.folder("ImageSets");
         
-        if (this.projectType === "VOICE_CLASSIFICATION") {
-          //   let wavFile = data.id + "." + data.sound_ext;
-          //   let wavData = await dispatch("dataset/getDataAsFile", wavFile);
-          //   rawDataset.file(wavFile, wavData);
-          //   let mfccFile = data.id + "_mfcc.jpg";
-          //   let mfccData = await dispatch("dataset/getDataAsFile", mfccFile);
-          //   rawDataset.file(mfccFile, mfccData);
-          // }
-          //let progress = ((i + 1) / datasets.length) * 100;
-          //commit("setSavingProgress", progress - 5);
+        let main = imageSets.folder("Main");        
+        let allImageFile = datasets.map(data => data.id + "." + data.ext);
+        //random shuffle
+        let splitConstant = 0.8;
+        let splitSite = Math.round(allImageFile.length * splitConstant);
+        allImageFile.sort(() => Math.random() - 0.5);
+        let trainFile = allImageFile.slice(0, splitSite);
+        let validFile = allImageFile.slice(splitSite);
+        main.file("train.txt", trainFile.join("\n"));
+        main.file("valid.txt", validFile.join("\n"));
+      }
+
+      for (let [i, data] of datasets.entries()) {
+        let filename = data.id + "." + data.ext;        
+        let fileData = datasetStore.getDataAsFile(filename);
+        if(this.projectType === "IMAGE_CLASSIFICATION"){
+          rawDataset.file(data.class + "/" + filename, fileData);
         }
-        //await sleep(1000);
+        if(this.projectType === "OBJECT_DETECTION"){
+          //xml voc export
+          let xml = generatePascalVocFromDataset(data);          
+          annotations.file(data.id + ".xml", xml);          
+          images.file(data.id + "." + data.ext, fileData);
+          //create image set                    
+        }
+        if (this.projectType === "VOICE_CLASSIFICATION") {
+
+        }
         //saving progress map to 1-97
         this.savingProgress = 1 + Math.round(((i + 1) / datasets.length) * 97);
       }

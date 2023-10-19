@@ -3,13 +3,12 @@ python.pythonGenerator.forBlock['sht31_i2c_sensor'] = function(block, generator)
     var dropdown_type = block.getFieldValue('type');    
     generator.definitions_['import_time'] = 'import time';
     generator.definitions_['import_smbus2'] = 'import smbus2';
-    generator.definitions_['init_sht31'] = `_sht31 = smbus2.SMBus(2)
-_sht31.write_i2c_block_data(${dropdown_addr}, 0x2C, [0x06])
-time.sleep(0.5)
-`;
+    generator.definitions_['init_sht31'] = `_sht31 = smbus2.SMBus(2)`;
     var functionName = generator.provideFunction_(
     '_getSHT31',
     ['def _getSHT31(datatype):',
+    '  _sht31.write_i2c_block_data('+dropdown_addr+', 0x2C, [0x06])',
+    '  time.sleep(0.2)',
     '  data = _sht31.read_i2c_block_data('+ dropdown_addr+', 0x00, 6)',
     '  if data is None:',
     '    return False',
