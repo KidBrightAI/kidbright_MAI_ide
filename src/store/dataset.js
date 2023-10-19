@@ -126,18 +126,6 @@ export const useDatasetStore = defineStore({
       console.log("dataset type : ", this.datasetType);
     },
 
-    async clearDataset() {
-      console.log("clear dataset : ", this.dataset.project);
-      if (this.dataset.project) {
-        console.log("remove folder");
-        //removeFolder
-        let res = await storage.removeFolder(this._vm.$fs, state.dataset.project);
-        if (res) {
-          console.log("remove folder success");
-        }
-      }
-    },
-
     exist(filename) {
       return storage.exists(this.$fs, filename);
     },

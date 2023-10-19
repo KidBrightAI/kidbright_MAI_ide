@@ -29,6 +29,7 @@ import ExampleDialog from "@/components/dialog/ExampleDialog.vue";
 import PluginDialog from "@/components/dialog/PluginDialog.vue";
 import ConnectWifiDialog from "@/components/dialog/ConnectWifiDialog.vue";
 import SavingProjectDialog from "@/components/dialog/SavingProjectDialog.vue";
+import OpeningProjectDialog from "@/components/dialog/OpeningProjectDialog.vue";
 
 import {sleep } from "@/engine/helper";
 import { loadPlugin } from "@/engine/board"
@@ -170,8 +171,11 @@ const openProject = async () => {
     let message = "ข้อมูลโปรเจคปัจจุบันจะถูกลบทั้งหมด คุณต้องการเปิดโปรเจคใหม่หรือไม่";
     await confirm({ title: "ยืนยันการเปิดโปรเจค" , content: message , dialogProps: { width: 'auto' } });
     let res = await workspaceStore.openProjectFromZip();
-    blocklyComp.value.reload();
-    onResized();
+    if(res){
+      selectedMenu.value = 4;
+      blocklyComp.value.reload();
+      onResized();
+    }
   } catch (err) {
     console.log(err);
   }
@@ -408,6 +412,7 @@ watch(selectedMenu, (val) => {
     </v-main>
   </v-layout>
   <SavingProjectDialog></SavingProjectDialog>
+  <OpeningProjectDialog></OpeningProjectDialog>
   <ConnectWifiDialog v-model:isDialogVisible="connectWifiDialogOpen" />
   <NewProjectDialog v-model:isDialogVisible="newProjectDialogOpen" @submit="createdProject" />
   <ExampleDialog v-model:isDialogVisible="exampleDialogOpen" @loadExample="onExampleOpen" />

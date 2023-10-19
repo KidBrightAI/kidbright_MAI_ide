@@ -27,6 +27,8 @@ export const useWorkspaceStore = defineStore({
       model : null,
 
       saving: false,
+      opening: false,
+      openingProgress: 0,
       savingProgress: 0,
     }
   },
@@ -53,6 +55,14 @@ export const useWorkspaceStore = defineStore({
       zip.file("project.json", JSON.stringify(this.$state));
       //---------- save dataset raw ------------//
       const datasetStore = useDatasetStore();
+      
+      zip.file("dataset.json", JSON.stringify({
+        project: datasetStore.project,
+        datasetType: datasetStore.datasetType,
+        data: datasetStore.data,
+        baseURL: datasetStore.baseURL,
+      }));
+
       let rawDataset = zip.folder("dataset");
       let datasets = datasetStore.data;
       for (let [i, data] of datasets.entries()) {
@@ -177,16 +187,78 @@ export const useWorkspaceStore = defineStore({
     // open select file dialog and read ziped file
     async openProjectFromZip() {
       try{
+        let datasetStore = useDatasetStore();
+        
         let data = await this.selectAndReadZipFile();
+        
+        this.opening = true;
+        this.openingProgress = 0;
+
         let zip = new JSZip();
         await zip.loadAsync(data);
         let projectData = await zip.file("project.json").async("string");
         projectData = JSON.parse(projectData);
-        await this.createNewProject(projectData);
+
+        // clear dataset
+        await storage.removeFolder(this.$fs, projectData.id);
+        
+        // load dataset
+        await datasetStore.prepareDataset(projectData.id);
+        let datasetData = await zip.file("dataset.json").async("string");
+        datasetData = JSON.parse(datasetData);
+        
+
+        for(let i = 0; i < datasetData.data.length; i++){
+          let data = datasetData.data[i];
+          let fileData = await zip.file("dataset/" + data.class + "/" + data.id + "." + data.ext).async("blob");
+          await storage.writeFile(this.$fs, `${projectData.id}/${data.id}.${data.ext}`, fileData);
+          //scale progress from 1 - 97
+          this.openingProgress = 1 + Math.round(((i + 1) / datasetData.data.length) * 97);
+          //await sleep(1000);
+        }
+        
+        // load model
+        if(projectData.model){
+          let model = await zip.folder("model");
+          let modelBinaries = await model.file("model.bin").async("blob");
+          let modelParams = await model.file("model.param").async("blob");
+          this.openingProgress = 98;
+          await storage.writeFile(this.$fs, `${projectData.id}/model.bin`, modelBinaries);
+          this.openingProgress = 99;
+          await storage.writeFile(this.$fs, `${projectData.id}/model.param`, modelParams);
+        }
+        
+
+        this.code = projectData.code;
+        this.block = projectData.block;
+        this.currentBoard = this.boards.find(board => board.id == projectData.currentBoard.id);
+        this.name = projectData.name;
+        this.id = projectData.id;
+        this.dataset = projectData.dataset;
+        this.projectType = projectData.projectType;
+        this.projectTypeTitle = projectData.projectTypeTitle;
+        this.lastUpdate = projectData.lastUpdate;
+        this.extension = projectData.extension;
+        this.model = projectData.model;
+        this.labels = projectData.labels;
+        
+
+        datasetStore.project = datasetData.project;
+        datasetStore.datasetType = datasetData.datasetType;
+        datasetStore.data = datasetData.data;
+        datasetStore.baseURL = datasetData.baseURL;
+
+
+        this.openingProgress = 100;
+        this.opening = false;
+        return true;
       }catch(e){
         if(e == "NOFILE"){
           console.log('no file selected');
-        }        
+        }else{
+          console.log(e);
+          return false;
+        } 
       }
     },
 
