@@ -26,6 +26,7 @@ python.pythonGenerator.forBlock['maix3_display_get_image'] = function(block, gen
 
 python.pythonGenerator.forBlock['maix3_display_dislay'] = function(block, generator) {
   generator.definitions_['from_maix_import_display'] = 'from maix import display';
+  generator.definitions_['from_maix_import_camera'] = 'from maix import camera';
   var value_image = generator.valueToCode(block, 'image', python.Order.ATOMIC);  
   var code = 'display.show(' + value_image + ')\n';
   return code;
