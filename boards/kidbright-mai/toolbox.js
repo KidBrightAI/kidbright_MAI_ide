@@ -55,25 +55,26 @@ export default [
         icon: `images/icons/image-processing.png`,
         blocks: [
           {
-            // <block type="variables_set">
-            //   <field name="VAR">img1</field>
-            //   <value name="VALUE">
-            //     <block type="maix3_image_new">
-            //       <field name="color">#000000</field>
-            //       <value name="width">
-            //         <shadow type="math_number">
-            //           <field name="NUM">240</field>
-            //         </shadow>
-            //       </value>
-            //       <value name="height">
-            //         <shadow type="math_number">
-            //           <field name="NUM">240</field>
-            //         </shadow>
-            //       </value>
-            //     </block>
-            //   </value>
-            // </block>
+            
             xml : `<label text="create, load and save image"></label>            
+            <block type="variables_set">
+              <field name="VAR">img1</field>
+              <value name="VALUE">
+                <block type="maix3_image_new">
+                  <field name="color">#000000</field>
+                  <value name="width">
+                    <shadow type="math_number">
+                      <field name="NUM">240</field>
+                    </shadow>
+                  </value>
+                  <value name="height">
+                    <shadow type="math_number">
+                      <field name="NUM">240</field>
+                    </shadow>
+                  </value>
+                </block>
+              </value>
+            </block>
             <block type="variables_set">
             <field name="VAR">img1</field>
             <value name="VALUE">
