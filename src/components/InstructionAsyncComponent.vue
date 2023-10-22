@@ -13,6 +13,7 @@ const props = defineProps({
 });
 const AsyncComponent = shallowRef(null);
 watchEffect(() => {
+  console.log
   AsyncComponent.value = defineAsyncComponent(() => import(`./Instructions/${props.target}`));
 });
 </script>
