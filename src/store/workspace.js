@@ -292,8 +292,8 @@ export const useWorkspaceStore = defineStore({
         let data = await this.selectAndReadZipFile();
         let zip = new JSZip();
         await zip.loadAsync(data);
-        let modelBinaries = await zip.file("modelv831/opt_int8.bin").async("arraybuffer");
-        let modelParams = await zip.file("modelv831/opt_int8.param").async("arraybuffer");
+        let modelBinaries = await zip.file("classifier.bin").async("arraybuffer");
+        let modelParams = await zip.file("classifier.param").async("arraybuffer");
         await storage.writeFile(this.$fs, `${this.id}/model.bin`, new Blob([modelBinaries]));
         await storage.writeFile(this.$fs, `${this.id}/model.param`, new Blob([modelParams]));
         let hash = await md5(new Uint8Array(modelBinaries));
