@@ -1,8 +1,14 @@
 import Blockly from "blockly";
 
 export function randomId(count = 7) {
-    return Math.random().toString(36).substring(0,count);
+    let text = "";
+    let possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    for (let i = 0; i < count; i++) {
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+    }
+    return text;
 }
+
 export function getColorIndex(ind) {
     let colors = [
         "#3D642D",
