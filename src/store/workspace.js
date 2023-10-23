@@ -347,6 +347,17 @@ export const useWorkspaceStore = defineStore({
         await zip.loadAsync(data);
         let modelBinaries = await zip.file("classifier.bin").async("arraybuffer");
         let modelParams = await zip.file("classifier.param").async("arraybuffer");
+        //remove old model
+        try{
+          await storage.removeFile(this.$fs, `${this.id}/model.bin`);          
+        }catch(e){
+          console.log(e);
+        }
+        try{
+          await storage.removeFile(this.$fs, `${this.id}/model.param`);          
+        }catch(e){
+          console.log(e);
+        }
         await storage.writeFile(this.$fs, `${this.id}/model.bin`, new Blob([modelBinaries]));
         await storage.writeFile(this.$fs, `${this.id}/model.param`, new Blob([modelParams]));
         let hash = await md5(new Uint8Array(modelBinaries));
@@ -373,12 +384,32 @@ export const useWorkspaceStore = defineStore({
         await zip.loadAsync(data);
         let modelBinaries = await zip.file("classifier_awnn.bin").async("arraybuffer");
         let modelParams = await zip.file("classifier_awnn.param").async("arraybuffer");
+        //remove old model
+        try{
+          await storage.removeFile(this.$fs, `${this.id}/model.bin`);          
+        }catch(e){
+          console.log(e);
+        }
+        try{
+          await storage.removeFile(this.$fs, `${this.id}/model.param`);          
+        }catch(e){
+          console.log(e);
+        }
+
         await storage.writeFile(this.$fs, `${this.id}/model.bin`, new Blob([modelBinaries]));
         await storage.writeFile(this.$fs, `${this.id}/model.param`, new Blob([modelParams]));
         let hash = await md5(new Uint8Array(modelBinaries));
         let paramHash = await md5(new Uint8Array(modelParams));
         console.log("params hash : ", paramHash);
         console.log("model hash : ", hash);
+        // check again
+        let modelBinariesFile = await storage.readAsFile(this.$fs, `${this.id}/model.bin`);
+        let modelParamsFile = await storage.readAsFile(this.$fs, `${this.id}/model.param`);
+        let paramHashFile = await md5(new Uint8Array(await modelParamsFile.arrayBuffer()));
+        let modelHashFile = await md5(new Uint8Array(await modelBinariesFile.arrayBuffer()));
+        console.log("storeage param hash : ", paramHashFile);
+        console.log("storage model hash : ", modelHashFile);
+
         this.model = {
           name: 'model',
           type: 'bin',
