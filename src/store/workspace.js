@@ -345,8 +345,8 @@ export const useWorkspaceStore = defineStore({
         let data = await this.selectAndReadZipFile();
         let zip = new JSZip();
         await zip.loadAsync(data);
-        let modelBinaries = await zip.file("classifier.bin").async("arraybuffer");
-        let modelParams = await zip.file("classifier.param").async("arraybuffer");
+        let modelBinaries = await zip.file("classifier_awnn.bin").async("arraybuffer");
+        let modelParams = await zip.file("classifier_awnn.param").async("arraybuffer");
         //remove old model
         try{
           await storage.removeFile(this.$fs, `${this.id}/model.bin`);          
