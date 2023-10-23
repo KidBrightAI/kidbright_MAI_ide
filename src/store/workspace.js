@@ -144,6 +144,7 @@ export const useWorkspaceStore = defineStore({
       this.lastUpdate = projectInfo.lastUpdate;
       this.extension = projectInfo.extension;
       this.model = projectInfo.model;
+      this.modelLabel = projectInfo.modelLabel;
       //--------- create dataset for project --------//
       const datasetStore = useDatasetStore();
       let dataset = {
@@ -307,7 +308,7 @@ export const useWorkspaceStore = defineStore({
         this.extension = projectData.extension;
         this.model = projectData.model;
         this.labels = projectData.labels;
-        
+        this.modelLabel = projectData.modelLabel;
 
         datasetStore.project = datasetData.project;
         datasetStore.datasetType = datasetData.datasetType;
