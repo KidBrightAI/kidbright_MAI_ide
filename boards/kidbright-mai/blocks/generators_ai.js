@@ -3,8 +3,8 @@ python.pythonGenerator.forBlock['maix3_nn_classify_load'] = function(block, gene
   generator.definitions_['class_Resnet'] = `
 class _Resnet:
   m = {
-    "bin": "/home/model/${workspaceStore.model.hash}.bin",
-    "param": "/home/model/${workspaceStore.model.hash}.param"
+    "bin": "/root/model/${workspaceStore.model.hash}.bin",
+    "param": "/root/model/${workspaceStore.model.hash}.param"
   }
 
   options = {
@@ -76,10 +76,10 @@ _labels = [${workspaceStore.labels.map(label => `"${label.label}"`).join(', ')}]
     generator.definitions_['class_Resnet'] = `
 class Yolo:
   labels = [${workspaceStore.labels.map(label => `"${label.label}"`).join(', ')}]
-  anchors = [1.19, 1.98, 2.79, 4.59, 4.53, 8.92, 8.06, 5.29, 10.32, 10.65]
+  anchors = [5.4, 5.38, 1.65, 2.09, 0.8, 1.83, 2.45, 4.14, 0.46, 0.8]
   m = {
-    "bin": "/home/model/${workspaceStore.model.hash}.bin",
-    "param": "/home/model/${workspaceStore.model.hash}.param"
+    "bin": "/root/model/${workspaceStore.model.hash}.bin",
+    "param": "/root/model/${workspaceStore.model.hash}.param"
   }
   options = {
     "model_type":  "awnn",
@@ -109,7 +109,7 @@ class Yolo:
     var number_nms = block.getFieldValue('nms');
     var number_threshold = block.getFieldValue('threshold');
     // TODO: Assemble python into code variable.
-    var code = `_out = _yolo.model.forward(${value_image}, quantize=True, layout="hwc")
+    var code = `_out = _yolo.model.forward(${value_image}.tobytes(), quantize=True, layout="hwc")
 _boxes, _probs = _yolo.decoder.run(_out, nms=${number_nms}, threshold=${number_threshold}, img_size=(224, 224))\n`;
 // restruct two array to one array with properties in python code of _boxes and _probs 
     return code;

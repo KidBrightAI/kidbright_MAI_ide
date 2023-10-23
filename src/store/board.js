@@ -104,7 +104,7 @@ export const useBoardStore = defineStore({
       console.log(model);
       if(model != null){
         try{
-          let stat = await sync.lstat("/home/model/" + model.hash + ".param");
+          let stat = await sync.lstat("/root/model/" + model.hash + ".bin");
           console.log(stat);
         }catch(e){
           toast.warn("ไม่พบไฟล์โมเดลบนบอร์ด กำลังอัพโหลดโมเดลใหม่");
@@ -112,7 +112,7 @@ export const useBoardStore = defineStore({
           let modelParams = await storage.readAsFile(this.$fs, `${workspaceStore.id}/model.param`);
           try{
             await sync.write({
-              filename: "/home/model/" + model.hash + ".param",
+              filename: "/root/model/" + model.hash + ".param",
               file: new WrapReadableStream(modelParams.stream())
                       .pipeThrough(new WrapConsumableStream()),
               type: LinuxFileType.File,
@@ -120,7 +120,7 @@ export const useBoardStore = defineStore({
               mtime: Date.now() / 1000,
             });
             await sync.write({
-              filename: "/home/model/" + model.hash + ".bin",
+              filename: "/root/model/" + model.hash + ".bin",
               file: new WrapReadableStream(modelBinaries.stream())
                       .pipeThrough(new WrapConsumableStream()),
               type: LinuxFileType.File,

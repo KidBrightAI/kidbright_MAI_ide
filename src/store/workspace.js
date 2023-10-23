@@ -219,10 +219,22 @@ export const useWorkspaceStore = defineStore({
         projectData = JSON.parse(projectData);
 
         // clear dataset
-        await storage.removeFolder(this.$fs, projectData.id);
+        try{
+          await storage.removeFolder(this.$fs, projectData.id);
+          console.log("folder removed : ", projectData.id);
+        }catch(e){
+          console.log(e);
+        }
+        try{
+          await storage.removeFolder(this.$fs, this.id);
+          console.log("folder removed : ", this.id);
+        }catch(e){
+          console.log(e);
+        }
         
         // load dataset
-        await datasetStore.prepareDataset(projectData.id);
+        let entry = await datasetStore.prepareDataset(projectData.id);
+        console.log("dataset entry : ", entry);
         let datasetData = await zip.file("dataset.json").async("string");
         datasetData = JSON.parse(datasetData);
         
@@ -300,7 +312,7 @@ export const useWorkspaceStore = defineStore({
         datasetStore.project = datasetData.project;
         datasetStore.datasetType = datasetData.datasetType;
         datasetStore.data = datasetData.data;
-        datasetStore.baseURL = datasetData.baseURL;
+        datasetStore.baseURL = entry.toURL();
 
         if(projectData.plugin){
           const pluginStore = usePluginStore();
@@ -364,6 +376,9 @@ export const useWorkspaceStore = defineStore({
         await storage.writeFile(this.$fs, `${this.id}/model.bin`, new Blob([modelBinaries]));
         await storage.writeFile(this.$fs, `${this.id}/model.param`, new Blob([modelParams]));
         let hash = await md5(new Uint8Array(modelBinaries));
+        let paramHash = await md5(new Uint8Array(modelParams));
+        console.log("params hash : ", paramHash);
+        console.log("model hash : ", hash);
         this.model = {
           name: 'model',
           type: 'bin',

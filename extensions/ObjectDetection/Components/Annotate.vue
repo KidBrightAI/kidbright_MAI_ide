@@ -144,20 +144,22 @@ const selectLabel = (label) => {
   currentLabel.value = label;
 }
 
-const onRemoveLabel = async(name) => {
-  let confirm = await this.$dialog.confirm({ text: `หากลบ '${name}' ภาพที่ใช้ป้ายกำกับนี้จะถูกล้างค่า`, title : "ยืนยันการลบป้ายกำกับ"});
-  if(confirm){
-    this.removeDataAnnotation(name);
-    this.removeLabel(name);
-  }
+
+const onChangeLabel = (oldLabel) => {  
+  datasetStore.changeClassData({oldLabel : oldLabel, newLabel : tobeChangeLabel.value});
+  workspaceStore.changeLabel({oldLabel : oldLabel, newLabel : tobeChangeLabel.value});
+  onLabelChangeDialog.value = false;
+  tobeChangeLabel.value = "";
+  changeLabelName.value = "";
 };
 
-const onChangeLabel = async (name)=> {
-  let label = await this.$dialog.prompt({ text: `ชื่อป้ายกำกับจาก '${name}' เป็น`, title: 'เปลี่ยนชื่อป้ายกำกับใหม่' });
-  if(label){
-      this.changeDataAnnotation( { oldLabel : name, newLabel : label});
-      this.changeLabel({ oldLabel : name, newLabel : label});
-      this.processBbox();
+const onRemoveLabel = async(label) => {
+  try{
+    await confirm({ title: "ยืนยันการลบป้ายกำกับ", content: `หากลบ '${label}' ภาพที่ใช้ป้ายกำกับนี้จะถูกล้างค่า`, dialogProps: { width: 'auto' } });
+    datasetStore.changeClassData({oldLabel : label, newLabel : null});
+    workspaceStore.removeLabel(label);
+  }catch(e){
+    return;
   }
 };
 
