@@ -361,16 +361,16 @@ export default [
             <block type="maix3_nn_yolo_load"></block>
             <block type="maix3_nn_yolo_detect"></block>
             <block type="variables_set">
-              <field name="VAR" id="xsUU7$so/X+8#g,JO*@n">detect_results</field>
+              <field name="VAR">detect_results</field>
               <value name="VALUE">
-                <block type="maix3_nn_classify_get_result_array"></block>
+                <block type="maix3_nn_yolo_get_result_array"></block>
               </value>
             </block>
             <block type="controls_forEach">
-              <field name="VAR" id=":^0fttf6ikWaH|3XSBPO">obj</field>
+              <field name="VAR">obj</field>
               <value name="LIST">
                 <block type="variables_get">
-                  <field name="VAR" id="xsUU7$so/X+8#g,JO*@n">detect_results</field>
+                  <field name="VAR">detect_results</field>
                 </block>
               </value>
             </block>
@@ -378,7 +378,7 @@ export default [
               <field name="data">center X</field>
               <value name="obj">
                 <block type="variables_get">
-                  <field name="VAR" id=":^0fttf6ikWaH|3XSBPO">obj</field>
+                  <field name="VAR">obj</field>
                 </block>
               </value>
             </block>`

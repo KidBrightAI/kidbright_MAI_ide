@@ -34,12 +34,28 @@ Blockly.defineBlocksWithJsonArray([{
   },
   {
     "type": "maix3_nn_yolo_detect",
-    "message0": "Detect Image %1",
+    "message0": "Detect Image %1 with NMS %2 threshold %3",
     "args0": [
       {
         "type": "input_value",
         "name": "image",
         "check": "Image"
+      },
+      {
+        "type": "field_number",
+        "name": "nms",
+        "value": 0.3,
+        "min": 0.1,
+        "max": 1,
+        "precision": 0.1
+      },
+      {
+        "type": "field_number",
+        "name": "threshold",
+        "value": 0.5,
+        "min": 0.1,
+        "max": 1,
+        "precision": 0.1
       }
     ],
     "previousStatement": null,
@@ -49,7 +65,7 @@ Blockly.defineBlocksWithJsonArray([{
     "helpUrl": ""
   },
   {
-    "type": "maix3_nn_classify_get_result_array",
+    "type": "maix3_nn_yolo_get_result_array",
     "message0": "get results",
     "output": "Array",
     "colour": 120,
@@ -65,12 +81,20 @@ Blockly.defineBlocksWithJsonArray([{
         "name": "data",
         "options": [
           [
-            "center_x",
-            "center X"
+            "x1",
+            "x1"
           ],
           [
-            "center_y",
-            "center Y"
+            "y1",
+            "y1"
+          ],
+          [
+            "x2",
+            "x2"
+          ],
+          [
+            "y2",
+            "y2"
           ],
           [
             "width",
@@ -85,8 +109,8 @@ Blockly.defineBlocksWithJsonArray([{
             "label"
           ],
           [
-            "class_id",
-            "class id"
+            "class id",
+            "class_id"
           ],
           [
             "probability",

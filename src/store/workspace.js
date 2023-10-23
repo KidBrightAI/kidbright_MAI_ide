@@ -310,7 +310,12 @@ export const useWorkspaceStore = defineStore({
         await loadBoard(this.currentBoard);
 
         this.openingProgress = 100;        
-        return true;
+        
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+
+        return true;        
       }catch(e){
         if(e == "NOFILE"){
           console.log('no file selected');
