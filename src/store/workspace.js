@@ -170,11 +170,11 @@ export const useWorkspaceStore = defineStore({
       await loadBoard(this.currentBoard);      
       return true;
     },
-    selectAndReadZipFile() {      
+    selectAndReadFile(ext = '.zip') {      
       return new Promise((resolve, reject) => {
         let input = document.createElement("input");
         input.type = "file";
-        input.accept = ".zip";
+        input.accept = ext;
         input.addEventListener("change", function () {
           console.log("user loaded file");
           document.body.removeChild(input);
@@ -208,7 +208,7 @@ export const useWorkspaceStore = defineStore({
       try{
         let datasetStore = useDatasetStore();
         
-        let data = await this.selectAndReadZipFile();
+        let data = await this.selectAndReadFile();
         
         this.opening = true;
         this.openingProgress = 0;
@@ -342,7 +342,7 @@ export const useWorkspaceStore = defineStore({
 
     async importModelFromZip(){
       try{
-        let data = await this.selectAndReadZipFile();
+        let data = await this.selectAndReadFile();
         let zip = new JSZip();
         await zip.loadAsync(data);
         let modelBinaries = await zip.file("classifier_awnn.bin").async("arraybuffer");
@@ -393,7 +393,7 @@ export const useWorkspaceStore = defineStore({
     },
     async importObjectDetectionModelFromZip(){
       try{
-        let data = await this.selectAndReadZipFile();
+        let data = await this.selectAndReadFile();
         let zip = new JSZip();
         await zip.loadAsync(data);
         let modelBinaries = await zip.file("classifier_awnn.bin").async("arraybuffer");
@@ -451,6 +451,18 @@ export const useWorkspaceStore = defineStore({
           return false;
         }        
       }
+    },
+
+    async uploadLabel(){
+      let data = await this.selectAndReadFile(".txt");
+      // convert data from arraybuffer to string
+      let labels = await new TextDecoder("utf-8").decode(data);
+      labels = labels.split("\n");
+      //trim empty line and \r
+      labels = labels.filter(el => el.trim() != "");
+      labels = labels.map(el => el.trim());
+      this.modelLabel = labels;
+      console.log("model label : ", this.modelLabel);
     },
 
     saveAs(content, filename) {

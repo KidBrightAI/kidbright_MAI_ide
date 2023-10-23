@@ -22,6 +22,7 @@
       <VCardItem class="text-center">
         <h4>ขั้นตอนที่ 3 นำเข้าโมเดลที่สอนเสร็จเรียบร้อยแล้ว</h4>
         <VBtn class="my-3" @click="importModel">นำเข้าโมเดล</VBtn><br>
+        <VBtn class="my-3" @click="uploadLabel">นำเข้า LABEL</VBtn><br>
         <p class="mt-2">
           เมื่อทำการสอนโมเดลเรียบร้อย ให้ทำการนำเข้าโมเดลที่บันทึกจาก Google COLAB เพื่อใช้ในบอร์ดต่อไป
         </p>
@@ -40,6 +41,14 @@ const importModel = async()=>{
     toast.success("นำเข้าโมเดลเรียบร้อยแล้ว");
   }else if(res === false){
     toast.error("เกิดข้อผิดพลาดในการนำเข้าโมเดล");
+  }
+}
+const uploadLabel = async()=>{
+  let res = await workspaceStore.uploadLabel();
+  if(res){
+    toast.success("อัพโหลด Label เรียบร้อยแล้ว");
+  }else if(res === false){
+    toast.error("เกิดข้อผิดพลาดในการอัพโหลด Label");
   }
 }
 
