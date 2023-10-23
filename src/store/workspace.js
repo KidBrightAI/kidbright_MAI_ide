@@ -25,7 +25,7 @@ export const useWorkspaceStore = defineStore({
       extension: null,      
       labels: [],
       model : null,
-
+      modelLabel : [],
       saving: false,
       opening: false,
       openingProgress: 0,
@@ -33,7 +33,7 @@ export const useWorkspaceStore = defineStore({
     }
   },
   persist: {
-    paths: ['mode', 'code', 'block', 'currentBoard', 'name', 'board', 'id', 'dataset', 'projectType', 'projectTypeTitle', 'lastUpdate', 'model', 'labels'],
+    paths: ['mode', 'code', 'block', 'currentBoard', 'name', 'board', 'id', 'dataset', 'projectType', 'projectTypeTitle', 'lastUpdate', 'model', 'labels', 'modelLabel'],
   },
   actions: {
     downloadBlob(filename, data) {
@@ -360,6 +360,20 @@ export const useWorkspaceStore = defineStore({
         }
         await storage.writeFile(this.$fs, `${this.id}/model.bin`, new Blob([modelBinaries]));
         await storage.writeFile(this.$fs, `${this.id}/model.param`, new Blob([modelParams]));
+        // read labels.txt
+        //check is labels.txt exist
+        if(zip.file("labels.txt")){
+          let labels = await zip.file("labels.txt").async("string");
+          labels = labels.split("\n");
+          //trim empty line and \r
+          labels = labels.filter(el => el.trim() != "");
+          labels = labels.map(el => el.trim());
+          this.modelLabel = labels;
+          console.log("model label : ", this.modelLabel);
+        }else {
+          this.modelLabel = [];
+        }
+
         let hash = await md5(new Uint8Array(modelBinaries));
         this.model = {
           name: 'model',
@@ -409,6 +423,18 @@ export const useWorkspaceStore = defineStore({
         let modelHashFile = await md5(new Uint8Array(await modelBinariesFile.arrayBuffer()));
         console.log("storeage param hash : ", paramHashFile);
         console.log("storage model hash : ", modelHashFile);
+
+        if(zip.file("labels.txt")){
+          let labels = await zip.file("labels.txt").async("string");
+          labels = labels.split("\n");
+          //trim empty line and \r
+          labels = labels.filter(el => el.trim() != "");
+          labels = labels.map(el => el.trim());
+          this.modelLabel = labels;
+          console.log("model label : ", this.modelLabel);
+        }else {
+          this.modelLabel = [];
+        }
 
         this.model = {
           name: 'model',
