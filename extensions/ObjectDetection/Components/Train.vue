@@ -35,7 +35,7 @@ import { useWorkspaceStore } from '@/store/workspace';
 import { toast } from "vue3-toastify";
 const workspaceStore = useWorkspaceStore();
 const importModel = async()=>{
-  let res = await workspaceStore.importModelFromZip();
+  let res = await workspaceStore.importObjectDetectionModelFromZip();
   if(res){
     toast.success("นำเข้าโมเดลเรียบร้อยแล้ว");
   }else if(res === false){

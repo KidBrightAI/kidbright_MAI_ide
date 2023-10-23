@@ -108,7 +108,7 @@ class Yolo:
     var value_image = generator.valueToCode(block, 'image', python.Order.ATOMIC);
     // TODO: Assemble python into code variable.
     var code = `_out = _yolo.model.forward(${value_image}, quantize=True, layout="hwc")
-_boxes, _probs = _yolo.decoder.run(_out, nms=0.3, threshold=0.5, img_size=(224, 224))\n`;
+_boxes, _probs = _yolo.decoder.run(_out, nms=0.3, threshold=0.3, img_size=(224, 224))\n`;
     return code;
   };
   

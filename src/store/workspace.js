@@ -226,14 +226,49 @@ export const useWorkspaceStore = defineStore({
         let datasetData = await zip.file("dataset.json").async("string");
         datasetData = JSON.parse(datasetData);
         
-
-        for(let i = 0; i < datasetData.data.length; i++){
-          let data = datasetData.data[i];
-          let fileData = await zip.file("dataset/" + data.class + "/" + data.id + "." + data.ext).async("blob");
-          await storage.writeFile(this.$fs, `${projectData.id}/${data.id}.${data.ext}`, fileData);
-          //scale progress from 1 - 97
-          this.openingProgress = 1 + Math.round(((i + 1) / datasetData.data.length) * 97);
-          //await sleep(1000);
+        if(projectData.projectType === "OBJECT_DETECTION"){
+          for(let i = 0; i < datasetData.data.length; i++){
+            let data = datasetData.data[i];
+            // read xml file in pascol voc format
+            let xml = await zip.file("dataset/Annotations/" + data.id + ".xml").async("string");
+            // convert xml to dataset
+            let parser = new DOMParser();
+            let xmlDoc = parser.parseFromString(xml, "text/xml");
+            let objects = xmlDoc.getElementsByTagName("object");
+            let dataset = [];
+            for(let j = 0; j < objects.length; j++){
+              let object = objects[j];
+              let bndbox = object.getElementsByTagName("bndbox")[0];
+              let xmin = bndbox.getElementsByTagName("xmin")[0].innerHTML;
+              let ymin = bndbox.getElementsByTagName("ymin")[0].innerHTML;
+              let xmax = bndbox.getElementsByTagName("xmax")[0].innerHTML;
+              let ymax = bndbox.getElementsByTagName("ymax")[0].innerHTML;
+              dataset.push({
+                id: data.id,
+                class: object.getElementsByTagName("name")[0].innerHTML,
+                xmin: xmin,
+                ymin: ymin,
+                xmax: xmax,
+                ymax: ymax,
+              });
+            }
+            datasetStore.data = datasetStore.data.concat(dataset);
+            // read image file
+            let fileData = await zip.file("dataset/JPEGImages/" + data.id + "." + data.ext).async("blob");
+            await storage.writeFile(this.$fs, `${projectData.id}/${data.id}.${data.ext}`, fileData);
+            //scale progress from 1 - 97
+            this.openingProgress = 1 + Math.round(((i + 1) / datasetData.data.length) * 97);
+            //await sleep(1000);
+          }
+        }else if(projectData.projectType === "IMAGE_CLASSIFICATION"){
+          for(let i = 0; i < datasetData.data.length; i++){
+            let data = datasetData.data[i];
+            let fileData = await zip.file("dataset/" + data.class + "/" + data.id + "." + data.ext).async("blob");
+            await storage.writeFile(this.$fs, `${projectData.id}/${data.id}.${data.ext}`, fileData);
+            //scale progress from 1 - 97
+            this.openingProgress = 1 + Math.round(((i + 1) / datasetData.data.length) * 97);
+            //await sleep(1000);
+          }
         }
         
         // load model
@@ -274,8 +309,7 @@ export const useWorkspaceStore = defineStore({
         }
         await loadBoard(this.currentBoard);
 
-        this.openingProgress = 100;
-        this.opening = false;
+        this.openingProgress = 100;        
         return true;
       }catch(e){
         if(e == "NOFILE"){
@@ -284,6 +318,8 @@ export const useWorkspaceStore = defineStore({
           console.log(e);
           return false;
         } 
+      } finally {
+        this.opening = false;
       }
     },
 
@@ -313,7 +349,33 @@ export const useWorkspaceStore = defineStore({
         }        
       }
     },
-    
+    async importObjectDetectionModelFromZip(){
+      try{
+        let data = await this.selectAndReadZipFile();
+        let zip = new JSZip();
+        await zip.loadAsync(data);
+        let modelBinaries = await zip.file("classifier_awnn.bin").async("arraybuffer");
+        let modelParams = await zip.file("classifier_awnn.param").async("arraybuffer");
+        await storage.writeFile(this.$fs, `${this.id}/model.bin`, new Blob([modelBinaries]));
+        await storage.writeFile(this.$fs, `${this.id}/model.param`, new Blob([modelParams]));
+        let hash = await md5(new Uint8Array(modelBinaries));
+        this.model = {
+          name: 'model',
+          type: 'bin',
+          hash: hash,
+        };
+        console.log("model data", this.model);
+        return true;
+      }catch(e){
+        if(e == "NOFILE"){
+          console.log('no file selected');
+        }else{
+          console.log(e);
+          return false;
+        }        
+      }
+    },
+
     saveAs(content, filename) {
       const link = document.createElement('a')
       link.href = URL.createObjectURL(content)
