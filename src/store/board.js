@@ -3,7 +3,7 @@ import { defineStore } from "pinia";
 import { toast } from "vue3-toastify";
 import { useWorkspaceStore } from "./workspace";
 import storage from "@/engine/storage";
-
+import { md5 } from 'hash-wasm';
 import {
   WrapConsumableStream,
   WrapReadableStream,
@@ -110,6 +110,11 @@ export const useBoardStore = defineStore({
           toast.warn("ไม่พบไฟล์โมเดลบนบอร์ด กำลังอัพโหลดโมเดลใหม่");
           let modelBinaries = await storage.readAsFile(this.$fs, `${workspaceStore.id}/model.bin`);
           let modelParams = await storage.readAsFile(this.$fs, `${workspaceStore.id}/model.param`);
+          let paramHash = await md5(new Uint8Array(await modelParams.arrayBuffer()));
+          let modelHash = await md5(new Uint8Array(await modelBinaries.arrayBuffer()));
+          console.log("model hash : ", model.hash);
+          console.log("param hash : ", paramHash);
+          console.log("model hash : ", modelHash);
           try{
             await sync.write({
               filename: "/root/model/" + model.hash + ".param",
