@@ -161,7 +161,7 @@ export const useBoardStore = defineStore({
       //=======================//
       filesUpload = filesUpload.concat(extra_files);
       filesUpload.push({
-        file: "/root/main2.py",
+        file: "/root/app/run.py",
         content: code
       });
       
@@ -169,7 +169,17 @@ export const useBoardStore = defineStore({
       const workspaceStore = useWorkspaceStore();
       const currentBoard = workspaceStore.currentBoard;
       const pluginStore = usePluginStore();
-      
+      // list board python modules
+      for(let module of currentBoard.pythonModules){
+        let scriptResponse = await fetch(module);
+        if(scriptResponse.ok){
+          let scriptData = await scriptResponse.text();
+          filesUpload.push({
+            file: "/root/app/" + module.replace(currentBoard.path + "libs/", ""),
+            content: scriptData
+          });
+        }
+      }
       // list plugin files
       for(let plugin of pluginStore.installed){
         for(let codeFile of plugin.codeFiles){
@@ -177,7 +187,7 @@ export const useBoardStore = defineStore({
           if(scriptResponse.ok){
             let scriptData = await scriptResponse.text();
             filesUpload.push({
-              file: "/root/" + codeFile.replace(plugin.path + "libs/",""),
+              file: "/root/app/" + codeFile.replace(plugin.path + "libs/",""),
               content: scriptData
             });
           }
@@ -215,7 +225,7 @@ export const useBoardStore = defineStore({
         }
         sync.dispose(); 
         SingletonShell.write("killall python3\n");
-        SingletonShell.write("python3 /root/main2.py\n");       
+        SingletonShell.write("python3 /root/app/run.py\n");       
         return true;
       } catch (e) {
         throw e;

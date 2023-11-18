@@ -13,8 +13,8 @@ Blockly.Python['pin_digital_read'] = function (block) {
 
     var dropdown_pin = block.getFieldValue('pin');
 
-    var code = `Pin(${dropdown_pin}, Pin.IN).value()`;
-    return [code, Blockly.Python.ORDER_NONE];
+    var code = `(1 - (Pin(${dropdown_pin}, Pin.IN).value()))`;
+    return [code, Blockly.Python.ORDER_ATOMIC];
 };
 
 Blockly.Python['pin_analog_read'] = function (block) {

@@ -89,6 +89,7 @@ app.provide('extensions', extensionList);
 const boardModules = import.meta.glob('boards/*/index.js', { eager: true });
 const boardToolbox = import.meta.glob('boards/*/toolbox.js', { eager: true });
 const workspaces = import.meta.glob('boards/*/workspace.json', { eager: true });
+const boardPythonModules = import.meta.glob('boards/*/libs/*.py', { eager: false });
 // load examples folder
 const examples = import.meta.glob('boards/*/examples/*/readme.md', { eager: false, as : "raw" });
 const parsedExamples = await parseExamples(examples);
@@ -102,6 +103,16 @@ for (const path in boardModules) {
   board.toolbox = toolbox;
   board.defaultWorkspace = workspace;
   board.examples = parsedExamples;
+  
+  //find corresponding python modules
+  let pythonModules = [];
+  for (const pythonPath in boardPythonModules) {
+    if (pythonPath.startsWith(path.replace('index.js', ''))) {
+      pythonModules.push(pythonPath);
+    }
+  }
+  board.pythonModules = pythonModules;
+
   boards.push({ path: path.replace('index.js', ''), ...board  });
 }
 console.log("===== all boards =====");
@@ -143,8 +154,6 @@ pluginStore.plugins = plugins;
 const workspaceStore = useWorkspaceStore();
 workspaceStore.boards = boards;
 const currentBoard = workspaceStore.currentBoard;
-console.log("current board ");
-console.log(currentBoard);
 
 if(!currentBoard){
   // create new project
@@ -162,12 +171,16 @@ if(!currentBoard){
   //   board: "kidbright-mai"
   // });
 }else{
+  // reinit current board 
+  console.log("reinit current board");
+  workspaceStore.currentBoard = boards.find(el=>el.id == currentBoard.id);
   // assign extension to workspace
   console.log("assing extension to workspace");
   console.log(extensionList.find(el=>el.id == workspaceStore.projectType));
   workspaceStore.extension = extensionList.find(el=>el.id == workspaceStore.projectType);
 }
-
+console.log("current board ");
+console.log(currentBoard);
 //--------- init default blocks ----------//
 let defaultBlocks = import.meta.glob('@/blocks/*.js', { eager: false });
 for (const path in defaultBlocks) {
