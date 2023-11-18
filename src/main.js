@@ -112,7 +112,7 @@ console.log(boards);
 //==================================================//
 const pluginModules = import.meta.glob('plugins/*/index.js', { eager: true });
 const pluginBlocks = import.meta.glob('plugins/*/blocks/*.js', { eager: false });
-const pluginCodes = import.meta.glob('plugins/*/modules/*.py', { eager: false });
+const pluginCodes = import.meta.glob('plugins/*/libs/*.py', { eager: false });
 let plugins = [];
 for (const path in pluginModules) {
   let plugin = pluginModules[path].default;

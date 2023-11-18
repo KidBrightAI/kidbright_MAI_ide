@@ -2,6 +2,7 @@ import { findIncludeModuleNameInCode, sleep } from "@/engine/helper";
 import { defineStore } from "pinia";
 import { toast } from "vue3-toastify";
 import { useWorkspaceStore } from "./workspace";
+import { usePluginStore } from "./plugin";
 import storage from "@/engine/storage";
 import { md5 } from 'hash-wasm';
 import {
@@ -163,9 +164,31 @@ export const useBoardStore = defineStore({
         file: "/root/main2.py",
         content: code
       });
-      //return;
+      
+      //=======================//
+      const workspaceStore = useWorkspaceStore();
+      const currentBoard = workspaceStore.currentBoard;
+      const pluginStore = usePluginStore();
+      
+      // list plugin files
+      for(let plugin of pluginStore.installed){
+        for(let codeFile of plugin.codeFiles){
+          let scriptResponse = await fetch(codeFile);
+          if(scriptResponse.ok){
+            let scriptData = await scriptResponse.text();
+            filesUpload.push({
+              file: "/root/" + codeFile.replace(plugin.path + "libs/",""),
+              content: scriptData
+            });
+          }
+          // filesUpload.push({
+          //   file: "/root/" + codeFile.replace(plugin.path + "/libs/", ""),
+          //   content: code
+          // });
+        }
+      }
       console.log(filesUpload);
-      const currentBoard = useWorkspaceStore().currentBoard;
+
       try {
         let adb = this.$adb.adb;
         if(isProxy(adb)){
@@ -179,6 +202,7 @@ export const useBoardStore = defineStore({
         // upload files
         for (let file of filesUpload) {
           let fileT = new File([file.content], file.file);        
+          console.log("upload file : ", file.file);
           let fileStream = new WrapReadableStream(fileT.stream());
           await sync.write({
             filename: file.file,

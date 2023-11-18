@@ -1,4 +1,16 @@
 export default [
+  // {
+  //     name: "Basic",
+  //     color: "#5BA58C",
+  //     icon: `images/icons/basic_block_icon.svg`,
+  //     blocks : [
+  //       {
+  //         xml : `<block type="maix3_display_camera"></block>
+  //         <block type="maix3_set_display_color"></block>
+  //         `,
+  //       }
+  //     ]
+  // },
     {
         name: "Camera",
         color: "#a5745b",
