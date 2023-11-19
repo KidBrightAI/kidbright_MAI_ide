@@ -1,7 +1,7 @@
 python.pythonGenerator.forBlock['maix3_image_draw_string'] = function(block, generator) {
     generator.definitions_['from_maix_import_image'] = 'from maix import image';
-    var value_image = generator.valueToCode(block, 'image', python.Order.ATOMIC);
-    var value_text = generator.valueToCode(block, 'text', python.Order.ATOMIC);
+    var value_image = generator.valueToCode(block, 'image', python.Order.NONE);
+    var value_text = generator.valueToCode(block, 'text', python.Order.NONE);
     var value_x = generator.valueToCode(block, 'x', python.Order.ATOMIC);
     var value_y = generator.valueToCode(block, 'y', python.Order.ATOMIC);
     var colour_color = block.getFieldValue('color');
@@ -11,13 +11,13 @@ python.pythonGenerator.forBlock['maix3_image_draw_string'] = function(block, gen
     var r = parseInt(colour_color.substring(1,3),16);
     var g = parseInt(colour_color.substring(3,5),16);
     var b = parseInt(colour_color.substring(5,7),16);
-    var code = `${value_image}.draw_string(${value_x}, ${value_y}, ${value_text}, scale=${value_scale}, color=(${r}, ${g}, ${b}))\n`;
+    var code = `${value_image}.draw_string(${value_x}, ${value_y}, str(${value_text}), scale=${value_scale}, color=(${r}, ${g}, ${b}))\n`;
     return code;
   };
   
   python.pythonGenerator.forBlock['maix3_image_draw_line'] = function(block, generator) {
     generator.definitions_['from_maix_import_image'] = 'from maix import image';
-    var value_image = generator.valueToCode(block, 'image', python.Order.ATOMIC);
+    var value_image = generator.valueToCode(block, 'image', python.Order.NONE);
     var value_x1 = generator.valueToCode(block, 'x1', python.Order.ATOMIC);
     var value_y1 = generator.valueToCode(block, 'y1', python.Order.ATOMIC);
     var value_x2 = generator.valueToCode(block, 'x2', python.Order.ATOMIC);
@@ -34,7 +34,7 @@ python.pythonGenerator.forBlock['maix3_image_draw_string'] = function(block, gen
   
   python.pythonGenerator.forBlock['maix3_image_draw_rectangle'] = function(block, generator) {
     generator.definitions_['from_maix_import_image'] = 'from maix import image';
-    var value_image = generator.valueToCode(block, 'image', python.Order.ATOMIC);
+    var value_image = generator.valueToCode(block, 'image', python.Order.NONE);
     var value_x1 = generator.valueToCode(block, 'x1', python.Order.ATOMIC);
     var value_y1 = generator.valueToCode(block, 'y1', python.Order.ATOMIC);
     var value_x2 = generator.valueToCode(block, 'x2', python.Order.ATOMIC);
@@ -51,7 +51,7 @@ python.pythonGenerator.forBlock['maix3_image_draw_string'] = function(block, gen
   
   python.pythonGenerator.forBlock['maix3_image_draw_circle'] = function(block, generator) {
     generator.definitions_['from_maix_import_image'] = 'from maix import image';
-    var value_image = generator.valueToCode(block, 'image', python.Order.ATOMIC);
+    var value_image = generator.valueToCode(block, 'image', python.Order.NONE);
     var value_x1 = generator.valueToCode(block, 'x1', python.Order.ATOMIC);
     var value_y1 = generator.valueToCode(block, 'y1', python.Order.ATOMIC);
     var value_radius = generator.valueToCode(block, 'radius', python.Order.ATOMIC);
@@ -67,7 +67,7 @@ python.pythonGenerator.forBlock['maix3_image_draw_string'] = function(block, gen
   
   python.pythonGenerator.forBlock['maix3_image_draw_ellipse'] = function(block, generator) {
     generator.definitions_['from_maix_import_image'] = 'from maix import image';
-    var value_image = generator.valueToCode(block, 'image', python.Order.ATOMIC);
+    var value_image = generator.valueToCode(block, 'image', python.Order.NONE);
     var value_x1 = generator.valueToCode(block, 'x1', python.Order.ATOMIC);
     var value_y1 = generator.valueToCode(block, 'y1', python.Order.ATOMIC);
     var value_radius_x = generator.valueToCode(block, 'radius_x', python.Order.ATOMIC);
@@ -88,7 +88,7 @@ python.pythonGenerator.forBlock['maix3_image_draw_string'] = function(block, gen
   
   python.pythonGenerator.forBlock['maix3_image_crop'] = function(block, generator) {
     generator.definitions_['from_maix_import_image'] = 'from maix import image';
-    var value_image = generator.valueToCode(block, 'image', python.Order.ATOMIC);
+    var value_image = generator.valueToCode(block, 'image', python.Order.NONE);
     var value_x1 = generator.valueToCode(block, 'x1', python.Order.ATOMIC);
     var value_y1 = generator.valueToCode(block, 'y1', python.Order.ATOMIC);
     var value_x2 = generator.valueToCode(block, 'x2', python.Order.ATOMIC);
@@ -99,7 +99,7 @@ python.pythonGenerator.forBlock['maix3_image_draw_string'] = function(block, gen
   
   python.pythonGenerator.forBlock['maix3_image_resize'] = function(block, generator) {
     generator.definitions_['from_maix_import_image'] = 'from maix import image';
-    var value_image = generator.valueToCode(block, 'image', python.Order.ATOMIC);
+    var value_image = generator.valueToCode(block, 'image', python.Order.NONE);
     var value_width = generator.valueToCode(block, 'width', python.Order.ATOMIC);
     var value_height = generator.valueToCode(block, 'height', python.Order.ATOMIC);    
     var code = `${value_image}.resize(${value_width}, ${value_height})`;    
@@ -108,7 +108,7 @@ python.pythonGenerator.forBlock['maix3_image_draw_string'] = function(block, gen
   
   python.pythonGenerator.forBlock['maix3_image_flip'] = function(block, generator) {
     generator.definitions_['from_maix_import_image'] = 'from maix import image';
-    var value_image = generator.valueToCode(block, 'image', python.Order.ATOMIC);
+    var value_image = generator.valueToCode(block, 'image', python.Order.NONE);
     var dropdown_direction = block.getFieldValue('direction');    
     var code = `${value_image}.flip(${dropdown_direction})`;    
     return [code, python.Order.NONE];
@@ -116,7 +116,7 @@ python.pythonGenerator.forBlock['maix3_image_draw_string'] = function(block, gen
   
   python.pythonGenerator.forBlock['maix3_image_rotate'] = function(block, generator) {
     generator.definitions_['from_maix_import_image'] = 'from maix import image';
-    var value_image = generator.valueToCode(block, 'image', python.Order.ATOMIC);
+    var value_image = generator.valueToCode(block, 'image', python.Order.NONE);
     var angle_angle = block.getFieldValue('angle');    
     var code = `${value_image}.rotate(${angle_angle})`;    
     return [code, python.Order.NONE];
@@ -124,7 +124,7 @@ python.pythonGenerator.forBlock['maix3_image_draw_string'] = function(block, gen
   
   python.pythonGenerator.forBlock['maix3_image_copy'] = function(block, generator) {
     generator.definitions_['from_maix_import_image'] = 'from maix import image';
-    var value_image = generator.valueToCode(block, 'image', python.Order.ATOMIC);    
+    var value_image = generator.valueToCode(block, 'image', python.Order.NONE);    
     var code = `${value_image}.copy()`;
     // TODO: Change ORDER_NONE to the correct strength.
     return [code, python.Order.NONE];
@@ -132,7 +132,7 @@ python.pythonGenerator.forBlock['maix3_image_draw_string'] = function(block, gen
   
   python.pythonGenerator.forBlock['maix3_image_save'] = function(block, generator) {
     generator.definitions_['from_maix_import_image'] = 'from maix import image';
-    var value_image = generator.valueToCode(block, 'image', python.Order.ATOMIC);
+    var value_image = generator.valueToCode(block, 'image', python.Order.NONE);
     var text_path = block.getFieldValue('path');    
     var code = `${value_image}.save("${text_path}")\n`;
     return code;

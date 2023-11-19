@@ -71,6 +71,10 @@ const reload = (initBlock) => {
   let toolboxXml = `<xml xmlns="https://developers.google.com/blockly/xml">`
   if (targetBoard) {
     let toolbox = targetBoard.toolbox;
+    //check if toolbox is function
+    if (typeof toolbox === 'function') {
+      toolbox = toolbox();
+    }
     toolboxXml += updateBlockCategory(toolbox, targetBoard.path);    
   }
   //-------- load toolbox from installed plugin ----------//

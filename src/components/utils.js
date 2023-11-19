@@ -44,6 +44,10 @@ export let updateBlockCategory = (toolboxTree, rootPath='') => {
     let toolboxTextXML = ``;
     // blockTree
     for (let category of toolboxTree) {
+        // check if category is empty object
+        if (Object.keys(category).length === 0 && category.constructor === Object) {
+            continue;
+        }
         let actualRootPath = rootPath || category.path || '';
         toolboxTextXML += `<category name="${category.name}" icon="${actualRootPath}${category.icon}" colour="${category.color}"${typeof category.blocks === "string" ? ` custom="${category.blocks}"` : ''}>`;
         if (typeof category.blocks === "object") {

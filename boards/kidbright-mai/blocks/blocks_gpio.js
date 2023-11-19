@@ -136,6 +136,42 @@ Blockly.defineBlocksWithJsonArray(
         "helpUrl": ""
       },
       {
+        "type": "board_get_acc",
+        "message0": "get acceleration %1",
+        "args0": [
+          {
+            "type": "field_dropdown",
+            "name": "axis",
+            "options": [
+              [
+                "x",
+                "0"
+              ],
+              [
+                "y",
+                "1"
+              ],
+              [
+                "z",
+                "2"
+              ]
+            ]
+          }
+        ],
+        "output": null,
+        "colour": 210,
+        "tooltip": "",
+        "helpUrl": ""
+      },
+      {
+        "type": "board_get_acc_tap",
+        "message0": "is tapped",
+        "output": "Boolean",
+        "colour": 210,
+        "tooltip": "",
+        "helpUrl": ""
+      },
+      {
         "type": "maixpy3_gpio_get",
         "message0": "read pin %1",
         "args0": [
