@@ -140,9 +140,11 @@ python.pythonGenerator.forBlock['maix3_image_draw_string'] = function(block, gen
   
   python.pythonGenerator.forBlock['maix3_image_open'] = function(block, generator) {
     generator.definitions_['from_maix_import_image'] = 'from maix import image';
-    var text_path = block.getFieldValue('path');    
-    var code = `image.open("${text_path}")`;
-    return [code, python.Order.NONE];
+    var value_var = generator.valueToCode(block, 'var', python.Order.NONE);
+    var text_path = block.getFieldValue('path');
+    console.log(value_var);
+    var code = `${value_var} = image.open("${text_path}")`;
+    return code;
   };
   
   python.pythonGenerator.forBlock['maix3_image_new'] = function(block, generator) {

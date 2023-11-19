@@ -407,11 +407,11 @@ export default function(){
         </block>`
         },{
           xml : `<label text="load and save image"></label> 
-          <block type="variables_set">
-            <field name="VAR">img1</field>
-            <value name="VALUE">
-              <block type="maix3_image_open">
-                <field name="path">./tmp.png</field>
+          <block type="maix3_image_open">
+            <field name="path">./tmp.png</field>
+            <value name="var">
+              <block type="variables_get">
+                <field name="VAR">img1</field>
               </block>
             </value>
           </block>

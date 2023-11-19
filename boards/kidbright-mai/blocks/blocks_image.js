@@ -414,18 +414,43 @@ Blockly.defineBlocksWithJsonArray(
     "tooltip": "",
     "helpUrl": ""
   },
+  // {
+  //   "type": "maix3_image_open",
+  //   "message0": "Open image from path %1 to variable %2",
+  //   "args0": [
+  //     {
+  //       "type": "field_input",
+  //       "name": "path",
+  //       "text": "./tmp.png"
+  //     },
+  //   ],
+  //   "inputsInline": true,
+  //   "output": "Image",
+  //   "colour": 120,
+  //   "tooltip": "",
+  //   "helpUrl": ""
+  // },
   {
     "type": "maix3_image_open",
-    "message0": "Open image from path %1",
+    "message0": "open image from path %1 to variable %2 %3",
     "args0": [
       {
         "type": "field_input",
         "name": "path",
         "text": "./tmp.png"
+      },
+      {
+        "type": "input_dummy"
+      },
+      {
+        "type": "input_value",
+        "name": "var",
+        "check": ""
       }
     ],
     "inputsInline": true,
-    "output": "Image",
+    "previousStatement": null,
+    "nextStatement": null,
     "colour": 120,
     "tooltip": "",
     "helpUrl": ""

@@ -1,6 +1,6 @@
 <template>
   <div class="left-panel d-flex flex-column">
-    <div class="l-title font-weight-bold">KidBright AI</div>
+    <div class="l-title font-weight-bold">KidBright μAI</div>
     <main-menu @newProject="$emit('newProject')" @openProject="$emit('openProject')" @saveProject="$emit('saveProject')" @deleteProject="$emit('deleteProject')"></main-menu>
     <div class="left-bottom-content d-flex flex-fill position-relative">
       <div class="header-left-bar">
