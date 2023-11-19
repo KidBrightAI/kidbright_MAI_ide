@@ -140,17 +140,9 @@ export default function(){
           </block>
           <block type="maix3_display_get_image"></block>
           <block type="maix3_display_dislay"></block>`
-        }
-      ]
-  },
-  {
-      name: "Image Processing",
-      color: "#5ba55b",
-      icon: `images/icons/image-processing.png`,
-      blocks: [
+        },
         {
-          
-          xml : `<label text="create, load and save image"></label>            
+          xml : `           
           <block type="variables_set">
             <field name="VAR">img1</field>
             <value name="VALUE">
@@ -169,22 +161,6 @@ export default function(){
               </block>
             </value>
           </block>
-          <block type="variables_set">
-          <field name="VAR">img1</field>
-          <value name="VALUE">
-            <block type="maix3_image_open">
-              <field name="path">./tmp.png</field>
-            </block>
-          </value>
-        </block>
-        <block type="maix3_image_save">
-          <field name="path">./tmp.png</field>
-          <value name="image">
-            <block type="variables_get">
-              <field name="VAR">img1</field>
-            </block>
-          </value>
-        </block>
         <label text="Image Manipulation"></label>
         <block type="maix3_image_copy">
           <value name="image">
@@ -429,35 +405,201 @@ export default function(){
             </shadow>
           </value>
         </block>`
+        },{
+          xml : `<label text="load and save image"></label> 
+          <block type="variables_set">
+            <field name="VAR">img1</field>
+            <value name="VALUE">
+              <block type="maix3_image_open">
+                <field name="path">./tmp.png</field>
+              </block>
+            </value>
+          </block>
+          <block type="maix3_image_save">
+            <field name="path">./tmp.png</field>
+            <value name="image">
+              <block type="variables_get">
+                <field name="VAR">img1</field>
+              </block>
+            </value>
+          </block>`
         }
       ]
     },
     {
-        name: "Camera",
-        color: "#a5745b",
-        icon: `images/icons/camera.png`,
-        blocks: [
+      name: "Loops",
+      color: "#a56d5b",
+      icon: `images/icons/loop.png`,
+      blocks: [
           {
-            xml : `<block type="maix3_camera_width"></block>
-            <block type="maix3_camera_height"></block>
-            <block type="maix3_camera_resolution">
-              <value name="width">
+              xml: `
+              <block type="controls_repeat_ext">
+              <value name="TIMES">
                 <shadow type="math_number">
-                  <field name="NUM">240</field>
-                </shadow>
-              </value>
-              <value name="height">
-                <shadow type="math_number">
-                  <field name="NUM">240</field>
+                  <field name="NUM">10</field>
                 </shadow>
               </value>
             </block>
-            <block type="maix3_camera_capture"></block>
-            <block type="maix3_camera_close"></block>` 
-          }
+            <block type="controls_whileUntil">
+              <field name="MODE">WHILE</field>
+              <value name="BOOL">
+                <shadow type="logic_boolean">
+                  <field name="BOOL">TRUE</field>
+                </shadow>
+              </value>
+            </block>
+            <block type="controls_for">
+              <field name="VAR" id="oCd]8vxz-Mau~M!KFR_v">i</field>
+              <value name="FROM">
+                <shadow type="math_number">
+                  <field name="NUM">1</field>
+                </shadow>
+              </value>
+              <value name="TO">
+                <shadow type="math_number">
+                  <field name="NUM">10</field>
+                </shadow>
+              </value>
+              <value name="BY">
+                <shadow type="math_number">
+                  <field name="NUM">1</field>
+                </shadow>
+              </value>
+            </block>
+            <block type="controls_forEach">
+              <field name="VAR" id="$mr50Jzs+==5*:$9X;}r">j</field>
+            </block>
+            <block type="controls_flow_statements" disabled="false">
+              <field name="FLOW">BREAK</field>
+            </block>`
+          }     
+          // "controls_flow_statements",
+      ]
+    },
+    {
+      name: "Logic",
+      color: "#a55b5b",
+      icon: `images/icons/logn.png`,
+      blocks: [
+          {
+              xml: `
+              <block type="controls_if">
+              </block>
+              <block type="controls_if">
+                <mutation else="1"></mutation>
+              </block>
+              <block type="controls_if">
+                <mutation elseif="1" else="1"></mutation>
+              </block>
+              <block type="logic_compare">
+                <field name="OP">EQ</field>
+              </block>
+              <block type="logic_operation">
+                <field name="OP">AND</field>
+              </block>
+
+              <block type="logic_boolean">
+                <field name="BOOL">TRUE</field>
+              </block>
+
+              <block type="logic_negate"></block>
+              <block type="logic_null"></block>    
+            `
+          },
         ]
     },
-    
+    {
+      name: "Math",
+      color: "#a55b80",
+      icon: `images/icons/math.png`,
+      blocks: [
+          
+          {
+              xml: `
+              <block type="math_number">
+              <field name="NUM">0</field>
+            </block>
+            <block type="math_arithmetic">
+              <field name="OP">ADD</field>
+              <value name="A">
+                <shadow type="math_number">
+                  <field name="NUM">1</field>
+                </shadow>
+              </value>
+              <value name="B">
+                <shadow type="math_number">
+                  <field name="NUM">1</field>
+                </shadow>
+              </value>
+            </block>
+            <block type="math_single">
+              <field name="OP">ROOT</field>
+              <value name="NUM">
+                <shadow type="math_number">
+                  <field name="NUM">9</field>
+                </shadow>
+              </value>
+            </block>
+            <block type="math_trig">
+              <field name="OP">SIN</field>
+              <value name="NUM">
+                <shadow type="math_number">
+                  <field name="NUM">45</field>
+                </shadow>
+              </value>
+            </block>
+            <block type="math_constant">
+              <field name="CONSTANT">PI</field>
+            </block>
+            <block type="math_random_int">
+              <value name="FROM">
+                <shadow type="math_number">
+                  <field name="NUM">1</field>
+                </shadow>
+              </value>
+              <value name="TO">
+                <shadow type="math_number">
+                  <field name="NUM">100</field>
+                </shadow>
+              </value>
+            </block>
+            <block type="math_number_property">
+              <mutation divisor_input="false"></mutation>
+              <field name="PROPERTY">EVEN</field>
+              <value name="NUMBER_TO_CHECK">
+                <shadow type="math_number">
+                  <field name="NUM">0</field>
+                </shadow>
+              </value>
+            </block>
+            <block type="math_round">
+              <field name="OP">ROUND</field>
+              <value name="NUM">
+                <shadow type="math_number">
+                  <field name="NUM">3.1</field>
+                </shadow>
+              </value>
+            </block>
+            <block type="math_on_list">
+              <mutation op="SUM"></mutation>
+              <field name="OP">SUM</field>
+            </block>
+            <block type="math_modulo">
+              <value name="DIVIDEND">
+                <shadow type="math_number">
+                  <field name="NUM">64</field>
+                </shadow>
+              </value>
+              <value name="DIVISOR">
+                <shadow type="math_number">
+                  <field name="NUM">10</field>
+                </shadow>
+              </value>
+            </block>
+              `
+          },
+      ]
+    },
     {
       name: "GPIO I/O",
       color: "#5b80a5",
@@ -467,7 +609,7 @@ export default function(){
             // <block type="maixpy3_gpio_when_switch">
             //   <field name="switch">S1</field>
             // </block>            
-              xml: `
+              xml: `<label text="GPIO / Sensors"></label>
             <block type="maixpy3_gpio_switch">
               <field name="switch">S1</field>
             </block>
@@ -489,13 +631,6 @@ export default function(){
                 </shadow>
               </value>
             </block>
-            <block type="maixpy3_delay">
-              <value name="delay">
-                <shadow type="math_number">
-                  <field name="NUM">1</field>
-                </shadow>
-              </value>
-            </block>     
             <block type="board_get_acc">       
             </block>
             <block type="board_get_acc_tap">
@@ -521,6 +656,25 @@ export default function(){
             //     </shadow>
             //   </value>
             // </block>
+          },
+          {
+            xml : `<label text="camera"></label>
+            <block type="maix3_camera_width"></block>
+            <block type="maix3_camera_height"></block>
+            <block type="maix3_camera_resolution">
+              <value name="width">
+                <shadow type="math_number">
+                  <field name="NUM">240</field>
+                </shadow>
+              </value>
+              <value name="height">
+                <shadow type="math_number">
+                  <field name="NUM">240</field>
+                </shadow>
+              </value>
+            </block>
+            <block type="maix3_camera_capture"></block>
+            <block type="maix3_camera_close"></block>` 
           }
       ]
     },
@@ -615,12 +769,6 @@ export default function(){
           </block>`
         }
       ]
-    },
-    {
-      name: "Variables",
-      color: "#745ba5",
-      icon: `images/icons/var.png`,
-      blocks: "VARIABLE"
     },
     {
       name: "List",
@@ -728,263 +876,19 @@ export default function(){
       ]
     },
     {
-      name: "Math",
-      color: "#a55b80",
-      icon: `images/icons/math.png`,
-      blocks: [
-          
-          {
-              xml: `
-              <block type="math_number">
-              <field name="NUM">0</field>
-            </block>
-            <block type="math_arithmetic">
-              <field name="OP">ADD</field>
-              <value name="A">
-                <shadow type="math_number">
-                  <field name="NUM">1</field>
-                </shadow>
-              </value>
-              <value name="B">
-                <shadow type="math_number">
-                  <field name="NUM">1</field>
-                </shadow>
-              </value>
-            </block>
-            <block type="math_single">
-              <field name="OP">ROOT</field>
-              <value name="NUM">
-                <shadow type="math_number">
-                  <field name="NUM">9</field>
-                </shadow>
-              </value>
-            </block>
-            <block type="math_trig">
-              <field name="OP">SIN</field>
-              <value name="NUM">
-                <shadow type="math_number">
-                  <field name="NUM">45</field>
-                </shadow>
-              </value>
-            </block>
-            <block type="math_constant">
-              <field name="CONSTANT">PI</field>
-            </block>
-            <block type="math_random_int">
-              <value name="FROM">
-                <shadow type="math_number">
-                  <field name="NUM">1</field>
-                </shadow>
-              </value>
-              <value name="TO">
-                <shadow type="math_number">
-                  <field name="NUM">100</field>
-                </shadow>
-              </value>
-            </block>
-            <block type="math_number_property">
-              <mutation divisor_input="false"></mutation>
-              <field name="PROPERTY">EVEN</field>
-              <value name="NUMBER_TO_CHECK">
-                <shadow type="math_number">
-                  <field name="NUM">0</field>
-                </shadow>
-              </value>
-            </block>
-            <block type="math_round">
-              <field name="OP">ROUND</field>
-              <value name="NUM">
-                <shadow type="math_number">
-                  <field name="NUM">3.1</field>
-                </shadow>
-              </value>
-            </block>
-            <block type="math_on_list">
-              <mutation op="SUM"></mutation>
-              <field name="OP">SUM</field>
-            </block>
-            <block type="math_modulo">
-              <value name="DIVIDEND">
-                <shadow type="math_number">
-                  <field name="NUM">64</field>
-                </shadow>
-              </value>
-              <value name="DIVISOR">
-                <shadow type="math_number">
-                  <field name="NUM">10</field>
-                </shadow>
-              </value>
-            </block>
-              `
-          },
-      ]
+      name: "Variables",
+      color: "#745ba5",
+      icon: `images/icons/var.png`,
+      blocks: "VARIABLE"
     },
     {
-      name: "Logic",
-      color: "#a55b5b",
-      icon: `images/icons/logn.png`,
-      blocks: [
-          {
-              xml: `
-              <block type="logic_boolean">
-                <field name="BOOL">TRUE</field>
-              </block>
-              <block type="controls_if">
-              <value name="IF0">
-                <block type="logic_compare">
-                  <field name="OP">EQ</field>
-                  <value name="A">
-                    <shadow type="math_number">
-                      <field name="NUM">0</field>
-                    </shadow>
-                  </value>
-                  <value name="B">
-                    <shadow type="math_number">
-                      <field name="NUM">0</field>
-                    </shadow>
-                  </value>
-                </block>
-              </value>
-            </block>
-            <block type="controls_if">
-              <value name="IF0">
-                <block type="logic_operation">
-                  <field name="OP">AND</field>
-                </block>
-              </value>
-            </block>
-            <block type="controls_if">
-              <mutation else="1"></mutation>
-            </block>
-            <block type="controls_if">
-              <mutation elseif="1" else="1"></mutation>
-            </block>
-            <block type="logic_compare">
-              <field name="OP">LT</field>
-              <value name="A">
-                <shadow type="math_number">
-                  <field name="NUM">0</field>
-                </shadow>
-              </value>
-              <value name="B">
-                <shadow type="math_number">
-                  <field name="NUM">0</field>
-                </shadow>
-              </value>
-            </block>
-            <block type="logic_compare">
-              <field name="OP">GT</field>
-              <value name="A">
-                <shadow type="math_number">
-                  <field name="NUM">0</field>
-                </shadow>
-              </value>
-              <value name="B">
-                <shadow type="math_number">
-                  <field name="NUM">0</field>
-                </shadow>
-              </value>
-            </block>
-            <block type="logic_compare">
-              <field name="OP">NEQ</field>
-              <value name="A">
-                <shadow type="math_number">
-                  <field name="NUM">0</field>
-                </shadow>
-              </value>
-              <value name="B">
-                <shadow type="math_number">
-                  <field name="NUM">0</field>
-                </shadow>
-              </value>
-            </block>
-            <block type="logic_compare">
-              <field name="OP">EQ</field>
-            </block>
-            <block type="logic_compare">
-              <field name="OP">EQ</field>
-            </block>
-            <block type="logic_operation">
-              <field name="OP">AND</field>
-            </block>
-            <block type="logic_negate"></block>
-            <block type="logic_null"></block>    
-            <block type="text_print">
-                <value name="TEXT">
-                    <shadow type="text">
-                    <field name="TEXT">abc</field>
-                    </shadow>
-                </value>
-            </block>
-            `
-          },
-        ]
-    },
-    {
-      name: "Loops",
-      color: "#a56d5b",
-      icon: `images/icons/loop.png`,
-      blocks: [
-          {
-              xml: `
-              <block type="maixpy3_delay">
-                <value name="delay">
-                  <shadow type="math_number">
-                    <field name="NUM">1</field>
-                  </shadow>
-                </value>
-              </block>
-              <block type="controls_repeat_ext">
-              <value name="TIMES">
-                <shadow type="math_number">
-                  <field name="NUM">10</field>
-                </shadow>
-              </value>
-            </block>
-            <block type="controls_whileUntil">
-              <field name="MODE">WHILE</field>
-              <value name="BOOL">
-                <shadow type="logic_boolean">
-                  <field name="BOOL">TRUE</field>
-                </shadow>
-              </value>
-            </block>
-            <block type="controls_for">
-              <field name="VAR" id="oCd]8vxz-Mau~M!KFR_v">i</field>
-              <value name="FROM">
-                <shadow type="math_number">
-                  <field name="NUM">1</field>
-                </shadow>
-              </value>
-              <value name="TO">
-                <shadow type="math_number">
-                  <field name="NUM">10</field>
-                </shadow>
-              </value>
-              <value name="BY">
-                <shadow type="math_number">
-                  <field name="NUM">1</field>
-                </shadow>
-              </value>
-            </block>
-            <block type="controls_forEach">
-              <field name="VAR" id="$mr50Jzs+==5*:$9X;}r">j</field>
-            </block>
-            <block type="controls_flow_statements" disabled="false">
-              <field name="FLOW">BREAK</field>
-            </block>
-            <block type="text_print">
-                <value name="TEXT">
-                    <shadow type="text">
-                    <field name="TEXT">abc</field>
-                    </shadow>
-                </value>
-            </block>
-              `
-          }     
-          // "controls_flow_statements",
-      ]
-    },
+      name: "Functions",
+      color: "#995ba5",
+      icon: `images/icons/function.png`,
+      blocks: "PROCEDURE"
+    }
+    
+    
     // {
     //   name: "Advanced",
     //   color: "#4FC3F7",
