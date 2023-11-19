@@ -5,29 +5,29 @@ const defaultBlockStyles = {
   'colour_blocks': {
     'colourPrimary': '#05427f',
   },
-  'text_blocks': {
-    'colourPrimary': '#5b67a5',
-  },
-  'variable_blocks': {
-    'colourPrimary': '#745ba5',
-  },
-  'variable_dynamic_blocks': {
-    'colourPrimary': '#70bf70',
-  },
-  'list_blocks': {
-    'colourPrimary': '#995ba5',
-  },
-  'math_blocks': {
-    'colourPrimary': '#a55b80',
+  'loop_blocks': {
+    'colourPrimary': '#56A668',
   },
   'logic_blocks': {
-    'colourPrimary': '#a55b5b',
+    'colourPrimary': '#617E95',
   },
-  'loop_blocks': {
-    'colourPrimary': '#a56d5b',
+  'math_blocks': {
+    'colourPrimary': '#3A4F8B',
+  },
+  'text_blocks': {
+    'colourPrimary': '#5ba593',
+  },
+  'list_blocks': {
+    'colourPrimary': '#745ba5',
+  },
+  'variable_blocks': {
+    'colourPrimary': '#a55b80',
+  },
+  'variable_dynamic_blocks': {
+    'colourPrimary': '#a55b80',
   },
   'procedure_blocks': {
-    'colourPrimary': '#590721',
+    'colourPrimary': '#995ba5',
   },
   
 };

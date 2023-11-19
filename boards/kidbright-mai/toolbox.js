@@ -428,7 +428,7 @@ export default function(){
     },
     {
       name: "Loops",
-      color: "#a56d5b",
+      color: "#56A668",
       icon: `images/icons/loop.png`,
       blocks: [
           {
@@ -478,7 +478,7 @@ export default function(){
     },
     {
       name: "Logic",
-      color: "#a55b5b",
+      color: "#617E95",
       icon: `images/icons/logn.png`,
       blocks: [
           {
@@ -510,7 +510,7 @@ export default function(){
     },
     {
       name: "Math",
-      color: "#a55b80",
+      color: "#3A4F8B",
       icon: `images/icons/math.png`,
       blocks: [
           
@@ -602,7 +602,7 @@ export default function(){
     },
     {
       name: "GPIO I/O",
-      color: "#5b80a5",
+      color: "#a5745b",
       icon: `images/icons/gpio.png`,
       blocks: [
           {
@@ -680,7 +680,7 @@ export default function(){
     },
     {
       name: "Text",
-      color: "#5b67a5",
+      color: "#5ba593",
       icon: `images/icons/font.png`,
       blocks: [
         {
@@ -772,7 +772,7 @@ export default function(){
     },
     {
       name: "List",
-      color: "#995ba5",
+      color: "#745ba5",
       icon: `images/icons/list.png`,
       blocks: [
             {
@@ -877,7 +877,7 @@ export default function(){
     },
     {
       name: "Variables",
-      color: "#745ba5",
+      color: "#a55b80",
       icon: `images/icons/var.png`,
       blocks: "VARIABLE"
     },
