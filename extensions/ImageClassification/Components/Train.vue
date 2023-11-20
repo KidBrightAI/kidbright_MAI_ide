@@ -13,7 +13,7 @@
       </VCardItem>
       <VCardItem class="text-center">
         <h4>ขั้นตอนที่ 2 สร้าง Instance บน Google Colab และสอนโมเดล</h4>
-        <VBtn class="my-3" target="_blank" href="https://colab.research.google.com/drive/12W-GNNJQTYoEga3hHnLIJhEOLvGFCsRh?usp=sharing">สร้าง Instance Google Colab</VBtn><br>
+        <VBtn class="my-3" target="_blank" href="https://colab.research.google.com/drive/1GuQE-CffdKsq4sHIEAzBYdwEUGlpbI1A?usp=sharing">สร้าง Instance Google Colab</VBtn><br>
         <img class="mt-4" src="@/assets/images/png/train_step2.png" height="200"/>
         <p class="mt-2">
           กดที่ปุ่ม "สร้าง INSTANCE GOOGLE COLAB" จากนั้นทำตามขั้นตอนทีอธิบายไว้ใน COLAb ทำการสอนโมเดลจนเสร็จ จากนั้นกลับมาที่หน้านี้ใหม่อีกครั้ง
