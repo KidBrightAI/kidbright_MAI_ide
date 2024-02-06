@@ -12,6 +12,7 @@
         </div>
 
         <div v-if="workspaceStore.currentBoard" class="d-flex w-100 align-center justify-center mt-3">
+          <v-btn density="comfortable" class="mx-1" color="grey-lighten-3" icon="mdi-brain" @click="$emit('newModel')"></v-btn>
           <v-btn density="comfortable" class="mx-1" color="grey-lighten-3" icon="mdi-usb" @click="$emit('connectBoard')"></v-btn>
           <!-- <v-btn density="comfortable" class="mx-1" color="grey-lighten-3" icon="mdi-wifi" @click="$emit('connectWifi')"></v-btn> -->
           <!-- <v-btn density="comfortable" class="mx-1" color="grey-lighten-3" icon="mdi-folder" @click="$emit('fileBrowser')" :disabled="!isConnected"></v-btn> -->
@@ -23,7 +24,7 @@
         <li
           :class="{
             current: selectedMenu === 1,
-            inactive: workspaceStore.id == null,
+            inactive: workspaceStore.id == null || workspaceStore.projectType == null,
           }"
           @click="workspaceStore.id && handleTabChange(1)"
         >
@@ -32,7 +33,7 @@
         <li
           v-bind:class="{
             current: selectedMenu === 2,
-            inactive: workspaceStore.id == null,
+            inactive: workspaceStore.id == null || workspaceStore.projectType == null,
           }"
           @click="workspaceStore.id && handleTabChange(2)"
         >
@@ -41,7 +42,7 @@
         <li
           :class="{
             current: selectedMenu == 3,
-            inactive: workspaceStore.id == null,
+            inactive: workspaceStore.id == null || workspaceStore.projectType == null,
           }"
           @click="workspaceStore.id && handleTabChange(3)"
         >
@@ -57,7 +58,7 @@
           <img src="@/assets/images/png/code.png" alt="" srcset="" />
         </li>
       </ul>
-      <div v-if="workspaceStore.projectType == null" class="hint">
+      <!-- <div v-if="workspaceStore.projectType == null" class="hint">
         <div class="main-hint txt notype">
           <p v-if="workspaceStore.projectType == null">
             เริ่มใช้งานโดยกด
@@ -80,45 +81,45 @@
             srcset=""
           />
         </div>
-      </div>
+      </div> -->
       <div v-if="selectedMenu === 1" class="pt-3 h-100 overflow-hidden">
         <InstructionAsyncComponent
-          v-if="!workspaceStore.extension.instructions.capture"
+          v-if="!workspaceStore?.extension?.instructions?.capture"
           target="CaptureInstruction.vue"
         ></InstructionAsyncComponent>
         <extension-async-component
           v-else
-          :target="workspaceStore.extension.instructions.capture"
+          :target="workspaceStore?.extension?.instructions?.capture"
         ></extension-async-component>
       </div>
       <div v-if="selectedMenu === 2" class="pt-3 h-100 overflow-hidden">
         <InstructionAsyncComponent
-          v-if="!workspaceStore.extension.instructions.annotate"
+          v-if="!workspaceStore?.extension?.instructions?.annotate"
           target="AnnatateInstruction.vue"
         ></InstructionAsyncComponent>
         <extension-async-component
           v-else
-          :target="workspaceStore.extension.instructions.annotate"
+          :target="workspaceStore?.extension?.instructions?.annotate"
         ></extension-async-component>
       </div>
       <div v-if="selectedMenu === 3" class="pt-3 h-100 overflow-hidden">
         <InstructionAsyncComponent
-          v-if="!workspaceStore.extension.instructions.train"
+          v-if="!workspaceStore?.extension?.instructions?.train"
           target="TrainInstruction.vue"
         ></InstructionAsyncComponent>
         <extension-async-component
           v-else
-          :target="workspaceStore.extension.instructions.train"
+          :target="workspaceStore?.extension?.instructions?.train"
         ></extension-async-component>
       </div>
       <div v-if="selectedMenu === 4" class="pt-3 h-100 overflow-hidden">
         <InstructionAsyncComponent
-          v-if="!workspaceStore.extension.instructions.coding"
+          v-if="!workspaceStore?.extension?.instructions?.coding"
           target="CodingInstruction.vue"
         ></InstructionAsyncComponent>
         <extension-async-component
           v-else
-          :target="workspaceStore.extension.instructions.coding"
+          :target="workspaceStore?.extension?.instructions?.coding"
         ></extension-async-component>
       </div>
     </div>
@@ -142,7 +143,9 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(["update:selectedMenu"]);
+const emit = defineEmits([
+  "update:selectedMenu", 
+  "newProject", "openProject", "saveProject", "deleteProject", "connectBoard", "connectWifi", "fileBrowser", "terminal", "restartBoard", "newModel"]);
 //const exts = this.$extensions;
 const isOnline = computed(() => window.navigator.onLine);
 

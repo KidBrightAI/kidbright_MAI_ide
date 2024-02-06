@@ -30,6 +30,7 @@ import PluginDialog from "@/components/dialog/PluginDialog.vue";
 import ConnectWifiDialog from "@/components/dialog/ConnectWifiDialog.vue";
 import SavingProjectDialog from "@/components/dialog/SavingProjectDialog.vue";
 import OpeningProjectDialog from "@/components/dialog/OpeningProjectDialog.vue";
+import NewModelDialog from "@/components/dialog/NewModelDialog.vue";
 
 import {sleep } from "@/engine/helper";
 import { loadPlugin } from "@/engine/board"
@@ -50,6 +51,8 @@ const newProjectDialogOpen = ref(false);
 const exampleDialogOpen = ref(false);
 const pluginDialogOpen = ref(false);
 const connectWifiDialogOpen = ref(false);
+const newModelDialogOpen = ref(false);
+
 
 const footer = shallowRef();
 const isSerialPanelOpen = ref(false);
@@ -198,11 +201,26 @@ const deleteProject = async () => {
   try {
     let message = "ข้อมูลโปรเจคปัจจุบันจะถูกลบทั้งหมด คุณต้องการลบโปรเจคหรือไม่";
     await confirm({ title: "ยืนยันการลบโปรเจค", content: message , dialogProps: { width: 'auto' } });
+    selectedMenu.value = 0;
     let res = await workspaceStore.deleteProject();
-    blocklyComp.value.reload();
+    // blocklyComp.value.reload();
     onResized();
   } catch (err) {
     console.log(err);
+  }
+};
+
+const selectProjectType = async(selectedType) => {
+  newModelDialogOpen.value = false;
+  console.log("select project type");
+  console.log(selectedType);
+  let res = await workspaceStore.selectProjectType(selectedType);
+  if(res){
+    selectedMenu.value = 1;
+    blocklyComp.value.reload();
+    toast.success("เลือกประเภทโมเดลเสร็จเรียบร้อย");
+  }else{
+    toast.error("เลือกประเภทโมเดลไม่สำเร็จ");    
   }
 };
 
@@ -377,14 +395,15 @@ watch(selectedMenu, (val) => {
     <v-navigation-drawer permanent width="320" class="main-bg">
       <MainPanel v-model:selectedMenu="selectedMenu" 
         @newProject="newProjectDialogOpen = true" 
-        @openProject="openProject" 
-        @saveProject="saveProject" 
+        @openProject="openProject"
+        @saveProject="saveProject"
         @deleteProject="deleteProject"
         @connectBoard="serialMonitorBridge"
         @connectWifi="connectWifiDialogOpen = true"
         @fileBrowser=""
         @terminal="onSerial"
         @restartBoard="boardStore.rebootBoard"
+        @newModel="newModelDialogOpen = true"
       >
       </MainPanel>
     </v-navigation-drawer>
@@ -422,6 +441,7 @@ watch(selectedMenu, (val) => {
   <NewProjectDialog v-model:isDialogVisible="newProjectDialogOpen" @submit="createdProject" />
   <ExampleDialog v-model:isDialogVisible="exampleDialogOpen" @loadExample="onExampleOpen" />
   <PluginDialog v-model:isDialogVisible="pluginDialogOpen" @installPlugin="onInstallPlugin" @uninstallPlugin="onUninstallPlugin" />
+  <NewModelDialog v-model:isDialogVisible="newModelDialogOpen" @submit="selectProjectType" />
 </template>
 
 <route lang="yaml">

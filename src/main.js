@@ -29,6 +29,7 @@ import { useWorkspaceStore } from './store/workspace'
 
 import { loadBoard, loadPlugin, parseExamples } from './engine/board'
 import Storage from './engine/storage';
+import { randomId } from './engine/helper'
 
 loadFonts()
 Blockly.Python = Blockly.Python || {};
@@ -158,18 +159,21 @@ const currentBoard = workspaceStore.currentBoard;
 if(!currentBoard){
   // create new project
   console.log("create new project with default board");
-  // await workspaceStore.createNewProject({
-  //   name: projectName.value,
-  //   id: projectName.value + "_" + randomId(),
-  //   projectType: selectType.value, //id of extension
-  //   projectTypeTitle: selectedExtension.name, //this.models.find(el=>el.value == this.selectType).text,
-  //   lastUpdate: new Date(),
-  //   extension: selectedExtension, 
-  //   model : null,
-  //   dataset: [],
-  //   labels: [],
-  //   board: "kidbright-mai"
-  // });
+  await workspaceStore.createNewProject({
+    name: "KidBright Micro AI Project",
+    id: "kbmai_project_" + randomId(),
+    //projectType: selectType.value, //id of extension
+    //projectTypeTitle: selectedExtension.name, //this.models.find(el=>el.value == this.selectType).text,    
+    //extension: selectedExtension, 
+    projectType: null,
+    projectTypeTitle: "",
+    extension: null,    
+    model : null,
+    dataset: [],
+    labels: [],
+    board: "kidbright-mai",
+    lastUpdate: new Date(),
+  });
 }else{
   // reinit current board 
   console.log("reinit current board");

@@ -6,6 +6,8 @@ import { useDatasetStore } from "./dataset";
 import { sleep, generatePascalVocFromDataset } from "@/engine/helper";
 import storage from "@/engine/storage";
 import { md5 } from 'hash-wasm';
+//axios 
+import axios from 'axios';
 
 export const useWorkspaceStore = defineStore({
   id: "workspace",
@@ -145,15 +147,6 @@ export const useWorkspaceStore = defineStore({
       this.extension = projectInfo.extension;
       this.model = projectInfo.model;
       this.modelLabel = projectInfo.modelLabel;
-      //--------- create dataset for project --------//
-      const datasetStore = useDatasetStore();
-      let dataset = {
-        project: this.id,
-        datasetType: this.extension.id,
-        data: [],
-        baseURL: "",
-      };
-      await datasetStore.createDataset(dataset);
       //--------- load default code from board --------//
       if(projectInfo.block){
         this.block = projectInfo.block;        
@@ -169,6 +162,51 @@ export const useWorkspaceStore = defineStore({
         await loadPlugin(projectInfo.plugin);
       }
       await loadBoard(this.currentBoard);      
+      return true;
+    },
+    async deleteProject() {
+      // clear dataset
+      await storage.removeFolder(this.$fs, this.id);
+      
+      this.mode = 'block';
+      this.code = null;
+      this.block = null;
+      this.currentBoard = null;
+      this.name = null;
+      this.id = null;
+      this.dataset = [];
+      this.projectType = null;
+      this.projectTypeTitle = null;
+      this.lastUpdate = null;
+      this.extension = null;
+      this.labels = [];
+      this.model = null;
+      this.modelLabel = [];
+
+      // clear local storage
+      this.$reset();
+      
+      // reload page
+      window.location.reload();
+    },
+
+    async selectProjectType(projectType) {
+      
+      console.log("select project type : ", projectType);
+
+      this.projectType = projectType.projectType;
+      this.projectTypeTitle = projectType.projectTypeTitle;
+      this.extension = projectType.extension;
+      // create new dataset
+      //--------- create dataset for project --------//
+      const datasetStore = useDatasetStore();
+      let dataset = {
+        project: this.id,
+        datasetType: this.extension.id,
+        data: [],
+        baseURL: "",
+      };
+      await datasetStore.createDataset(dataset);
       return true;
     },
     selectAndReadFile(ext = '.zip') {      
@@ -452,6 +490,17 @@ export const useWorkspaceStore = defineStore({
           return false;
         }        
       }
+    },
+
+    async connectColab(colabUrl){
+      //axios request /ping and server return json success with message "pong"
+      let response = await axios.get(colabUrl + "/ping");
+      console.log(response);
+      if(response.data.response == "pong"){
+        console.log("connected to colab");
+        return true;
+      }
+      return false;
     },
 
     async uploadLabel(){
