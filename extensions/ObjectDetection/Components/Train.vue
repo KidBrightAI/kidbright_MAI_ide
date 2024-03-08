@@ -19,32 +19,42 @@
     <VCard flat>
       <VCardItem class="text-center">
         <h4>ขั้นตอนที่ 2 วางลิงค์ที่ได้จาก GOOGLE COLAB ในขั้นตอนที่ 1 และทำการเชื่อมต่อ</h4>
-        <VTextField class="my-3 mx-auto" style="max-width: 600px;" v-model="colabUrl" label="URL ที่ได้จาก Google Colab" outlined></VTextField>
-        <VBtn class="my-3" @click="connectColab">เชื่อมต่อกับ COLAB</VBtn>        
+        <VTextField class="my-3 mx-auto" style="max-width: 600px;" v-model="workspaceStore.colabUrl" label="URL ที่ได้จาก Google Colab" outlined></VTextField>
+        <VBtn class="my-3" @click="connectColab" :loading="workspaceStore.isColabConnecting" :disabled="workspaceStore.isColabConnecting">เชื่อมต่อกับ COLAB</VBtn>
       </VCardItem>
     </VCard>
     <VDivider></VDivider>
-    <VCard flat :disabled="!isColabConnected">
+    <VCard flat :disabled="!workspaceStore.isColabConnected">
       <VCardItem class="text-center">
         <h4>ขั้นตอนที่ 3 ตั่งค่าการสอนโมเดล</h4>
         <VRow class="mx-auto mt-5" style="max-width: 600px;">
           <VCol cols="12" md="6">
-            <VTextField v-model.number="trainConfig.epochs" label="จำนวนรอบการสอน" outlined hint="จำนวนรอบการสอนที่ต้องการให้โมเดลทำการสอน" hint-color="red"></VTextField>
+            <VTextField type="number" v-model.number="workspaceStore.trainConfig.epochs" label="จำนวนรอบการสอน" outlined hint="จำนวนรอบการสอนที่ต้องการให้โมเดลทำการสอน" hint-color="red"></VTextField>
           </VCol>
           <VCol cols="12" md="6">
-            <VTextField v-model.number="trainConfig.batchSize" label="จำนวนรูปภาพต่อรอบ" outlined hint="จำนวนรูปภาพที่ต้องการให้โมเดลทำการสอนต่อรอบ" hint-color="red"></VTextField>
+            <VTextField type="number" v-model.number="workspaceStore.trainConfig.batchSize" label="จำนวนรูปภาพต่อรอบ" outlined hint="จำนวนรูปภาพที่ต้องการให้โมเดลทำการสอนต่อรอบ" hint-color="red"></VTextField>
           </VCol>
           <VCol cols="12" md="6">
-            <VTextField v-model.number="trainConfig.learningRate" label="Learning Rate" outlined hint="ค่าที่ใช้ในการปรับค่าความสามารถในการเรียนรู้ของโมเดล" hint-color="red"></VTextField>
+            <VTextField 
+              type="number"
+              v-model.number="workspaceStore.trainConfig.learningRate" 
+              label="Learning Rate" 
+              outlined 
+              hint="ค่าที่ใช้ในการปรับค่าความสามารถในการเรียนรู้ของโมเดล" 
+              min="0.0001"
+              step="0.0001"
+              max="0.1"
+              hint-color="red">
+            </VTextField>
           </VCol>
           <VCol cols="12" md="6">
-            <VSelect v-model="trainConfig.model" :items="['slim_yolo_v2']" label="โมเดล" outlined hint="โมเดลที่ต้องการให้โมเดลทำการสอน" hint-color="red"></VSelect>
+            <VSelect v-model="workspaceStore.trainConfig.model" :items="['slim_yolo_v2']" label="โมเดล" outlined hint="โมเดลที่ต้องการให้โมเดลทำการสอน" hint-color="red"></VSelect>
           </VCol>
           <VCol cols="12" md="6">
-            <VTextField v-model.number="trainConfig.split" label="Validation Split" outlined hint="ค่าที่ใช้ในการแบ่งข้อมูลสำหรับการทดสอบโมเดล" hint-color="red"></VTextField>
+            <VTextField type="number" v-model.number="workspaceStore.trainConfig.split" label="Validation Split" outlined hint="ค่าที่ใช้ในการแบ่งข้อมูลสำหรับการทดสอบโมเดล" hint-color="red"></VTextField>
           </VCol>
           <VCol cols="12" md="6">
-            <VSwitch v-model="trainConfig.augmentation" label="Augmentation" outlined hint="การทำการปรับข้อมูลเพื่อให้โมเดลสามารถเรียนรู้ได้ดีขึ้น" hint-color="red"></VSwitch>
+            <VSwitch v-model="workspaceStore.trainConfig.augmentation" label="Augmentation" outlined hint="การทำการปรับข้อมูลเพื่อให้โมเดลสามารถเรียนรู้ได้ดีขึ้น" hint-color="red"></VSwitch>
           </VCol>          
         </VRow>
         <br>        
@@ -67,7 +77,7 @@
       </VCardItem>
     </VCard>
     <VDivider></VDivider>
-    <VCard flat class="h-100" :disabled="!isTrainingSuccess">
+    <VCard flat class="h-100" :disabled="!workspaceStore.isTrainingSuccess">
       <VCardItem class="text-center">
         <h4>ขั้นตอนที่ 4 ดาวน์โหลดโมเดลที่สอนเสร็จเรียบร้อยแล้ว</h4>
         <VBtn class="my-3" @click="importModel">ดาวน์โหลดโมเดล</VBtn><br>        
@@ -84,20 +94,6 @@ import { useWorkspaceStore } from '@/store/workspace';
 import { toast } from "vue3-toastify";
 const workspaceStore = useWorkspaceStore();
 
-const colabUrl = ref("");
-const isColabConnected = ref(false);
-const isTraining = ref(false);
-const isTrainingSuccess = ref(false);
-const trainConfig = ref({
-  epochs: 10,
-  batchSize: 32,
-  learningRate: 0.001,
-  model: "slim_yolo_v2",
-  metrics: ["accuracy"],
-  split : 0.2,
-  augmentation: true
-});
-
 const importModel = async()=>{
   let res = await workspaceStore.importObjectDetectionModelFromZip();
   if(res){
@@ -106,26 +102,26 @@ const importModel = async()=>{
     toast.error("เกิดข้อผิดพลาดในการนำเข้าโมเดล");
   }
 }
-const uploadLabel = async()=>{
-  let res = await workspaceStore.uploadLabel();
-  if(res){
-    toast.success("อัพโหลด Label เรียบร้อยแล้ว");
-  }else if(res === false){
-    toast.error("เกิดข้อผิดพลาดในการอัพโหลด Label");
-  }
-}
 
 const connectColab = async()=>{
-  if(colabUrl.value){
-    let res = await workspaceStore.connectColab(colabUrl.value);
+  if(workspaceStore.colabUrl){
+    let res = await workspaceStore.connectColab();
     if(res){
       toast.success("เชื่อมต่อกับ Google Colab เรียบร้อยแล้ว");
-      isColabConnected.value = true;
     }else if(res === false){
       toast.error("เกิดข้อผิดพลาดในการเชื่อมต่อกับ Google Colab");
     }
   }else{
     toast.error("กรุณากรอก URL ที่ได้จาก Google Colab");
+  }
+}
+
+const trainModel = async()=>{
+  let res = await workspaceStore.trainColab();
+  if(res){
+    toast.success("เริ่มการสอนโมเดลเรียบร้อยแล้ว");
+  }else if(res === false){
+    toast.error("เกิดข้อผิดพลาดในการสอนโมเดล");
   }
 }
 </script>

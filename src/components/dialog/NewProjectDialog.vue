@@ -34,8 +34,8 @@ const onFormSubmit = async() => {
     let project = {
       name: projectName.value,
       id: projectName.value + "_" + randomId(),
-      projectType: selectType.value, //id of extension
-      projectTypeTitle: selectedExtension.name, //this.models.find(el=>el.value == this.selectType).text,
+      projectType: null,// selectType.value, //id of extension
+      projectTypeTitle: "", //selectedExtension.name, //this.models.find(el=>el.value == this.selectType).text,
       lastUpdate: new Date(),
       extension: selectedExtension, 
       model : null,
@@ -68,10 +68,10 @@ const onFormSubmit = async() => {
       <VCardText class="pt-0">
         <VForm ref="refVForm" @submit.prevent="onFormSubmit">
           <VRow>
-            <VCol cols="12">
+            <!--VCol cols="12">
               <VSelect :items="models" label="ประเภทการเรียนรู้" v-model="selectType">
               </VSelect>
-            </VCol>
+            </VCol-->
             <VCol cols="12">
               <VTextField
                 v-model="projectName"

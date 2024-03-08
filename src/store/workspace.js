@@ -32,10 +32,40 @@ export const useWorkspaceStore = defineStore({
       opening: false,
       openingProgress: 0,
       savingProgress: 0,
+      graph: {},
+      
+      //colab training server
+      colabUrl: null,
+      messagesLog: [],
+
+      //training
+      trainConfig: {
+        epochs: 10,
+        batchSize: 32,
+        learningRate: 0.001,
+        model: "slim_yolo_v2",
+        metrics: ["accuracy"],
+        split : 0.2,
+        augmentation: true,
+      },
+      isColabConnecting: false,
+      isColabConnected: false,
+      isTraining: false,
+      trainingProgress: 0,
+      isTrainingSuccess: false,
+
+      isUploading: false,
+      uploadProgress: 0,
+
     }
   },
   persist: {
-    paths: ['mode', 'code', 'block', 'currentBoard', 'name', 'board', 'id', 'dataset', 'projectType', 'projectTypeTitle', 'lastUpdate', 'model', 'labels', 'modelLabel'],
+    paths: [
+      'mode', 'code', 'block', 'currentBoard', 'name', 'board', 
+      'id', 'dataset', 'projectType', 'projectTypeTitle', 'lastUpdate', 
+      'model', 'labels', 'modelLabel', 'colabUrl',
+      'trainConfig', 'graph'
+    ],
   },
   actions: {
     downloadBlob(filename, data) {
@@ -49,7 +79,7 @@ export const useWorkspaceStore = defineStore({
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     },
-    async saveProject() {
+    async saveProject(mode='download') {
       this.saving = true;
       this.savingProgress = 0;
       console.log("saving project");
@@ -119,18 +149,22 @@ export const useWorkspaceStore = defineStore({
       this.savingProgress = 99;
       //---------- save output (model) ---------//
       const that = this;
-      zip
-        .generateAsync({
+      try{
+        let zipBlob = await zip.generateAsync({
           type: "blob",
           compression: "STORE",
-        })
-        .then(function (content) {
-          that.downloadBlob("project.zip", content);
-        })
-        .finally(() => {
-          this.saving = false;
-          this.savingProgress = 100;
         });
+        if(mode === 'download'){
+          that.downloadBlob("project.zip", zipBlob);
+        }else if(mode === 'upload'){
+          return zipBlob;
+        }        
+      }catch(e){
+        console.log(e);
+      } finally {
+        this.saving = false;
+        this.savingProgress = 100;
+      }
     },
     async createNewProject(projectInfo) {
       this.mode = projectInfo.mode || 'block';
@@ -206,6 +240,8 @@ export const useWorkspaceStore = defineStore({
         data: [],
         baseURL: "",
       };
+      //set graph
+      this.graph = this.extension.graph;
       await datasetStore.createDataset(dataset);
       return true;
     },
@@ -492,15 +528,81 @@ export const useWorkspaceStore = defineStore({
       }
     },
 
-    async connectColab(colabUrl){
+    async connectColab(){
       //axios request /ping and server return json success with message "pong"
-      let response = await axios.get(colabUrl + "/ping");
-      console.log(response);
-      if(response.data.response == "pong"){
-        console.log("connected to colab");
-        return true;
+      this.isColabConnecting = true;
+      try{    
+        let response = await axios.get(this.colabUrl + "/ping");      
+        if(response.data.result == "pong"){
+          console.log("connected to colab");
+          this.isColabConnected = true;          
+          return true;
+        }
+        this.isColabConnected = false;
+        return false;
+      }catch(e){
+        console.log(e);
+        this.isColabConnected = false;
+        return false;
+      }finally{
+        this.isColabConnecting = false;
       }
-      return false;
+    },
+
+    async trainColab(){
+      try{
+        this.isTraining = true;
+        // upload project
+        let uploaded = await this.uploadProject();
+        if(!uploaded){
+          console.log("project upload failed");
+          return false;
+        }
+        // axios request /train
+        let response = await axios.post(this.colabUrl + "/train", {
+          project : this.id,
+          train_config : this.trainConfig,
+        });
+        console.log(response.data);
+      }catch(e){
+        console.log(e);
+      }finally{
+        this.isTraining = false;
+      }
+    },
+
+    async uploadProject(){
+      // axios http post request to /upload with blob zip file
+      try{
+        let blob = await this.saveProject('upload');
+        blob.name = "project.zip";
+        this.isUploading = true;    
+        let formData = new FormData();
+        // add zip file to formData
+        formData.append("project", blob);              
+        formData.append("project_id", this.id);
+
+        let response = await axios.post(this.colabUrl + "/upload", formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          },
+          onUploadProgress: (progressEvent) => {
+            this.uploadProgress = Math.round((progressEvent.loaded / progressEvent.total) * 100);
+          }
+        });
+        console.log(response.data);
+        if(response.data.result == "success"){
+          console.log("project uploaded");
+          return true;
+        }else{
+          console.log("project upload failed");
+          return false;
+        }        
+      }catch(e){
+        console.log(e);
+      }finally{
+        this.isUploading = false;
+      }
     },
 
     async uploadLabel(){

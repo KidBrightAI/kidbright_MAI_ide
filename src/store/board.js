@@ -1,4 +1,4 @@
-import { findIncludeModuleNameInCode, sleep } from "@/engine/helper";
+import { sleep } from "@/engine/helper";
 import { defineStore } from "pinia";
 import { toast } from "vue3-toastify";
 import { useWorkspaceStore } from "./workspace";
@@ -28,6 +28,9 @@ export const useBoardStore = defineStore({
       firmwareUpdateMode: false,
       uploading: false,
       connected: false,
+      wifiConnected: false,
+      wifiConnecting : false,
+      wifiListing: false,
     }
   },
 
@@ -85,7 +88,130 @@ export const useBoardStore = defineStore({
         return true;
       }   
     },
+    checkWifi(){
+      return new Promise(async (resolve, reject) => {
+        if (!this.$adb.transport) {
+          if (!await this.deviceConnect()) {
+            reject("device not connected");
+            return;
+          }
+          await sleep(300);
+        }
+        this.wifiListing = true;
+        SingletonShell.addCallback((data) => {
+          let dataString = new TextDecoder().decode(data);
+          console.log("wifi check : ", dataString);
+          /*
+          Connected AP: BanAomnaha_2.4GHz
+          IP address: 192.168.1.75
+          frequency: 2422
+          RSSI: -56
+          link_speed: 72
+          noise: 9999
+          */
+         //extract data
+          let lines = dataString.split("\n");
+          let wifiInfo = {};
+          for(let line of lines){
+            let parts = line.split(":");
+            if(parts.length == 2){
+              wifiInfo[parts[0].trim()] = parts[1].trim();
+            }
+          }
+          console.log("--- wifi info ---");
+          console.log(wifiInfo);
+          if(dataString.match(/wifi_get_connection_info_test: get connection infomation complete!/)){
+            SingletonShell.removeLastCallback();
+            this.wifiConnected = true;
+            this.wifiListing = false;
+            resolve(true);
+          }
+          if(dataString.match(/wifi_get_connection_info_test: WIFI disconnected/)){
+            SingletonShell.removeLastCallback();
+            this.wifiConnected = false;
+            this.wifiListing = false;
+            resolve(false);
+          }
+        });
+        await SingletonShell.write("wifi_get_connection_info_test 1\n");
+      });
+    },
+    listWifi(){
+      return new Promise(async (resolve, reject) => {
+        if (!this.$adb.transport) {
+          if (!await this.deviceConnect()) {
+            reject("device not connected");
+            return;
+          }
+          await sleep(300);
+        }
 
+        this.wifiListing = true;
+        let wifiList = [];
+        SingletonShell.addCallback((data) => {        
+          let dataString = new TextDecoder().decode(data);
+          console.log("wifi list : ", dataString);
+          // data start with bssid frequency signal level flags ssid
+          // 64:20:e0:c2:8e:a5	2442	-50	[WPA2-PSK-CCMP][WPS][ESS]	Yanika_2.4G
+          // 9c:52:f8:7b:3f:fc	2422	-64	[WPA-PSK-CCMP][WPA2-PSK-CCMP][ESS]	BanAomnaha_2.4GHz
+          let lines = dataString.split("\n");
+          for(let line of lines){
+            //check line start with bssid xx:xx:xx:xx:xx:xx
+            if(line.match(/([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})/)){
+              let wifi = line.split("\t");              
+              if(wifi.length == 5){
+                wifiList.push({
+                  ssid: wifi[4].trim(),
+                  bssid: wifi[0].trim(),
+                  frequency: wifi[1].trim(),
+                  signal: wifi[2].trim(),
+                  flags: wifi[3].trim()
+                });
+              }
+            }
+          }
+          //check if command success with root@sipeed:/#
+          if(dataString.match(/root@sipeed:/)){
+            SingletonShell.removeLastCallback();
+            this.wifiListing = false;        
+            //filter if ssid is empty
+            wifiList = wifiList.filter(wifi => wifi.ssid != "");       
+            //sort by signal level
+            wifiList.sort((a, b) => (parseInt(a.signal) > parseInt(b.signal)) ? -1 : 1);         
+            resolve(wifiList);
+          }
+        });
+        await SingletonShell.write("wifi_scan_results_test\n");
+        await sleep(1000);
+      });
+    },
+    connectWifi(ssid, password){
+      return new Promise(async (resolve, reject) => {
+        if (!this.$adb.transport) {
+          if (!await this.deviceConnect()) {
+            reject("device not connected");
+            return;
+          }
+          await sleep(300);
+        }
+        this.wifiConnecting = true;
+        SingletonShell.addCallback((data) => {
+          let dataString = new TextDecoder().decode(data);
+          console.log("wifi connect : ", dataString);
+          if(dataString.match(/Wifi connect ap : Success!/)){
+            SingletonShell.removeLastCallback();
+            this.wifiConnecting = false;
+            resolve(true);
+          }
+          if(dataString.match(/Wifi connect ap : Failure!/)){
+            SingletonShell.removeLastCallback();
+            this.wifiConnecting = false;
+            resolve(false);
+          }
+        });
+        await SingletonShell.write(`wifi_connect_ap_test ${ssid} ${password}\n\n`);                  
+      });
+    },
     rebootBoard(){
       SingletonShell.write("reboot\n");
       this.connected = false;

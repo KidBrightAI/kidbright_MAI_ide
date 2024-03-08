@@ -29,7 +29,11 @@ export default class SingletonShell {
       this.shell.stdout.pipeTo(
         new WritableStream({
           write: (chunk) => {
-            if(this.cb){
+            if(Array.isArray(this.cb)){
+              this.cb.forEach((cb) => {
+                cb(chunk);
+              });
+            }else if(this.cb){
               this.cb(chunk);
             }
           },
@@ -99,6 +103,27 @@ export default class SingletonShell {
     this.writer = writer;
   }
   
+  static addCallback(cb) {
+    if(this._instance){
+      //check if cb is array
+      if(Array.isArray(this._instance.cb)){
+        this._instance.cb.push(cb);
+      }else if(this._instance.cb){
+        this._instance.cb = [this._instance.cb, cb];
+      }      
+    }
+  }
+
+  static removeLastCallback() {
+    if(this._instance){
+      if(Array.isArray(this._instance.cb)){
+        this._instance.cb.pop();
+      }else if(this._instance.cb){
+        this._instance.cb = null;
+      }
+    }
+  }
+
   setCallback(cb) {
     this.cb = cb;
   }

@@ -64,6 +64,7 @@ app.use(router)
 
 //==================== Load Extensions ====================//
 const extensions = import.meta.glob('extensions/*/config.js', { eager: true });
+const defaultGraphs = import.meta.glob('extensions/*/model-graph.json', { eager: true });
 const extensionComponents = import.meta.glob('extensions/*/Components/*.vue', { eager: false });
 let extensionList = [];
 for (const path in extensions) {
@@ -75,6 +76,12 @@ for (const path in extensions) {
       // get file name from path
       let fileName = componentPath.split('/').pop().split('.')[0];
       extension.components[fileName] = componentPath.replace("/extensions/", "");
+    }
+  }
+  //find corresponding model graph
+  for (const graphPath in defaultGraphs) {
+    if (graphPath.startsWith(path.replace('config.js', ''))) {
+      extension.graph = defaultGraphs[graphPath].default;
     }
   }
   extensionList.push({ path: path.replace('config.js', ''), ...extension });
@@ -90,7 +97,7 @@ app.provide('extensions', extensionList);
 const boardModules = import.meta.glob('boards/*/index.js', { eager: true });
 const boardToolbox = import.meta.glob('boards/*/toolbox.js', { eager: true });
 const workspaces = import.meta.glob('boards/*/workspace.json', { eager: true });
-const boardPythonModules = import.meta.glob('boards/*/libs/*.py', { eager: false });
+const boardPythonModules = import.meta.glob('boards/*/libs/*.py', { eager: false, as : 'raw'});
 // load examples folder
 const examples = import.meta.glob('boards/*/examples/*/readme.md', { eager: false, as : "raw" });
 const parsedExamples = await parseExamples(examples);
@@ -124,7 +131,7 @@ console.log(boards);
 //==================================================//
 const pluginModules = import.meta.glob('plugins/*/index.js', { eager: true });
 const pluginBlocks = import.meta.glob('plugins/*/blocks/*.js', { eager: false });
-const pluginCodes = import.meta.glob('plugins/*/libs/*.py', { eager: false });
+const pluginCodes = import.meta.glob('plugins/*/modules/*.py', { eager: false, as : 'raw' });
 let plugins = [];
 for (const path in pluginModules) {
   let plugin = pluginModules[path].default;
@@ -174,6 +181,7 @@ if(!currentBoard){
     board: "kidbright-mai",
     lastUpdate: new Date(),
   });
+  workspaceStore.currentBoard = boards.find(el=>el.id == "kidbright-mai");
 }else{
   // reinit current board 
   console.log("reinit current board");
@@ -186,15 +194,11 @@ if(!currentBoard){
 console.log("current board ");
 console.log(currentBoard);
 //--------- init default blocks ----------//
-let defaultBlocks = import.meta.glob('@/blocks/*.js', { eager: false });
+let defaultBlocks = import.meta.glob('@/blocks/*.js', { eager: true, as : 'raw' });
+import python from "blockly/python";
 for (const path in defaultBlocks) {
-  fetch(path).then(
-    response => response.text()
-  ).then(text => {
-    eval(text,pythonGenerator);
-  }).catch(
-    err => console.error(err)
-  );
+  let blockText = defaultBlocks[path];
+  eval(blockText,python);  
 }
 
 //---------init board ----------//

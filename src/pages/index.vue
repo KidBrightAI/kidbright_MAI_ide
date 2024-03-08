@@ -29,6 +29,7 @@ import ExampleDialog from "@/components/dialog/ExampleDialog.vue";
 import PluginDialog from "@/components/dialog/PluginDialog.vue";
 import ConnectWifiDialog from "@/components/dialog/ConnectWifiDialog.vue";
 import SavingProjectDialog from "@/components/dialog/SavingProjectDialog.vue";
+import UploadProjectDialog from "@/components/dialog/UploadProjectDialog.vue";
 import OpeningProjectDialog from "@/components/dialog/OpeningProjectDialog.vue";
 import NewModelDialog from "@/components/dialog/NewModelDialog.vue";
 
@@ -436,6 +437,7 @@ watch(selectedMenu, (val) => {
     </v-main>
   </v-layout>
   <SavingProjectDialog></SavingProjectDialog>
+  <UploadProjectDialog></UploadProjectDialog>
   <OpeningProjectDialog></OpeningProjectDialog>
   <ConnectWifiDialog v-model:isDialogVisible="connectWifiDialogOpen" />
   <NewProjectDialog v-model:isDialogVisible="newProjectDialogOpen" @submit="createdProject" />

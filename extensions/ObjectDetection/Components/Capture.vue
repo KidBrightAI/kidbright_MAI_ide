@@ -58,7 +58,7 @@
         </pane>
       </splitpanes>
     </div>
-    <ImportImageClassifiy v-model:isDialogVisible="showImportDialog"></ImportImageClassifiy>
+    <ImportObjectDetectDialog v-model:isDialogVisible="showImportDialog"></ImportObjectDetectDialog>
   </div>
 </template>
 
@@ -67,6 +67,7 @@ import { Splitpanes, Pane } from 'splitpanes'
 import 'splitpanes/dist/splitpanes.css'
 import { randomId } from "@/components/utils";
 import ImportImageClassifiy from "@/components/dialog/ImportImageClassify.vue";
+import ImportObjectDetectDialog from "@/components/dialog/ImportObjectDetectDialog.vue";
 import ImageCapture from "@/components/InputConnection/ImageCapture.vue";
 import ImageDisplay from "@/components/InputConnection/ImageDisplay.vue";
 import ImageDatasetList from "@/components/InputConnection/ImageDatasetList.vue";

@@ -14,7 +14,7 @@
         <div v-if="workspaceStore.currentBoard" class="d-flex w-100 align-center justify-center mt-3">
           <v-btn density="comfortable" class="mx-1" color="grey-lighten-3" icon="mdi-brain" @click="$emit('newModel')"></v-btn>
           <v-btn density="comfortable" class="mx-1" color="grey-lighten-3" icon="mdi-usb" @click="$emit('connectBoard')"></v-btn>
-          <!-- <v-btn density="comfortable" class="mx-1" color="grey-lighten-3" icon="mdi-wifi" @click="$emit('connectWifi')"></v-btn> -->
+          <v-btn density="comfortable" class="mx-1" color="grey-lighten-3" icon="mdi-wifi" @click="$emit('connectWifi')" :disabled="!isConnected"></v-btn> 
           <!-- <v-btn density="comfortable" class="mx-1" color="grey-lighten-3" icon="mdi-folder" @click="$emit('fileBrowser')" :disabled="!isConnected"></v-btn> -->
           <v-btn density="comfortable" class="mx-1" color="grey-lighten-3" icon="mdi-console" @click="$emit('terminal')" :disabled="!isConnected"></v-btn>
           <v-btn density="comfortable" class="mx-1" color="grey-lighten-3" icon="mdi-restart" @click="$emit('restartBoard')" :disabled="!isConnected"></v-btn>
@@ -26,7 +26,7 @@
             current: selectedMenu === 1,
             inactive: workspaceStore.id == null || workspaceStore.projectType == null,
           }"
-          @click="workspaceStore.id && handleTabChange(1)"
+          @click="workspaceStore.id && workspaceStore.projectType && handleTabChange(1)"
         >
           <img src="@/assets/images/png/capture.png" alt="" srcset="" />
         </li>
@@ -35,7 +35,7 @@
             current: selectedMenu === 2,
             inactive: workspaceStore.id == null || workspaceStore.projectType == null,
           }"
-          @click="workspaceStore.id && handleTabChange(2)"
+          @click="workspaceStore.id && workspaceStore.projectType && handleTabChange(2)"
         >
           <img src="@/assets/images/png/annotate.png" alt="" srcset="" />
         </li>
@@ -44,7 +44,7 @@
             current: selectedMenu == 3,
             inactive: workspaceStore.id == null || workspaceStore.projectType == null,
           }"
-          @click="workspaceStore.id && handleTabChange(3)"
+          @click="workspaceStore.id && workspaceStore.projectType && handleTabChange(3)"
         >
           <img src="@/assets/images/png/train.png" alt="" srcset="" />
         </li>
@@ -53,7 +53,7 @@
             current: selectedMenu == 4,
             inactive: workspaceStore.id == null,
           }"
-          @click="workspaceStore.id && handleTabChange(4)"
+          @click="workspaceStore.id && workspaceStore.projectType && handleTabChange(4)"
         >
           <img src="@/assets/images/png/code.png" alt="" srcset="" />
         </li>
