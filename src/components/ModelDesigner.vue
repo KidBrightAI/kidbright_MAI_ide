@@ -4,11 +4,13 @@
     <VBtn class="me-2 ms-4" @click="resetToDefault" size="small" icon="mdi-refresh"></VBtn>
     <VBtn class="mx-1" @click="downloadGraph" size="small" icon="mdi-download"></VBtn>
     <VBtn class="mx-1" @click="uploadGraph" size="small" icon="mdi-upload"></VBtn>
+    <VBtn class="mx-1" @click="computeGraph" size="small" icon="mdi-graph"></VBtn>
   </div>
 </template>
 
 <script setup>
 import { BaklavaEditor, useBaklava } from "@baklavajs/renderer-vue";
+import { DependencyEngine } from "@baklavajs/engine";
 import "@baklavajs/themes/dist/syrup-dark.css";
 import { BaklavaInterfaceTypes, NodeInterfaceType } from "@baklavajs/interface-types";
 import { modelInput, modelOutput, modelLayer } from '@/nodes/interfaces/interface-types';
@@ -21,6 +23,7 @@ import { onMounted } from "vue";
 
 const baklava = useBaklava();
 const editor = baklava.editor;
+const engine = new DependencyEngine(editor);
 
 baklava.settings.enableMinimap = false;
 baklava.settings.toolbar.enabled = false;
@@ -29,7 +32,6 @@ baklava.settings.contextMenu.enabled = true;
 baklava.settings.palette.enabled = false;
 baklava.settings.nodes.defaultWidth = 280;
 
-//const engine = new DependencyEngine(baklava.editor);
 
 //register interface
 const nodeInterfaceTypes = new BaklavaInterfaceTypes(editor, { viewPlugin : baklava });
@@ -57,6 +59,11 @@ const resetToDefault = ()=> {
   editor.load(props.graph);
 };
 
+const computeGraph = async () => {
+  let res = await engine.runOnce({ offset: 5 });
+  console.log(res);
+}
+
 const downloadGraph = () => {
   const graph = editor.save();
   const data = JSON.stringify(graph);
@@ -67,6 +74,7 @@ const downloadGraph = () => {
   a.download = "model-graph.json";
   a.click();
   URL.revokeObjectURL(url);
+  console.log(engine.runOnce());
 };
 
 const uploadGraph = () => {

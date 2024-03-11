@@ -24,12 +24,14 @@ export const YoloNode = defineNode({
     },
     calculate({ modelInput, modelType, objectThreshold, iouThreshold, weights }) {
         return {
-            type: "model",
-            modelInput: modelInput,
-            modelType: modelType,
-            objectThreshold: objectThreshold,
-            iouThreshold: iouThreshold,
-            weights: weights            
+            result: {
+                type: "model",
+                modelInput: modelInput,
+                modelType: modelType,
+                objectThreshold: objectThreshold,
+                iouThreshold: iouThreshold,
+                weights: weights
+            }            
         }
     }
 });

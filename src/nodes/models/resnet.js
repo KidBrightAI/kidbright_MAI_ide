@@ -22,10 +22,12 @@ export const ResnetNode = defineNode({
     },
     calculate({ modelInput, modelType, objectThreshold, iouThreshold, weights }) {
         return {
-            type: "model",
-            modelInput: modelInput,
-            modelType: modelType,            
-            weights: weights            
+            result: {
+                type: "model",
+                modelInput: modelInput,
+                modelType: modelType,            
+                weights: weights
+            }            
         }
     }
 });

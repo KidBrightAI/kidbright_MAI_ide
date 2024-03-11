@@ -25,13 +25,15 @@ export const InputNode = defineNode({
     },
     calculate({ inputWidth, inputHeight, train_split, epochs, batch_size, learning_rate }) {
         return {
-            type: "Input",
-            inputWidth: inputWidth,
-            inputHeight: inputHeight,
-            train_split: train_split,
-            epochs: epochs,
-            batch_size: batch_size,
-            learning_rate: learning_rate        
+            result : {
+                type: "Input",
+                inputWidth: inputWidth,
+                inputHeight: inputHeight,
+                train_split: train_split,
+                epochs: epochs,
+                batch_size: batch_size,
+                learning_rate: learning_rate        
+            }
         }
     }
 });
