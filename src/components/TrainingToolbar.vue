@@ -1,7 +1,8 @@
 <script setup>
-import { useWorkspaceStore } from "@/store/workspace";
+import { useServerStore } from "@/store/server";
+import { onMounted } from "vue";
 
-const workspaceStore = useWorkspaceStore();
+const serverStore = useServerStore();
 
 let props = defineProps({
   colabUrl : {
@@ -11,6 +12,34 @@ let props = defineProps({
 });
 
 let emits = defineEmits(['train', 'test', 'download']);
+
+const serverUrl = ref('');
+let currentUrl = '';
+
+const openColab = () => {
+  window.open(props.colabUrl, '_blank');
+};
+
+//validate the url with port
+const validateUrl = (url) => {
+  console.log("Validating url: ", url);
+  const regex = new RegExp('^(https?|ftp)://(www\\.)?([a-zA-Z0-9]+)\\.[a-zA-Z]{2,3}(\\.[a-zA-Z]{2})?(:[0-9]+)?(/\\S*)?$');
+  return regex.test(url);
+};
+
+const onColab = async (focused) => {
+  if(!focused) {
+    if(serverUrl.value && serverUrl.value !== currentUrl) {
+      serverStore.serverUrl = serverUrl.value;
+      console.log("Set colab url: ", serverUrl.value);     
+      currentUrl = serverUrl.value; 
+      await serverStore.connectColab();
+    }
+  }
+};
+onMounted(() => {
+  serverUrl.value = serverStore.serverUrl;
+});
 </script>
 <template>
   <div>
@@ -23,7 +52,8 @@ let emits = defineEmits(['train', 'test', 'download']);
         color="primary"
         size="large"
         style="height: 49px;"
-        class="me-0 rounded-0 rounded-s-lg"
+        class="me-0 rounded-0 rounded-s-lg"       
+        @click="openColab" 
       >
       Create
       </VBtn>
@@ -34,6 +64,10 @@ let emits = defineEmits(['train', 'test', 'download']);
         hide-details
         variant="solo"
         single-line
+        @update:focused="onColab"
+        :loading="serverStore.isColabConnecting"
+        :disabled="serverStore.isColabConnecting"
+        v-model="serverUrl"
       />
       <VBtn
         rounded
@@ -41,8 +75,9 @@ let emits = defineEmits(['train', 'test', 'download']);
         color="primary"
         variant="flat"
         size="large"
-        style="min-width: 140px;"
+        style="min-width: 140px;"        
         @click="$emit('train')"
+        :disabled="!serverStore.isColabConnected"
       >
         Train
       </VBtn>
@@ -53,6 +88,7 @@ let emits = defineEmits(['train', 'test', 'download']);
         variant="flat"
         size="large"
         style="min-width: 140px;"
+        :disabled="!serverStore.isTrainingSuccess"
         @click="$emit('test')"
       >
         Test
@@ -64,6 +100,7 @@ let emits = defineEmits(['train', 'test', 'download']);
         variant="flat"
         size="large"
         style="min-width: 140px;"
+        :disabled="!serverStore.isTrainingSuccess"
         @click="$emit('download')"
       >
         Download

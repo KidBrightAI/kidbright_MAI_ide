@@ -26,7 +26,6 @@ export const InputNode = defineNode({
     calculate({ inputWidth, inputHeight, train_split, epochs, batch_size, learning_rate }) {
         return {
             result : {
-                type: "Input",
                 inputWidth: inputWidth,
                 inputHeight: inputHeight,
                 train_split: train_split,

@@ -6,8 +6,7 @@ import { useDatasetStore } from "./dataset";
 import { sleep, generatePascalVocFromDataset } from "@/engine/helper";
 import storage from "@/engine/storage";
 import { md5 } from 'hash-wasm';
-//axios 
-import axios from 'axios';
+
 
 export const useWorkspaceStore = defineStore({
   id: "workspace",
@@ -32,31 +31,10 @@ export const useWorkspaceStore = defineStore({
       opening: false,
       openingProgress: 0,
       savingProgress: 0,
+      defaultGraph: {},
       graph: {},
       
-      //colab training server
-      colabUrl: null,
-      messagesLog: [],
-
-      //training
-      trainConfig: {
-        epochs: 10,
-        batchSize: 32,
-        learningRate: 0.001,
-        model: "slim_yolo_v2",
-        metrics: ["accuracy"],
-        split : 0.2,
-        augmentation: true,
-      },
-      isColabConnecting: false,
-      isColabConnected: false,
-      isTraining: false,
-      trainingProgress: 0,
-      isTrainingSuccess: false,
-
-      isUploading: false,
-      uploadProgress: 0,
-
+      trainConfig: {},      
     }
   },
   persist: {
@@ -64,7 +42,7 @@ export const useWorkspaceStore = defineStore({
       'mode', 'code', 'block', 'currentBoard', 'name', 'board', 
       'id', 'dataset', 'projectType', 'projectTypeTitle', 'lastUpdate', 
       'model', 'labels', 'modelLabel', 'colabUrl',
-      'trainConfig', 'graph'
+      'trainConfig', 'graph', 'defaultGraph'
     ],
   },
   actions: {
@@ -109,13 +87,13 @@ export const useWorkspaceStore = defineStore({
         let main = imageSets.folder("Main");        
         let allImageFile = datasets.map(data => data.id + "." + data.ext);
         //random shuffle
-        let splitConstant = 0.8;
+        let splitConstant = this.$state.trainConfig?.train_split || 0.8;
         let splitSite = Math.round(allImageFile.length * splitConstant);
         allImageFile.sort(() => Math.random() - 0.5);
         let trainFile = allImageFile.slice(0, splitSite);
         let validFile = allImageFile.slice(splitSite);
         main.file("train.txt", trainFile.join("\n"));
-        main.file("valid.txt", validFile.join("\n"));
+        main.file("val.txt", validFile.join("\n"));
       }
 
       for (let [i, data] of datasets.entries()) {
@@ -241,7 +219,7 @@ export const useWorkspaceStore = defineStore({
         baseURL: "",
       };
       //set graph
-      this.graph = this.extension.graph;
+      this.defaultGraph = this.extension.graph;
       await datasetStore.createDataset(dataset);
       return true;
     },
@@ -528,94 +506,7 @@ export const useWorkspaceStore = defineStore({
       }
     },
 
-    async connectColab(){
-      //axios request /ping and server return json success with message "pong"
-      this.isColabConnecting = true;
-      try{    
-        let response = await axios.get(this.colabUrl + "/ping");      
-        if(response.data.result == "pong"){
-          console.log("connected to colab");
-          this.isColabConnected = true;          
-          return true;
-        }
-        this.isColabConnected = false;
-        return false;
-      }catch(e){
-        console.log(e);
-        this.isColabConnected = false;
-        return false;
-      }finally{
-        this.isColabConnecting = false;
-      }
-    },
-
-    async trainColab(){
-      try{
-        this.isTraining = true;
-        // upload project
-        let uploaded = await this.uploadProject();
-        if(!uploaded){
-          console.log("project upload failed");
-          return false;
-        }
-        // axios request /train
-        let response = await axios.post(this.colabUrl + "/train", {
-          project : this.id,
-          train_config : this.trainConfig,
-        });
-        console.log(response.data);
-      }catch(e){
-        console.log(e);
-      }finally{
-        this.isTraining = false;
-      }
-    },
-
-    async uploadProject(){
-      // axios http post request to /upload with blob zip file
-      try{
-        let blob = await this.saveProject('upload');
-        blob.name = "project.zip";
-        this.isUploading = true;    
-        let formData = new FormData();
-        // add zip file to formData
-        formData.append("project", blob);              
-        formData.append("project_id", this.id);
-
-        let response = await axios.post(this.colabUrl + "/upload", formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          },
-          onUploadProgress: (progressEvent) => {
-            this.uploadProgress = Math.round((progressEvent.loaded / progressEvent.total) * 100);
-          }
-        });
-        console.log(response.data);
-        if(response.data.result == "success"){
-          console.log("project uploaded");
-          return true;
-        }else{
-          console.log("project upload failed");
-          return false;
-        }        
-      }catch(e){
-        console.log(e);
-      }finally{
-        this.isUploading = false;
-      }
-    },
-
-    async uploadLabel(){
-      let data = await this.selectAndReadFile(".txt");
-      // convert data from arraybuffer to string
-      let labels = await new TextDecoder("utf-8").decode(data);
-      labels = labels.split("\n");
-      //trim empty line and \r
-      labels = labels.filter(el => el.trim() != "");
-      labels = labels.map(el => el.trim());
-      this.modelLabel = labels;
-      console.log("model label : ", this.modelLabel);
-    },
+    
 
     saveAs(content, filename) {
       const link = document.createElement('a')

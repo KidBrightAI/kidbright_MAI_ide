@@ -9,6 +9,7 @@
 </template>
 
 <script setup>
+import { useWorkspaceStore } from '@/store/workspace';
 import { BaklavaEditor, useBaklava } from "@baklavajs/renderer-vue";
 import { DependencyEngine } from "@baklavajs/engine";
 import "@baklavajs/themes/dist/syrup-dark.css";
@@ -21,9 +22,11 @@ import { YoloNode } from "@/nodes/models/yolo";
 import { ResnetNode } from "@/nodes/models/resnet";
 import { onMounted } from "vue";
 
+const workspaceStore = useWorkspaceStore();
 const baklava = useBaklava();
 const editor = baklava.editor;
 const engine = new DependencyEngine(editor);
+const token = Symbol();
 
 baklava.settings.enableMinimap = false;
 baklava.settings.toolbar.enabled = false;
@@ -44,24 +47,23 @@ editor.registerNodeType(ResnetNode, { category: "Model" });
 editor.registerNodeType(YoloNode, { category: "Model" });
 
 //props
-const props = defineProps({
-  graph: {
-    type: Object,
-    required: true,
-  }
-});
 
 const resetToDefault = ()=> {  
+  console.log("--- reset graph ---");
   //check props.graph is empty object
-  if (Object.keys(props.graph).length === 0) {
-    return;
+  if(Object.keys(workspaceStore.defaultGraph).length !== 0){
+    editor.load(workspaceStore.defaultGraph);
   }
-  editor.load(props.graph);
 };
 
 const computeGraph = async () => {
-  let res = await engine.runOnce({ offset: 5 });
-  console.log(res);
+  let res = await engine.runOnce({ });
+  //get last object of Map
+  if(res.size === 0){
+    return {};
+  }
+  let modelGraphConfig = Array.from(res.values()).pop();
+  return modelGraphConfig.get('result');
 }
 
 const downloadGraph = () => {
@@ -74,7 +76,6 @@ const downloadGraph = () => {
   a.download = "model-graph.json";
   a.click();
   URL.revokeObjectURL(url);
-  console.log(engine.runOnce());
 };
 
 const uploadGraph = () => {
@@ -93,18 +94,51 @@ const uploadGraph = () => {
   };
   input.click();
 };
-
+const saveGraph = async() => {
+  const graph = editor.save();
+  workspaceStore.graph = graph;
+  let trainConfig = await computeGraph();
+  workspaceStore.trainConfig = trainConfig;
+};
 onMounted(() => {
-  if (Object.keys(props.graph).length !== 0) {
-    editor.load(props.graph);
+  //check if workspaceStore is empty then load default graph or if emty then load graph or do nothing
+  if (Object.keys(workspaceStore.graph).length === 0) {
+    if(Object.keys(workspaceStore.defaultGraph).length !== 0){
+      editor.load(workspaceStore.defaultGraph);
+    }
+  } else {
+    editor.load(workspaceStore.graph);
+  }
+  //listen to graph change
+  editor.nodeEvents.update.subscribe(token, async (data, node) => {
+    await saveGraph();
+  });
+  editor.graphEvents.addConnection.subscribe(token, async(data) => {
+    await saveGraph();
+  });
+  editor.graphEvents.removeConnection.subscribe(token, async(data) => {
+    await saveGraph();
+  });
+  editor.graphEvents.addNode.subscribe(token, async(data) => {
+    await saveGraph();
+  });
+  editor.graphEvents.removeNode.subscribe(token, async(data) => {
+    await saveGraph();
+  });
+});
+
+//watch workspaceStore.defaultGraph
+watch(() => workspaceStore.defaultGraph, (newVal, oldVal) => {
+  if (Object.keys(newVal).length !== 0) {
+    editor.load(newVal);
   }
 });
 
-//watch graph change
-watch(() => props.graph, (newVal) => {
-  if (newVal) {
-    editor.load(newVal);
-  }
+defineExpose({
+  downloadGraph,
+  uploadGraph,
+  computeGraph,
+  resetToDefault
 });
 </script>
 <style lang="scss">
