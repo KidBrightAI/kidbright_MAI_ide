@@ -402,6 +402,36 @@ export const useWorkspaceStore = defineStore({
         this.opening = false;
       }
     },
+    async importModelFromBlob(modelBin, modelParam){
+      try{
+        let modelBinaries = new Blob([modelBin], { type: 'application/octet-stream' });
+        let modelParams = new Blob([modelParam], { type: 'application/octet-stream' });
+        //remove old model
+        try{
+          await storage.removeFile(this.$fs, `${this.id}/model.bin`);          
+        }catch(e){
+          console.log(e);
+        }
+        try{
+          await storage.removeFile(this.$fs, `${this.id}/model.param`);          
+        }catch(e){
+          console.log(e);
+        }
+        await storage.writeFile(this.$fs, `${this.id}/model.bin`, modelBinaries);
+        await storage.writeFile(this.$fs, `${this.id}/model.param`, modelParams);
+        let hash = await md5(new Uint8Array(await modelBin.arrayBuffer()));
+        this.model = {
+          name: 'model',
+          type: 'bin',
+          hash: hash,
+        };
+        console.log("model data", this.model);
+        return true;
+      }catch(e){
+        console.log(e);
+        return false;
+      }
+    },
 
     async importModelFromZip(){
       try{

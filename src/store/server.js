@@ -21,6 +21,8 @@ export const useServerStore = defineStore({
       isTraining: false,
       trainingProgress: 0,
       isTrainingSuccess: false,
+      isConverting: false,
+      isConvertingSuccess: false,
 
       isUploading: false,
       uploadProgress: 0,
@@ -39,7 +41,7 @@ export const useServerStore = defineStore({
   },
   persist: {
     paths: [
-      "serverUrl",        
+      "serverUrl",
     ],
   },
   actions: {
@@ -53,6 +55,34 @@ export const useServerStore = defineStore({
       try{    
         let response = await axios.get(this.serverUrl + "/ping");      
         if(response.data.result == "pong"){
+          // Server stage
+          let stage = response.data.stage;
+          //STAGE = 0 #0 none, 1 = prepare dataset, 2 = training, 3 = trained, 4 = converting, 5 converted
+          if(stage == 0){
+            //this.step = 0;
+          }else if(stage == 1){
+            //this.step = 1;
+          }else if(stage == 2){
+            this.isTraining = true;
+            this.isTrainingSuccess = false;
+            this.isConverting = false;
+            this.isConvertingSuccess = false;
+          }else if(stage == 3){
+            this.isTraining = false;
+            this.isTrainingSuccess = true;
+            this.isConverting = false;
+            this.isConvertingSuccess = false;
+          }else if(stage == 4){
+            this.isTraining = false;
+            this.isTrainingSuccess = true;
+            this.isConverting = true;
+            this.isConvertingSuccess = false;
+          }else if(stage == 5){
+            this.isTraining = false;
+            this.isTrainingSuccess = true;
+            this.isConverting = false;
+            this.isConvertingSuccess = true;
+          }
           //create listener for event using eventsource
           this.event = new EventSource(this.serverUrl + "/listen");
           //this.event.addEventListener('message', this.onmessage);
@@ -73,36 +103,6 @@ export const useServerStore = defineStore({
     },
 
     onmessage(event){      
-      /* 
-      event: 
-          "event": "train_start"
-
-          "event": "epoch_start",             
-          "epoch": epoch + 1, 
-          "max_epoch": max_epoch
-                    
-          "event": "batch_start",           
-          "batch": iter_i,
-          "max_batch": epoch_size
-
-          "event": "batch_end",           
-          "batch": iter_i,
-          "max_batch": epoch_size,
-          "matrix": { "train_loss": total_loss.item() }
-            
-          "event": "epoch_end",           
-          "matrix": {
-              "train_loss": epoch_train_loss / epoch_size,
-              "val_acc": evaluator.map or 0.0,
-              "val_loss": evaluator.loss or 0.0,
-              "val_precision": evaluator.precision or 0.0,
-              "val_recall": evaluator.recall or 0.0,            
-          }
-        })
-    
-      q.announce({"time":time.time(), "event": "train_end", "msg" : "Training is done"})
-      */
-
       let data = JSON.parse(event.data);
       let dt = new Date(data.time * 1000);
       let eventType = data.event;
@@ -137,9 +137,19 @@ export const useServerStore = defineStore({
       } else if (eventType == "batch_end") {
         this.progress = (data.batch / data.max_batch) * 100;        
       } else if (eventType == "train_end") {
+        this.isTrainingSuccess = true;
         this.messagesLog.push(`[${dt.toLocaleString()}]: ${data["msg"]}`);
         //TODO : >>>>>>>>>>>>>>>> goto next step ================================
-      } else {
+      }
+      //convert model  
+      else if(eventType == "convert_model_init"){
+        this.messagesLog.push(`[${dt.toLocaleString()}]: ${data["msg"]}`);
+      }else if(eventType == "convert_model_progress"){
+        this.messagesLog.push(`[${dt.toLocaleString()}]: ${data["msg"]}`);
+      }else if(eventType == "convert_model_end"){
+        this.messagesLog.push(`[${dt.toLocaleString()}]: ${data["msg"]}`);
+        // download model
+      }else {
         this.messagesLog.push(`[${dt.toLocaleString()}]: ${data["msg"]}`);
       }
     },
@@ -167,7 +177,59 @@ export const useServerStore = defineStore({
         this.isTraining = false;
       }
     },
-  
+    async convertModel(){
+      try{
+        this.isConverting = true;
+        // axios request /convert
+        let response = await axios.post(this.serverUrl + "/convert", {
+          project_id : workspaceStore.id,
+        });
+
+        // download model 
+        let modelInt8Response = await axios.get(this.serverUrl + "/projects/" + workspaceStore.id + "/model_int8.bin", {
+          responseType: 'blob',
+        });
+
+        let modelParamResponse = await axios.get(this.serverUrl + "/projects/" + workspaceStore.id + "/model_int8.param", {
+          responseType: 'blob',
+        });
+        
+        //await workspaceStore.importModelFromBlob(modelInt8Response.data, modelParamResponse.data);
+        //let labels = workspaceStore.modelLabel;
+        
+        //await storage.writeFile(this.$fs, `${this.id}/model.bin`, new Blob([modelBinaries]));
+        //await storage.writeFile(this.$fs, `${this.id}/model.param`, new Blob([modelParams]));
+        // read labels.txt
+        //check is labels.txt exist
+        //workspaceStore.modelLabel = [];
+      
+        // let hash = await md5(new Uint8Array(modelInt8Response.data));
+        // workspaceStore.model = {
+        //   name: 'model',
+        //   type: 'bin',
+        //   hash: hash,
+        // };
+        console.log("==================DOWNLOAD SUCCESS=================");
+
+      }catch(e){
+        console.log(e);
+      }finally{
+      }
+    },
+    async downloadModel(){
+      try{
+        let workspaceStore = useWorkspaceStore();
+        let response = await axios.get(this.serverUrl + "/download", {
+          params: {
+            project_id: workspaceStore.id,
+          },
+          responseType: 'json',
+        });
+        console.log(response.data);
+      }catch(e){
+        console.log(e);
+      }
+    },
     async uploadProject(){
       // axios http post request to /upload with blob zip file
       try{

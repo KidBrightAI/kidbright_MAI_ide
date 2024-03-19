@@ -142,7 +142,8 @@ defineExpose({
   downloadGraph,
   uploadGraph,
   computeGraph,
-  resetToDefault
+  resetToDefault,
+  saveGraph
 });
 </script>
 <style lang="scss">

@@ -69,6 +69,9 @@ const accuracyMatrix = ref(null);
 
 const train = async () => {
   if (serverStore.isColabConnected) {
+    if(modelDesigner.value){
+      await modelDesigner.value.saveGraph();
+    }
     serverStore.trainColab();
   } else {
     toast.error("Please connect to Google Colab first");
@@ -84,6 +87,6 @@ const test = async () => {
 };
 
 const download = async () => {
-  workspaceStore.download();
+  await serverStore.downloadModel();
 };
 </script>
