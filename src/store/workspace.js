@@ -3,6 +3,8 @@ import { defineStore } from "pinia";
 import { loadBoard, loadPlugin } from "../engine/board";
 import { usePluginStore } from "./plugin";
 import { useDatasetStore } from "./dataset";
+import { useServerStore } from "./server";
+
 import { sleep, generatePascalVocFromDataset } from "@/engine/helper";
 import storage from "@/engine/storage";
 import { md5 } from 'hash-wasm';
@@ -85,9 +87,10 @@ export const useWorkspaceStore = defineStore({
         var imageSets = rawDataset.folder("ImageSets");
         
         let main = imageSets.folder("Main");        
-        let allImageFile = datasets.map(data => data.id + "." + data.ext);
+        let allImageFile = datasets.map(data => data.id);
         //random shuffle
-        let splitConstant = this.$state.trainConfig?.train_split || 0.8;
+        let splitConstant = (this.$state.trainConfig?.train_split / 100) || 0.8;
+        console.log("split constant : ", splitConstant);
         let splitSite = Math.round(allImageFile.length * splitConstant);
         allImageFile.sort(() => Math.random() - 0.5);
         let trainFile = allImageFile.slice(0, splitSite);
@@ -159,6 +162,13 @@ export const useWorkspaceStore = defineStore({
       this.extension = projectInfo.extension;
       this.model = projectInfo.model;
       this.modelLabel = projectInfo.modelLabel;
+      this.defaultGraph = {};
+      this.graph = {};
+      this.trainConfig = {};
+      // clear server store 
+      const serverStore = useServerStore();
+      serverStore.clear();
+
       //--------- load default code from board --------//
       if(projectInfo.block){
         this.block = projectInfo.block;        

@@ -27,8 +27,10 @@ export const useServerStore = defineStore({
 
       totalEpoch: 0,
       epoch: 0,
+
       totalBatch: 0,
       batch: 0,
+
       messagesLog: [],
       step: 0,
       progress: 0,      
@@ -41,6 +43,9 @@ export const useServerStore = defineStore({
     ],
   },
   actions: {
+    clear(){
+      this.serverUrl = null;
+    },
     async connectColab(){
       console.log("connecting to colab");
       //axios request /ping and server return json success with message "pong"
@@ -68,30 +73,69 @@ export const useServerStore = defineStore({
     },
 
     onmessage(event){      
+      /* 
+      event: 
+          "event": "train_start"
+
+          "event": "epoch_start",             
+          "epoch": epoch + 1, 
+          "max_epoch": max_epoch
+                    
+          "event": "batch_start",           
+          "batch": iter_i,
+          "max_batch": epoch_size
+
+          "event": "batch_end",           
+          "batch": iter_i,
+          "max_batch": epoch_size,
+          "matrix": { "train_loss": total_loss.item() }
+            
+          "event": "epoch_end",           
+          "matrix": {
+              "train_loss": epoch_train_loss / epoch_size,
+              "val_acc": evaluator.map or 0.0,
+              "val_loss": evaluator.loss or 0.0,
+              "val_precision": evaluator.precision or 0.0,
+              "val_recall": evaluator.recall or 0.0,            
+          }
+        })
+    
+      q.announce({"time":time.time(), "event": "train_end", "msg" : "Training is done"})
+      */
+
       let data = JSON.parse(event.data);
       let dt = new Date(data.time * 1000);
       let eventType = data.event;
-      if (eventType == "epoch_begin") {
+      if (eventType == "train_start") {
+        // clear log
+        this.messagesLog = [];
+        this.matric = [];
+      } else
+      if (eventType == "epoch_start") {
         this.messagesLog.push(`[${dt.toLocaleString()}]: training epoch ${data.epoch}`);
+        this.epoch = data.epoch;
+        this.totalEpoch = data.max_epoch;
       } else if (eventType == "epoch_end") {
         this.messagesLog.push(`[${dt.toLocaleString()}]: epoch [${data.epoch}] ended`);
-      } else if (eventType == "train_batch_begin") {
-        this.batch = data.batch;
-        this.totalBatch = data.steps;        
-      } else if (eventType == "train_batch_end") {
-        this.matric.push({
-          label: state.epoch,
+        //add server matric and notify change        
+        this.matric = [... this.matric, {
+          epoch: data.epoch,
+          max_epoch: data.max_epoch,
+          label: data.epoch,
           matric: data.matric,
           prefix: "train_",
-        });        
-      } else if (eventType == "test_end") {
-        this.matric.push({
-          label: state.epoch,
-          matric: data.matric,
-          prefix: "validate_",
-        });
-      } else if (eventType == "test_begin") {
-        // do nothing
+        }];
+        // this.matric.push({
+        //   label: data.epoch,
+        //   matric: data.matric,
+        //   prefix: "validate_",
+        // });
+      } else if (eventType == "batch_start") {
+        this.batch = data.batch;
+        this.totalBatch = data.max_batch;
+        this.progress = (data.batch / data.max_batch) * 100;
+      } else if (eventType == "batch_end") {
+        this.progress = (data.batch / data.max_batch) * 100;        
       } else if (eventType == "train_end") {
         this.messagesLog.push(`[${dt.toLocaleString()}]: ${data["msg"]}`);
         //TODO : >>>>>>>>>>>>>>>> goto next step ================================
@@ -116,6 +160,7 @@ export const useServerStore = defineStore({
           train_config : workspaceStore.trainConfig,
         });
         console.log(response.data);
+
       }catch(e){
         console.log(e);
       }finally{

@@ -1,4 +1,5 @@
 <script setup>
+import { useServerStore } from '@/store/server';
 import { Line } from 'vue-chartjs'
 import {
   Chart as ChartJS,
@@ -21,6 +22,9 @@ ChartJS.register(
   Tooltip,
   Legend
 )
+
+const serverStore = useServerStore();
+
 const props = defineProps({
   title : {
     type: String,
@@ -30,6 +34,12 @@ const props = defineProps({
   chartOptions: {
     type: Object,
     required: true
+  },
+  chartData : {
+    type: Array,
+    default: () => {
+      return []
+    }
   }
 });
 const colors = [
@@ -45,18 +55,7 @@ const colors = [
 ];
 
 const chartRef = ref(null);
-const data = ref({  
-  labels: [],
-  datasets: [ 
-    {
-      label: props.title,
-      backgroundColor: 'rgba(255, 99, 132, 0.2)',
-      borderColor: 'rgba(255, 99, 132, 1)',
-      borderWidth: 1,
-      data: []
-    }
-  ]
-});
+
 const chartStyle = ref({
   width: '100%',
   height: '100%',
@@ -69,24 +68,26 @@ const chartOptions = {
       padding: {
           bottom: 42
       }
-  }  
+  }
 };
 onMounted(() => {
-  console.log('chartRef', chartRef.value);
+  //console.log('chartRef', chartRef.value);
 })
-const appendData = async (value, label) => {
-  chartData.labels.push(label)
-  chartData.datasets[0].data.push(value)
-  chartRef.value.update()
-}
-const clearData = async () => {
-  chartData.labels = []
-  chartData.datasets[0].data = []
-}
-defineExpose({
-  appendData,
-  clearData
-})
+const data = computed(() => {
+  return {
+    labels: serverStore.matric.map((m) => m.epoch),
+    datasets: [ 
+      {
+        label: 'Accuracy | mAP',
+        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+        borderColor: 'rgba(255, 99, 132, 1)',
+        borderWidth: 1,
+        data: serverStore.matric.map((m) => m.matric.val_acc)
+      }
+    ]
+  }
+});
+
 </script>
 <template>
   <Line ref="chartRef" :style="chartStyle" :chartData="data" :chartOptions="chartOptions" /> 

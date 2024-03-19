@@ -1,169 +1,89 @@
 <template>
   <div class="w-100 h-100">
-    <VCard flat>
-      <VCardTitle class="text-center mt-5">ขั้นตอนการสอนโมเดล</VCardTitle>
-      <VCardSubtitle class="text-center">ทำตามขั้นตอนต่อไปนี้เพื่อทำการสอนโมเดล</VCardSubtitle>    
-    </VCard>
-    <VDivider></VDivider>
-    <VCard flat>
-      <VCardItem class="text-center">        
-        <h4>ขั้นตอนที่ 1 สร้าง Instance บน Google Colab และสอนโมเดล</h4>
-        <VBtn class="my-3" target="_blank" href="https://colab.research.google.com/drive/1GuQE-CffdKsq4sHIEAzBYdwEUGlpbI1A?usp=sharing">สร้าง Instance Google Colab</VBtn><br>
-        <img class="mt-4" src="@/assets/images/png/train_step2.png" height="200"/>
-        <p class="mt-2">
-          กดที่ปุ่ม "สร้าง INSTANCE GOOGLE COLAB" จากนั้นทำตามขั้นตอนเพื่อนำ URL จาก COLAB สำหรับการเชื่อมต่อกับ KidBright uAI IDE ต่อไป
-        </p>
-      </VCardItem>
-    </VCard>
-    <VDivider></VDivider>
-    <VCard flat>
-      <VCardItem class="text-center">
-        <h4>ขั้นตอนที่ 2 วางลิงค์ที่ได้จาก GOOGLE COLAB ในขั้นตอนที่ 1 และทำการเชื่อมต่อ</h4>
-        <VTextField class="my-3 mx-auto" style="max-width: 600px;" v-model="workspaceStore.colabUrl" label="URL ที่ได้จาก Google Colab" outlined></VTextField>
-        <VBtn class="my-3" @click="connectColab" :loading="workspaceStore.isColabConnecting" :disabled="workspaceStore.isColabConnecting">เชื่อมต่อกับ COLAB</VBtn>
-      </VCardItem>
-    </VCard>
-    <VDivider></VDivider>
-    <VCard flat :disabled="!workspaceStore.isColabConnected">
-      <VCardItem class="text-center">
-        <h4>ขั้นตอนที่ 3 ตั่งค่าการสอนโมเดล</h4>
-        <VRow class="mx-auto mt-5" style="max-width: 600px;">
-          <VCol cols="12" md="6">
-            <VTextField type="number" v-model.number="workspaceStore.trainConfig.epochs" label="จำนวนรอบการสอน" outlined hint="จำนวนรอบการสอนที่ต้องการให้โมเดลทำการสอน" hint-color="red"></VTextField>
-          </VCol>
-          <VCol cols="12" md="6">
-            <VTextField type="number" v-model.number="workspaceStore.trainConfig.batchSize" label="จำนวนรูปภาพต่อรอบ" outlined hint="จำนวนรูปภาพที่ต้องการให้โมเดลทำการสอนต่อรอบ" hint-color="red"></VTextField>
-          </VCol>
-          <VCol cols="12" md="6">
-            <VTextField 
-              type="number"
-              v-model.number="workspaceStore.trainConfig.learningRate" 
-              label="Learning Rate" 
-              outlined 
-              hint="ค่าที่ใช้ในการปรับค่าความสามารถในการเรียนรู้ของโมเดล" 
-              min="0.0001"
-              step="0.0001"
-              max="0.1"
-              hint-color="red">
-            </VTextField>
-          </VCol>
-          <VCol cols="12" md="6">
-            <VSelect v-model="workspaceStore.trainConfig.model" :items="['slim_yolo_v2']" label="โมเดล" outlined hint="โมเดลที่ต้องการให้โมเดลทำการสอน" hint-color="red"></VSelect>
-          </VCol>
-          <VCol cols="12" md="6">
-            <VTextField type="number" v-model.number="workspaceStore.trainConfig.split" label="Validation Split" outlined hint="ค่าที่ใช้ในการแบ่งข้อมูลสำหรับการทดสอบโมเดล" hint-color="red"></VTextField>
-          </VCol>
-          <VCol cols="12" md="6">
-            <VSwitch v-model="workspaceStore.trainConfig.augmentation" label="Augmentation" outlined hint="การทำการปรับข้อมูลเพื่อให้โมเดลสามารถเรียนรู้ได้ดีขึ้น" hint-color="red"></VSwitch>
-          </VCol>          
-        </VRow>
-        <br>        
-        <p class="mt-2">
-          - ทำการตั้งค่าโมเดล มีรายละเอียดดังนี้ จากนั้น กดปุ่ม "สอนโมเดล" เพื่อทำการสอนโมเดล
-          <br>
-          <!-- - จำนวนรอบการสอน คือ จำนวนรอบที่ต้องการให้โมเดลทำการสอน
-          <br>
-          - จำนวนรูปภาพต่อรอบ คือ จำนวนรูปภาพที่ต้องการให้โมเดลทำการสอนต่อรอบ
-          <br>
-          - Learning Rate คือ ค่าที่ใช้ในการปรับค่าความสามารถในการเรียนรู้ของโมเดล
-          <br>
-          - โมเดล คือ โมเดลที่ต้องการให้โมเดลทำการสอน
-          <br>
-          - Validation Split คือ ค่าที่ใช้ในการแบ่งข้อมูลสำหรับการทดสอบโมเดล
-          <br>
-          - Augmentation คือ การทำการปรับข้อมูลเพื่อให้โมเดลสามารถเรียนรู้ได้ดีขึ้น -->
-        </p>
-        <VBtn class="my-3" @click="trainModel">สอนโมเดล</VBtn>
-      </VCardItem>
-    </VCard>
-    <VDivider></VDivider>
-    <VCard flat class="h-100" :disabled="!workspaceStore.isTrainingSuccess">
-      <VCardItem class="text-center">
-        <h4>ขั้นตอนที่ 4 ดาวน์โหลดโมเดลที่สอนเสร็จเรียบร้อยแล้ว</h4>
-        <VBtn class="my-3" @click="importModel">ดาวน์โหลดโมเดล</VBtn><br>        
-        <p class="mt-2">
-          เมื่อทำการสอนโมเดลเรียบร้อย ให้ทำการนำเข้าโมเดลจาก Google COLAB เพื่อใช้ในบอร์ดต่อไป
-        </p>
-      </VCardItem>
-    </VCard>
+    <splitpanes ref="splitpanesRef" class="default-theme" horizontal :style="{ height: selectedMenu==4 ? 'calc(100vh - 64px)' : 'calc(100vh)'}">
+        <pane>
+          <TrainingToolbar 
+            @train="train"
+            @test="test"
+            @download="download"
+            colab-url="https://colab.research.google.com/"
+          ></TrainingToolbar>
+          <ModelDesigner ref="modelDesigner"></ModelDesigner>
+        </pane>        
+        <pane :min-size="10" :size="30" :max-size="80">          
+          <VTabs v-model="tab">
+            <VTab value="Message">
+              Message log {{ serverStore.epoch && serverStore.totalEpoch ? `(${serverStore.epoch}/${serverStore.totalEpoch})` : ''}}              
+            </VTab>
+            <VTab value="Accuracy">
+              Accuracy
+            </VTab>
+            <VTab value="Loss">
+              Loss
+            </VTab>
+          </VTabs>
+          <div class="h-100">
+          <VCard class="h-100">
+            <VCardText class="h-100 pa-0">
+              <VWindow v-model="tab" class="h-100">
+                <VWindowItem value="Message" class="h-100">
+                  <MessageLog/>
+                </VWindowItem>
+                <VWindowItem value="Accuracy" class="h-100 pa-2">                
+                  <AccuracyMatrixChart></AccuracyMatrixChart>
+                </VWindowItem>
+                <VWindowItem value="Loss" class="h-100 pa-2">
+                  <LossMatrixChart></LossMatrixChart>
+                </VWindowItem>
+              </VWindow>
+            </VCardText> 
+          </VCard>
+          </div>
+        </pane>
+      </splitpanes>    
   </div>
 </template>
 
 <script setup>
 import { useWorkspaceStore } from '@/store/workspace';
+import { useServerStore } from '@/store/server';
 import { toast } from "vue3-toastify";
+import ModelDesigner from "@/components/ModelDesigner.vue";
+import TrainingToolbar from "@/components/TrainingToolbar.vue";
+import AccuracyMatrixChart from "@/components/charts/AccuracyMatrixChart.vue";
+import LossMatrixChart from "@/components/charts/LossMatrixChart.vue";
+import MessageLog from "@/components/MessageLog.vue";
+
+import { Splitpanes, Pane } from 'splitpanes'
+import 'splitpanes/dist/splitpanes.css'
+import { onMounted } from 'vue';
+
 const workspaceStore = useWorkspaceStore();
+const serverStore = useServerStore();
 
-const importModel = async()=>{
-  let res = await workspaceStore.importObjectDetectionModelFromZip();
-  if(res){
-    toast.success("นำเข้าโมเดลเรียบร้อยแล้ว");
-  }else if(res === false){
-    toast.error("เกิดข้อผิดพลาดในการนำเข้าโมเดล");
-  }
-}
+const tab = ref(0);
+const selectedMenu = ref(0);
+const modelDesigner = ref(null);
+const lossMatrix = ref(null);
+const accuracyMatrix = ref(null);
 
-const connectColab = async()=>{
-  if(workspaceStore.colabUrl){
-    let res = await workspaceStore.connectColab();
-    if(res){
-      toast.success("เชื่อมต่อกับ Google Colab เรียบร้อยแล้ว");
-    }else if(res === false){
-      toast.error("เกิดข้อผิดพลาดในการเชื่อมต่อกับ Google Colab");
-    }
-  }else{
-    toast.error("กรุณากรอก URL ที่ได้จาก Google Colab");
+const train = async () => {
+  if (serverStore.isColabConnected) {
+    serverStore.trainColab();
+  } else {
+    toast.error("Please connect to Google Colab first");
   }
-}
+};
 
-const trainModel = async()=>{
-  let res = await workspaceStore.trainColab();
-  if(res){
-    toast.success("เริ่มการสอนโมเดลเรียบร้อยแล้ว");
-  }else if(res === false){
-    toast.error("เกิดข้อผิดพลาดในการสอนโมเดล");
+const test = async () => {
+  if (workspaceStore.isColabConnected) {
+    workspaceStore.test();
+  } else {
+    toast.error("Please connect to Google Colab first");
   }
-}
+};
+
+const download = async () => {
+  workspaceStore.download();
+};
 </script>
-
-<style lang="scss" scoped>
-$primary-color: #007e4e;
-.horizontal-panes {
-  width: 100%;
-  height: calc(100vh - 80px);
-  border: 1px solid #ccc;
-  overflow: hidden;
-}
-.multipane.horizontal-panes.layout-h .multipane-resizer {
-  margin: 0;
-  top: 0; /* reset default styling */
-  height: 5px;
-  background: #aaa;
-}
-.train-panel {
-  padding: 20px;
-  background: #222;
-  height: 78px;
-  display: flex;
-  justify-content: flex-end;
-}
-.train-btn {
-  color: white;
-  margin-left: 10px !important;
-  border-radius: 15px !important;
-  min-width: 150px;
-  &:disabled {
-    opacity: 0.7;
-  }
-}
-.base-btn {
-  color: white;
-  background-color: $primary-color;
-  margin-left: 10px !important;
-  border-radius: 15px !important;
-  min-width: 150px;
-  &:disabled {
-    opacity: 0.7;
-  }
-}
-</style>

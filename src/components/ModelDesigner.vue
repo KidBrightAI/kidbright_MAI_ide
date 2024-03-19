@@ -18,6 +18,8 @@ import { modelInput, modelOutput, modelLayer } from '@/nodes/interfaces/interfac
 
 import { InputNode } from "@/nodes/inputs/default-input";
 import { OutputNode } from "@/nodes/outputs/default-output";
+import { ClassificationOutputNode } from "@/nodes/outputs/classification-output";
+import { ObjectDetectionOutputNode } from "@/nodes/outputs/object-detection-output";
 import { YoloNode } from "@/nodes/models/yolo";
 import { ResnetNode } from "@/nodes/models/resnet";
 import { onMounted } from "vue";
@@ -43,6 +45,8 @@ nodeInterfaceTypes.addTypes([modelInput, modelOutput, modelLayer]);
 //register custom node
 editor.registerNodeType(InputNode, { category: "Input" });
 editor.registerNodeType(OutputNode, { category: "Output" });
+editor.registerNodeType(ClassificationOutputNode, { category: "Output" });
+editor.registerNodeType(ObjectDetectionOutputNode, { category: "Output" });
 editor.registerNodeType(ResnetNode, { category: "Model" });
 editor.registerNodeType(YoloNode, { category: "Model" });
 

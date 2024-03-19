@@ -30,12 +30,15 @@ const validateUrl = (url) => {
 const onColab = async (focused) => {
   if(!focused) {
     if(serverUrl.value && serverUrl.value !== currentUrl) {
-      serverStore.serverUrl = serverUrl.value;
-      console.log("Set colab url: ", serverUrl.value);     
       currentUrl = serverUrl.value; 
-      await serverStore.connectColab();
+      await setServerAndConnect(currentUrl);
     }
   }
+};
+const setServerAndConnect = async (url) => {
+  serverStore.serverUrl = url;
+  console.log("Set colab url: ", url);
+  await serverStore.connectColab();
 };
 onMounted(() => {
   serverUrl.value = serverStore.serverUrl;
@@ -68,6 +71,7 @@ onMounted(() => {
         :loading="serverStore.isColabConnecting"
         :disabled="serverStore.isColabConnecting"
         v-model="serverUrl"
+        @keyup.enter="setServerAndConnect(serverUrl)"
       />
       <VBtn
         rounded

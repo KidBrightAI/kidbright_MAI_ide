@@ -11,24 +11,24 @@ import {
 import { setType } from "@baklavajs/interface-types";
 import { modelOutput } from "../interfaces/interface-types";
 
-export const OutputNode = defineNode({
-  type: "OutputNode",
-  title: "Output", 
+export const ClassificationOutputNode = defineNode({
+  type: "ClassifiyOutputNode",
+  title: "Classification Output", 
   inputs: {
     modelOutput: () => new NodeInterface("Model Output", "").use(setType, modelOutput),
     validateMatrix : () => new SelectInterface("Validate Matrix", "val_accuracy",[
-        {text : "Mean Average Precision", value : "mAP"},
         {text: "Validation Accuracy", value : "val_accuracy"},
         {text: "Validation Loss", value : "val_loss"},
-    ]).setPort(false),
+    ]).setPort(false),    
     saveMethod : () => new SelectInterface("Save Method", "best", 
       [
-        {text: "Best value", value : "best"},
-        {text: "Last epoch", value : "last"},
-        {text: "Best value after n epoch", value : "best_after_n"}
+        {text: "Save best value", value : "best"},
+        {text: "Save Last epoch", value : "last"},
+        {text: "Best value after 1 of 3 epochs", value : "best_one_of_third"},        
+        {text: "Best value after half epochs", value : "best_one_of_half"},
       ]).setPort(false),        
   },
-  calculate({ modelOutput, validateMatrix, saveMethod }) {        
+  calculate({ modelOutput, validateMatrix, saveMethod }) {    
     return {
       result : {
         validateMatrix: validateMatrix,

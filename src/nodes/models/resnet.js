@@ -14,17 +14,18 @@ export const ResnetNode = defineNode({
     title: "Image classification model",
     inputs: {        
         modelInput : () => new NodeInterface("Model Input").use(setType, modelInput),
-        modelType : () => new SelectInterface("Model Type", "Resnet18", ["Resnet18"]).setPort(false),        
-        weights : () => new SelectInterface("Weights", "resnet18", ["resnet18", "random"]).setPort(false),
+        modelType : () => new SelectInterface("Model Type", "resnet18", 
+        [
+            { text: "Resnet-18", value : "resnet18" }
+        ]).setPort(false),                
     },
     outputs: {
         result: () => new NodeInterface("Model Output").use(setType, modelOutput)
     },
-    calculate({ modelInput, modelType, objectThreshold, iouThreshold, weights }) {
+    calculate({ modelInput, modelType}) {
         return {
             result: {          
-                modelType: modelType,            
-                weights: weights,
+                modelType: modelType,
                 ... modelInput,
             }            
         }
