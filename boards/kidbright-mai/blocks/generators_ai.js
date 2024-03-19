@@ -76,7 +76,8 @@ _labels = [${workspaceStore.modelLabel.map(label => `"${label}"`).join(', ')}]
     generator.definitions_['class_Resnet'] = `
 class Yolo:
   labels = [${workspaceStore.modelLabel.map(label => `"${label}"`).join(', ')}]
-  anchors = [5.4, 5.38, 1.65, 2.09, 0.8, 1.83, 2.45, 4.14, 0.46, 0.8]
+  anchors = [1.19,1.98, 2.79,4.59, 4.53,8.92, 8.06,5.29, 10.32,10.65]
+  #anchors = [5.4, 5.38, 1.65, 2.09, 0.8, 1.83, 2.45, 4.14, 0.46, 0.8]
   m = {
     "bin": "/root/model/${workspaceStore.model.hash}.bin",
     "param": "/root/model/${workspaceStore.model.hash}.param"
