@@ -283,7 +283,7 @@ export const useBoardStore = defineStore({
       
       let filesUpload = [];
       let extra_files = [];
-      let uploadModuleList = findIncludeModuleNameInCode(code);
+      //let uploadModuleList = findIncludeModuleNameInCode(code);
       //=======================//
       filesUpload = filesUpload.concat(extra_files);
       filesUpload.push({

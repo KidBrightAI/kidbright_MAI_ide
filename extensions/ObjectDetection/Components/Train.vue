@@ -87,6 +87,6 @@ const test = async () => {
 };
 
 const download = async () => {
-  await serverStore.downloadModel();
+  await serverStore.convertModel();
 };
 </script>

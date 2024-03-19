@@ -3,7 +3,8 @@ import { defineStore } from "pinia";
 import { useWorkspaceStore } from "./workspace";
 //axios 
 import axios from 'axios';
-
+import { toast } from "vue3-toastify";
+import { md5 } from 'hash-wasm';
 
 export const useServerStore = defineStore({
   id: "server",
@@ -23,7 +24,11 @@ export const useServerStore = defineStore({
       isTrainingSuccess: false,
       isConverting: false,
       isConvertingSuccess: false,
-
+      isDownloading: false,
+      isDownloadingSuccess: false,
+      downloadProgress : 0,
+      downloadingFiles : 0,
+      totalDownloadingFiles : 2,
       isUploading: false,
       uploadProgress: 0,
 
@@ -83,6 +88,10 @@ export const useServerStore = defineStore({
             this.isConverting = false;
             this.isConvertingSuccess = true;
           }
+          //check if event is not null, close it
+          if(this.event != null){
+            this.event.close();
+          }
           //create listener for event using eventsource
           this.event = new EventSource(this.serverUrl + "/listen");
           //this.event.addEventListener('message', this.onmessage);
@@ -125,11 +134,6 @@ export const useServerStore = defineStore({
           matric: data.matric,
           prefix: "train_",
         }];
-        // this.matric.push({
-        //   label: data.epoch,
-        //   matric: data.matric,
-        //   prefix: "validate_",
-        // });
       } else if (eventType == "batch_start") {
         this.batch = data.batch;
         this.totalBatch = data.max_batch;
@@ -138,8 +142,9 @@ export const useServerStore = defineStore({
         this.progress = (data.batch / data.max_batch) * 100;        
       } else if (eventType == "train_end") {
         this.isTrainingSuccess = true;
+        this.isTraining = false;
         this.messagesLog.push(`[${dt.toLocaleString()}]: ${data["msg"]}`);
-        //TODO : >>>>>>>>>>>>>>>> goto next step ================================
+        toast.success("Training end");
       }
       //convert model  
       else if(eventType == "convert_model_init"){
@@ -153,7 +158,36 @@ export const useServerStore = defineStore({
         this.messagesLog.push(`[${dt.toLocaleString()}]: ${data["msg"]}`);
       }
     },
-  
+    async terminateColab(){
+      try{
+        let workspaceStore = useWorkspaceStore();
+        // axios request /terminate
+        let response = await axios.get(this.serverUrl + "/terminate", {
+          params: {
+            project_id: workspaceStore.id,
+          }
+        });
+        console.log(response.data);
+        if(response.data.result == "OK"){
+          this.isTraining = false;
+          this.isTrainingSuccess = false;
+          this.isConverting = false;
+          this.isConvertingSuccess = false;
+          this.isDownloading = false;
+          this.isDownloadingSuccess = false;
+          this.isUploading = false;
+          this.isColabConnected = false;
+          this.isColabConnecting = false;
+          this.event.close();
+          this.event = null;
+          toast.success("Colab terminated");
+        }
+      }catch(e){
+        console.log(e);
+      }finally{
+        console.log("==================TERMINATE DONE=================");
+      }
+    },
     async trainColab(){
       try{        
         let workspaceStore = useWorkspaceStore();
@@ -174,46 +208,65 @@ export const useServerStore = defineStore({
       }catch(e){
         console.log(e);
       }finally{
-        this.isTraining = false;
+        console.log("==================TRAIN DONE=================");
       }
     },
     async convertModel(){
       try{
+        let workspaceStore = useWorkspaceStore();
         this.isConverting = true;
+        this.isConvertingSuccess = false;
         // axios request /convert
-        let response = await axios.post(this.serverUrl + "/convert", {
-          project_id : workspaceStore.id,
+        let response = await axios.get(this.serverUrl + "/convert", {
+          params: {
+            project_id: workspaceStore.id,
+          },
         });
-
-        // download model 
-        let modelInt8Response = await axios.get(this.serverUrl + "/projects/" + workspaceStore.id + "/model_int8.bin", {
-          responseType: 'blob',
-        });
-
-        let modelParamResponse = await axios.get(this.serverUrl + "/projects/" + workspaceStore.id + "/model_int8.param", {
-          responseType: 'blob',
-        });
-        
-        //await workspaceStore.importModelFromBlob(modelInt8Response.data, modelParamResponse.data);
-        //let labels = workspaceStore.modelLabel;
-        
-        //await storage.writeFile(this.$fs, `${this.id}/model.bin`, new Blob([modelBinaries]));
-        //await storage.writeFile(this.$fs, `${this.id}/model.param`, new Blob([modelParams]));
-        // read labels.txt
-        //check is labels.txt exist
-        //workspaceStore.modelLabel = [];
-      
-        // let hash = await md5(new Uint8Array(modelInt8Response.data));
-        // workspaceStore.model = {
-        //   name: 'model',
-        //   type: 'bin',
-        //   hash: hash,
-        // };
-        console.log("==================DOWNLOAD SUCCESS=================");
+        if(response.data.result == "OK"){
+          this.isConvertingSuccess = true;
+          this.isConverting = false;
+          // download model 
+          this.isDownloading = true;
+          this.isDownloadingSuccess = false;
+          this.downloadingFiles = 1;
+          let modelInt8Response = await axios.get(this.serverUrl + "/projects/" + workspaceStore.id + "/output/model_int8.bin", 
+          //download progress
+          {
+            responseType: 'blob',
+            onDownloadProgress: (progressEvent) => {
+              this.downloadProgress = Math.round((progressEvent.loaded / progressEvent.total) * 100);
+            }
+          });
+          this.downloadingFiles = 2;
+          let modelParamResponse = await axios.get(this.serverUrl + "/projects/" + workspaceStore.id + "/output/model_int8.param", {
+            responseType: 'blob',
+            onDownloadProgress: (progressEvent) => {
+              this.downloadProgress = Math.round((progressEvent.loaded / progressEvent.total) * 100);
+            }
+          });
+          this.isDownloading = false;
+          this.isDownloadingSuccess = true;
+          this.downloadingFiles = 0;
+          //import model
+          let modelLabel = workspaceStore.labels.map(lb => lb.label);
+          let hash = await md5(new Uint8Array(modelInt8Response.data));
+          await workspaceStore.importModelFromBlob(modelInt8Response.data, modelParamResponse.data);
+          workspaceStore.model = {
+            name: 'model',
+            type: 'bin',
+            hash: hash,
+          };
+          workspaceStore.modelLabel = modelLabel;
+          toast.success("Model Downloaded");
+        }else{
+          console.log("model convert failed");
+          toast.error("Model Convert Failed");
+        }
 
       }catch(e){
         console.log(e);
       }finally{
+        console.log("==================CONVERT AND DOWNLOAD DONE=================");
       }
     },
     async downloadModel(){

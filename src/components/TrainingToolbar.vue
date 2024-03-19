@@ -1,6 +1,6 @@
 <script setup>
 import { useServerStore } from "@/store/server";
-import { onMounted } from "vue";
+import { computed, onMounted } from "vue";
 
 const serverStore = useServerStore();
 
@@ -11,7 +11,7 @@ let props = defineProps({
   }
 });
 
-let emits = defineEmits(['train', 'test', 'download']);
+let emits = defineEmits(['train', 'terminate', 'test', 'download']);
 
 const serverUrl = ref('');
 let currentUrl = '';
@@ -35,6 +35,16 @@ const onColab = async (focused) => {
     }
   }
 };
+const resolveDownloadMessage = computed(() => {
+  if(serverStore.isConverting){
+    return "Converting";
+  }else if(serverStore.isDownloading){
+    return `Downloading ${serverStore.downloadingFiles}/${serverStore.totalDownloadingFiles}`;
+  }else{
+    return "Download";
+  }
+});
+
 const setServerAndConnect = async (url) => {
   serverStore.serverUrl = url;
   console.log("Set colab url: ", url);
@@ -69,11 +79,12 @@ onMounted(() => {
         single-line
         @update:focused="onColab"
         :loading="serverStore.isColabConnecting"
-        :disabled="serverStore.isColabConnecting"
+        :disabled="serverStore.isColabConnecting || serverStore.isColabConnected"
         v-model="serverUrl"
         @keyup.enter="setServerAndConnect(serverUrl)"
       />
       <VBtn
+        v-if="!serverStore.isTraining"
         rounded
         class="ms-4"
         color="primary"
@@ -86,13 +97,26 @@ onMounted(() => {
         Train
       </VBtn>
       <VBtn
+        v-if="serverStore.isTraining"
+        rounded
+        class="ms-2"
+        color="error"
+        variant="flat"
+        size="large"
+        style="min-width: 140px;"
+        :disabled="!serverStore.isTraining || serverStore.isDownloading || serverStore.isConverting"
+        @click="$emit('terminate')"
+      >
+        Terminate
+      </VBtn>
+      <VBtn
         rounded
         class="ms-2"
         color="primary"
         variant="flat"
         size="large"
         style="min-width: 140px;"
-        :disabled="!serverStore.isTrainingSuccess"
+        :disabled="true"
         @click="$emit('test')"
       >
         Test
@@ -104,10 +128,18 @@ onMounted(() => {
         variant="flat"
         size="large"
         style="min-width: 140px;"
-        :disabled="!serverStore.isTrainingSuccess"
+        :disabled="!serverStore.isTrainingSuccess || serverStore.isDownloading || serverStore.isConverting"
         @click="$emit('download')"
       >
-        Download
+        <VProgressCircular
+          v-if="serverStore.isDownloading || serverStore.isConverting"
+          :indeterminate="serverStore.isConverting"
+          color="white"
+          size="20"
+          class="me-2"
+          :model-value="serverStore.downloadProgress"
+        ></VProgressCircular>
+         {{ resolveDownloadMessage }}
       </VBtn>
     </VToolbar>
   </div>  
