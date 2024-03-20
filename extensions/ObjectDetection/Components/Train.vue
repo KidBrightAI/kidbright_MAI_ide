@@ -6,7 +6,7 @@
             @train="train"
             @test="test"
             @download="download"
-            colab-url="https://colab.research.google.com/drive/1Nij-J3C4J5gTZl0x79e4lxCG5EPBwsQM#scrollTo=3HF3WZ4ej4_D"
+            colab-url="https://colab.research.google.com/drive/1jTfJ5oBaNA57ASt4IsDng-kcQhUQDJ3t"
           ></TrainingToolbar>
           <ModelDesigner ref="modelDesigner"></ModelDesigner>
         </pane>        
