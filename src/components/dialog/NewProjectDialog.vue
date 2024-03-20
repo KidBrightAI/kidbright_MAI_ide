@@ -33,7 +33,7 @@ const onFormSubmit = async() => {
     let selectedExtension = extensions.find(el=>el.id == selectType.value);
     let project = {
       name: projectName.value,
-      id: projectName.value + "_" + randomId(),
+      id: "kidbright_mai" + "_" + randomId(),
       projectType: null,// selectType.value, //id of extension
       projectTypeTitle: "", //selectedExtension.name, //this.models.find(el=>el.value == this.selectType).text,
       lastUpdate: new Date(),
