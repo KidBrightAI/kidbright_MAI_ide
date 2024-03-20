@@ -249,13 +249,8 @@ export const useServerStore = defineStore({
           this.downloadingFiles = 0;
           //import model
           let modelLabel = workspaceStore.labels.map(lb => lb.label);
-          let hash = await md5(new Uint8Array(modelInt8Response.data));
           await workspaceStore.importModelFromBlob(modelInt8Response.data, modelParamResponse.data);
-          workspaceStore.model = {
-            name: 'model',
-            type: 'bin',
-            hash: hash,
-          };
+          //read model to calculate hash
           workspaceStore.modelLabel = modelLabel;
           toast.success("Model Downloaded");
         }else{
