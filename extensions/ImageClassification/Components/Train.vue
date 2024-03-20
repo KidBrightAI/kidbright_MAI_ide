@@ -12,9 +12,15 @@
         </pane>        
         <pane :min-size="10" :size="30" :max-size="80">          
           <VTabs v-model="tab">
-            <VTab value="Message">Message log</VTab>
-            <VTab value="Loss">Loss</VTab>
-            <VTab value="Accuracy">Accuracy</VTab>
+            <VTab value="Message">
+              Message log {{ serverStore.epoch && serverStore.totalEpoch ? `(${serverStore.epoch}/${serverStore.totalEpoch})` : ''}}              
+            </VTab>
+            <VTab value="Accuracy">
+              Accuracy
+            </VTab>
+            <VTab value="Loss">
+              Loss
+            </VTab>
           </VTabs>
           <div class="h-100">
           <VCard class="h-100">
@@ -23,11 +29,11 @@
                 <VWindowItem value="Message" class="h-100">
                   <MessageLog/>
                 </VWindowItem>
-                <VWindowItem value="Loss" class="h-100 pa-2">                
-                  <MetrixChart/>
+                <VWindowItem value="Accuracy" class="h-100 pa-2">                
+                  <AccuracyMatrixChart></AccuracyMatrixChart>
                 </VWindowItem>
-                <VWindowItem value="Accuracy" class="h-100 pa-2">
-                  <MetrixChart/>
+                <VWindowItem value="Loss" class="h-100 pa-2">
+                  <LossMatrixChart></LossMatrixChart>
                 </VWindowItem>
               </VWindow>
             </VCardText> 
@@ -44,7 +50,8 @@ import { useServerStore } from '@/store/server';
 import { toast } from "vue3-toastify";
 import ModelDesigner from "@/components/ModelDesigner.vue";
 import TrainingToolbar from "@/components/TrainingToolbar.vue";
-import MetrixChart from "@/components/charts/MetrixChart.vue";
+import AccuracyMatrixChart from "@/components/charts/AccuracyMatrixChart.vue";
+import LossMatrixChart from "@/components/charts/LossMatrixChart.vue";
 import MessageLog from "@/components/MessageLog.vue";
 
 import { Splitpanes, Pane } from 'splitpanes'
@@ -57,9 +64,14 @@ const serverStore = useServerStore();
 const tab = ref(0);
 const selectedMenu = ref(0);
 const modelDesigner = ref(null);
+const lossMatrix = ref(null);
+const accuracyMatrix = ref(null);
 
 const train = async () => {
   if (serverStore.isColabConnected) {
+    if(modelDesigner.value){
+      await modelDesigner.value.saveGraph();
+    }
     serverStore.trainColab();
   } else {
     toast.error("Please connect to Google Colab first");
@@ -75,6 +87,6 @@ const test = async () => {
 };
 
 const download = async () => {
-  workspaceStore.download();
+  await serverStore.convertModel();
 };
 </script>
