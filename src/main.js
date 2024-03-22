@@ -131,7 +131,7 @@ console.log(boards);
 //==================================================//
 const pluginModules = import.meta.glob('plugins/*/index.js', { eager: true });
 const pluginBlocks = import.meta.glob('plugins/*/blocks/*.js', { eager: false });
-const pluginCodes = import.meta.glob('plugins/*/modules/*.py', { eager: false, as : 'raw' });
+const pluginCodes = import.meta.glob('plugins/*/libs/*.py', { eager: false, as : 'raw' });
 let plugins = [];
 for (const path in pluginModules) {
   let plugin = pluginModules[path].default;
@@ -156,7 +156,12 @@ console.log(plugins);
 const pluginStore = usePluginStore();
 pluginStore.plugins = plugins;
 // load block installed plugins 
-
+// reload installed plugin
+let installed = pluginStore.installed;
+for (const plugin of installed) {
+  let pluginInfo = plugins.find(el=>el.id == plugin.id);
+  installed[plugin.id] = pluginInfo;
+}
 //==================================================//
 
 const workspaceStore = useWorkspaceStore();

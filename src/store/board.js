@@ -347,6 +347,7 @@ export const useBoardStore = defineStore({
       }
       // list plugin files
       for(let plugin of pluginStore.installed){
+        console.log(plugin);
         for(let codeFile of plugin.codeFiles){
           let scriptResponse = await fetch(codeFile);
           if(scriptResponse.ok){
