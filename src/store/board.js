@@ -195,11 +195,13 @@ export const useBoardStore = defineStore({
           await sleep(300);
         }
         this.wifiConnecting = true;
-        SingletonShell.addCallback((data) => {
+        SingletonShell.addCallback(async (data) => {
           let dataString = new TextDecoder().decode(data);
           console.log("wifi connect : ", dataString);
           if(dataString.match(/Wifi connect ap : Success!/)){
             SingletonShell.removeLastCallback();
+            //write wifi config
+            await this.writeWifiConfig(ssid, password);
             this.wifiConnecting = false;
             resolve(true);
           }
@@ -211,6 +213,43 @@ export const useBoardStore = defineStore({
         });
         await SingletonShell.write(`wifi_connect_ap_test ${ssid} ${password}\n\n`);                  
       });
+    },
+    async writeWifiConfig(ssid, password){
+      //create wpa_supplicant.conf
+      /*
+      network={
+        ssid="Sipeed_Guest"
+        psk="qwert123"
+      }*/
+      let wpaConfig = `network={\n\tssid="${ssid}"\n\tpsk="${password}"\n}\n`;
+      let buffer = encodeUtf8(wpaConfig);
+      let file = new File([buffer], "wpa_supplicant.conf");
+      let fileStream = new WrapReadableStream(file.stream());
+      if (!this.$adb.transport) {
+        if (!await this.deviceConnect()) {
+          return;
+        }
+        await sleep(300);
+      }
+      try {
+        let adb = this.$adb.adb;
+        if(isProxy(adb)){
+          adb = toRaw(adb);
+        }
+        const sync = await adb.sync();        
+        await sync.write({
+          filename: "/root/wpa_supplicant.conf",
+          file: fileStream
+            .pipeThrough(new WrapConsumableStream()),
+          type: LinuxFileType.File,
+          permission: 0o666,
+          mtime: Date.now() / 1000,
+        });
+        sync.dispose(); 
+        return true;
+      } catch (e) {
+        throw e;
+      }
     },
     rebootBoard(){
       SingletonShell.write("reboot\n");
