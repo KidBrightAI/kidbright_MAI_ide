@@ -1,12 +1,21 @@
 export default {
-    name: "SHT31",    
-    description: "Humidity and Temperature Sensor",
-    category: "Sensors",    
+    name: "MQTT",    
+    description: "MQTT Plugin for connecting to MQTT broker and publish/subscribe messages.",
+    category: "Communication",    
     author: "comdet",
     version: "1.0.0",
-    icon: "/static/dht11.png",
+    icon: "/static/MQTT.png",
     color: "#8b507c",
     blocks: [
-        "sht31_i2c_sensor"
+        "mqtt_config",
+        "mqtt_on_connected",
+        "mqtt_is_connect",
+        "mqtt_publish",
+        "mqtt_subscribe",
+        "mqtt_on_message",
+        //"mqtt_loop",
+        "mqtt_get_topic",
+        "mqtt_get_number",
+        "mqtt_get_text"
     ]
 }

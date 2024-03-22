@@ -115,7 +115,7 @@ export const useServerStore = defineStore({
       let data = JSON.parse(event.data);
       let dt = new Date(data.time * 1000);
       let eventType = data.event;
-      if (eventType == "train_start") {
+      if (eventType == "initial") {
         // clear log
         this.messagesLog = [];
         this.matric = [];

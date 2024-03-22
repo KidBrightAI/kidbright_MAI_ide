@@ -1,26 +1,89 @@
-python.pythonGenerator.forBlock['sht31_i2c_sensor'] = function(block, generator) {    
-    var dropdown_addr = block.getFieldValue('addr');
-    var dropdown_type = block.getFieldValue('type');    
-    generator.definitions_['import_time'] = 'import time';
-    generator.definitions_['import_smbus2'] = 'import smbus2';
-    generator.definitions_['init_sht31'] = `_sht31 = smbus2.SMBus(2)`;
-    var functionName = generator.provideFunction_(
-    '_getSHT31',
-    ['def _getSHT31(datatype):',
-    '  _sht31.write_i2c_block_data('+dropdown_addr+', 0x2C, [0x06])',
-    '  time.sleep(0.2)',
-    '  data = _sht31.read_i2c_block_data('+ dropdown_addr+', 0x00, 6)',
-    '  if data is None:',
-    '    return False',
-    '  temp = data[0] * 256 + data[1]',
-    '  cTemp = -45 + (175 * temp / 65535.0)',
-    '  fTemp = -49 + (315 * temp / 65535.0)',
-    '  humidity = 100 * (data[3] * 256 + data[4]) / 65535.0',    
-    '  if datatype == 0:',
-    '    return cTemp',
-    '  else:',
-    '    return humidity'
-    ]);              
-    var code = `${functionName}(${dropdown_type})`;
-    return [code, python.Order.NONE];
-  };
+//============= MQTT =============//
+python.pythonGenerator.forBlock['mqtt_config'] = function(block, generator) {   
+  var value_host = generator.valueToCode(block, 'host', python.Order.NONE) || "'broker.emqx.io'";
+  var value_port = generator.valueToCode(block, 'port', python.Order.ATOMIC) || '1883';
+  var value_client_id = generator.valueToCode(block, 'client_id', python.Order.NONE) || "'KidBrightMAI-" + Math.floor(Math.random() * 1000) + "'";
+  var value_username = generator.valueToCode(block, 'username', python.Order.NONE) || "''";
+  var value_password = generator.valueToCode(block, 'password', python.Order.NONE) || "''";
+  generator.definitions_['import_paho'] = 'import paho.mqtt.client as mqtt';
+  var code = `client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2,${value_client_id})
+client.connect(${value_host}, ${value_port}, 60)
+client.loop_start()
+try:
+  client.on_connect = on_connect
+except NameError:
+  print('NameError')
+  pass
+try:
+  client.on_message = on_message
+except NameError:
+  pass
+`;
+  return code;
+};
+python.pythonGenerator.forBlock['mqtt_on_connected'] = function(block, generator) {
+  var statements_callback = generator.statementToCode(block, 'callback');
+  generator.definitions_['import_paho'] = 'import paho.mqtt.client as mqtt';
+  generator.definitions_['mqtt_on_connect'] = `def on_connect(client, userdata, flags, rc, properties=None):
+  ${statements_callback}
+`;
+  return '';
+};
+
+python.pythonGenerator.forBlock['mqtt_is_connect'] = function(block, generator) {
+  generator.definitions_['import_paho'] = 'import paho.mqtt.client as mqtt';
+  let code = `client.is_connected()`;
+  return [code, python.Order.NONE];
+};
+
+python.pythonGenerator.forBlock['mqtt_publish'] = function(block, generator) {
+  generator.definitions_['import_paho'] = 'import paho.mqtt.client as mqtt';
+  var text_topic = block.getFieldValue('topic');
+  var value_value = generator.valueToCode(block, 'value', python.Order.ATOMIC) || '""';
+  var code = `client.publish("${text_topic}", ${value_value})\n`;
+  return code;
+};
+
+python.pythonGenerator.forBlock['mqtt_subscribe'] = function(block, generator) {
+  generator.definitions_['import_paho'] = 'import paho.mqtt.client as mqtt';
+  var text_topic = block.getFieldValue('topic');
+  var code = `client.subscribe("${text_topic}")\n`;
+  return code;
+};
+
+//on_message
+python.pythonGenerator.forBlock['mqtt_on_message'] = function(block, generator) {
+  var statements_callback = generator.statementToCode(block, 'callback');
+  generator.definitions_['import_paho'] = 'import paho.mqtt.client as mqtt';
+  generator.definitions_['mqtt_on_message'] = `def on_message(client, userdata, msg):
+  _event_data = {
+    "topic": msg.topic,
+    "message": msg.payload.decode()
+  }
+  ${statements_callback}
+`;
+  return '';
+};
+
+//mqtt_loop
+python.pythonGenerator.forBlock['mqtt_loop'] = function(block, generator) {
+  generator.definitions_['import_paho'] = 'import paho.mqtt.client as mqtt';
+  var code = `client.loop()\n`;
+  return code;
+};
+
+python.pythonGenerator.forBlock['mqtt_get_topic'] = function(block, generator) {
+  var code = '_event_data.topic';
+  return [code, python.Order.NONE];
+};
+
+python.pythonGenerator.forBlock['mqtt_get_number'] = function(block, generator) {
+  var code = 'int(_event_data.message)';
+  return [code, python.Order.ATOMIC];
+};
+
+python.pythonGenerator.forBlock['mqtt_get_text'] = function(block, generator) {
+  var code = '_event_data.message';
+  return [code, python.Order.NONE];
+};
+//============================================//
