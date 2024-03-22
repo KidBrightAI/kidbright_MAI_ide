@@ -143,7 +143,7 @@ python.pythonGenerator.forBlock['maix3_image_draw_string'] = function(block, gen
     var value_var = generator.valueToCode(block, 'var', python.Order.NONE);
     var text_path = block.getFieldValue('path');
     console.log(value_var);
-    var code = `${value_var} = image.open("${text_path}")`;
+    var code = `${value_var} = image.open("${text_path}")\n`;
     return code;
   };
   
