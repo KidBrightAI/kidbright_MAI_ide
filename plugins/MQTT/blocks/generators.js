@@ -6,6 +6,8 @@ python.pythonGenerator.forBlock['mqtt_config'] = function(block, generator) {
   var value_username = generator.valueToCode(block, 'username', python.Order.NONE) || "''";
   var value_password = generator.valueToCode(block, 'password', python.Order.NONE) || "''";
   generator.definitions_['import_paho'] = 'import paho.mqtt.client as mqtt';
+  generator.definitions_['import_sys'] = 'import sys';
+  generator.definitions_['import_signal'] = 'import signal';
   var code = `client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2,${value_client_id})
 client.connect(${value_host}, ${value_port}, 60)
 client.loop_start()
@@ -18,16 +20,23 @@ try:
   client.on_message = on_message
 except NameError:
   pass
+
+def signal_handler(signal, frame):
+  print("program exiting gracefully")
+  sys.exit(0)
+
+signal.signal(signal.SIGINT, signal_handler)
 `;
   return code;
 };
 python.pythonGenerator.forBlock['mqtt_on_connected'] = function(block, generator) {
   var statements_callback = generator.statementToCode(block, 'callback');
   generator.definitions_['import_paho'] = 'import paho.mqtt.client as mqtt';
+  const indentedValueString = generator.prefixLines(statements_callback, generator.INDENT);
   generator.definitions_['mqtt_on_connect'] = `def on_connect(client, userdata, flags, rc, properties=None):
-  ${statements_callback}
+${statements_callback}
 `;
-  return '';
+  return '\n';
 };
 
 python.pythonGenerator.forBlock['mqtt_is_connect'] = function(block, generator) {
@@ -55,14 +64,11 @@ python.pythonGenerator.forBlock['mqtt_subscribe'] = function(block, generator) {
 python.pythonGenerator.forBlock['mqtt_on_message'] = function(block, generator) {
   var statements_callback = generator.statementToCode(block, 'callback');
   generator.definitions_['import_paho'] = 'import paho.mqtt.client as mqtt';
+  const indentedValueString = generator.prefixLines(statements_callback, generator.INDENT);
   generator.definitions_['mqtt_on_message'] = `def on_message(client, userdata, msg):
-  _event_data = {
-    "topic": msg.topic,
-    "message": msg.payload.decode()
-  }
-  ${statements_callback}
+${statements_callback}
 `;
-  return '';
+  return '\n';
 };
 
 //mqtt_loop
@@ -73,17 +79,17 @@ python.pythonGenerator.forBlock['mqtt_loop'] = function(block, generator) {
 };
 
 python.pythonGenerator.forBlock['mqtt_get_topic'] = function(block, generator) {
-  var code = '_event_data.topic';
+  var code = 'msg.topic';
   return [code, python.Order.NONE];
 };
 
 python.pythonGenerator.forBlock['mqtt_get_number'] = function(block, generator) {
-  var code = 'int(_event_data.message)';
+  var code = 'int(msg.payload)';
   return [code, python.Order.ATOMIC];
 };
 
 python.pythonGenerator.forBlock['mqtt_get_text'] = function(block, generator) {
-  var code = '_event_data.message';
+  var code = 'msg.payload.decode("utf-8")';
   return [code, python.Order.NONE];
 };
 //============================================//
