@@ -11,6 +11,7 @@ const blockAIObjectDetection = `
   <block type="maix3_nn_yolo_get_result_array"></block>
 </value>
 </block>
+<block type="maix3_nn_yolo_get_count"></block>
 <block type="controls_forEach">
 <field name="VAR">obj</field>
 <value name="LIST">

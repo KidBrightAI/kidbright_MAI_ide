@@ -117,10 +117,14 @@ _boxes, _probs = _yolo.decoder.run(_out, nms=${number_nms}, threshold=${number_t
   };
   
   python.pythonGenerator.forBlock['maix3_nn_yolo_get_result_array'] = function(block, generator) {
-    var code = 'zip(_boxes, _probs)\n';
+    var code = 'zip(_boxes, _probs)';
     return [code, python.Order.NONE];
   };
-  
+  //maix3_nn_yolo_get_count
+  python.pythonGenerator.forBlock['maix3_nn_yolo_get_count'] = function(block, generator) {
+    var code = 'len(_boxes)';
+    return [code, python.Order.ATOMIC];
+  };
   python.pythonGenerator.forBlock['maix3_nn_yolo_get'] = function(block, generator) {
     var dropdown_data = block.getFieldValue('data');
     var value_obj = generator.valueToCode(block, 'obj', python.Order.ATOMIC);

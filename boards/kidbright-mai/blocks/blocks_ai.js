@@ -72,6 +72,15 @@ Blockly.defineBlocksWithJsonArray([{
     "tooltip": "",
     "helpUrl": ""
   },
+  //get count of objects detected
+  {
+    "type": "maix3_nn_yolo_get_count",
+    "message0": "get object detected count",
+    "output": "Number",
+    "colour": 120,
+    "tooltip": "",
+    "helpUrl": ""
+  },
   {
     "type": "maix3_nn_yolo_get",
     "message0": "get %1 %2 from object %3",
