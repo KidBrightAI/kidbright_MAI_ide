@@ -13,7 +13,7 @@ const defineEmits = defineEmits(["undo","redo","download"]);
 </script>
 
 <template>
-  <v-footer class="footer-panel" color="primary">
+  <v-footer class="footer-panel" color="primary" style="height: 100% !important;">
     <div class="footer-container">
       <div class="d-flex flex-row align-center footer-header">                
         <v-spacer></v-spacer>

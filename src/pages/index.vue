@@ -362,7 +362,10 @@ const addChangeListener = () => {
 
 onMounted(() => {
   if(workspaceStore.currentBoard){
-    mountSerial();
+    setTimeout(() => {
+      console.log("mount serial monitor when have board");
+      mountSerial();
+    }, 1000);
   }
   if(selectedMenu.value == 4){
     console.log("add change listener");

@@ -199,13 +199,127 @@ export const useBoardStore = defineStore({
         }
         const sync = await adb.sync();
         const entries = await sync.readdir(path);
-        console.log(entries);
+        //console.log(entries);
         sync.dispose();
         return entries;
       } catch (e) {
         throw e;
       }
     },
+    async downloadFile(path){
+      if (!this.$adb.transport) {
+        if (!await this.deviceConnect()) {
+          return;
+        }
+        await sleep(300);
+      }
+      try {
+        let adb = this.$adb.adb;
+        if(isProxy(adb)){
+          adb = toRaw(adb);
+        }
+        const sync = await adb.sync();
+        const file = await sync.read(path);
+        //file is PushReadableStream convert to arrayBuffer
+        let arrayBuffer = await new Response(file).arrayBuffer();
+        
+        //const arrayBuffer = await file.arrayBuffer();
+        sync.dispose();
+        //create download link
+        let blob = new Blob([arrayBuffer]);
+        let url = URL.createObjectURL(blob);
+        let a = document.createElement("a");
+        a.href = url;
+        a.download = path.split("/").pop();
+        a.click();
+        URL.revokeObjectURL(url);
+
+        return true;
+      } catch (e) {
+        throw e;
+      }
+    },
+    async deleteFileOrFolder(path){
+      if (!this.$adb.transport) {
+        if (!await this.deviceConnect()) {
+          return;
+        }
+        await sleep(300);
+      }
+      try {
+        SingletonShell.write("\x03");
+        SingletonShell.write("\x03");
+        await sleep(300);
+        //check empty path
+        if(path == ""){
+          toast.error("ไม่สามารถลบไฟล์หรือโฟลเดอร์ที่ว่างเปล่าได้");
+          return;
+        }
+        //check if root folder or app folder        
+        if(path == "/" || path == "/root" || path == "/root/app"){
+          toast.error("ไม่สามารถลบไฟล์หรือโฟลเดอร์หลักได้");
+          return;
+        }
+        SingletonShell.write(`rm -rf "${path}"\n`);
+        return true;
+      } catch (e) {
+        throw e;
+      }
+    },
+
+    async createNewFolder(path){
+      if (!this.$adb.transport) {
+        if (!await this.deviceConnect()) {
+          return;
+        }
+        await sleep(300);
+      }
+      try {
+        SingletonShell.write("\x03");
+        SingletonShell.write("\x03");
+        await sleep(300);
+        //check empty path
+        if(path == ""){
+          toast.error("ไม่สามารถสร้างโฟลเดอร์ที่ว่างเปล่าได้");
+          return;
+        }
+        SingletonShell.write(`mkdir -p "${path}"\n`);
+        return true;
+      } catch (e) {
+        throw e;
+      }
+    },
+
+    async uploadFile(path, file){
+      if (!this.$adb.transport) {
+        if (!await this.deviceConnect()) {
+          return;
+        }
+        await sleep(300);
+      }
+      try {
+        let adb = this.$adb.adb;
+        if(isProxy(adb)){
+          adb = toRaw(adb);
+        }
+        const sync = await adb.sync();
+        //file is browser file object
+        let fileStream = new WrapReadableStream(file.stream());
+        await sync.write({
+          filename: path,
+          file: fileStream
+            .pipeThrough(new WrapConsumableStream()),
+          type: LinuxFileType.File,
+          permission: 0o666,
+          mtime: Date.now() / 1000,
+        });
+        sync.dispose();
+        return true;
+      } catch (e) {
+        throw e;
+      }
+    },
+
     connectWifi(ssid, password){
       return new Promise(async (resolve, reject) => {
         if (!this.$adb.transport) {
