@@ -44,7 +44,6 @@ const listParentDir = async () => {
   let arr = path.split('/');
   arr.pop();
   path = arr.join('/');
-  console.log("Current Path: ", path);
   if(path === '') path = '/';
   await listDir(path);
   currentPath.value = path;
@@ -118,7 +117,6 @@ const itemClickAction = async (item) => {
   }
 }
 const onPathClick = async (item) => {
-  console.log("Path Click: ", item);
   await listDir(item.path);
   currentPath.value = item.path;
 }
@@ -139,7 +137,6 @@ const deleteFileOrFolder = async (item) => {
 
 const onCreateFolder = async (folderName) => {
   try {
-    console.log("Create Folder: ", folderName);
     let res = await boardStore.createNewFolder(currentPath.value + '/' + folderName);
     if(res) {
       toast.info(`สร้างโฟลเดอร์ ${folderName} สำเร็จ`);      
@@ -202,7 +199,7 @@ watch(() => props.isDialogVisible, async (value) => {
     <VCard class="pa-sm-3 pa-3 bg-background">
       <DialogCloseBtn variant="text" size="small" @click="resetForm"/>
       <VCardTitle class="text-h5 text-center">
-        File Explorer
+        File System Explorer
       </VCardTitle>      
       <VCardItem>
         <VCard color="grey-lighten-4" rounded="lg" flat>
