@@ -16,7 +16,7 @@
           <v-btn density="comfortable" class="mx-1" color="grey-lighten-3" icon="mdi-usb" @click="$emit('connectBoard')"></v-btn>
           <v-btn density="comfortable" class="mx-1" color="grey-lighten-3" icon="mdi-wifi" @click="$emit('connectWifi')" :disabled="!isConnected"></v-btn> 
           <v-btn density="comfortable" class="mx-1" color="grey-lighten-3" icon="mdi-folder" @click="$emit('fileBrowser')" :disabled="!isConnected"></v-btn>
-          <v-btn density="comfortable" class="mx-1" color="grey-lighten-3" icon="mdi-console" @click="$emit('terminal')" :disabled="!isConnected"></v-btn>
+          <!-- <v-btn density="comfortable" class="mx-1" color="grey-lighten-3" icon="mdi-console" @click="$emit('terminal')" :disabled="!isConnected || selectedMenu != 4"></v-btn> -->
           <v-btn density="comfortable" class="mx-1" color="grey-lighten-3" icon="mdi-restart" @click="$emit('restartBoard')" :disabled="!isConnected"></v-btn>
         </div>
       </div>

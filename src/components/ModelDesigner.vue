@@ -4,7 +4,7 @@
     <VBtn class="me-2 ms-4" @click="resetToDefault" size="small" icon="mdi-refresh"></VBtn>
     <VBtn class="mx-1" @click="downloadGraph" size="small" icon="mdi-download"></VBtn>
     <VBtn class="mx-1" @click="uploadGraph" size="small" icon="mdi-upload"></VBtn>
-    <VBtn class="mx-1" @click="computeGraph" size="small" icon="mdi-graph"></VBtn>
+    <!-- <VBtn class="mx-1" @click="computeGraph" size="small" icon="mdi-graph"></VBtn> -->
   </div>
 </template>
 
