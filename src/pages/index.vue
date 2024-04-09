@@ -32,6 +32,7 @@ import SavingProjectDialog from "@/components/dialog/SavingProjectDialog.vue";
 import UploadProjectDialog from "@/components/dialog/UploadProjectDialog.vue";
 import OpeningProjectDialog from "@/components/dialog/OpeningProjectDialog.vue";
 import NewModelDialog from "@/components/dialog/NewModelDialog.vue";
+import fileExplorerDialog from "@/components/dialog/FileExplorerDialog.vue";
 
 import {sleep } from "@/engine/helper";
 import { loadPlugin } from "@/engine/board"
@@ -53,7 +54,7 @@ const exampleDialogOpen = ref(false);
 const pluginDialogOpen = ref(false);
 const connectWifiDialogOpen = ref(false);
 const newModelDialogOpen = ref(false);
-
+const fileExplorerDialogOpen = ref(false);
 
 const footer = shallowRef();
 const isSerialPanelOpen = ref(false);
@@ -401,7 +402,7 @@ watch(selectedMenu, (val) => {
         @deleteProject="deleteProject"
         @connectBoard="serialMonitorBridge"
         @connectWifi="connectWifiDialogOpen = true"
-        @fileBrowser=""
+        @fileBrowser="fileExplorerDialogOpen = true"
         @terminal="onSerial"
         @restartBoard="boardStore.rebootBoard"
         @newModel="newModelDialogOpen = true"
@@ -444,6 +445,8 @@ watch(selectedMenu, (val) => {
   <ExampleDialog v-model:isDialogVisible="exampleDialogOpen" @loadExample="onExampleOpen" />
   <PluginDialog v-model:isDialogVisible="pluginDialogOpen" @installPlugin="onInstallPlugin" @uninstallPlugin="onUninstallPlugin" />
   <NewModelDialog v-model:isDialogVisible="newModelDialogOpen" @submit="selectProjectType" />
+  <fileExplorerDialog v-model:isDialogVisible="fileExplorerDialogOpen" />
+  
 </template>
 
 <route lang="yaml">

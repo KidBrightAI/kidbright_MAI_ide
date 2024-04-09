@@ -80,7 +80,7 @@ export const useWorkspaceStore = defineStore({
 
       let rawDataset = zip.folder("dataset");
       let datasets = datasetStore.data;
-
+      
       if(this.projectType === "OBJECT_DETECTION"){        
         var annotations = rawDataset.folder("Annotations");
         var images = rawDataset.folder("JPEGImages");
@@ -97,13 +97,31 @@ export const useWorkspaceStore = defineStore({
         let validFile = allImageFile.slice(splitSite);
         main.file("train.txt", trainFile.join("\n"));
         main.file("val.txt", validFile.join("\n"));
+      }else if(this.projectType === "IMAGE_CLASSIFICATION"){
+        var trainset = [];
+        var validset = [];
+        var trainImageSet = rawDataset.folder("train");
+        var validImageSet = rawDataset.folder("valid");
+        //random store in transet and validset
+        let allImageFile = datasets.map(data => data.id);
+        //random shuffle
+        let splitConstant = (this.$state.trainConfig?.train_split / 100) || 0.8;
+        console.log("split constant : ", splitConstant);
+        let splitSite = Math.round(allImageFile.length * splitConstant);
+        allImageFile.sort(() => Math.random() - 0.5);
+        trainset = allImageFile.slice(0, splitSite);
+        validset = allImageFile.slice(splitSite);
       }
-
       for (let [i, data] of datasets.entries()) {
         let filename = data.id + "." + data.ext;        
         let fileData = datasetStore.getDataAsFile(filename);
-        if(this.projectType === "IMAGE_CLASSIFICATION"){
-          rawDataset.file(data.class + "/" + filename, fileData);
+        if(this.projectType === "IMAGE_CLASSIFICATION"){          
+          //store image to trainset or validset include label
+          if(trainset.includes(data.id)){
+            trainImageSet.file(data.class + "/" + data.id + "." + data.ext, fileData);
+          }else if(validset.includes(data.id)){
+            validImageSet.file(data.class + "/" + data.id + "." + data.ext, fileData);
+          }
         }
         if(this.projectType === "OBJECT_DETECTION"){
           //xml voc export

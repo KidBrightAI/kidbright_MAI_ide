@@ -185,6 +185,27 @@ export const useBoardStore = defineStore({
         await sleep(1000);
       });
     },
+    async listDir(path){
+      if (!this.$adb.transport) {
+        if (!await this.deviceConnect()) {
+          return;
+        }
+        await sleep(300);
+      }
+      try {
+        let adb = this.$adb.adb;
+        if(isProxy(adb)){
+          adb = toRaw(adb);
+        }
+        const sync = await adb.sync();
+        const entries = await sync.readdir(path);
+        console.log(entries);
+        sync.dispose();
+        return entries;
+      } catch (e) {
+        throw e;
+      }
+    },
     connectWifi(ssid, password){
       return new Promise(async (resolve, reject) => {
         if (!this.$adb.transport) {
