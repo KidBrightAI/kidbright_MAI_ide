@@ -8,7 +8,7 @@ Blockly.Python['controls_wait'] = function(block) {
 
 Blockly.Python['controls_forever'] = function(block) {
   var statements_block = Blockly.Python.statementToCode(block, 'block');
-  var code = `while True:\n${statements_block}`;
+  var code = `while True:\n${statements_block || "  pass"}`;
   return code;
 };
 

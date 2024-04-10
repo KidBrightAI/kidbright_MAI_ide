@@ -46,7 +46,8 @@ app.config.globalProperties.$fs = await Storage.newStorage();;
 Blockly.Msg.BKY_LOGIC_HUE = 10;
 app.use(vuetify)
 app.use(Vue3Toastify, {
-  autoClose: 3000,
+  autoClose: 3000,  
+  
 });
 app.use(VuetifyUseDialog);
 app.component('RecycleScroller', RecycleScroller);
@@ -96,6 +97,7 @@ app.provide('extensions', extensionList);
 // --------- init --------- //
 const boardModules = import.meta.glob('boards/*/index.js', { eager: true });
 const boardToolbox = import.meta.glob('boards/*/toolbox.js', { eager: true });
+const boardCodeTemplate = import.meta.glob('boards/*/main.py', { eager: true, as : 'raw' });
 const workspaces = import.meta.glob('boards/*/workspace.json', { eager: true });
 const boardPythonModules = import.meta.glob('boards/*/libs/*.py', { eager: false, as : 'raw'});
 // load examples folder
@@ -106,12 +108,15 @@ for (const path in boardModules) {
   let board = boardModules[path].default;
   let pathToolbox = path.replace('index.js', 'toolbox.js');
   let pathWorkspace = path.replace('index.js', 'workspace.json');
+  let pathCodeTemplate = path.replace('index.js', 'main.py');
   let toolbox = boardToolbox[pathToolbox].default;
   let workspace = workspaces[pathWorkspace].default;
+  let codeTemplate = boardCodeTemplate[pathCodeTemplate];
   board.toolbox = toolbox;
   board.defaultWorkspace = workspace;
   board.examples = parsedExamples;
-  
+  board.codeTemplate = codeTemplate;
+  console.log("Code template", codeTemplate);
   //find corresponding python modules
   let pythonModules = [];
   for (const pythonPath in boardPythonModules) {

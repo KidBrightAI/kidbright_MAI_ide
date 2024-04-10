@@ -457,6 +457,16 @@ export const useBoardStore = defineStore({
       
       let filesUpload = [];
       let extra_files = [];
+      //=======================//
+      const workspaceStore = useWorkspaceStore();
+      const currentBoard = workspaceStore.currentBoard;
+      const pluginStore = usePluginStore();
+            
+      //=========== code template merge ============//
+      console.log("code template : ", currentBoard.codeTemplate);
+      //replace code template ##{main}## with code
+      code = currentBoard.codeTemplate.replace("##{main}##", code);
+      console.log("code : ", code);
       //let uploadModuleList = findIncludeModuleNameInCode(code);
       //=======================//
       filesUpload = filesUpload.concat(extra_files);
@@ -465,10 +475,6 @@ export const useBoardStore = defineStore({
         content: code
       });
       
-      //=======================//
-      const workspaceStore = useWorkspaceStore();
-      const currentBoard = workspaceStore.currentBoard;
-      const pluginStore = usePluginStore();
       // list board python modules
       for(let module of currentBoard.pythonModules){
         let scriptResponse = await fetch(module);

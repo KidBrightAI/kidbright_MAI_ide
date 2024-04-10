@@ -4,7 +4,8 @@
   
     var dropdown_addr = block.getFieldValue('addr');
     
-    var code = `iKB1.IKB_1_ADDR = ${dropdown_addr}; iKB1.reset()\n`;
+    var code = `iKB1.IKB_1_ADDR = ${dropdown_addr};
+iKB1.reset()\n`;
     return code;
   };
   

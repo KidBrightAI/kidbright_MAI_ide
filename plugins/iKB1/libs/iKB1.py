@@ -7,16 +7,16 @@ IKB_1_ADDR = 0x48
 i2c1 = pylibi2c.I2CDevice('/dev/i2c-2', IKB_1_ADDR, iaddr_bytes=0)
 
 def write(wd):
-    i2c1.write(0x0,bytes(wd))
+    res = i2c1.write(0x0,bytes(wd))
 
 def write_byte(wd):
-    i2c1.write(0x0, wd)
+    res = i2c1.write(0x0, wd)
 
 def read(n):
     return i2c1.read(0x0,n)
 
 def reset(wait=0.1):
-    write([ 0x00 ])
+    res = write([ 0x00 ])
     sleep(wait)
 
 class Pin:

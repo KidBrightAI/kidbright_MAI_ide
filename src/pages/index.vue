@@ -137,7 +137,7 @@ const download = async () => {
   let res = null;
   //blockly generate python code
   let code = pythonGenerator.workspaceToCode(blocklyComp.value.workspace);
-  console.log(code);
+  //console.log(code);
   res = await boardStore.upload(code);
   
   if (res === true) {

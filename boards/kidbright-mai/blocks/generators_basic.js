@@ -38,6 +38,6 @@ python.pythonGenerator.forBlock['maix3_draw_string'] = function(block, generator
 
 python.pythonGenerator.forBlock['maix3_forever'] = function(block, generator) {
     var statements_code = generator.statementToCode(block, 'code');
-    var code = `while True:\n${statements_code}`;
+    var code = `while True:\n${statements_code || "  pass"}\n`;
     return code;
   };
