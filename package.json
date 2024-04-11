@@ -2,8 +2,9 @@
     "name": "vue-project",
     "version": "0.0.0",
     "scripts": {
-        "dev": "npm run build:icons && vite --host",
-        "build": "npm run build:icons && vite build",
+        "dev": "npm run build:icons && vite --host",        
+        "build": "set NODE_OPTIONS=--max-old-space-size=4096 npm run build:icons && vite build && npm run copy",
+        "copy": "copyfiles -V -u 1 boards/**/* dist/boards && copyfiles -V -u 1 plugins/**/* dist/plugins && copyfiles -V -u 1 extensions/**/* dist/extensions",        
         "preview": "vite preview --port 5050",
         "lint": "eslint . -c .eslintrc.js --fix --ext .ts,.js,.vue,.tsx,.jsx",
         "build:icons": "node src/@iconify/build-icons.js"
