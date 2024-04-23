@@ -38,12 +38,17 @@ Blockly.defineBlocksWithJsonArray([
   },
   {
     "type": "pylibi2c_write",
-    "message0": "I2C device  %1 write data %2",
+    "message0": "I2C device  %1 internal addr %2 write data %3",
     "args0": [
       {
         "type": "input_value",
         "name": "device",
         "check": "I2CDevice"
+      },
+      {
+        "type": "field_input",
+        "name": "internal_addr",
+        "text": "0x0"
       },
       {
         "type": "field_input",
@@ -59,12 +64,17 @@ Blockly.defineBlocksWithJsonArray([
   },
   {
     "type": "pylibi2c_read",
-    "message0": "I2C device  %1 read data # %2 byte(s)",
+    "message0": "I2C device  %1 internal addr %2 read data # %3 byte(s)",
     "args0": [
       {
         "type": "input_value",
         "name": "device",
         "check": "I2CDevice"
+      },
+      {
+        "type": "field_input",
+        "name": "internal_addr",
+        "text": "0x0"
       },
       {
         "type": "input_value",
