@@ -59,7 +59,7 @@ const fileExplorerDialogOpen = ref(false);
 const footer = shallowRef();
 const isSerialPanelOpen = ref(false);
 const splitpanesRef = ref();
-const DEFAULT_FOOTER_HEIGHT = 68;
+const DEFAULT_FOOTER_HEIGHT = 18;
 const bottomMinPaneSize = ref(5);
 const bottomMaxPaneSize = ref(80);
 const bottomPaneSize = ref(5);
@@ -314,7 +314,7 @@ const onResized = () => {
         setTimeout(() => {
           let footerHeight = footer.value.$el.clientHeight;
           console.log(`footerHeight: ${footerHeight}`);
-          let serialMonitorHeight = footerHeight - 68
+          let serialMonitorHeight = footerHeight - DEFAULT_FOOTER_HEIGHT
           footer.value.$refs.terminalDiv.style.height = `${serialMonitorHeight}px`;
           if(fitAddon){      
             fitAddon.fit();
@@ -396,8 +396,8 @@ watch(selectedMenu, (val) => {
 </script>
 
 <template>
-  <v-layout class="rounded rounded-md main-bg">
-    <v-navigation-drawer permanent width="320" class="main-bg">
+  <v-layout class="rounded rounded-md main-bg">    
+    <!-- <v-navigation-drawer permanent width="320" class="main-bg">
       <MainPanel v-model:selectedMenu="selectedMenu" 
         @newProject="newProjectDialogOpen = true" 
         @openProject="openProject"
@@ -411,14 +411,11 @@ watch(selectedMenu, (val) => {
         @newModel="newModelDialogOpen = true"
       >
       </MainPanel>
-    </v-navigation-drawer>
+    </v-navigation-drawer> -->
     <v-main class="d-flex align-center justify-center" style="min-height: 310px; height: calc(100vh);">
-      <splitpanes ref="splitpanesRef" class="default-theme" horizontal :style="{ height: selectedMenu==4 ? 'calc(100vh - 64px)' : 'calc(100vh)'}" @resized="onResized" @ready="onResized">
+      <splitpanes ref="splitpanesRef" class="default-theme" horizontal :style="{ height: selectedMenu==4 ? 'calc(100vh - 100px)' : 'calc(100vh)'}" @resized="onResized" @ready="onResized">
         <pane v-if="workspaceStore.currentBoard" :size="100 - bottomPaneSize">
-          <extension-async-component v-if="selectedMenu === 1 && workspaceStore.extension" :target="workspaceStore.extension.components.Capture"></extension-async-component>
-          <extension-async-component v-else-if="selectedMenu === 2 && workspaceStore.extension" :target="workspaceStore.extension.components.Annotate"></extension-async-component>
-          <extension-async-component v-else-if="selectedMenu === 3 && workspaceStore.extension" :target="workspaceStore.extension.components.Train"></extension-async-component>
-          <div v-if="selectedMenu == 4" class="w-100 h-100">
+          <div class="w-100 h-100">
             <Header
               @serial="onSerial" 
               @help="onHelp" 
@@ -435,7 +432,7 @@ watch(selectedMenu, (val) => {
           </div>
         </pane>
         <pane :min-size="bottomMinPaneSize" :size="bottomPaneSize" :max-size="bottomMaxPaneSize">
-          <Footer ref="footer" @undo="undo" @redo="redo" @download="download"></Footer>
+          <Footer ref="footer" @undo="undo" @redo="redo" @download="download" @terminal="onSerial"></Footer>
         </pane>
       </splitpanes>
     </v-main>

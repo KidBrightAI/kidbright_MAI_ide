@@ -3,6 +3,7 @@ import { onMounted, ref, shallowRef, nextTick } from "vue";
 import Blockly from "blockly";
 import { pythonGenerator } from "blockly/python";
 import CustomCategory from "./CustomCategory";
+import CustomTrashcan from "./CustomTrashcan";
 import { ZoomToFitControl } from "./ZoomToFit";
 import BlocklyLogo from "@/assets/images/blockly.png";
 import PythonLogo from "@/assets/images/python.png";
@@ -86,9 +87,16 @@ const reload = (initBlock) => {
   }
   toolboxXml += `</xml>`;  
   options.toolbox = toolboxXml;
-
+  console.log("Blockly",Blockly);
   workspace.value = Blockly.inject(blocklyDiv.value, options);
   workspace.value.scrollCenter();
+  //-------- add custom trashcan ----------//
+  workspace.value.trashcan.dispose();
+  workspace.value.trashcan  = new CustomTrashcan(workspace.value);
+  workspace.value.trashcan.init();
+  const svgTrashcan = workspace.value.trashcan.createDom();
+  workspace.value.svgGroup_.insertBefore(svgTrashcan, workspace.value.getCanvas());
+  //-------- add custom zoomToFit ----------//
   //-------- load default block code ----------//
   if (initBlock) {
     Blockly.serialization.workspaces.load(initBlock, workspace.value);
@@ -182,7 +190,7 @@ defineExpose({ workspace,resizeWorkspace,undo,redo, reload, getSerializedWorkspa
   background-color:#fafafa;
 }
 .blocklyToolboxCategory{
-  border-bottom: 1px black solid;
+  border-bottom: 2px rgb(230, 230, 230) solid;
   margin-bottom: 3px;
 }
 .blocklyTreeLabel {

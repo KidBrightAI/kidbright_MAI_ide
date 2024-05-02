@@ -5,24 +5,29 @@ export default class CustomCategory extends Blockly.ToolboxCategory {
   }
   addColourBorder_(colour){
     var labelDom = this.rowDiv_.getElementsByClassName('blocklyTreeLabel')[0];
-    this.rowDiv_.style.backgroundColor = colour;
-    labelDom.style.color = 'white';
+    this.rowDiv_.style.backgroundColor = "#E9E9E9";
+    labelDom.style.color = colour;
   }
   setSelected(isSelected){
     // We do not store the label span on the category, so use getElementsByClassName.
     var labelDom = this.rowDiv_.getElementsByClassName('blocklyTreeLabel')[0];
-    if (isSelected) {
-      // Change the background color of the div to white.
-      this.rowDiv_.style.backgroundColor = "white"; // this.colour_;
-      // Set the colour of the text to the colour of the category.
-      //labelDom.style.color = this.colour_;
+    if (isSelected) {      
+      // this.rowDiv_.style.backgroundColor = "white"; // this.colour_;
+      // labelDom.style.color = this.colour_;
+      // this.iconDom_.style.color = this.colour_;
+      this.rowDiv_.style.backgroundColor = "#E9E9E9"; // this.colour_;
       labelDom.style.color = this.colour_;
       this.iconDom_.style.color = this.colour_;
+      // add left and right border to the selected category
+      this.rowDiv_.style.borderLeft = '8px solid ' + this.colour_;
+      this.rowDiv_.style.borderRight = '8px solid ' + this.colour_;
+
     } else {
-      // Set the background back to the original colour.
-      this.rowDiv_.style.backgroundColor = this.colour_; //'';
-      // Set the text back to white.
-      labelDom.style.color = 'white';
+      this.rowDiv_.style.borderLeft = 'none';
+      this.rowDiv_.style.borderRight = 'none';
+
+      this.rowDiv_.style.backgroundColor = "#E9E9E9";
+      labelDom.style.color = this.colour_;
       this.iconDom_.style.color = 'white';
     }
     // This is used for accessibility purposes.
