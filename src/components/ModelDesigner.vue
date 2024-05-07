@@ -22,6 +22,7 @@ import { ClassificationOutputNode } from "@/nodes/outputs/classification-output"
 import { ObjectDetectionOutputNode } from "@/nodes/outputs/object-detection-output";
 import { YoloNode } from "@/nodes/models/yolo";
 import { ResnetNode } from "@/nodes/models/resnet";
+import { MobileNetNode } from "@/nodes/models/mobilenet";
 import { onMounted } from "vue";
 
 const workspaceStore = useWorkspaceStore();
@@ -47,7 +48,7 @@ editor.registerNodeType(InputNode, { category: "Input" });
 editor.registerNodeType(OutputNode, { category: "Output" });
 editor.registerNodeType(ClassificationOutputNode, { category: "Output" });
 editor.registerNodeType(ObjectDetectionOutputNode, { category: "Output" });
-editor.registerNodeType(ResnetNode, { category: "Model" });
+editor.registerNodeType(MobileNetNode, { category: "Model" });
 editor.registerNodeType(YoloNode, { category: "Model" });
 
 //props

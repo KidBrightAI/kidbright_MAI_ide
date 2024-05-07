@@ -9,10 +9,7 @@ import { useBoardStore } from "@/store/board";
 import { usePluginStore } from "@/store/plugin";
 import { useConfirm } from "@/components/comfirm-dialog";
 import { toast } from "vue3-toastify";
-import { useRouter } from 'vue-router';
-
 import { onMounted, ref, shallowRef, nextTick } from "vue";
-
 
 import { Splitpanes, Pane } from 'splitpanes'
 import 'splitpanes/dist/splitpanes.css'
@@ -49,7 +46,6 @@ const confirm = useConfirm();
 const workspaceStore = useWorkspaceStore();
 const boardStore = useBoardStore();
 const pluginStore = usePluginStore();
-const router = useRouter();
 
 const blocklyComp = ref();
 //dialog state
@@ -63,7 +59,7 @@ const fileExplorerDialogOpen = ref(false);
 const footer = shallowRef();
 const isSerialPanelOpen = ref(false);
 const splitpanesRef = ref();
-const DEFAULT_FOOTER_HEIGHT = 18;
+const DEFAULT_FOOTER_HEIGHT = 68;
 const bottomMinPaneSize = ref(5);
 const bottomMaxPaneSize = ref(80);
 const bottomPaneSize = ref(5);
@@ -223,9 +219,8 @@ const selectProjectType = async(selectedType) => {
   let res = await workspaceStore.selectProjectType(selectedType);
   if(res){
     selectedMenu.value = 1;
-    //blocklyComp.value.reload();
-    //toast.success("เลือกประเภทโมเดลเสร็จเรียบร้อย");
-    router.push("/ai");
+    blocklyComp.value.reload();
+    toast.success("เลือกประเภทโมเดลเสร็จเรียบร้อย");
   }else{
     toast.error("เลือกประเภทโมเดลไม่สำเร็จ");    
   }
@@ -265,16 +260,6 @@ const onExampleOpen = async(mode, example) => {
   }catch(err){
     console.log(err);
     return;
-  }
-};
-
-const onAiOpen = async() => {
-  //check if project has set project type
-  if(workspaceStore.projectType == null){
-    newModelDialogOpen.value = true;
-  }else{
-    selectedMenu.value = 1;
-    router.push("/ai");
   }
 };
 
@@ -329,7 +314,7 @@ const onResized = () => {
         setTimeout(() => {
           let footerHeight = footer.value.$el.clientHeight;
           console.log(`footerHeight: ${footerHeight}`);
-          let serialMonitorHeight = footerHeight - DEFAULT_FOOTER_HEIGHT
+          let serialMonitorHeight = footerHeight - 68
           footer.value.$refs.terminalDiv.style.height = `${serialMonitorHeight}px`;
           if(fitAddon){      
             fitAddon.fit();
@@ -371,9 +356,7 @@ const mountSerial = () => {
 
 const addChangeListener = () => {    
   blocklyComp.value.workspace.addChangeListener(() => {    
-    if(blocklyComp.value){
-      workspaceStore.block = blocklyComp.value.getSerializedWorkspace();
-    }    
+    workspaceStore.block = blocklyComp.value.getSerializedWorkspace();
   });
 };
 
@@ -414,21 +397,32 @@ watch(selectedMenu, (val) => {
 
 <template>
   <v-layout class="rounded rounded-md main-bg">
+    <v-navigation-drawer permanent width="320" class="main-bg">
+      <MainPanel v-model:selectedMenu="selectedMenu" 
+        @newProject="newProjectDialogOpen = true" 
+        @openProject="openProject"
+        @saveProject="saveProject"
+        @deleteProject="deleteProject"
+        @connectBoard="serialMonitorBridge"
+        @connectWifi="connectWifiDialogOpen = true"
+        @fileBrowser="fileExplorerDialogOpen = true"
+        @terminal="onSerial"
+        @restartBoard="boardStore.rebootBoard"
+        @newModel="newModelDialogOpen = true"
+      >
+      </MainPanel>
+    </v-navigation-drawer>
     <v-main class="d-flex align-center justify-center" style="min-height: 310px; height: calc(100vh);">
-      <splitpanes ref="splitpanesRef" class="default-theme" horizontal :style="{ height: selectedMenu==4 ? 'calc(100vh - 100px)' : 'calc(100vh)'}" @resized="onResized" @ready="onResized">
+      <splitpanes ref="splitpanesRef" class="default-theme" horizontal :style="{ height: selectedMenu==4 ? 'calc(100vh - 64px)' : 'calc(100vh)'}" @resized="onResized" @ready="onResized">
         <pane v-if="workspaceStore.currentBoard" :size="100 - bottomPaneSize">
-          <div class="w-100 h-100">
+          <extension-async-component v-if="selectedMenu === 1 && workspaceStore.extension" :target="workspaceStore.extension.components.Capture"></extension-async-component>
+          <extension-async-component v-else-if="selectedMenu === 2 && workspaceStore.extension" :target="workspaceStore.extension.components.Annotate"></extension-async-component>
+          <extension-async-component v-else-if="selectedMenu === 3 && workspaceStore.extension" :target="workspaceStore.extension.components.Train"></extension-async-component>
+          <div v-if="selectedMenu == 4" class="w-100 h-100">
             <Header
-              @newProject="newProjectDialogOpen = true" 
-              @openProject="openProject"
-              @saveProject="saveProject"
-              @deleteProject="deleteProject"
-              @connectBoard="serialMonitorBridge"
-              @connectWifi="connectWifiDialogOpen = true"
-              @fileBrowser="fileExplorerDialogOpen = true"
-              @terminal="onSerial"
-              @restartBoard="boardStore.rebootBoard"
-              @newModel="onAiOpen"
+              @serial="onSerial" 
+              @help="onHelp" 
+              @example="exampleDialogOpen = true" 
               @plugin="pluginDialogOpen = true">
             </Header>
             <BlocklyComponent ref="blocklyComp"></BlocklyComponent> 
@@ -441,7 +435,7 @@ watch(selectedMenu, (val) => {
           </div>
         </pane>
         <pane :min-size="bottomMinPaneSize" :size="bottomPaneSize" :max-size="bottomMaxPaneSize">
-          <Footer ref="footer" @undo="undo" @redo="redo" @download="download" @terminal="onSerial"></Footer>
+          <Footer ref="footer" @undo="undo" @redo="redo" @download="download"></Footer>
         </pane>
       </splitpanes>
     </v-main>
@@ -470,9 +464,9 @@ meta:
   padding-top: 8px;
   padding-left: 5px;
   padding-right: 5px;
-  // max-width: 320px;
-  // width: 320px;
-  // min-width: 320px;
+  max-width: 320px;
+  width: 320px;
+  min-width: 320px;
   overflow-y: auto;
   height: 100%;
   

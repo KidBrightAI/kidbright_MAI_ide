@@ -116,6 +116,14 @@ export const useDatasetStore = defineStore({
       console.log("dataset base url : ", this.baseURL);
       console.log("dataset type : ", this.datasetType);
     },
+    async clearDataset() {
+      this.data = [];
+      this.project = "";
+      this.datasetType = null;
+      this.baseURL = "";
+      //let dirEntry = await storage.getDirectory(this.$fs, this.project);
+      //await storage.removeDir(this.$fs, dirEntry);
+    },
     
     async restoreDataset(dataset) {
       console.log("Restore dataset ...");

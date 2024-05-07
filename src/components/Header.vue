@@ -4,7 +4,7 @@ import connectIcon from "@/assets/images/icons/connectbtn.png";
 import wifiIcon from "@/assets/images/icons/wifibtn.png";
 import fileIcon from "@/assets/images/icons/filebtn.png";
 import aiIcon from "@/assets/images/icons/aibtn.png";
-import qrIcon from "@/assets/images/icons/qrbtn.png";
+import qrIcon from "@/assets/images/icons/pluginsbtn.png";
 
 import newIcon from "@/assets/images/icons/newbtn.png";
 import saveIcon from "@/assets/images/icons/savebtn.png";
@@ -42,25 +42,25 @@ watch(() => workspaceStore.name, (val) => {
     <v-spacer></v-spacer>
     <v-tooltip text="Connect Board">
       <template v-slot:activator="{ props }">
-        <kbbtn class="mx-1" :icon="connectIcon" :disabled="false" v-bind="props" @click="$emit('plugin')"/>
+        <kbbtn class="mx-1" :icon="connectIcon" :disabled="false" v-bind="props" @click="$emit('connectBoard')"/>
       </template>
     </v-tooltip>
 
     <v-tooltip text="File Browser">
       <template v-slot:activator="{ props }">
-        <kbbtn class="mx-1" :icon="fileIcon" :disabled="false" v-bind="props" @click="$emit('plugin')"/>
+        <kbbtn class="mx-1" :icon="fileIcon" :disabled="false" v-bind="props" @click="$emit('fileBrowser')"/>
       </template>
     </v-tooltip>
 
     <v-tooltip text="WiFi Connect">
       <template v-slot:activator="{ props }">
-        <kbbtn class="mx-1" :icon="wifiIcon" :disabled="false" v-bind="props" @click="$emit('plugin')"/>
+        <kbbtn class="mx-1" :icon="wifiIcon" :disabled="false" v-bind="props" @click="$emit('connectWifi')"/>
       </template>
     </v-tooltip>
 
     <v-tooltip text="AI Model">
       <template v-slot:activator="{ props }">
-        <kbbtn class="mx-1" :icon="aiIcon" :disabled="false" v-bind="props" @click="$emit('plugin')"/>
+        <kbbtn class="mx-1" :icon="aiIcon" :disabled="false" v-bind="props" @click="$emit('newModel')"/>
       </template>
     </v-tooltip>
 
@@ -74,25 +74,25 @@ watch(() => workspaceStore.name, (val) => {
 
     <v-tooltip text="New Project">
       <template v-slot:activator="{ props }">
-        <kbbtn class="mx-1" :icon="newIcon" :disabled="false" v-bind="props" @click="$emit('plugin')"/>
+        <kbbtn class="mx-1" :icon="newIcon" :disabled="false" v-bind="props" @click="$emit('newProject')"/>
       </template>
     </v-tooltip>
 
     <v-tooltip text="Open Project">
       <template v-slot:activator="{ props }">
-        <kbbtn class="mx-1" :icon="openIcon" :disabled="false" v-bind="props" @click="$emit('plugin')"/>
+        <kbbtn class="mx-1" :icon="openIcon" :disabled="false" v-bind="props" @click="$emit('openProject')"/>
       </template>
     </v-tooltip>
 
     <v-tooltip text="Save Project">
       <template v-slot:activator="{ props }">
-        <kbbtn class="mx-1" :icon="saveIcon" :disabled="false" v-bind="props" @click="$emit('plugin')"/>
+        <kbbtn class="mx-1" :icon="saveIcon" :disabled="false" v-bind="props" @click="$emit('saveProject')"/>
       </template>
     </v-tooltip>
 
     <v-tooltip text="Upload Code">
       <template v-slot:activator="{ props }">
-        <kbbtn class="mx-1 me-5" :icon="uploadIcon" :disabled="false" v-bind="props" @click="$emit('plugin')"/>
+        <kbbtn class="mx-1 me-5" :icon="uploadIcon" :disabled="false" v-bind="props" @click="$emit('download')"/>
       </template>
     </v-tooltip>
 
