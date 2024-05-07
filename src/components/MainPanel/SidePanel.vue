@@ -91,7 +91,7 @@
             style="border-color: #007e4e !important;"
           >
             <img :src="KBRobot" width="42" height="42">
-            Your Robot is Ready!
+            Model is Ready!
             <div class="step-text" style="background-color: #007e4e;"><v-icon size="25" color="yellow-lighten-2">mdi-star</v-icon></div>
           </VBtn>
 

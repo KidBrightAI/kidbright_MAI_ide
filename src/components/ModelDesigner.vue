@@ -48,7 +48,8 @@ editor.registerNodeType(InputNode, { category: "Input" });
 editor.registerNodeType(OutputNode, { category: "Output" });
 editor.registerNodeType(ClassificationOutputNode, { category: "Output" });
 editor.registerNodeType(ObjectDetectionOutputNode, { category: "Output" });
-editor.registerNodeType(MobileNetNode, { category: "Model" });
+//editor.registerNodeType(MobileNetNode, { category: "Model" });
+editor.registerNodeType(ResnetNode, { category: "Model" });
 editor.registerNodeType(YoloNode, { category: "Model" });
 
 //props
