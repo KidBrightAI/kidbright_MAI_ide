@@ -18,7 +18,7 @@ import {toast} from "vue3-toastify";
 const workspaceStore = useWorkspaceStore();
 const boardStore = useBoardStore();
 const projectName = ref(workspaceStore.name);
-const defineEmits = defineEmits(["serial","example", "help", "firmware", "extraSave","plugin"]);
+const defineEmits = defineEmits(["serial","example", "help", "firmware", "extraSave","plugin","download","newProject","openProject","saveProject","connectBoard","fileBrowser","connectWifi","newModel"]);
 const loading = ref(false);
 
 const saveProjetName = () => {

@@ -30,6 +30,36 @@ const importImages = (e)=>{
     importPascalVOC(e);
   }else if(tab.value == "KBAI"){
     importKidBrightProject(e);
+  }else if(tab.value == "IMAGE"){
+    importOnlyImage(e);
+  }
+};
+const importOnlyImage = async(e)=>{
+  if(step.value == 1){
+    e.preventDefault();
+    step.value = 2;
+    let dataset = [];
+    progress.value = 0;
+    let labels = [];
+    for(let file of files.value){
+      let data = {
+        id : randomId(16),
+        image: file,
+        annotate : [],
+        class: null,
+        ext : file.name.split(".").pop()
+      };
+      await datasetStore.addDataToFs(data);
+      delete data.image;
+      dataset.push(data);
+      progress.value+=1;
+      percentage.value= Math.round(progress.value/files.value.length*100);
+    }
+    step.value = 3;
+    toast.success("นำเข้าข้อมูลสำเร็จ");
+    datasetStore.addDatasetItems(dataset);
+  }else if(step.value == 3){
+    //import success 
   }
 };
 
@@ -243,14 +273,49 @@ const tab = ref("PASCAL VOL");
           </VCol>  
           <VCol cols="12">
             <VTabs v-model="tab" grow>
+              <VTab value="IMAGE">
+                <span>IMPORT IMAGE</span>
+              </VTab>
               <VTab value="PASCAL_VOC">
                 <span>PASCAL VOC</span>
-              </VTab>          
+              </VTab>
               <VTab value="KBAI" style="text-transform: none !important;">
                 <span>KidBright AI</span> 
               </VTab>
             </VTabs>
             <VWindow v-model="tab">
+              <VWindowItem value="IMAGE" class="pt-5">
+                <VRow>
+                  <VCol cols="12" class="text-center">     
+                    <span class="text-title px-2 w-100">นำเข้าเฉพาะรูปภาพ</span>
+                  </VCol>
+                  <VCol cols="12">                    
+                    <VFileInput
+                      v-model="files"
+                      color="primary"
+                      label="เลือก Folder รูปภาพ"
+                      multiple
+                      density="compact"
+                      hide-details
+                      counter
+                      webkitdirectory
+                      directory
+                      :show-size="1024"
+                    >
+                    <template v-slot:selection="{ fileNames }">
+                      <template v-for="(fileName, index) in fileNames" :key="fileName">
+                        <VChip v-if="index < 3" color="primary" label size="small" class="me-2">
+                          {{ fileName }}
+                        </VChip>
+                        <span v-else-if="index === 3" class="text-overline text-grey-darken-3 mx-2">
+                          +{{ files.length - 3 }} File(s)
+                        </span>
+                      </template>
+                    </template>
+                    </VFileInput>
+                  </VCol>
+                </VRow>
+              </VWindowItem>
               <VWindowItem value="PASCAL_VOC" class="pt-5">
                 <VRow>
                   <VCol cols="12">                    

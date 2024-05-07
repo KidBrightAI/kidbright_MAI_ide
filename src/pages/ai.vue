@@ -13,6 +13,9 @@ import 'splitpanes/dist/splitpanes.css'
 import MainPanel from "@/components/MainPanel/MainPanel.vue";
 import SidePanel from "@/components/MainPanel/SidePanel.vue";
 
+import SavingProjectDialog from "@/components/dialog/SavingProjectDialog.vue";
+import UploadProjectDialog from "@/components/dialog/UploadProjectDialog.vue";
+
 import { getCurrentInstance } from 'vue'
 
 import {sleep } from "@/engine/helper";
@@ -72,6 +75,8 @@ const onResetModel = async () => {
         </pane>
       </splitpanes>
     </v-main>
+    <SavingProjectDialog></SavingProjectDialog>
+    <UploadProjectDialog></UploadProjectDialog>
   </v-layout>
 </template>
 

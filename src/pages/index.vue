@@ -419,6 +419,7 @@ watch(selectedMenu, (val) => {
         <pane v-if="workspaceStore.currentBoard" :size="100 - bottomPaneSize">
           <div class="w-100 h-100">
             <Header
+              @download="download"
               @newProject="newProjectDialogOpen = true" 
               @openProject="openProject"
               @saveProject="saveProject"
