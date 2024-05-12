@@ -525,7 +525,7 @@ export const useBoardStore = defineStore({
       //=======================//
       filesUpload = filesUpload.concat(extra_files);
       filesUpload.push({
-        file: "/home/startup.py",
+        file: "/root/app/rum.py",
         content: code
       });
 
@@ -595,7 +595,7 @@ export const useBoardStore = defineStore({
         sync.dispose(); 
         SingletonShell.write("sync\n");        
         SingletonShell.write("killall python3\n");
-        SingletonShell.write("python3 /home/startup.py\n");       
+        SingletonShell.write("python3 /root/app/run.py\n");       
         return true;
       } catch (e) {
         throw e;
