@@ -668,12 +668,12 @@ export default function(){
             <block type="maix3_camera_resolution">
               <value name="width">
                 <shadow type="math_number">
-                  <field name="NUM">224</field>
+                  <field name="NUM">240</field>
                 </shadow>
               </value>
               <value name="height">
                 <shadow type="math_number">
-                  <field name="NUM">224</field>
+                  <field name="NUM">240</field>
                 </shadow>
               </value>
             </block>

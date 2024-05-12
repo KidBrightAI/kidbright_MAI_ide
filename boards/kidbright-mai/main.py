@@ -1,4 +1,7 @@
 import signal, sys
+from maix import camera
+
+camera.camera.config(size=(224, 224))
 
 def handler_stop_signals(signum, frame):
     print("Exiting...")
