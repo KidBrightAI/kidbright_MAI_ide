@@ -11,6 +11,8 @@ import saveIcon from "@/assets/images/icons/savebtn.png";
 import openIcon from "@/assets/images/icons/openbtn.png";
 import uploadIcon from "@/assets/images/icons/uploadbtn.png";
 
+import kbhead from "@/assets/KidBrightHead.png";
+import kblogo from "@/assets/kblogo_white.png";
 import { useWorkspaceStore } from "@/store/workspace";
 import { useBoardStore } from "@/store/board";
 import {toast} from "vue3-toastify";
@@ -37,8 +39,10 @@ watch(() => workspaceStore.name, (val) => {
 
 <template>  
   <v-app-bar color="primary" height="100">    
-    <span class="text-h3 text-white ms-5 logo-text">Kidbright μAI</span>
-    
+    <div class="d-flex align-center">
+      <v-img :src="kbhead" height="90" width="90" class="ms-5" alt="KidBright Micro AI IDE"></v-img>
+      <v-img :src="kblogo" height="60" width="340" class="ms-2 mt-3"></v-img>
+    </div>    
     <v-spacer></v-spacer>
     <v-tooltip text="Connect Board">
       <template v-slot:activator="{ props }">
