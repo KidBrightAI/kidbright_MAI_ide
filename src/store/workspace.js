@@ -59,7 +59,7 @@ export const useWorkspaceStore = defineStore({
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     },
-    async saveProject(mode='download') {
+    async saveProject(mode='download', filename='project.zip') {
       this.saving = true;
       this.savingProgress = 0;
       console.log("saving project");
@@ -156,7 +156,9 @@ export const useWorkspaceStore = defineStore({
           compression: "STORE",
         });
         if(mode === 'download'){
-          that.downloadBlob("project.zip", zipBlob);
+          //check if filename end with .zip or not, if not add .zip
+          filename = filename.endsWith(".zip") ? filename : filename + ".zip";
+          that.downloadBlob(filename, zipBlob);
         }else if(mode === 'upload'){
           return zipBlob;
         }        
@@ -410,6 +412,10 @@ export const useWorkspaceStore = defineStore({
         this.model = projectData.model;
         this.labels = projectData.labels;
         this.modelLabel = projectData.modelLabel;
+
+        this.defaultGraph = projectData.defaultGraph;
+        this.graph = projectData.graph;
+        this.trainConfig = projectData.trainConfig;        
 
         datasetStore.project = datasetData.project;
         datasetStore.datasetType = datasetData.datasetType;

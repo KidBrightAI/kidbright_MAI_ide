@@ -42,7 +42,7 @@ watch(() => workspaceStore.name, (val) => {
     <div class="d-flex align-center">
       <v-img :src="kbhead" height="90" width="90" class="ms-5" alt="KidBright Micro AI IDE"></v-img>
       <v-img :src="kblogo" height="60" width="340" class="ms-2 mt-3"></v-img>
-    </div>    
+    </div>
     <v-spacer></v-spacer>
     <v-tooltip text="Connect Board">
       <template v-slot:activator="{ props }">

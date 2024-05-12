@@ -11,7 +11,6 @@ const blockAIObjectDetection = `
   <block type="maix3_nn_yolo_get_result_array"></block>
 </value>
 </block>
-<block type="maix3_nn_yolo_get_count"></block>
 <block type="controls_forEach">
 <field name="VAR">obj</field>
 <value name="LIST">
@@ -20,6 +19,7 @@ const blockAIObjectDetection = `
   </block>
 </value>
 </block>
+<block type="maix3_nn_yolo_get_count"></block>
 <block type="maix3_nn_yolo_get">
 <field name="data">center X</field>
 <value name="obj">
@@ -161,6 +161,9 @@ export default function(){
                 </value>
               </block>
             </value>
+          </block>
+          <block type="variables_set">
+            <field name="VAR">img1</field>            
           </block>
         <label text="Image Manipulation"></label>
         <block type="maix3_image_copy">
@@ -665,12 +668,12 @@ export default function(){
             <block type="maix3_camera_resolution">
               <value name="width">
                 <shadow type="math_number">
-                  <field name="NUM">240</field>
+                  <field name="NUM">224</field>
                 </shadow>
               </value>
               <value name="height">
                 <shadow type="math_number">
-                  <field name="NUM">240</field>
+                  <field name="NUM">224</field>
                 </shadow>
               </value>
             </block>

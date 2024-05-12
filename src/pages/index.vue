@@ -11,6 +11,8 @@ import { useConfirm } from "@/components/comfirm-dialog";
 import { toast } from "vue3-toastify";
 import { useRouter } from 'vue-router';
 
+import { randomId } from "@/components/utils";
+
 import { onMounted, ref, shallowRef, nextTick } from "vue";
 
 
@@ -32,6 +34,7 @@ import ExampleDialog from "@/components/dialog/ExampleDialog.vue";
 import PluginDialog from "@/components/dialog/PluginDialog.vue";
 import ConnectWifiDialog from "@/components/dialog/ConnectWifiDialog.vue";
 import SavingProjectDialog from "@/components/dialog/SavingProjectDialog.vue";
+import SaveProjectDialog from "@/components/dialog/SaveProjectDialog.vue";
 import UploadProjectDialog from "@/components/dialog/UploadProjectDialog.vue";
 import OpeningProjectDialog from "@/components/dialog/OpeningProjectDialog.vue";
 import NewModelDialog from "@/components/dialog/NewModelDialog.vue";
@@ -43,7 +46,6 @@ import { loadPlugin } from "@/engine/board"
 import RobotPoker from "@/assets/images/png/Mask_Group_12.png";
 
 import ExtensionAsyncComponent from "@/components/ExtensionAsyncComponent.vue";
-
 
 const confirm = useConfirm();
 const workspaceStore = useWorkspaceStore();
@@ -59,6 +61,7 @@ const pluginDialogOpen = ref(false);
 const connectWifiDialogOpen = ref(false);
 const newModelDialogOpen = ref(false);
 const fileExplorerDialogOpen = ref(false);
+const saveProjectDialogOpen = ref(false);
 
 const footer = shallowRef();
 const isSerialPanelOpen = ref(false);
@@ -179,6 +182,28 @@ const createdProject = async (projectInfo) => {
   }
 };
 
+const newProjectConfirm = async () => {
+  try {
+    let message = "ข้อมูลโปรเจคปัจจุบันจะถูกลบทั้งหมด คุณต้องการสร้างโปรเจคใหม่หรือไม่";
+    await confirm({ title: "ยืนยันการสร้างโปรเจค", content: message , dialogProps: { width: 'auto' } });
+    let project = {
+      name: "kidbright project",
+      id: "kidbright_mai" + "_" + randomId(),
+      projectType: null,// selectType.value, //id of extension
+      projectTypeTitle: "", //selectedExtension.name, //this.models.find(el=>el.value == this.selectType).text,
+      lastUpdate: new Date(),
+      extension: null, 
+      model : null,
+      dataset: [],
+      labels: [],
+      board: "kidbright-mai"
+    };
+    await createdProject(project);
+  } catch (err) {
+    console.log(err);
+  }
+};
+
 const openProject = async () => {
   try {
     let message = "ข้อมูลโปรเจคปัจจุบันจะถูกลบทั้งหมด คุณต้องการเปิดโปรเจคใหม่หรือไม่";
@@ -195,9 +220,10 @@ const openProject = async () => {
   }
 };
 
-const saveProject = async ($event) => {
+const saveProject = async (filename) => {
   try {    
-    await workspaceStore.saveProject();
+    saveProjectDialogOpen.value = false;
+    await workspaceStore.saveProject("download", filename);    
   } catch (err) {
     console.log(err);
   }
@@ -420,9 +446,9 @@ watch(selectedMenu, (val) => {
           <div class="w-100 h-100">
             <Header
               @download="download"
-              @newProject="newProjectDialogOpen = true" 
+              @newProject="newProjectConfirm" 
               @openProject="openProject"
-              @saveProject="saveProject"
+              @saveProject="saveProjectDialogOpen = true"
               @deleteProject="deleteProject"
               @connectBoard="serialMonitorBridge"
               @connectWifi="connectWifiDialogOpen = true"
@@ -448,8 +474,9 @@ watch(selectedMenu, (val) => {
     </v-main>
   </v-layout>
   <SavingProjectDialog></SavingProjectDialog>
+  <SaveProjectDialog v-model:isDialogVisible="saveProjectDialogOpen" @submit="saveProject"></SaveProjectDialog>
   <UploadProjectDialog></UploadProjectDialog>
-  <OpeningProjectDialog></OpeningProjectDialog>
+  <OpeningProjectDialog></OpeningProjectDialog>  
   <ConnectWifiDialog v-model:isDialogVisible="connectWifiDialogOpen" />
   <NewProjectDialog v-model:isDialogVisible="newProjectDialogOpen" @submit="createdProject" />
   <ExampleDialog v-model:isDialogVisible="exampleDialogOpen" @loadExample="onExampleOpen" />
