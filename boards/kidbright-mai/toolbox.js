@@ -163,7 +163,10 @@ export default function(){
             </value>
           </block>
           <block type="variables_set">
-            <field name="VAR">img1</field>            
+            <field name="VAR">img1</field>
+            <value name="VALUE">
+            <block type="maix3_camera_capture"></block>
+            </value>
           </block>
         <label text="Image Manipulation"></label>
         <block type="maix3_image_copy">

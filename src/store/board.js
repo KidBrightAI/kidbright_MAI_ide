@@ -525,7 +525,7 @@ export const useBoardStore = defineStore({
       //=======================//
       filesUpload = filesUpload.concat(extra_files);
       filesUpload.push({
-        file: "/root/app/rum.py",
+        file: "/root/app/run.py",
         content: code
       });
 
