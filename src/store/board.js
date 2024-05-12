@@ -532,10 +532,10 @@ export const useBoardStore = defineStore({
       //edit startup 
       // TODO : remove this when firmware support startup script
 
-      filesUpload.push({
-        file: "/etc/init.d/S02app",
-        content: startupScript
-      });
+      // filesUpload.push({
+      //   file: "/etc/init.d/S02app",
+      //   content: startupScript
+      // });
       
       // list board python modules
       for(let module of currentBoard.pythonModules){
