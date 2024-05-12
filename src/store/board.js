@@ -19,6 +19,43 @@ import { AdbDaemonWebUsbDeviceManager } from "@yume-chan/adb-daemon-webusb";
 import { isProxy, toRaw } from "vue";
 import SingletonShell from "../engine/SingletonShell";
 
+const startupScript = `#!/bin/sh
+
+[ ! -e /va/run ] && mkdir -p /var/run
+mount /mnt/UDISK /root
+
+app="/root/app/main.py"
+libmaix="/root/maix_dist/start_app.sh"
+maixpy3="/root/maixpy3-9.9.9-cp38-cp38-linux_armv7l.whl"
+main="/root/main.py"
+swap="/swapfile"
+
+case "$1" in
+  start)
+        if [ -f "$swap" ]; then
+          swapon /swapfile
+        fi
+        if [ -d "/home/root/" ]; then
+          mv /home/root/* /root/
+          sync
+          rm -rf /home/root/
+          sync
+        fi
+        if [ -d "/home/app/" ]; then
+          mv /home/app/ /root/
+          sync
+        fi
+        echo "Starting app..."
+#        if [ -f "$libmaix" ]; then
+#          chmod 777 /root/maix_dist/* && cd /root/maix_dist/ && ./start_app.sh &
+#        else
+#          if [ -f "$maixpy3" ]; then
+#            fbviewer /home/res/pypi.png &
+#            export TMPDIR=/root && pip install /root/maixpy3-9.9.9-cp38-cp38-linux_armv7l.whl
+#            rm /root/maixpy3-9.9.9-cp38-cp38-linux_armv7l.whl
+#            sync
+#            fbviewer...
+`;
 
 export const useBoardStore = defineStore({
   id: "board",
@@ -392,7 +429,24 @@ export const useBoardStore = defineStore({
       this.$adb.transport = null;
       this.$adb.adb = null;
     },
-
+    // async checkStartupScriptIfNeeded(){
+    //   if (!this.$adb.transport) {
+    //     if (!await this.deviceConnect()) {
+    //       return;
+    //     }
+    //     await sleep(300);
+    //   }
+    //   try {
+    //     let adb = this.$adb.adb;
+    //     if(isProxy(adb)){
+    //       adb = toRaw(adb);
+    //     }
+    //     const sync = await adb.sync();
+        
+    //   } catch (e) {
+    //     throw e;
+    //   }
+    // },
     async deviceDisconnect() {
       toast.warning("Serial port disconnect");
       this.device = null;
@@ -471,8 +525,16 @@ export const useBoardStore = defineStore({
       //=======================//
       filesUpload = filesUpload.concat(extra_files);
       filesUpload.push({
-        file: "/root/app/run.py",
+        file: "/home/startup.py",
         content: code
+      });
+
+      //edit startup 
+      // TODO : remove this when firmware support startup script
+
+      filesUpload.push({
+        file: "/etc/init.d/S02app",
+        content: startupScript
       });
       
       // list board python modules
@@ -531,8 +593,9 @@ export const useBoardStore = defineStore({
           });
         }
         sync.dispose(); 
+        SingletonShell.write("sync\n");        
         SingletonShell.write("killall python3\n");
-        SingletonShell.write("python3 /root/app/run.py\n");       
+        SingletonShell.write("python3 /home/startup.py\n");       
         return true;
       } catch (e) {
         throw e;

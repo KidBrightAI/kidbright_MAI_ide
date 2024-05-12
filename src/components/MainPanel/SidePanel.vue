@@ -89,6 +89,7 @@
             height="64"
             block
             style="border-color: #007e4e !important;"
+            @click="$emit('backToCoding')"
           >
             <img :src="KBRobot" width="42" height="42">
             Model is Ready!

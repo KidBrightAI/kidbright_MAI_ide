@@ -46,7 +46,7 @@ export const useServerStore = defineStore({
   },
   persist: {
     paths: [
-      "serverUrl",
+      "serverUrl","matric"
     ],
   },
   actions: {

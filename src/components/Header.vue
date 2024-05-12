@@ -97,7 +97,6 @@ watch(() => workspaceStore.name, (val) => {
     </v-tooltip>
 
     <div class="d-flex flex-column align-center">
-      <span class="text-h6 text-yellow me-2">EN/TH</span>
       <span class="text-title text-white me-2">Version 1.0.0</span>
     </div>
 
