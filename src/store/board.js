@@ -525,17 +525,17 @@ export const useBoardStore = defineStore({
       //=======================//
       filesUpload = filesUpload.concat(extra_files);
       filesUpload.push({
-        file: "/root/app/run.py",
+        file: "/home/startup.py",
         content: code
       });
 
       //edit startup 
       // TODO : remove this when firmware support startup script
 
-      // filesUpload.push({
-      //   file: "/etc/init.d/S02app",
-      //   content: startupScript
-      // });
+      filesUpload.push({
+        file: "/etc/init.d/S02app",
+        content: startupScript
+      });
       
       // list board python modules
       for(let module of currentBoard.pythonModules){
@@ -595,7 +595,7 @@ export const useBoardStore = defineStore({
         sync.dispose(); 
         SingletonShell.write("sync\n");        
         SingletonShell.write("killall python3\n");
-        SingletonShell.write("python3 /root/app/run.py\n");       
+        SingletonShell.write("python3 /home/startup.py\n");       
         return true;
       } catch (e) {
         throw e;
