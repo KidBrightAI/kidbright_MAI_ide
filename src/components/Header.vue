@@ -96,7 +96,7 @@ watch(() => workspaceStore.name, (val) => {
 
     <v-tooltip text="Upload Code">
       <template v-slot:activator="{ props }">
-        <kbbtn class="mx-1 me-5" :icon="uploadIcon" :disabled="false" v-bind="props" @click="$emit('download')"/>
+        <kbbtn class="mx-1 me-5" :icon="uploadIcon" :disabled="false" v-bind="props" @click="(ev)=>$emit('download',ev)"/>
       </template>
     </v-tooltip>
 

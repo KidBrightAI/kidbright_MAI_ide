@@ -54,7 +54,40 @@ case "$1" in
 #            export TMPDIR=/root && pip install /root/maixpy3-9.9.9-cp38-cp38-linux_armv7l.whl
 #            rm /root/maixpy3-9.9.9-cp38-cp38-linux_armv7l.whl
 #            sync
-#            fbviewer...
+#            fbviewer /home/res/qrcode.png &
+#          fi
+#          if [ -f "$app" ]; then
+#            cd /root/app/ && python3 main.py > main.py.log &
+#          elif [ -f "$main" ]; then
+#            cd /root/ && python3 main.py > main.py.log &
+#          else
+#            cp /home/startup.py /root/main.py
+#            sync
+#            python3 /home/startup.py &
+#            # cd /home/smart/ && ./run.sh &
+#          fi
+#        fi
+        python3 /home/startup.py &
+#       python -c "from maix import camera, display, image, nn"
+
+        ;;
+  stop)
+        echo "Stopping app..."
+        if [ -f "$libmaix" ]; then
+          ps |grep maix_dist |awk '{print $1}'|xargs kill -9
+        else
+          killall python3
+        fi
+        ;;
+  restart|reload)
+        "$0" stop
+        "$0" start
+        ;;
+  *)
+        echo "Usage: $0 {start|stop|restart}"
+        exit 1
+esac
+
 `;
 
 export const useBoardStore = defineStore({
@@ -496,7 +529,7 @@ export const useBoardStore = defineStore({
         }
       }
     },
-    async upload(code, skipFirmwareUpgrade = false) {
+    async upload(code, writeStartup=false) {
       if (!this.$adb.transport) {
         if (!await this.deviceConnect()) {
           return;
@@ -525,17 +558,24 @@ export const useBoardStore = defineStore({
       //=======================//
       filesUpload = filesUpload.concat(extra_files);
       filesUpload.push({
-        file: "/home/startup.py",
+        file: "/root/app/run.py",
         content: code
       });
 
       //edit startup 
       // TODO : remove this when firmware support startup script
-
-      filesUpload.push({
-        file: "/etc/init.d/S02app",
-        content: startupScript
-      });
+      if (writeStartup) {
+        console.log("write startup script");
+        filesUpload.push({
+          file: "/home/startup.py",
+          content: code
+        });
+       
+        filesUpload.push({
+          file: "/etc/init.d/S02app",
+          content: startupScript
+        });
+      }
       
       // list board python modules
       for(let module of currentBoard.pythonModules){
@@ -595,7 +635,7 @@ export const useBoardStore = defineStore({
         sync.dispose(); 
         SingletonShell.write("sync\n");        
         SingletonShell.write("killall python3\n");
-        SingletonShell.write("python3 /home/startup.py\n");       
+        SingletonShell.write("python3 /root/app/run.py\n");       
         return true;
       } catch (e) {
         throw e;

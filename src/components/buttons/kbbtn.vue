@@ -6,9 +6,12 @@ const props = defineProps({
   disabled : Boolean,
 });
 const emit = defineEmits(["click"]);
+const onClick = (ev) => {
+  emit("click", ev);
+};
 </script>
 <template>
-  <button v-bind="props" class="kbbtn" :disabled="props.disabled" @click="emit('click')">
+  <button v-bind="props" class="kbbtn" :disabled="props.disabled" @click="onClick">
     <img :src="icon" width="60" height="60">
   </button>
 </template>

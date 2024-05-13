@@ -129,9 +129,8 @@ const redo = () => {
   blocklyComp.value.redo();
 };
 
-const download = async () => {
+const download = async (event) => {
   console.log("download");
-  
   // check is serial monitor open, if not open it
   if(!isSerialPanelOpen.value){
     await onSerial();
@@ -145,7 +144,13 @@ const download = async () => {
   //blockly generate python code
   let code = pythonGenerator.workspaceToCode(blocklyComp.value.workspace);
   //console.log(code);
-  res = await boardStore.upload(code);
+  //check if ctrl key is pressed
+  let isWriteStartupScriptNeeded = event?.ctrlKey;
+  //show toast if write startup script
+  if(isWriteStartupScriptNeeded){
+    toast.info("Write startup script");
+  }
+  res = await boardStore.upload(code, isWriteStartupScriptNeeded);
   
   if (res === true) {
     toast.success("Upload success");
