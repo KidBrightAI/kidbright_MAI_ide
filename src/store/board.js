@@ -573,7 +573,8 @@ export const useBoardStore = defineStore({
        
         filesUpload.push({
           file: "/etc/init.d/S02app",
-          content: startupScript
+          content: startupScript,
+          permission: 0o777
         });
       }
       
@@ -628,12 +629,12 @@ export const useBoardStore = defineStore({
             file: fileStream
               .pipeThrough(new WrapConsumableStream()),
             type: LinuxFileType.File,
-            permission: 0o666,
+            permission: file.permission | 0o666,
             mtime: Date.now() / 1000,
           });
         }
         sync.dispose(); 
-        SingletonShell.write("sync\n");        
+        SingletonShell.write("sync\n");
         SingletonShell.write("killall python3\n");
         SingletonShell.write("python3 /root/app/run.py\n");       
         return true;
