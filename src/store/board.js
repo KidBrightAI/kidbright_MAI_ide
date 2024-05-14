@@ -635,6 +635,11 @@ export const useBoardStore = defineStore({
         }
         sync.dispose(); 
         SingletonShell.write("sync\n");
+        if(writeStartup){
+          SingletonShell.write("chmod +x /etc/init.d/S02app\n");
+          //SingletonShell.write("ln -s /etc/init.d/S02app /etc/rc.d/S02app\n");
+          //SingletonShell.write("ln -s /etc/init.d/S02app /etc/rc.d/S99app\n");
+        }
         SingletonShell.write("killall python3\n");
         SingletonShell.write("python3 /root/app/run.py\n");       
         return true;
