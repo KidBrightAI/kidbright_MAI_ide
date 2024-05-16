@@ -103,7 +103,12 @@ export const useBoardStore = defineStore({
       wifiListing: false,
     }
   },
-
+  getters: {
+    isBoardConnected(){
+      //return this.$adb?.transport != null;
+      return true;
+    }
+  },
   actions: {
     isConnected(){
       return this.$adb.transport != null;
