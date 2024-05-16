@@ -105,8 +105,8 @@ export const useBoardStore = defineStore({
   },
   getters: {
     isBoardConnected(){
-      //return this.$adb?.transport != null;
-      return true;
+      return this.$adb?.transport != null;
+      //return true;
     }
   },
   actions: {
