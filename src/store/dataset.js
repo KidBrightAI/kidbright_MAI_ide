@@ -90,6 +90,25 @@ export const useDatasetStore = defineStore({
       }
     },
 
+    changeDataAnnotation ({oldLabel, newLabel}) {
+      this.data = this.data.map((el) => ({
+        ...el,
+        annotate : el.annotate.map((anno) => {
+          if (anno.label == oldLabel) {
+            anno.label = newLabel;
+          }
+          return anno;
+        }),
+      }));
+    },
+
+    removeAllDataAnnotationByLabel(label){
+      this.data = this.data.map((el) => ({
+        ...el,
+        annotate : el.annotate.filter((anno) => anno.label != label),
+      }));
+    },
+    
     removeDataAnnotationWhere({ids, annotationId}) {
       let selectedItems = this.data.filter((el) => ids.includes(el.id));
       for (let item of selectedItems) {

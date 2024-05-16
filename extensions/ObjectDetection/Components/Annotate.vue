@@ -82,7 +82,8 @@
           ></AddEditLabelDialog>
           <AddEditLabelDialog
             v-model:isDialogVisible="onLabelChangeDialog"
-            @submit="onNewLabel"
+            :label-name="changeLabelName"
+            @submit="onChangeLabel"
           ></AddEditLabelDialog>
         </div>
         <div class="w-100"></div>
@@ -94,6 +95,7 @@
 <script setup>
 import { useDatasetStore } from '@/store/dataset';
 import { useWorkspaceStore } from '@/store/workspace';
+import { useConfirm } from "@/components/comfirm-dialog";
 
 import ImageDisplay from '@/components/InputConnection/ImageDisplay.vue';
 import ImageDatasetList from "@/components/InputConnection/ImageDatasetList.vue";
@@ -104,6 +106,7 @@ import { getColorIndex } from '@/components/utils';
 import AddEditLabelDialog from '../../../src/components/dialog/AddEditLabelDialog.vue';
 const datasetStore = useDatasetStore();
 const workspaceStore = useWorkspaceStore();
+const confirm = useConfirm();
 
 const currentLabel = ref("");
 const current = ref([]);
@@ -123,12 +126,13 @@ const onNewLabel = async(label) => {
   labelName.value = "";
 };
 
-const onChangeLabel = (oldLabel) => {  
-  datasetStore.changeClassData({oldLabel : oldLabel, newLabel : tobeChangeLabel.value});
-  workspaceStore.changeLabel({oldLabel : oldLabel, newLabel : tobeChangeLabel.value});
+const onChangeLabel = (newLabel) => {  
+  datasetStore.changeDataAnnotation({oldLabel : changeLabelName.value, newLabel : newLabel});
+  workspaceStore.changeLabel({oldLabel : changeLabelName.value, newLabel : newLabel});
   onLabelChangeDialog.value = false;
   tobeChangeLabel.value = "";
   changeLabelName.value = "";
+  current.value = [];
 };
 
 const selectLabel = (label) => {
@@ -138,8 +142,9 @@ const selectLabel = (label) => {
 const onRemoveLabel = async(label) => {
   try{
     await confirm({ title: "ยืนยันการลบป้ายกำกับ", content: `หากลบ '${label}' ภาพที่ใช้ป้ายกำกับนี้จะถูกล้างค่า`, dialogProps: { width: 'auto' } });
-    datasetStore.changeClassData({oldLabel : label, newLabel : null});
+    datasetStore.removeAllDataAnnotationByLabel(label);
     workspaceStore.removeLabel(label);
+    currentLabel.value = "";
   }catch(e){
     return;
   }

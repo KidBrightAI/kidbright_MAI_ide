@@ -11,13 +11,12 @@ const props = defineProps({
 })
 
 const labelName = ref('');
-const showDialog = ref(false);
 
 const emit = defineEmits(['submit']);
 
 const resetForm = () => {
   labelName.value = '';
-  showDialog.value = false;
+  emit('update:isDialogVisible', false);
 }
 const submitLabel = () => {
   emit('submit', labelName.value);
@@ -31,13 +30,12 @@ watch(() => props.isDialogVisible, (newVal) => {
 </script>
 <template>
   <VDialog
-    v-model="showDialog"
-    activator="parent"
+    :model-value="props.isDialogVisible"
     width="500px"
   >
     <VCard>
       <VToolbar density="compact">
-        <VToolbarTitle>{{ props.labelName? 'เพิ่ม' : 'แก้ไข' }} ป้ายกำกับใหม่</VToolbarTitle>
+        <VToolbarTitle>{{ !props.labelName? 'เพิ่ม' : 'แก้ไข' }} ป้ายกำกับใหม่</VToolbarTitle>
         <VSpacer/> 
         <VBtn icon @click="resetForm" density="compact">
           <VIcon>mdi-close</VIcon>
@@ -46,13 +44,13 @@ watch(() => props.isDialogVisible, (newVal) => {
       <VCardText>
         <VTextField
           v-model="labelName"
-          :label="props.labelName? 'ตั้งชื่อป้ายกำกับ' : 'แก้ไขชื่อป้ายกำกับ'"
+          :label="!props.labelName? 'ตั้งชื่อป้ายกำกับ' : 'แก้ไขชื่อป้ายกำกับ'"
           outlined
         ></VTextField>
       </VCardText>
       <VCardActions>
         <VSpacer/>
-        <VBtn color="primary" @click="submitLabel" variant="elevated" :disabled="!labelName.length">{{ props.labelName? 'เพิ่ม' : 'แก้ไข' }}ป้ายกำกับ</VBtn>
+        <VBtn color="primary" @click="submitLabel" variant="elevated" :disabled="!labelName.length">{{ !props.labelName? 'เพิ่ม' : 'แก้ไข' }}ป้ายกำกับ</VBtn>
       </VCardActions>
     </VCard>
   </VDialog>
