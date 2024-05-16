@@ -118,7 +118,7 @@ watch(() => workspaceStore.name, (val) => {
           class="mx-1" 
           :icon="aiIcon" 
           :disabledIcon="aiOffIcon" 
-          :disabled="!boardStore.isBoardConnected"
+          :disabled="false"
           :status="!workspaceStore.projectType" 
           :statusIcon="aiOffIcon"
           v-bind="props" 
