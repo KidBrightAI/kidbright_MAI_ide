@@ -4,7 +4,7 @@
       <VBtn
         v-if="captureDevices.length > 1"
         density="comfortable"
-        icon="mdi-skip-next-outline"
+        icon="mdi-cached"
         @click="nextCamera"
       />
     </div>
