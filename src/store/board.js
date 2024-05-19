@@ -46,28 +46,7 @@ case "$1" in
           sync
         fi
         echo "Starting app..."
-#        if [ -f "$libmaix" ]; then
-#          chmod 777 /root/maix_dist/* && cd /root/maix_dist/ && ./start_app.sh &
-#        else
-#          if [ -f "$maixpy3" ]; then
-#            fbviewer /home/res/pypi.png &
-#            export TMPDIR=/root && pip install /root/maixpy3-9.9.9-cp38-cp38-linux_armv7l.whl
-#            rm /root/maixpy3-9.9.9-cp38-cp38-linux_armv7l.whl
-#            sync
-#            fbviewer /home/res/qrcode.png &
-#          fi
-#          if [ -f "$app" ]; then
-#            cd /root/app/ && python3 main.py > main.py.log &
-#          elif [ -f "$main" ]; then
-#            cd /root/ && python3 main.py > main.py.log &
-#          else
-#            cp /home/startup.py /root/main.py
-#            sync
-#            python3 /home/startup.py &
-#            # cd /home/smart/ && ./run.sh &
-#          fi
-#        fi
-        python3 /home/startup.py &
+        python3 /root/app/startup.py &
 #       python -c "from maix import camera, display, image, nn"
 
         ;;
@@ -572,7 +551,7 @@ export const useBoardStore = defineStore({
       if (writeStartup) {
         console.log("write startup script");
         filesUpload.push({
-          file: "/home/startup.py",
+          file: "/root/app/startup.py",
           content: code
         });
        
