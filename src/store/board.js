@@ -434,7 +434,12 @@ export const useBoardStore = defineStore({
           permission: 0o666,
           mtime: Date.now() / 1000,
         });
-        sync.dispose(); 
+        sync.dispose();
+        await sleep(300);
+        SingletonShell.write("cp /root/wpa_supplicant.conf /etc/wifi/wpa_supplicant.conf\n"); 
+        await sleep(300);
+        SingletonShell.write("sync\n");
+        await sleep(300);
         return true;
       } catch (e) {
         throw e;
