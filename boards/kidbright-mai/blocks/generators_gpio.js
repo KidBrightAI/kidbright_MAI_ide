@@ -15,17 +15,17 @@ python.pythonGenerator.forBlock['maixpy3_gpio_when_switch'] = function(block, ge
 
 python.pythonGenerator.forBlock['maixpy3_gpio_switch'] = function(block, generator) {
   generator.definitions_['from_maix_import_gpio'] = 'from maix import gpio';
-  generator.definitions_['from_evdev_import_InputDevice'] = 'from evdev import InputDevice';
-  generator.definitions_['keys_device'] = 'keys_device = InputDevice("/dev/input/event0")';
+  generator.definitions_['from_v831adc_import_v83x_ADC'] = 'from v831adc import v83x_ADC';
+  generator.definitions_['__adc_key'] = '__adc_key = v83x_ADC()';
+  //generator.definitions_['from_evdev_import_InputDevice'] = 'from evdev import InputDevice';
+  //generator.definitions_['keys_device'] = 'keys_device = InputDevice("/dev/input/event0")';
   var functionName = generator.provideFunction_(
-      '_isKeyPressed',
-      ['def ' + "_isKeyPressed" + '(key):',
-      '  event = keys_device.read_one()',      
-      '  if event is None:',
-      '    return False',
-      '  if event.value == 1 and event.code == 0x02 and key == "S1":',
+      '_keyADC_isKeyPressed',
+      ['def ' + "_keyADC_isKeyPressed" + '(key):',
+      '  adc_val = __adc_key.value()',
+      '  if adc_val > 0 and adc_val < 20 and key == "S1":',
       '    return True',
-      '  if event.value == 1 and event.code == 0x03 and key == "S2":',
+      '  if adc_val > 500 and adc_val < 700 and key == "S2":',
       '    return True',
       '  return False']);      
   var dropdown_switch = block.getFieldValue('switch');
