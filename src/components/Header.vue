@@ -1,18 +1,30 @@
 <script setup>
 import kbbtn from "@/components/buttons/kbbtn.vue";
-import connectIcon from "@/assets/images/icons/connectbtn.png";
-import wifiIcon from "@/assets/images/icons/wifibtn.png";
-import fileIcon from "@/assets/images/icons/filebtn.png";
-import aiIcon from "@/assets/images/icons/aibtn.png";
-import qrIcon from "@/assets/images/icons/pluginsbtn.png";
 
-import newIcon from "@/assets/images/icons/newbtn.png";
-import saveIcon from "@/assets/images/icons/savebtn.png";
-import openIcon from "@/assets/images/icons/openbtn.png";
-import uploadIcon from "@/assets/images/icons/uploadbtn.png";
+import connectIcon from "@/assets/images/icons/btn_connect.png";
+import connectedIcon from "@/assets/images/icons/btn_connected.png";
+
+import wifiIcon from "@/assets/images/icons/btn_wifi.png";
+import wifiOffIcon from "@/assets/images/icons/btn_wifi_off.png";
+
+import fileIcon from "@/assets/images/icons/btn_file.png";
+import fileOffIcon from "@/assets/images/icons/btn_file_dis.png";
+
+import aiIcon from "@/assets/images/icons/btn_ai.png";
+import aiOffIcon from "@/assets/images/icons/btn_ai_off.png";
+
+import pluginIcon from "@/assets/images/icons/btn_plugin.png";
+
+import newIcon from "@/assets/images/icons/btn_new.png";
+import saveIcon from "@/assets/images/icons/btn_save.png";
+import openIcon from "@/assets/images/icons/btn_open.png";
+
+import uploadIcon from "@/assets/images/icons/btn_upload_02.png";
+import uploadDisabledIcon from "@/assets/images/icons/btn_upload_02.png";
 
 import kbhead from "@/assets/KidBrightHead.png";
 import kblogo from "@/assets/kblogo_white.png";
+
 import { useWorkspaceStore } from "@/store/workspace";
 import { useBoardStore } from "@/store/board";
 import {toast} from "vue3-toastify";
@@ -46,31 +58,78 @@ watch(() => workspaceStore.name, (val) => {
     <v-spacer></v-spacer>
     <v-tooltip text="Connect Board">
       <template v-slot:activator="{ props }">
-        <kbbtn class="mx-1" :icon="connectIcon" :disabled="false" v-bind="props" @click="$emit('connectBoard')"/>
+        <kbbtn 
+          class="mx-1" 
+          :icon="connectIcon" 
+          :disabledIcon="connectedIcon" 
+          :statusIcon="connectedIcon" 
+          :disabled="false" 
+          :status="boardStore.isBoardConnected" 
+          v-bind="props" 
+          @click="$emit('connectBoard')"
+        />
+      </template>
+    </v-tooltip>
+
+    <v-tooltip text="Upload Code">
+      <template v-slot:activator="{ props }">
+        <kbbtn 
+          class="mx-1" 
+          :icon="uploadIcon" 
+          :disabledIcon="uploadDisabledIcon" 
+          :disabled="!boardStore.isBoardConnected" 
+          v-bind="props" 
+          @click="(ev)=>$emit('download',ev)"
+        />
       </template>
     </v-tooltip>
 
     <v-tooltip text="File Browser">
       <template v-slot:activator="{ props }">
-        <kbbtn class="mx-1" :icon="fileIcon" :disabled="false" v-bind="props" @click="$emit('fileBrowser')"/>
+        <kbbtn 
+          class="mx-1" 
+          :icon="fileIcon" 
+          :disabledIcon="fileOffIcon" 
+          :disabled="!boardStore.isBoardConnected" 
+          v-bind="props" 
+          @click="$emit('fileBrowser')"
+        />
       </template>
     </v-tooltip>
 
     <v-tooltip text="WiFi Connect">
       <template v-slot:activator="{ props }">
-        <kbbtn class="mx-1" :icon="wifiIcon" :disabled="false" v-bind="props" @click="$emit('connectWifi')"/>
+        <kbbtn 
+          class="mx-1" 
+          :icon="wifiIcon" 
+          :status="!boardStore.wifiConnected" 
+          :statusIcon="wifiOffIcon" 
+          :disabledIcon="wifiOffIcon" 
+          :disabled="!boardStore.isBoardConnected" 
+          v-bind="props" 
+          @click="$emit('connectWifi')"
+        />
       </template>
     </v-tooltip>
 
     <v-tooltip text="AI Model">
       <template v-slot:activator="{ props }">
-        <kbbtn class="mx-1" :icon="aiIcon" :disabled="false" v-bind="props" @click="$emit('newModel')"/>
+        <kbbtn 
+          class="mx-1" 
+          :icon="aiIcon" 
+          :disabledIcon="aiOffIcon" 
+          :disabled="false"
+          :status="!workspaceStore.projectType" 
+          :statusIcon="aiOffIcon"
+          v-bind="props" 
+          @click="$emit('newModel')"
+        />
       </template>
     </v-tooltip>
 
     <v-tooltip text="Plugins">
       <template v-slot:activator="{ props }">
-        <kbbtn class="mx-1" :icon="qrIcon" :disabled="false" v-bind="props" @click="$emit('plugin')"/>
+        <kbbtn class="mx-1" :icon="pluginIcon" :disabled="false" v-bind="props" @click="$emit('plugin')"/>
       </template>
     </v-tooltip>
 
@@ -90,13 +149,7 @@ watch(() => workspaceStore.name, (val) => {
 
     <v-tooltip text="Save Project">
       <template v-slot:activator="{ props }">
-        <kbbtn class="mx-1" :icon="saveIcon" :disabled="false" v-bind="props" @click="$emit('saveProject')"/>
-      </template>
-    </v-tooltip>
-
-    <v-tooltip text="Upload Code">
-      <template v-slot:activator="{ props }">
-        <kbbtn class="mx-1 me-5" :icon="uploadIcon" :disabled="false" v-bind="props" @click="(ev)=>$emit('download',ev)"/>
+        <kbbtn class="mx-1 me-5" :icon="saveIcon" :disabled="false" v-bind="props" @click="$emit('saveProject')"/>
       </template>
     </v-tooltip>
 

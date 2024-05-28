@@ -25,33 +25,7 @@
         <div class="w-100">
           <h4 class="side-panel-ttl">LABEL</h4>
           <div class="feature-wrap">
-            <VBtn block rounded="xl">
-              <VDialog
-                v-model="onLabelInputDialog"
-                activator="parent"
-                width="500px"
-              >
-                <v-card>
-                  <v-toolbar density="compact">
-                    <v-toolbar-title>เพิ่มป้ายกำกับใหม่</v-toolbar-title>
-                    <v-spacer/> 
-                    <v-btn icon @click="onLabelInputDialog = false" density="compact">
-                      <v-icon>mdi-close</v-icon>
-                    </v-btn>
-                  </v-toolbar>
-                  <v-card-text>
-                    <v-text-field
-                      v-model="labelName"
-                      label="ตั้งชื่อป้ายกำกับ"
-                      outlined
-                    ></v-text-field>
-                  </v-card-text>
-                  <v-card-actions>
-                    <v-spacer></v-spacer>
-                    <v-btn color="primary" @click="onNewLabel" variant="elevated" :disabled="!labelName.length">เพิ่มป้ายกำกับ</v-btn>
-                  </v-card-actions>
-                </v-card>
-              </VDialog>
+            <VBtn block rounded="xl" @click="onLabelInputDialog = true">
               <VIcon>mdi-plus</VIcon> New label
             </VBtn>
             <div class="pills w-100">
@@ -102,6 +76,15 @@
           </div>
           <DatasetCounter class="second-counter" prefix="Labeled" seperator="of" :current="datasetStore.getLabeledLength" suffix="Image"></DatasetCounter>
           <DatasetCounter prefix="Selected" seperator="of" :current="current.length" suffix="Image"></DatasetCounter>
+          <AddEditLabelDialog
+            v-model:isDialogVisible="onLabelInputDialog"
+            @submit="onNewLabel"
+          ></AddEditLabelDialog>
+          <AddEditLabelDialog
+            v-model:isDialogVisible="onLabelChangeDialog"
+            :label-name="changeLabelName"
+            @submit="onChangeLabel"
+          ></AddEditLabelDialog>
         </div>
         <div class="w-100"></div>
       </div>
@@ -112,6 +95,7 @@
 <script setup>
 import { useDatasetStore } from '@/store/dataset';
 import { useWorkspaceStore } from '@/store/workspace';
+import { useConfirm } from "@/components/comfirm-dialog";
 
 import ImageDisplay from '@/components/InputConnection/ImageDisplay.vue';
 import ImageDatasetList from "@/components/InputConnection/ImageDatasetList.vue";
@@ -119,8 +103,10 @@ import DatasetCounter from '@/components/InputConnection/DatasetCounter.vue';
 import VueCrop from "@/components/Tools/VueCrop.vue";
 import { watch, nextTick } from 'vue';
 import { getColorIndex } from '@/components/utils';
+import AddEditLabelDialog from '../../../src/components/dialog/AddEditLabelDialog.vue';
 const datasetStore = useDatasetStore();
 const workspaceStore = useWorkspaceStore();
+const confirm = useConfirm();
 
 const currentLabel = ref("");
 const current = ref([]);
@@ -134,30 +120,31 @@ const labelName = ref("");
 const changeLabelName = ref("");
 const tobeChangeLabel = ref("");
 
-const onNewLabel = async() => {
-  workspaceStore.addLabel({label : labelName.value});
+const onNewLabel = async(label) => {
+  workspaceStore.addLabel({label : label});
   onLabelInputDialog.value = false;
   labelName.value = "";
+};
+
+const onChangeLabel = (newLabel) => {  
+  datasetStore.changeDataAnnotation({oldLabel : changeLabelName.value, newLabel : newLabel});
+  workspaceStore.changeLabel({oldLabel : changeLabelName.value, newLabel : newLabel});
+  onLabelChangeDialog.value = false;
+  tobeChangeLabel.value = "";
+  changeLabelName.value = "";
+  current.value = [];
 };
 
 const selectLabel = (label) => {
   currentLabel.value = label;
 }
 
-
-const onChangeLabel = (oldLabel) => {  
-  datasetStore.changeClassData({oldLabel : oldLabel, newLabel : tobeChangeLabel.value});
-  workspaceStore.changeLabel({oldLabel : oldLabel, newLabel : tobeChangeLabel.value});
-  onLabelChangeDialog.value = false;
-  tobeChangeLabel.value = "";
-  changeLabelName.value = "";
-};
-
 const onRemoveLabel = async(label) => {
   try{
     await confirm({ title: "ยืนยันการลบป้ายกำกับ", content: `หากลบ '${label}' ภาพที่ใช้ป้ายกำกับนี้จะถูกล้างค่า`, dialogProps: { width: 'auto' } });
-    datasetStore.changeClassData({oldLabel : label, newLabel : null});
+    datasetStore.removeAllDataAnnotationByLabel(label);
     workspaceStore.removeLabel(label);
+    currentLabel.value = "";
   }catch(e){
     return;
   }

@@ -73,7 +73,7 @@ onMounted(() => {
       <VTextField 
         class="ms-0 colab-url-input"                 
         color="white"
-        label="Put Google Colab URL here ..."
+        label="Put TUNNEL URL here ..."
         hide-details
         variant="solo"
         single-line

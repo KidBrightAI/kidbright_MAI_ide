@@ -3,16 +3,21 @@
 const props = defineProps({
   props : Object,
   icon : String,
+  disabledIcon : String,
   disabled : Boolean,
+  status : Boolean,
+  statusIcon : String
 });
 const emit = defineEmits(["click"]);
 const onClick = (ev) => {
-  emit("click", ev);
+  emit("click", ev, props.status);
 };
 </script>
 <template>
   <button v-bind="props" class="kbbtn" :disabled="props.disabled" @click="onClick">
-    <img :src="icon" width="60" height="60">
+    <img v-if="!props.status && !props.disabled" :src="icon" alt="icon" width="60" height="60"/>
+    <img v-else-if="props.disabled" :src="disabledIcon" alt="icon" width="60" height="60"/>
+    <img v-else :src="statusIcon" alt="icon" width="60" height="60"/>
   </button>
 </template>
 <style lang="scss" scoped>
