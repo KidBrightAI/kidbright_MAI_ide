@@ -303,6 +303,43 @@ Blockly.defineBlocksWithJsonArray(
         "colour": "#a5745b",
         "tooltip": "",
         "helpUrl": ""
-      }]
+      },
+      // servo block for gpio
+      {
+        "type": "maixpy3_gpio_servo",
+        "message0": "Servo motor set pin %1 angle %2",
+        "args0": [
+          {
+            "type": "field_dropdown",
+            "name": "pin",
+            "options": [
+              [
+                "PH6",
+                "6"
+              ],
+              [
+                "PH7",
+                "7"
+              ],              
+              [
+                "PH8",
+                "8"
+              ],
+            ]
+          },
+          {
+            "type": "input_value",
+            "name": "angle",
+            "check": "Number"
+          }
+        ],
+        "inputsInline": true,
+        "previousStatement": null,
+        "nextStatement": null,
+        "colour": "#a5745b",
+        "tooltip": "",
+        "helpUrl": ""
+      },
+    ]
   );
   
