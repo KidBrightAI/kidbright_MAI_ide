@@ -23,9 +23,9 @@ python.pythonGenerator.forBlock['maixpy3_gpio_switch'] = function(block, generat
       '_keyADC_isKeyPressed',
       ['def ' + "_keyADC_isKeyPressed" + '(key):',
       '  adc_val = __adc_key.value()',
-      '  if adc_val > 0 and adc_val < 20 and key == "S1":',
+      '  if < 300 and key == "S1":',
       '    return True',
-      '  if adc_val > 500 and adc_val < 700 and key == "S2":',
+      '  if adc_val > 300 and adc_val < 1000 and key == "S2":',
       '    return True',
       '  return False']);      
   var dropdown_switch = block.getFieldValue('switch');
