@@ -15,14 +15,16 @@ python.pythonGenerator.forBlock['mqtt_config'] = function(block, generator) {
     ['def wait_internet_connection():',
     '  import time',
     '  import socket',
-    '  while True:',
+    '  _timeout = 30',
+    '  while _timeout > 0:',
     '    try:',    
     '      socket.gethostbyname("google.com")',
     '      print("Internet connected")',
     '      break',
-    '    except socket.gaierror:',
+    '    except socket.gaierror:',    
     '      pass',
     '    time.sleep(1)',
+    '    _timeout -= 1',
     '    print("Wait for internet connection...")'
     ]);
   var code = "";
