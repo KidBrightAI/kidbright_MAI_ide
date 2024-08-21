@@ -15,7 +15,7 @@ python.pythonGenerator.forBlock['mqtt_config'] = function(block, generator) {
     ['def wait_internet_connection():',
     '  import time',
     '  import socket',
-    '  _timeout = 30',
+    '  _timeout = 60',
     '  while _timeout > 0:',
     '    try:',    
     '      socket.gethostbyname("google.com")',
