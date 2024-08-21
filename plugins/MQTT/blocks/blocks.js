@@ -2,7 +2,7 @@
 Blockly.defineBlocksWithJsonArray([
   {
     "type": "mqtt_config",
-    "message0": "MQTT Connect %1 Host %2 Port %3 Client Id %4 Username %5 Password %6",
+    "message0": "MQTT Connect %1 Host %2 Port %3 Client Id %4 Username %5 Password %6 Wait Internet %7",
     "args0": [
       {
         "type": "input_dummy"
@@ -36,8 +36,14 @@ Blockly.defineBlocksWithJsonArray([
         "name": "password",
         "check": "String",
         "align": "RIGHT"
+      },
+      {
+        "type": "field_checkbox",
+        "name": "wait",
+        "checked": true,
       }
     ],
+    inputsInline: false,
     "previousStatement": null,
     "nextStatement": null,
     "colour": 180,

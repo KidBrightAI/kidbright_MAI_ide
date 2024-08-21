@@ -5,12 +5,33 @@ python.pythonGenerator.forBlock['mqtt_config'] = function(block, generator) {
   var value_client_id = generator.valueToCode(block, 'client_id', python.Order.NONE) || "'KidBrightMAI-" + Math.floor(Math.random() * 1000) + "'";
   var value_username = generator.valueToCode(block, 'username', python.Order.NONE) || "''";
   var value_password = generator.valueToCode(block, 'password', python.Order.NONE) || "''";
+  var checkbox_wait = block.getFieldValue('wait') == 'TRUE';
+  console.log(block.getFieldValue('wait'));
   generator.definitions_['import_paho'] = 'import paho.mqtt.client as mqtt';
   generator.definitions_['import_sys'] = 'import sys';
   generator.definitions_['import_signal'] = 'import signal';
-  var code = `client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2,${value_client_id})
+  var function_name = generator.provideFunction_(
+    'wait_internet_connection',
+    ['def wait_internet_connection():',
+    '  import time',
+    '  import socket',
+    '  while True:',
+    '    try:',    
+    '      socket.gethostbyname("google.com")',
+    '      print("Internet connected")',
+    '      break',
+    '    except socket.gaierror:',
+    '      pass',
+    '    time.sleep(1)',
+    '    print("Wait for internet connection...")'
+    ]);
+  var code = "";
+  if (checkbox_wait) {
+    console.log("Wait for internet connection...");
+    code += `${function_name}()\n`;
+  }    
+  code += `client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2,${value_client_id})  
 client.connect(${value_host}, ${value_port}, 60)
-client.loop_start()
 try:
   client.on_connect = on_connect
 except NameError:
@@ -19,13 +40,9 @@ except NameError:
 try:
   client.on_message = on_message
 except NameError:
+  print('NameError')
   pass
-
-def signal_handler(signal, frame):
-  print("program exiting gracefully")
-  sys.exit(0)
-
-signal.signal(signal.SIGINT, signal_handler)
+client.loop_start()
 `;
   return code;
 };
