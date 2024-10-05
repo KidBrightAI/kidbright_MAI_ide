@@ -9,7 +9,7 @@ import { useWorkspaceStore } from '@/store/workspace';
 export async function loadBoard(board) {
   // load scripts
   const workspaceStore = useWorkspaceStore();
-  let scripts = [...board.blocks || [], ...board.scripts || []];
+  let scripts = [...board.blocks || []];
   for (const script of scripts) {
     let scriptUrl = `${board.path}/${script}`;
     let scriptResponse = await fetch(scriptUrl);

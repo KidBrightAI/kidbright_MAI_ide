@@ -88,7 +88,8 @@ const start = async () => {
     SingletonShell.write("\x03\n");
     SingletonShell.write("killall python3\n");
     await sleep(1000);
-    SingletonShell.write("python3 /usr/lib/python3.8/site-packages/maix/mjpg.pyc &\n");
+    //SingletonShell.write("python3 /usr/lib/python3.8/site-packages/maix/mjpg.pyc &\n");
+    SingletonShell.write("python3 /root/scripts/mjpg.py &\n");
     console.log("create socket");
     let sock = null;
     let retry = 15;
@@ -160,6 +161,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   console.log("stop streaming");
+  SingletonShell.write("\x03\n");
   SingletonShell.write("killall python3\n");
   status.value = "disconnected";
   emit("stoped");

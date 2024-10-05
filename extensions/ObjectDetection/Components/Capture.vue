@@ -1,3 +1,38 @@
+<script setup>
+import { Splitpanes, Pane } from 'splitpanes'
+import 'splitpanes/dist/splitpanes.css'
+import { randomId } from "@/components/utils";
+import ImportImageClassifiy from "@/components/dialog/ImportImageClassify.vue";
+import ImportObjectDetectDialog from "@/components/dialog/ImportObjectDetectDialog.vue";
+import ImageCapture from "@/components/InputConnection/ImageCapture.vue";
+import ImageDisplay from "@/components/InputConnection/ImageDisplay.vue";
+import ImageDatasetList from "@/components/InputConnection/ImageDatasetList.vue";
+import DatasetCounter from "@/components/InputConnection/DatasetCounter.vue";
+
+import { useDatasetStore } from '@/store/dataset';
+
+const datasetStore = useDatasetStore();
+
+const current = ref([]);
+const cameraReady = ref(false);
+const camera = ref({});
+const showImportDialog = ref(false);
+
+const snapAndSave = async () => {
+  let { image, width, height } = await camera.value.snap();
+  let data = {
+    id : randomId(12),
+    image: image,
+    width: width,
+    height: height,
+    annotate: [],
+    class: null,
+    ext: "jpg",
+  };
+  await datasetStore.addData(data);
+  current.value = [data.id];
+};
+</script>
 <template>
   <div class="w-100 h-100">
     <div class="d-flex w-100 h-100 outer-wrap">
@@ -62,41 +97,6 @@
   </div>
 </template>
 
-<script setup>
-import { Splitpanes, Pane } from 'splitpanes'
-import 'splitpanes/dist/splitpanes.css'
-import { randomId } from "@/components/utils";
-import ImportImageClassifiy from "@/components/dialog/ImportImageClassify.vue";
-import ImportObjectDetectDialog from "@/components/dialog/ImportObjectDetectDialog.vue";
-import ImageCapture from "@/components/InputConnection/ImageCapture.vue";
-import ImageDisplay from "@/components/InputConnection/ImageDisplay.vue";
-import ImageDatasetList from "@/components/InputConnection/ImageDatasetList.vue";
-import DatasetCounter from "@/components/InputConnection/DatasetCounter.vue";
-
-import { useDatasetStore } from '@/store/dataset';
-
-const datasetStore = useDatasetStore();
-
-const current = ref([]);
-const cameraReady = ref(false);
-const camera = ref({});
-const showImportDialog = ref(false);
-
-const snapAndSave = async () => {
-  let { image, width, height } = await camera.value.snap();
-  let data = {
-    id : randomId(12),
-    image: image,
-    width: width,
-    height: height,
-    annotate: [],
-    class: null,
-    ext: "jpg",
-  };
-  await datasetStore.addData(data);
-  current.value = [data.id];
-};
-</script>
 <style lang="scss" scoped>
 $primary-color: #007e4e;
 

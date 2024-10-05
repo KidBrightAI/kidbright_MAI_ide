@@ -4,7 +4,13 @@ export default {
     title: "Time series: การแยกแยะเสียง (Voice Classification)",
     type: "Classifier",
     description: "",
-    config: {}, // not use yet
+    options: {
+      durations : {
+        title: "Durations",
+        type: 'number',
+        value: 3,
+      }
+    }, // not use yet
     // model: {}, // json of pre-config Model Design, this will register auto by ExtensionManager
     instructions: {
       capture: "VoiceClassification/Instructions/CaptureInstruction.vue",

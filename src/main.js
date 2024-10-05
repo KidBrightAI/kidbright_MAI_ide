@@ -98,6 +98,7 @@ app.provide('extensions', extensionList);
 const boardModules = import.meta.glob('boards/*/index.js', { eager: true });
 const boardToolbox = import.meta.glob('boards/*/toolbox.js', { eager: true });
 const boardCodeTemplate = import.meta.glob('boards/*/main.py', { eager: true, as : 'raw' });
+const boardScripts = import.meta.glob('boards/*/scripts/*.py', { eager: true, as : 'raw' });
 const workspaces = import.meta.glob('boards/*/workspace.json', { eager: true });
 const boardPythonModules = import.meta.glob('boards/*/libs/*.py', { eager: false, as : 'raw'});
 // load examples folder
@@ -126,6 +127,16 @@ for (const path in boardModules) {
   }
   board.pythonModules = pythonModules;
 
+  //find corresponding scripts
+  let scripts = [];
+  for (const scriptPath in boardScripts) {
+    if (scriptPath.startsWith(path.replace('index.js', ''))) {
+      scripts.push(scriptPath);
+    }
+  }
+  console.log("Scripts", scripts);
+  board.scripts = scripts;
+  
   boards.push({ path: path.replace('index.js', ''), ...board  });
 }
 console.log("===== all boards =====");

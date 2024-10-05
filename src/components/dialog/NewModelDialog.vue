@@ -5,6 +5,7 @@ import { toast } from "vue3-toastify";
 import { useWorkspaceStore } from "@/store/workspace";
 import { onMounted } from "vue";
 import { randomId } from "../utils";
+import { VTextField } from "vuetify/lib/components/index.mjs";
 
 const props = defineProps({
   isDialogVisible: Boolean,
@@ -17,7 +18,6 @@ const workspaceStore = useWorkspaceStore();
 
 const extensions = inject('extensions');
 const models = extensions.map((el) => ({title : el.title, value : el.id}))
-const modelOptions = Object.fromEntries(extensions.map(el=> el.options? [el.id,el.options] : null).filter(el=>el!=null));
 const selectType = ref(extensions[0].id);
 
 const refVForm = ref({});
@@ -25,11 +25,12 @@ const refVForm = ref({});
 const resetForm = () => {
   emit('update:isDialogVisible', false);
 }
+const selectedExtension = computed(() => extensions.find(el=>el.id == selectType.value));
 
 const onFormSubmit = async() => {
   let { valid: isValid } = await refVForm.value?.validate()  
   if (isValid) {
-    let selectedExtension = extensions.find(el=>el.id == selectType.value);
+    //let selectedExtension = extensions.find(el=>el.id == selectType.value);
     let project = {
       projectType: selectType.value, //id of extension
       projectTypeTitle: selectedExtension.name, //this.models.find(el=>el.value == this.selectType).text,
@@ -68,7 +69,27 @@ const onFormSubmit = async() => {
             <VCol cols="12">
               <VSelect :items="models" label="ประเภทการเรียนรู้" v-model="selectType">
               </VSelect>
-            </VCol>            
+            </VCol>
+            <VCol v-if="selectedExtension.options" v-for="configName in Object.keys(selectedExtension.options)" cols="12">
+              <VSelect 
+                v-if="selectedExtension.options[configName].type == 'select'" 
+                :items="selectedExtension.options[configName].options" 
+                :label="selectedExtension.options[configName].title" 
+                v-model="selectedExtension.options[configName].value"
+              >
+              </VSelect>
+              <VTextField 
+                v-else-if="selectedExtension.options[configName].type == 'text'" 
+                :label="selectedExtension.options[configName].title" 
+                v-model="selectedExtension.options[configName].value"
+              />
+              <VTextField 
+                v-else-if="selectedExtension.options[configName].type == 'number'" 
+                :label="selectedExtension.options[configName].title" 
+                v-model.number="selectedExtension.options[configName].value"
+                type="number"
+              />
+            </VCol>
           </VRow>
           <VRow>
             <VCol cols="12" class="text-center mt-3">

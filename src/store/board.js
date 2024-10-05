@@ -136,6 +136,22 @@ export const useBoardStore = defineStore({
         const adb = new Adb(transport);        
         this.$adb.adb = adb;
         SingletonShell.getInstance(adb, null);
+        //--- check mjpg streamer file ---//
+        let sync = await adb.sync();
+        await this.uploadBoardScript(sync);
+        // TODO : ในอนาคตให้ใช้เป็น script ด้านล่างนี้แทน
+        // try{          
+        //   await sync.lstat("/root/scripts/mjpg.py");                 
+        // }catch(e){
+        //   console.log(e);
+        //   if(e.message=="lstat error"){
+        //     //upload mjpg-streamer
+        //     await this.uploadBoardScript(sync);
+        //   }
+        //   //toast.error("ไม่พบไฟล์ mjpg-streamer บนบอร์ด กรุณาอัพโหลดไฟล์ mjpg-streamer ก่อนใช้งาน");         
+        // }finally{
+        //   sync.dispose();
+        // }
         toast.success("เชื่อมต่อบอร์ดสำเร็จ");
         this.$adb.transport = transport;
         this.connected = true;
@@ -473,6 +489,39 @@ export const useBoardStore = defineStore({
       toast.warning("Serial port disconnect");
       this.device = null;
     },
+
+    async uploadBoardScript(sync) {
+      const workspaceStore = useWorkspaceStore();
+      const currentBoard = workspaceStore.currentBoard;
+      const scripts = currentBoard.scripts;
+      let filesUpload = [];
+      for(let script of scripts){
+        let scriptResponse = await fetch(script);
+        if(scriptResponse.ok){
+          let scriptData = await scriptResponse.text();
+          filesUpload.push({
+            file: "/root/scripts/" + script.replace(currentBoard.path + "scripts/", ""),
+            content: scriptData
+          });
+        }
+      }
+      console.log(filesUpload);
+      // upload files
+      for (let file of filesUpload) {
+        let fileT = new File([file.content], file.file);        
+        console.log("upload file : ", file.file);
+        let fileStream = new WrapReadableStream(fileT.stream());
+        await sync.write({
+          filename: file.file,
+          file: fileStream
+            .pipeThrough(new WrapConsumableStream()),
+          type: LinuxFileType.File,
+          permission: file.permission | 0o666,
+          mtime: Date.now() / 1000,
+        });
+      }
+    },
+
     async uploadModelIfNeeded(sync){
       const workspaceStore = useWorkspaceStore();
       let model = workspaceStore.model;
