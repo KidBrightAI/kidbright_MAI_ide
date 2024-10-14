@@ -416,7 +416,7 @@ export const useBoardStore = defineStore({
             resolve(false);
           }
         });
-        await SingletonShell.write(`wifi_connect_ap_test ${ssid} ${password}\n\n`);                  
+        await SingletonShell.write(`wifi_connect_ap_test "${ssid}" ${password}\n\n`);                  
       });
     },
     async writeWifiConfig(ssid, password){
