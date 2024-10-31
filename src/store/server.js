@@ -248,10 +248,8 @@ export const useServerStore = defineStore({
           this.isDownloadingSuccess = true;
           this.downloadingFiles = 0;
           //import model
-          let modelLabel = workspaceStore.labels.map(lb => lb.label);
           await workspaceStore.importModelFromBlob(modelInt8Response.data, modelParamResponse.data);
           //read model to calculate hash
-          workspaceStore.modelLabel = modelLabel;
           toast.success("Model Downloaded");
         }else{
           console.log("model convert failed");

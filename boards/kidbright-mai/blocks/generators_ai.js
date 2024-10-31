@@ -13,7 +13,7 @@ class _Resnet:
       "input0": (224, 224, 3)
     },
     "outputs": {
-      "output0": (1, 1, ${workspaceStore.modelLabel.length})
+      "output0": (1, 1, ${workspaceStore.labels.map(lb => lb.label).length})
     },
     "first_layer_conv_no_pad": False,
     "mean": [127.5, 127.5, 127.5],
@@ -28,7 +28,7 @@ class _Resnet:
     del self.model
 
 _model = _Resnet()
-_labels = [${workspaceStore.modelLabel.map(label => `"${label}"`).join(', ')}]
+_labels = [${ workspaceStore.labels.map(label => `"${label.label}"`).join(', ') }]
 `    
   // var functionName = generator.provideFunction_(
   //     '_isKeyPressed',
@@ -75,7 +75,7 @@ _labels = [${workspaceStore.modelLabel.map(label => `"${label}"`).join(', ')}]
     generator.definitions_['from_maix_import_nn'] = 'from maix import nn';
     generator.definitions_['class_Resnet'] = `
 class Yolo:
-  labels = [${workspaceStore.modelLabel.map(label => `"${label}"`).join(', ')}]
+  labels = [${ workspaceStore.labels.map(label => `"${label.label}"`).join(', ') }]
   anchors = [1.19,1.98, 2.79,4.59, 4.53,8.92, 8.06,5.29, 10.32,10.65]
   #anchors = [5.4, 5.38, 1.65, 2.09, 0.8, 1.83, 2.45, 4.14, 0.46, 0.8]
   m = {

@@ -28,7 +28,6 @@ export const useWorkspaceStore = defineStore({
       extension: null,      
       labels: [],
       model : null,
-      modelLabel : [],
       saving: false,
       opening: false,
       openingProgress: 0,
@@ -43,7 +42,7 @@ export const useWorkspaceStore = defineStore({
     paths: [
       'mode', 'code', 'block', 'currentBoard', 'name', 'board', 
       'id', 'dataset', 'projectType', 'projectTypeTitle', 'lastUpdate', 
-      'model', 'labels', 'modelLabel', 'colabUrl',
+      'model', 'labels', 'colabUrl',
       'trainConfig', 'graph', 'defaultGraph'
     ],
   },
@@ -183,7 +182,6 @@ export const useWorkspaceStore = defineStore({
       this.lastUpdate = projectInfo.lastUpdate;
       this.extension = projectInfo.extension;
       this.model = projectInfo.model;
-      this.modelLabel = projectInfo.modelLabel;
       this.defaultGraph = {};
       this.graph = {};
       this.trainConfig = {};
@@ -225,7 +223,6 @@ export const useWorkspaceStore = defineStore({
       this.extension = null;
       this.labels = [];
       this.model = null;
-      this.modelLabel = [];
 
       // clear local storage
       this.$reset();
@@ -260,7 +257,6 @@ export const useWorkspaceStore = defineStore({
       this.extension = null;
       this.labels = [];
       this.model = null;
-      this.modelLabel = [];
       this.defaultGraph = {};
       this.graph = {};
       this.trainConfig = {};
@@ -411,7 +407,6 @@ export const useWorkspaceStore = defineStore({
         this.extension = projectData.extension;
         this.model = projectData.model;
         this.labels = projectData.labels;
-        this.modelLabel = projectData.modelLabel;
 
         this.defaultGraph = projectData.defaultGraph;
         this.graph = projectData.graph;
@@ -500,17 +495,18 @@ export const useWorkspaceStore = defineStore({
         await storage.writeFile(this.$fs, `${this.id}/model.param`, new Blob([modelParams]));
         // read labels.txt
         //check is labels.txt exist
-        if(zip.file("labels.txt")){
-          let labels = await zip.file("labels.txt").async("string");
-          labels = labels.split("\n");
-          //trim empty line and \r
-          labels = labels.filter(el => el.trim() != "");
-          labels = labels.map(el => el.trim());
-          this.modelLabel = labels;
-          console.log("model label : ", this.modelLabel);
-        }else {
-          this.modelLabel = [];
-        }
+
+        // if(zip.file("labels.txt")){
+        //   let labels = await zip.file("labels.txt").async("string");
+        //   labels = labels.split("\n");
+        //   //trim empty line and \r
+        //   labels = labels.filter(el => el.trim() != "");
+        //   labels = labels.map(el => el.trim());
+        //   this.modelLabel = labels;
+        //   console.log("model label : ", this.modelLabel);
+        // }else {
+        //   this.modelLabel = [];
+        // }
 
         let hash = await md5(new Uint8Array(modelBinaries));
         this.model = {
@@ -562,17 +558,17 @@ export const useWorkspaceStore = defineStore({
         console.log("storeage param hash : ", paramHashFile);
         console.log("storage model hash : ", modelHashFile);
 
-        if(zip.file("labels.txt")){
-          let labels = await zip.file("labels.txt").async("string");
-          labels = labels.split("\n");
-          //trim empty line and \r
-          labels = labels.filter(el => el.trim() != "");
-          labels = labels.map(el => el.trim());
-          this.modelLabel = labels;
-          console.log("model label : ", this.modelLabel);
-        }else {
-          this.modelLabel = [];
-        }
+        // if(zip.file("labels.txt")){
+        //   let labels = await zip.file("labels.txt").async("string");
+        //   labels = labels.split("\n");
+        //   //trim empty line and \r
+        //   labels = labels.filter(el => el.trim() != "");
+        //   labels = labels.map(el => el.trim());
+        //   this.modelLabel = labels;
+        //   console.log("model label : ", this.modelLabel);
+        // }else {
+        //   this.modelLabel = [];
+        // }
 
         this.model = {
           name: 'model',
