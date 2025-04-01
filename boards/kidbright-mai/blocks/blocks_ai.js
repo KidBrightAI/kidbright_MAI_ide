@@ -23,6 +23,73 @@ Blockly.defineBlocksWithJsonArray([{
     "tooltip": "",
     "helpUrl": ""
   },
+  //load voice model
+  {
+    "type": "maix3_nn_voice_load",
+    "message0": "load voice classification model",
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": 120,
+    "tooltip": "",
+    "helpUrl": ""
+  },
+  {
+    "type": "maix3_nn_voice_classify",
+    "message0": "Classify voice threshold %1 for %2 seconds",
+    "args0": [
+      {
+        "type": "field_number",
+        "name": "threshold",
+        "value": 120,
+        "min": 1,
+        "max": 999,
+        "precision": 1
+      },
+      {
+        "type": "field_number",
+        "name": "duration",
+        "value": 3,
+        "min": 1,
+        "max": 10,
+        "precision": 1
+      }
+    ],
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": 120,
+    "tooltip": "",
+    "helpUrl": ""
+  },
+  //get result for voice
+  {
+    "type": "maix3_nn_voice_get_result",
+    "message0": "get voice %1",
+    "args0": [
+      {
+        "type": "field_dropdown",
+        "name": "data",
+        "options": [
+          [
+            "label",
+            "label"
+          ],
+          [
+            "class_id",
+            "class id"
+          ],
+          [
+            "probability",
+            "probability"
+          ]
+        ]
+      }
+    ],
+    "inputsInline": true,
+    "output": null,
+    "colour": 120,
+    "tooltip": "",
+    "helpUrl": ""
+  },
   {
     "type": "maix3_nn_yolo_load",
     "message0": "load object detection model",

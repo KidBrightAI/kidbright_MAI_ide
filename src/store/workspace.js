@@ -110,6 +110,11 @@ export const useWorkspaceStore = defineStore({
         // allImageFile.sort(() => Math.random() - 0.5);
         // trainset = allImageFile.slice(0, splitSite);
         // validset = allImageFile.slice(splitSite);
+      }else if(this.projectType === "VOICE_CLASSIFICATION"){
+        //TODO : seperate mfcc voice and wave file
+        var waveform = rawDataset.folder("waveform");
+        var mfcc = rawDataset.folder("mfcc");
+        var sound = rawDataset.folder("sound");
       }
       for (let [i, data] of datasets.entries()) {
         let filename = data.id + "." + data.ext;        
@@ -132,7 +137,18 @@ export const useWorkspaceStore = defineStore({
           //create image set                    
         }
         if (this.projectType === "VOICE_CLASSIFICATION") {
-
+          //save to waveform folder
+          waveform.file(data.class + "/" + data.id + "." + data.ext, fileData);
+          if(data.sound && data.sound_ext){
+            let sound_filename = data.id + "." + data.sound_ext;
+            let sound_file = datasetStore.getDataAsFile(sound_filename);
+            sound.file(data.class + "/" + sound_filename, sound_file);
+          }
+          if(data.mfcc && data.mfcc_ext){
+            let mfcc_filename = data.id + "_mfcc" + "." + data.mfcc_ext;
+            let mfcc_file = datasetStore.getDataAsFile(mfcc_filename);
+            mfcc.file(data.class + "/" + mfcc_filename, mfcc_file);
+          }
         }
         //saving progress map to 1-97
         this.savingProgress = 1 + Math.round(((i + 1) / datasets.length) * 97);
@@ -337,7 +353,9 @@ export const useWorkspaceStore = defineStore({
         console.log("dataset entry : ", entry);
         let datasetData = await zip.file("dataset.json").async("string");
         datasetData = JSON.parse(datasetData);
-        
+        //==========================================================//
+        //==================== Object Detection ====================//
+        //==========================================================//
         if(projectData.projectType === "OBJECT_DETECTION"){
           for(let i = 0; i < datasetData.data.length; i++){
             let data = datasetData.data[i];
@@ -372,6 +390,9 @@ export const useWorkspaceStore = defineStore({
             this.openingProgress = 1 + Math.round(((i + 1) / datasetData.data.length) * 97);
             //await sleep(1000);
           }
+        //==========================================================//
+        //==================== Image Classification ================//
+        //==========================================================//
         }else if(projectData.projectType === "IMAGE_CLASSIFICATION"){
           for(let i = 0; i < datasetData.data.length; i++){
             let data = datasetData.data[i];
@@ -380,6 +401,26 @@ export const useWorkspaceStore = defineStore({
             //scale progress from 1 - 97
             this.openingProgress = 1 + Math.round(((i + 1) / datasetData.data.length) * 97);
             //await sleep(1000);
+          }
+        }
+        //==========================================================//
+        //==================== Voice Classification ================//
+        //==========================================================//
+        else if(projectData.projectType === "VOICE_CLASSIFICATION"){
+          for(let i = 0; i < datasetData.data.length; i++){
+            let data = datasetData.data[i];
+            let fileData = await zip.file("dataset/waveform/" + data.class + "/" + data.id + "." + data.ext).async("blob");
+            await storage.writeFile(this.$fs, `${projectData.id}/${data.id}.${data.ext}`, fileData);
+            if(data.sound && data.sound_ext){
+              let sound_file = await zip.file("dataset/sound/" + data.class + "/" + data.id + "." + data.sound_ext).async("blob");
+              await storage.writeFile(this.$fs, `${projectData.id}/${data.id}.${data.sound_ext}`, sound_file);
+            }
+            if(data.mfcc && data.mfcc_ext){
+              let mfcc_file = await zip.file("dataset/mfcc/" + data.class + "/" + data.id + "_mfcc." + data.mfcc_ext).async("blob");
+              await storage.writeFile(this.$fs, `${projectData.id}/${data.id}_mfcc.${data.mfcc_ext}`, mfcc_file);
+            }
+            //scale progress from 1 - 97
+            this.openingProgress = 1 + Math.round(((i + 1) / datasetData.data.length) * 97);
           }
         }
         

@@ -161,7 +161,14 @@ export const useDatasetStore = defineStore({
     },
 
     async addData(data){
+      console.log(data);
       await storage.writeFile(this.$fs, `${this.project}/${data.id}.${data.ext}`, data.image);
+      if(data.sound && data.sound_ext){
+        await storage.writeFile(this.$fs, `${this.project}/${data.id}.${data.sound_ext}`, data.sound);
+      }
+      if(data.mfcc && data.mfcc_ext){
+        await storage.writeFile(this.$fs, `${this.project}/${data.id}_mfcc.${data.mfcc_ext}`, data.mfcc);
+      }
       this.data.unshift(data);
     },
 

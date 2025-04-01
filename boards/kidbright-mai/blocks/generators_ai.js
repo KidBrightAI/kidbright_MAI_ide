@@ -70,7 +70,87 @@ _labels = [${ workspaceStore.labels.map(label => `"${label.label}"`).sort().join
     }
     return [code, order];
   };
+// voice 
+  python.pythonGenerator.forBlock['maix3_nn_voice_load'] = function(block, generator) {
+    generator.definitions_['from_maix_import_nn'] = 'from maix import nn';
+    generator.definitions_['import_voice_mfcc'] = 'import voice_mfcc';
+    generator.definitions_['from_maix_import_image'] = 'from maix import image';
 
+    generator.definitions_['class_Resnet'] = `
+class _Resnet:
+  m = {
+    "bin": "/root/model/${workspaceStore.model.hash}.bin",
+    "param": "/root/model/${workspaceStore.model.hash}.param"
+  }
+
+  options = {
+    "model_type": "awnn",
+    "inputs": {
+      "input0": (224, 224, 3)
+    },
+    "outputs": {
+      "output0": (1, 1, ${workspaceStore.labels.map(lb => lb.label).length})
+    },
+    "first_layer_conv_no_pad": False,
+    "mean": [127.5, 127.5, 127.5],
+    "norm": [0.00784313725490196, 0.00784313725490196, 0.00784313725490196],
+  }
+
+  def __init__(self):
+    from maix import nn
+    self.model = nn.load(self.m, opt=self.options)
+
+  def __del__(self):
+    del self.model
+
+_p, _stream = voice_mfcc.start_stream()
+if _stream is None:
+  print("Error: _stream is None")
+  exit()
+else:
+  print("Success: _stream is not None")
+_model = _Resnet()
+_labels = [${ workspaceStore.labels.map(label => `"${label.label}"`).sort().join(', ') }]
+
+`;
+    var code = 'print(_model.model)\n';
+    return code;
+  };
+
+  python.pythonGenerator.forBlock['maix3_nn_voice_classify'] = function(block, generator) {
+    var number_threshold = block.getFieldValue('threshold');
+    var number_duration = block.getFieldValue('duration');
+    
+    var code = `res_listen = voice_mfcc.audio_listener(_stream, _p, threshold=${number_threshold}, record_sec=${number_duration})\n`;
+    code += `if res_listen is not None:\n`;
+    code += `  mfcc_image = image.open('/root/app/mfcc_run.png')\n`;
+    code += `  mfcc_image = mfcc_image.resize(224, 224)\n`;
+    code += `  _model_result = _model.model.forward(mfcc_image, quantize=True)\n`;
+    code += `else:\n`;
+    code += `  _model_result = None\n`;
+    return code;
+  };
+
+  python.pythonGenerator.forBlock['maix3_nn_voice_get_result'] = function(block, generator) {
+    var dropdown_data = block.getFieldValue('data');
+    let code = '';
+    let order = python.Order.NONE;
+    if(dropdown_data == 'label'){
+      code = '_labels[_model_result.argmax()]\n';
+      block.setOutput(true, 'String');
+    }else if(dropdown_data == 'class_id'){
+      code = '_model_result.argmax()';
+      block.setOutput(true, 'Number');
+      order = python.Order.ATOMIC;
+    }else if(dropdown_data == 'probability'){
+      code = '_model_result.max()';
+      block.setOutput(true, 'Number');
+      order = python.Order.ATOMIC;
+    }
+    return [code, order];
+  };
+
+  // yolo
   python.pythonGenerator.forBlock['maix3_nn_yolo_load'] = function(block, generator) {
     generator.definitions_['from_maix_import_nn'] = 'from maix import nn';
     generator.definitions_['class_Resnet'] = `

@@ -22,6 +22,7 @@ import { ClassificationOutputNode } from "@/nodes/outputs/classification-output"
 import { ObjectDetectionOutputNode } from "@/nodes/outputs/object-detection-output";
 import { YoloNode } from "@/nodes/models/yolo";
 import { ResnetNode } from "@/nodes/models/resnet";
+import { VoiceClassifyNode } from "@/nodes/models/voice_classification";
 import { MobileNetNode } from "@/nodes/models/mobilenet";
 import { onMounted } from "vue";
 
@@ -51,6 +52,7 @@ editor.registerNodeType(ObjectDetectionOutputNode, { category: "Output" });
 //editor.registerNodeType(MobileNetNode, { category: "Model" });
 editor.registerNodeType(ResnetNode, { category: "Model" });
 editor.registerNodeType(YoloNode, { category: "Model" });
+editor.registerNodeType(VoiceClassifyNode, { category: "Model" });
 
 //props
 

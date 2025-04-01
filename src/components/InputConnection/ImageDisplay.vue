@@ -2,7 +2,8 @@
   <img
     v-if="props.id != undefined"
     crossorigin="anonymous"
-    style="height: calc(100vh - 190px);"
+    :style="{ maxHeight: props.height, width: '100%', objectFit: 'fill' }"
+    class="img-fluid"
     :src="`${datasetStore.baseURL}/${props.id}.${datasetStore.getExt(props.id)}`"
     ref="img"
   />
@@ -17,7 +18,11 @@ const props = defineProps({
   id: {
     type: String,
     default: null
-  }
+  },
+  height : {
+    type: [Number, String],
+    default: "calc(100vh - 190px)"
+  },
 });
 
 const getImage = () => {

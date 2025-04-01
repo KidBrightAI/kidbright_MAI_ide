@@ -7,19 +7,27 @@ import {
   InspectStream,
   WritableStream,
 } from "@yume-chan/stream-extra";
+import WaveFormPlayer from "@/components/InputConnection/WaveFormPlayer.vue";
 import { Adb, AdbDaemonTransport, LinuxFileType, encodeUtf8  } from "@yume-chan/adb";
 
 import SingletonShell from "@/engine/SingletonShell";
 
 import { useWorkspaceStore } from "@/store/workspace";
 import { useBoardStore } from "@/store/board";
-import { onUnmounted } from "vue";
+import { onBeforeMount, onUnmounted } from "vue";
 
 const workspaceStore = useWorkspaceStore();
 const boardStore = useBoardStore();
 
 const status = defineModel({  
   default: "disconnected",
+});
+const emits = defineEmits(["recorded"]);
+const props = defineProps({
+  id: {
+    type: String,
+    default: null,
+  },
 });
 
 const recording = ref(false);
@@ -61,13 +69,14 @@ const init = async()=>{
     SingletonShell.write("\x03\n");
     SingletonShell.write("killall python3\n");
     await sleep(1000);
+    SingletonShell.write("killall python3\n");
     SingletonShell.write("cd /root\n");
     SingletonShell.write("python3 scripts/voice_stream.py &\n");
-    // shell.setCallback((data)=>{
-    //   //unit8array to string
-    //   const text = new TextDecoder().decode(data);
-    //   console.log(text);
-    // });
+    shell.setCallback((data)=>{
+      //unit8array to string
+      const text = new TextDecoder().decode(data);
+      console.log(text);
+    });
     console.log("create socket");
     sock = null;
     let retry = 5;
@@ -86,6 +95,12 @@ const init = async()=>{
       console.log("socket error");
       return;
     }
+    //create pipe when sock ready
+    sock.readable.pipeTo(new WritableStream({
+      write(chunk){
+        processStream(chunk); 
+      }
+    }));
     status.value = "ready";
     console.log("socket created");
     writer = sock.writable.getWriter();
@@ -117,6 +132,52 @@ const clearCanvas = ()=>{
   waveformCtx.value.clearRect(0, 0, waveform.value.width, waveform.value.height);
   uvMeterCtx.value.clearRect(0, 0, uvMeter.value.width, uvMeter.value.height);
 };
+const countdown = ()=>{
+  counting.value = workspaceStore.extension.options.durations.value || 3;
+  const interval = setInterval(()=>{
+    counting.value--;
+    if(counting.value <= 0){
+      clearInterval(interval);
+    }
+  }, 1000);
+};
+const processStream = (chunk)=>{
+  const text = new TextDecoder().decode(chunk);
+  //console.log(text);      
+  if(text.startsWith("#uv")){
+    const value = text.split(",")[1];        
+    drawUv(value);
+  }
+  if(text.startsWith("#rm")){ //wave form to draw         
+    const value = text.split(",")[1];
+    const data = parseInt(value);
+    drawWaveform(data);
+  }
+  if(text.startsWith("#rec_start")){
+    status.value = "recording";
+    clearCanvas();
+    startPos = 0;
+    recording.value = true;
+    countdown();
+  }      
+  if(text.startsWith("#rec_stop")){
+    recording.value = false;
+    counting.value = 0;
+  }
+  if(text.startsWith("#process_start")){
+    //start save voice
+    status.value = "processing";
+  }
+  if(text.startsWith("#process_stop")){
+    //stop save voice
+    status.value = "finishing";
+    onFinish();
+  }
+  if(text.startsWith("#novoice")){        
+    status.value = "ready";
+  }
+}
+
 const listen = async()=>{
   //sending command to start recording  
   clearCanvas();
@@ -125,59 +186,41 @@ const listen = async()=>{
   let sec = workspaceStore.extension.options.durations.value || 3;
   let command = `#start,${th},${sec}\n`;  
   writer.write(new Consumable(encodeUtf8(command))); 
-  sock.readable.pipeTo(new WritableStream({
-    write(chunk){
-      const text = new TextDecoder().decode(chunk);
-      //console.log(text);      
-      if(text.startsWith("#uv")){
-        const value = text.split(",")[1];        
-        drawUv(value);
-      }
-      if(text.startsWith("#rm")){ //wave form to draw         
-        const value = text.split(",")[1];
-        const data = parseInt(value);
-        drawWaveform(data);
-      }
-      if(text.startsWith("#rec_start")){
-        status.value = "recording";
-        clearCanvas();
-        startPos = 0;
-        recording.value = true;
-        counting.value = sec;
-        const interval = setInterval(()=>{
-          counting.value--;
-          if(counting.value <= 0){
-            clearInterval(interval);
-            recording.value = false;
-          }
-        }, 1000);
-      }      
-      if(text.startsWith("#rec_stop")){
-        recording.value = false;
-        counting.value = 0;
-      }
-      if(text.startsWith("#process_start")){
-        //start save voice
-      }
-      if(text.startsWith("#process_stop")){
-        //stop save voice
-        status.value = "ready";
-      }
-      if(text.startsWith("#novoice")){        
-        status.value = "ready";
-      }
-    }
-  }));
+};
+
+const onFinish = async()=>{
+  let wav = await pullFile("/root/kbvoice.wav");
+  let wavform = await pullFile("/root/waveform.png");
+  let mfcc = await pullFile("/root/mfcc.png");
+  let data = {
+    sound: wav,
+    mfcc: mfcc,
+    preview: wavform,
+    duration: workspaceStore.extension.options.durations.value || 3,
+  };
+  emits("recorded", data);
+  status.value = "ready";
 };
 
 const stop = async()=>{
-
+  //sending command to stop recording
+  status.value = "ready";
+  let command = "#stop\n";
+  writer.write(new Consumable(encodeUtf8(command)));
 };
-const pullFile = async()=>{
+
+const pullFile = async(filename)=>{
   const shell = SingletonShell.getInstance();
   const adb = shell.getAdb();
   const sync = await adb.sync();
-  const file = await sync.pull("/root/kbvoice.wav");  
+  const file = await sync.read(filename);  
+  //file is PushReadableStream convert to arrayBuffer
+  let arrayBuffer = await new Response(file).arrayBuffer();
+        
+  //const arrayBuffer = await file.arrayBuffer();
+  sync.dispose();
+  let blob = new Blob([arrayBuffer]);      
+  return blob;
 };
 const assignCanvas = ()=>{
   canvas.value = document.getElementById("waveform-client");
@@ -214,6 +257,12 @@ onMounted(async () => {
   });
 });
 
+onBeforeMount(() => {
+  console.log("start streaming");
+  SingletonShell.write("killall python3\n");
+  status.value = "disconnected";
+});
+
 onUnmounted(() => {
   console.log("stop streaming");
   SingletonShell.write("killall python3\n");
@@ -235,20 +284,20 @@ defineExpose({
     <div class="voice-meter">
       <canvas v-show="status == 'listening'" id="uv-meter" width="20" height="250"></canvas>
     </div>
-    <div v-show="id == null" class="full">
+    <div v-show="props.id == null" class="full">
       <canvas id="waveform-client" style="width: 100%; height: 250px;"></canvas>
       <canvas id="mfcc-client" width="224" height="224" style="display:none;"></canvas>
     </div>
-    <div v-show="id != null" class="full">
-      <!--WaveFormPlayer 
-      :id="id" 
+    <div v-show="props.id != null" class="full">
+      <WaveFormPlayer 
+      :id="props.id" 
       sound_ext="wav" 
-      img_ext="jpg" 
-      :delay="project.options.duration" 
+      img_ext="png" 
+      :delay="workspaceStore.extension.options.durations.value" 
       :ref="`wavsuf`"
       :mute="true"
       >
-      </WaveFormPlayer-->
+      </WaveFormPlayer>
     </div>
     <div class="recorder-wrap">
       <VMenu :close-on-content-click="false" location="bottom">
@@ -258,14 +307,14 @@ defineExpose({
         <VList>
           <VListItem>
             <VListItemTitle>Setting Threshold</VListItemTitle>
-            <VListItemContent>
+            <VListItem>
               <VSlider
                 v-model="threshold"
                 min="1"
                 max="255"
                 step="1"
               ></VSlider>
-            </VListItemContent>
+            </VListItem>
           </VListItem>
         </VList>
       </VMenu>            

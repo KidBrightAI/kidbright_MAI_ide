@@ -36,6 +36,14 @@ const blockAIImageClassification = `
 <field name="data">label</field>
 </block>
 `;
+const blockAIVoiceClassification = `
+<label text="Voice classification"></label>
+<block type="maix3_nn_voice_load"></block>
+<block type="maix3_nn_voice_classify"></block>
+<block type="maix3_nn_voice_get_result">
+<field name="data">label</field>
+</block>
+`;
 
 export default function(){
   
@@ -53,6 +61,9 @@ export default function(){
     }
     if(modelType == "OBJECT_DETECTION"){
       return blockAIObjectDetection;
+    }
+    if(modelType == "VOICE_CLASSIFICATION"){
+      return blockAIVoiceClassification;
     }
     return "";
   }

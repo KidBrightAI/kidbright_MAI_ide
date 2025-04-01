@@ -26,8 +26,6 @@ class PWM:
         from maix import pwm
         self.pwm = pwm.PWM(num)
         self.pwm.export()
-        self.pwm.period = 20000000
-        self.pwm.duty_cycle = 500000
         self.frequency = frequency
         
         self.register_clock_base = 0x0300A000        
