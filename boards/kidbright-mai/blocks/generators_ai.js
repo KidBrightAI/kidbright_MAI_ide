@@ -130,7 +130,7 @@ _labels = [${ workspaceStore.labels.map(label => `"${label.label}"`).sort().join
     var code = `voice_mfcc.audio_record(_stream, _p, record_sec=${number_duration})\n`;
     code += `mfcc_image = image.open('/root/app/mfcc_run.png')\n`;
     code += `_model_result = _model.model.forward(mfcc_image, quantize=True)\n`;
-    code += `print(_model_result)\n`;
+    //code += `print(_model_result)\n`;
     return code;
   };
   // python.pythonGenerator.forBlock['maix3_nn_voice_classify'] = function(block, generator) {
