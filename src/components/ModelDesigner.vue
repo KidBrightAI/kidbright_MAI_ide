@@ -4,7 +4,7 @@
     <VBtn class="me-2 ms-4" @click="resetToDefault" size="small" icon="mdi-refresh"></VBtn>
     <VBtn class="mx-1" @click="downloadGraph" size="small" icon="mdi-download"></VBtn>
     <VBtn class="mx-1" @click="uploadGraph" size="small" icon="mdi-upload"></VBtn>
-    <!-- <VBtn class="mx-1" @click="computeGraph" size="small" icon="mdi-graph"></VBtn> -->
+    <VBtn class="mx-1" @click="testCompute" size="small" icon="mdi-graph"></VBtn>
   </div>
 </template>
 
@@ -24,7 +24,11 @@ import { YoloNode } from "@/nodes/models/yolo";
 import { ResnetNode } from "@/nodes/models/resnet";
 import { VoiceClassifyNode } from "@/nodes/models/voice_classification";
 import { MobileNetNode } from "@/nodes/models/mobilenet";
-import { onMounted } from "vue";
+import { Conv2dNode } from "@/nodes/layers/conv2d";
+import { DenseNode } from "@/nodes/layers/dense";
+import { FlattenNode } from "@/nodes/layers/flatten";
+import { MaxPooling2DNode } from "@/nodes/layers/maxpooling2d";
+
 
 const workspaceStore = useWorkspaceStore();
 const baklava = useBaklava();
@@ -53,6 +57,11 @@ editor.registerNodeType(ObjectDetectionOutputNode, { category: "Output" });
 editor.registerNodeType(ResnetNode, { category: "Model" });
 editor.registerNodeType(YoloNode, { category: "Model" });
 editor.registerNodeType(VoiceClassifyNode, { category: "Model" });
+
+editor.registerNodeType(Conv2dNode, { category: "Layer" });
+editor.registerNodeType(DenseNode, { category: "Layer" });
+editor.registerNodeType(FlattenNode, { category: "Layer" });
+editor.registerNodeType(MaxPooling2DNode, { category: "Layer" });
 
 //props
 
@@ -108,6 +117,12 @@ const saveGraph = async() => {
   let trainConfig = await computeGraph();
   workspaceStore.trainConfig = trainConfig;
 };
+
+const testCompute = async()=>{
+  let res = await computeGraph();
+  console.log(res);
+}
+
 onMounted(() => {
   //check if workspaceStore is empty then load default graph or if emty then load graph or do nothing
   if (Object.keys(workspaceStore.graph).length === 0) {

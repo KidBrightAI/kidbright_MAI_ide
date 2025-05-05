@@ -9,13 +9,13 @@ import {
 } from "baklavajs";
 
 import { setType } from "@baklavajs/interface-types";
-import { modelOutput } from "../interfaces/interface-types";
+import { modelOutput, tensor } from "../interfaces/interface-types";
 
 export const ClassificationOutputNode = defineNode({
   type: "ClassifiyOutputNode",
   title: "Classification Output", 
   inputs: {
-    modelOutput: () => new NodeInterface("Model Output", "").use(setType, modelOutput),
+    modelOutput: () => new NodeInterface("Model Output | Tensor", "").use(setType, [modelOutput, tensor]),
     validateMatrix : () => new SelectInterface("Validate Matrix", "val_accuracy",[
         {text: "Validation Accuracy", value : "val_accuracy"},
         {text: "Validation Loss", value : "val_loss"},
