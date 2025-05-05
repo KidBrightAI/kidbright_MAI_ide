@@ -86,12 +86,12 @@ class _Resnet:
   options = {
     "model_type": "awnn",
     "inputs": {
-      "input0": (224, 224, 3)
+      "input0": (147, 13, 3)
     },
     "outputs": {
       "output0": (1, 1, ${workspaceStore.labels.map(lb => lb.label).length})
     },
-    "first_layer_conv_no_pad": False,
+    "first_layer_conv_no_pad": True,
     "mean": [127.5, 127.5, 127.5],
     "norm": [0.00784313725490196, 0.00784313725490196, 0.00784313725490196],
   }
@@ -117,19 +117,35 @@ _labels = [${ workspaceStore.labels.map(label => `"${label.label}"`).sort().join
     return code;
   };
 
+
+  //maix3_nn_voice_get_rms
+  python.pythonGenerator.forBlock['maix3_nn_voice_get_rms'] = function(block, generator) {
+    var code = 'voice_mfcc.get_rms(_stream)\n';
+    return [code, python.Order.NONE];
+  };
+
+  //maix3_nn_voice_classify
   python.pythonGenerator.forBlock['maix3_nn_voice_classify'] = function(block, generator) {
-    var number_threshold = block.getFieldValue('threshold');
     var number_duration = block.getFieldValue('duration');
-    
-    var code = `res_listen = voice_mfcc.audio_listener(_stream, _p, threshold=${number_threshold}, record_sec=${number_duration})\n`;
-    code += `if res_listen is not None:\n`;
-    code += `  mfcc_image = image.open('/root/app/mfcc_run.png')\n`;
-    code += `  mfcc_image = mfcc_image.resize(224, 224)\n`;
-    code += `  _model_result = _model.model.forward(mfcc_image, quantize=True)\n`;
-    code += `else:\n`;
-    code += `  _model_result = None\n`;
+    var code = `voice_mfcc.audio_record(_stream, _p, record_sec=${number_duration})\n`;
+    code += `mfcc_image = image.open('/root/app/mfcc_run.png')\n`;
+    code += `_model_result = _model.model.forward(mfcc_image, quantize=True)\n`;
+    code += `print(_model_result)\n`;
     return code;
   };
+  // python.pythonGenerator.forBlock['maix3_nn_voice_classify'] = function(block, generator) {
+  //   var number_threshold = block.getFieldValue('threshold');
+  //   var number_duration = block.getFieldValue('duration');
+    
+  //   var code = `res_listen = voice_mfcc.audio_listener(_stream, _p, threshold=${number_threshold}, record_sec=${number_duration})\n`;
+  //   code += `if res_listen is not None:\n`;
+  //   code += `  mfcc_image = image.open('/root/app/mfcc_run.png')\n`;
+  //   code += `  mfcc_image = mfcc_image.resize(224, 224)\n`;
+  //   code += `  _model_result = _model.model.forward(mfcc_image, quantize=True)\n`;
+  //   code += `else:\n`;
+  //   code += `  _model_result = None\n`;
+  //   return code;
+  // };
 
   python.pythonGenerator.forBlock['maix3_nn_voice_get_result'] = function(block, generator) {
     var dropdown_data = block.getFieldValue('data');

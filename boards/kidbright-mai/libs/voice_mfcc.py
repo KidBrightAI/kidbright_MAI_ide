@@ -129,6 +129,44 @@ def stop_stream(stream, p):
   stream.close()
   p.terminate()
 
+def get_rms(stream):
+  data = stream.read(CHUNK, exception_on_overflow = False)
+  rms = audioop.rms(data, 2)    
+  return rms
+
+def audio_record(stream, p, record_sec):
+  try:
+    wavefile = wave.open("/root/app/voice_run.wav", 'wb')
+    wavefile.setnchannels(CHANNELS)
+    wavefile.setsampwidth(p.get_sample_size(pyaudio.paInt16))
+    wavefile.setframerate(RATE)        
+    for i in range(0, int(RATE / CHUNK * record_sec)):
+      data = stream.read(CHUNK, exception_on_overflow = False)
+      wavefile.writeframes(data)
+    wavefile.close()
+    #do MFCC
+    wavefile = wave.open("/root/app/voice_run.wav", 'rb')
+    signal = wavefile.readframes(-1)
+    signal = np.frombuffer(signal, dtype=np.int16)
+    wavefile.close()
+    mfcc = doMfcc(signal)
+    #print(mfcc.shape)
+    #print(mfcc)
+    #write mfcc image to file
+    mfcc = mfcc * 255 / np.max(mfcc)
+    mfcc = mfcc.astype(np.uint8)
+    mfcc = Image.fromarray(mfcc)
+    mfcc.save("/root/app/mfcc_run.png")
+    time.sleep(0.1)
+    
+  except KeyboardInterrupt:
+    print("KeyboardInterrupt")
+  except CtrlBreakInterrupt:
+    print("CtrlBreakInterrupt")
+  except Exception as e:
+    print("Exception")
+    print(e)
+
 def audio_listener(stream, p , threshold, record_sec):
   try:
     #check if msg is received and got command to start listening

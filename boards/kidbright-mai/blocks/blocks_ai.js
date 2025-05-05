@@ -33,18 +33,19 @@ Blockly.defineBlocksWithJsonArray([{
     "tooltip": "",
     "helpUrl": ""
   },
+  //get voice rms level
+  {
+    "type": "maix3_nn_voice_get_rms",
+    "message0": "get voice rms level",
+    "output": null,
+    "colour": 120,
+    "tooltip": "",
+    "helpUrl": ""
+  },
   {
     "type": "maix3_nn_voice_classify",
-    "message0": "Classify voice threshold %1 for %2 seconds",
+    "message0": "Classify voice for %1 seconds",
     "args0": [
-      {
-        "type": "field_number",
-        "name": "threshold",
-        "value": 120,
-        "min": 1,
-        "max": 999,
-        "precision": 1
-      },
       {
         "type": "field_number",
         "name": "duration",

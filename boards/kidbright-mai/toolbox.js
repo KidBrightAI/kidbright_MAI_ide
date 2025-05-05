@@ -39,6 +39,7 @@ const blockAIImageClassification = `
 const blockAIVoiceClassification = `
 <label text="Voice classification"></label>
 <block type="maix3_nn_voice_load"></block>
+<block type="maix3_nn_voice_get_rms"></block>
 <block type="maix3_nn_voice_classify"></block>
 <block type="maix3_nn_voice_get_result">
 <field name="data">label</field>
