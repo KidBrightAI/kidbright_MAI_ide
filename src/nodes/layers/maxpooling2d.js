@@ -59,17 +59,16 @@ export const MaxPooling2DNode = defineNode({
     modelInput : () => new NodeInterface("Model Input | Tensor").use(setType, [modelInput, tensor]),
     pool_size : () => new IntegerInterface("Pool Size", 2).setPort(false),
     strides : () => new IntegerInterface("Strides", 1).setPort(false),
-    padding : () => new SelectInterface("Padding", "same", 
-    [
-        { text: "valid", value : "valid" },
-        { text: "same", value : "same" },
-    ]).setPort(false),
+    padding : () => new IntegerInterface("Padding", 0).setPort(false),
   },
   outputs: {
     result: () => new NodeInterface("Tensor").use(setType, tensor)
   },
   calculate({ modelInput, pool_size, strides, padding }) {
-    let maxpool = "torch.nn.MaxPool2d(kernel_size=" + pool_size + ", stride=" + strides + ", padding='" + padding + "')";
+    let maxpool = "torch.nn.MaxPool2d(kernel_size=" + pool_size + ", stride=" + strides + ", padding=" + padding + ")\n";
+    if (modelInput && modelInput.code) {
+      maxpool = modelInput.code + maxpool;
+    }
     return {
       result: {
         ... modelInput,

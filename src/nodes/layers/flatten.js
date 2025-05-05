@@ -38,7 +38,10 @@ export const FlattenNode = defineNode({
     result: () => new NodeInterface("Tensor").use(setType, tensor)
   },
   calculate({ modelInput }) {
-    let flatten = "torch.flatten(" + modelInput.code + ", start_dim=1)";
+    let flatten = "torch.nn.Flatten(start_dim=1)\n";
+    if (modelInput && modelInput.code) {
+      flatten = modelInput.code + flatten;
+    }
     return {
       result: {
         ... modelInput,

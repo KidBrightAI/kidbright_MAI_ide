@@ -17,39 +17,35 @@ export const Conv2dNode = defineNode({
     filters : () => new IntegerInterface("Number of Filters", 2).setPort(false),
     kernel_size : () => new IntegerInterface("Kernel Size", 3).setPort(false),
     strides : () => new IntegerInterface("Strides", 1).setPort(false),
-    padding : () => new SelectInterface("Padding", "same", 
+    padding : () => new IntegerInterface("Padding", 0).setPort(false),
+    activation : () => new SelectInterface("Activation", "ReLU",
     [
-        { text: "valid", value : "valid" },
-        { text: "same", value : "same" },
-    ]).setPort(false),
-    activation : () => new SelectInterface("Activation", "relu",
-    [
-        { text: "relu", value : "relu" },
-        { text: "sigmoid", value : "sigmoid" },
-        { text: "tanh", value : "tanh" },
-        { text: "softmax", value : "softmax" },
-        { text: "leaky_relu", value : "leaky_relu" },
-        { text: "elu", value : "elu" },
-        { text: "prelu", value : "prelu" },
+        { text: "ReLU", value : "ReLU" },
+        { text: "Sigmoid", value : "Sigmoid" },
+        { text: "Tanh", value : "Tanh" },
+        { text: "Softmax", value : "Softmax" },
+        { text: "LeakyReLU", value : "LeakyReLU" },
+        { text: "ELU", value : "ELU" },
+        { text: "PReLU", value : "PReLU" },
     ]).setPort(false),
   },
   outputs: {
     result: () => new NodeInterface("Tensor").use(setType, tensor)
   },
   calculate({ modelInput, filters, kernel_size, strides, padding, activation})  {
-    let activationCode = "torch.nn.functional" + "." + activation + "()";
-    let use_bias = true;
-    if (activation === "softmax" || activation === "sigmoid") {
-      use_bias = false;
+    let activationCode = "torch.nn." + activation + "()\n";
+    let use_bias = "True";
+    if (activation === "Softmax" || activation === "Sigmoid") {
+      use_bias = "False";
     }
-    let conv = "torch.nn.Conv2d(" + filters + ", " + kernel_size + ", " + strides + ", padding='" + padding + "', bias=" + use_bias + ")";
-    if (modelInput.code) {
-      conv = modelInput.code + "\n" + conv;
+    let conv = "torch.nn.LazyConv2d(" + filters + ", " + kernel_size + ", " + strides + ", padding=" + padding + ", bias=" + use_bias + ")\n";
+    if (modelInput && modelInput.code) {
+      conv = modelInput.code + conv;
     }
     return {
       result: {
         ... modelInput,
-        code : conv + "\n" + activationCode,
+        code : conv + activationCode,
       }    
     }
   }

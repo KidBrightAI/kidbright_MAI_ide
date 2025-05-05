@@ -57,31 +57,32 @@ export const DenseNode = defineNode({
   inputs: {        
     modelInput : () => new NodeInterface("Model Input | Tensor").use(setType, [modelInput, tensor]),
     output_nodes : () => new IntegerInterface("Output Nodes", 50).setPort(false),
-    activation : () => new SelectInterface("Activation", "relu",
+    activation : () => new SelectInterface("Activation", "ReLU",
     [
-        { text: "relu", value : "relu" },
-        { text: "sigmoid", value : "sigmoid" },
-        { text: "tanh", value : "tanh" },
+      { text: "ReLU", value : "ReLU" },
+        { text: "Sigmoid", value : "Sigmoid" },
+        { text: "Tanh", value : "Tanh" },
+        { text: "Softmax", value : "Softmax" },
     ]).setPort(false),
-    use_bias : () => new SelectInterface("Use Bias", true,
+    use_bias : () => new SelectInterface("Use Bias", "True",
     [
-        { text: "true", value : true },
-        { text: "false", value : false },
+        { text: "True", value : "True" },
+        { text: "Talse", value : "False" },
     ]).setPort(false),
   },
   outputs: {
     result: () => new NodeInterface("Tensor").use(setType, tensor)
   },
   calculate({ modelInput, output_nodes, activation, use_bias})  {
-    let activationCode = "torch.nn." + activation.charAt(0).toUpperCase() + activation.slice(1) + "()";
-    let dense = "torch.nn.Linear(" + modelInput.shape[1] + ", " + output_nodes + ", bias=" + use_bias + ")";
-    if (modelInput.code) {
-      dense = modelInput.code + "\n" + dense;
+    let activationCode = "torch.nn." + activation + "()\n";
+    let dense = "torch.nn.LazyLinear(out_features = " + output_nodes + ", bias=" + use_bias + ")\n";
+    if (modelInput && modelInput.code) {
+      dense = modelInput.code + dense;
     }
     return {
       result: {
         ... modelInput,
-        code : dense + "\n" + activationCode,
+        code : dense + activationCode,
       }    
     }
   }
