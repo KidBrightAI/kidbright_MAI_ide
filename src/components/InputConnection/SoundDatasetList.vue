@@ -223,9 +223,7 @@ const playHandler = (id) => {
               <img src="@/assets/images/png/Group_177_grey.svg" height="20"/>
               </div>
             <div class="control">
-              <img src="@/assets/images/png/wave-sound.png" height="20" class="op-btn" @click="onMFCC(item.id)"/>
-              <img v-if="playing != item.id" src="@/assets/images/png/play3.png" height="20" class="op-btn" @click.stop="playHandler(item.id)"/>
-              <img v-else src="@/assets/images/png/pause1.png" height="20" class="op-btn-disabled"/>
+              <img src="@/assets/images/png/wave-sound.png" height="20" class="op-btn" @click="onMFCC(item.id)"/>              
             </div>
             <img title="กดปุ่ม CTRL ค้างไว้ เพื่อทำการลบรูปที่เลือก" class="cancel-btn" src="@/assets/images/png/cancel.png" @click.stop="removeItem($event,item)"/>
           </div>

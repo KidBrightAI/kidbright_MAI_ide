@@ -51,6 +51,7 @@ const play = async()=>{
   target.style.width = "100%";
   await playSound(`${datasetStore.baseURL}/${props.id}.${props.sound_ext}`);
   target.style.width = "0%";
+  target.style.transitionDuration = "0s";
   target.classList.remove("playing-overlay");
   playing.value = false;
   emits("onEnd", props.id);
@@ -67,6 +68,8 @@ defineExpose({
       <img class="thumb" :src="`${datasetStore.baseURL}/${id}.${img_ext}`" alt="" srcset=""></img>
       <div class="playing-overlay" ref="imgRef"></div>
     </div>
+    <img v-if="!playing" src="@/assets/images/png/play3.png" height="34" class="op-btn ps-3" @click.stop="play"/>
+    <img v-else src="@/assets/images/png/pause2.png" height="34" class="op-btn-disable ps-3"/>
   </div>
 </template>
 
@@ -75,6 +78,9 @@ defineExpose({
     width: 100%;
     height: 100%;
     padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     .full{
       position: relative;
       width: 100%;
@@ -92,7 +98,7 @@ defineExpose({
         border-right-width: 2px;
         background-color: #66000066;
         overflow: hidden;
-        transition: width 30s linear;
+        transition: width 3s linear;
       }
       .thumb{
         width: 100%;
@@ -101,5 +107,12 @@ defineExpose({
         image-rendering: -webkit-optimize-contrast;
       }
     }
+    
+  }
+    
+.op-btn-disable{
+    pointer-events: none;  
+    -webkit-filter: grayscale(100%); /* Safari 6.0 - 9.0 */
+    filter: grayscale(100%);
   }
 </style>
