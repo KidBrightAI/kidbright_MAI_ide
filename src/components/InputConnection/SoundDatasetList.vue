@@ -144,14 +144,14 @@ const removeItem = async (e, item) => {
         }
       }
     } else {
-      await datasetStore.deleteDatasetItems(item);
+      await datasetStore.deleteDatasetItem(item);
       if (selected.value.includes(item.id)) {
         selected.value = selected.value.filter((v) => v !== item.id) || [];
         value.value = selected.value;
       }
     }
   } else {
-    await datasetStore.deleteDatasetItems(item);
+    await datasetStore.deleteDatasetItem(item);
     if (item.id === value.value) {
       value.value = null;
     }

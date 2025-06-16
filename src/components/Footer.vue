@@ -1,5 +1,4 @@
 <script setup>
-import logo from '@/assets/images/logos/logo.jpg';
 import { useWorkspaceStore } from "@/store/workspace";
 import { useBoardStore } from "@/store/board";
 
