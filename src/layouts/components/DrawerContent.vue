@@ -1,17 +1,9 @@
 <script setup>
-import upgradeBannerDark from '@/assets/images/pro/upgrade-banner-dark.png'
-import upgradeBannerLight from '@/assets/images/pro/upgrade-banner-light.png'
 import logo from '@/assets/logo.svg?raw'
 import {
   VerticalNavLink,
   VerticalNavSectionTitle,
 } from '@layouts'
-import { useTheme } from 'vuetify'
-
-const vuetifyTheme = useTheme()
-const upgradeBanner = computed(() => {
-  return vuetifyTheme.global.name.value === 'light' ? upgradeBannerLight : upgradeBannerDark
-})
 </script>
 
 <template>
@@ -116,21 +108,6 @@ const upgradeBanner = computed(() => {
       }"
     />
   </ul>
-
-  <!-- 👉 illustration -->
-  <a
-    href="https://themeselection.com/item/materio-vuetify-vuejs-admin-template"
-    target="_blank"
-    rel="noopener noreferrer"
-  >
-    <img
-      :src="upgradeBanner"
-      alt="upgrade-banner"
-      transition="scale-transition"
-      class="upgrade-banner mx-auto"
-      style="max-width: 230px"
-    >
-  </a>
 </template>
 
 <style lang="scss">

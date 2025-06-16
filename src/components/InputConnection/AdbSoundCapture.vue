@@ -53,7 +53,7 @@ const RATE = 44100;
 const CHANNELS = 1;
 const SAMPLE_SIZE = 2;
 const SAMPLES_PER_FRAME = 1024;
-
+const signal = new AbortController();
 const init = async()=>{
   // init streaming
   console.log("init streaming");
@@ -71,7 +71,9 @@ const init = async()=>{
     await sleep(1000);
     SingletonShell.write("killall python3\n");
     SingletonShell.write("cd /root\n");
+    await sleep(1000);
     SingletonShell.write("python3 scripts/voice_stream.py &\n");
+    await sleep(1000);
     shell.setCallback((data)=>{
       //unit8array to string
       const text = new TextDecoder().decode(data);
@@ -79,7 +81,7 @@ const init = async()=>{
     });
     console.log("create socket");
     sock = null;
-    let retry = 5;
+    let retry = 10;
     while (retry--) {
       console.log("retry", retry);
       try {
@@ -100,7 +102,8 @@ const init = async()=>{
       write(chunk){
         processStream(chunk); 
       }
-    }));
+    }),{ signal : signal.signal});
+
     status.value = "ready";
     console.log("socket created");
     writer = sock.writable.getWriter();
@@ -260,12 +263,24 @@ onMounted(async () => {
 onBeforeMount(() => {
   console.log("start streaming");
   SingletonShell.write("killall python3\n");
+  
   status.value = "disconnected";
 });
 
 onUnmounted(() => {
   console.log("stop streaming");
   SingletonShell.write("killall python3\n");
+  if(!signal.aborted){
+    signal.abort();
+  }
+  if(writer){
+    writer.releaseLock();
+    writer = null;
+  }
+  if(sock){
+    sock.close();
+    sock = null;
+  }
   status.value = "disconnected";
 });
 

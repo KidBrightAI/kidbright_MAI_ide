@@ -151,7 +151,21 @@ def doMfcc2(signal):
 def audio_stream():
   # create socket server
   server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-  server_socket.bind(('0.0.0.0', 5000))
+  # bind the socket to an address and port or retry if it fails 10 times
+  retry = 10
+  while retry > 0:
+    retry -= 1
+    print(f"Trying to bind socket, {retry} retries left...")
+    try:
+      server_socket.bind(('0.0.0.0', 5000))
+      break
+    except OSError as e:
+      print(f"Error binding socket: {e}")
+      time.sleep(1)
+    except Exception as e:
+      print(f"Unexpected error: {e}")
+      time.sleep(1)
+      
   server_socket.listen(5)
 
   try:

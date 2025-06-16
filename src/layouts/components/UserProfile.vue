@@ -1,5 +1,5 @@
 <script setup>
-import avatar1 from '@/assets/images/avatars/avatar-1.png'
+import avatar1 from '@/assets/KidBrightHead.png'
 
 const avatarBadgeProps = {
   dot: true,
