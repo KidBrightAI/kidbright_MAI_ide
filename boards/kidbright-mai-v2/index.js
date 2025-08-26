@@ -1,11 +1,13 @@
 export default {
     id: "kidbright-mai",
-    name: "KidBright uAI v1",
+    name: "KidBright uAI v2",
     description : "บอร์ดสมองกลเพื่อการเรียนรู้ปัญญาประดิษฐ์",
+    wsUrl: "ws://10.90.153.1:7899",
+    wsShell: "ws://10.90.153.1:5555",
     image: "images/board.png",
-    protocol: "web-adb",
+    protocol: "websocket",
     version: "1.0.0",
-    chip: "MaixII",
+    chip: "RISC-V",
     firmware: [],
     usb: [
         {

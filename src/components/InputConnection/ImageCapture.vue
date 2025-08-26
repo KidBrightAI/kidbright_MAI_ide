@@ -9,9 +9,10 @@
       />
     </div>
     <div class="video-container">
-      <AdbCameraStreaming v-if="captureDevice.label == 'ADB'" ref="adbCameraStreaming" @started="onStarted" @stopped="onStoped"/>
+      <AdbCameraStreaming v-if="captureDevice.label === 'ADB'" ref="adbCameraStreaming" @started="onStarted" @stopped="onStoped"/>
+      <WebSocketCameraStreaming v-if="captureDevice.label === 'WebSocket'" ref="webSocketCameraStreaming" @started="onStarted" @stopped="onStoped"/>
       <Webcam
-        v-show="captureDevice.label == 'WEBCAM'"
+        v-show="captureDevice.label === 'WEBCAM'"
         :width="props.width"
         :height="props.height"
         ref="webcam"
@@ -24,10 +25,16 @@
   </div>
 </template>
 <script setup>
+import { ref, computed, onMounted, watch } from 'vue';
 import Webcam from "./Webcam.vue";
 import AdbCameraStreaming from "./AdbCameraStreaming.vue";
+import WebSocketCameraStreaming from './WebSocketCameraStreaming.vue';
 import { useBoardStore } from "@/store/board";
+import { useWorkspaceStore } from "@/store/workspace";
+
 const boardStore = useBoardStore();
+const workspaceStore = useWorkspaceStore();
+
 const props = defineProps({
   source: {
     type: String,
@@ -36,23 +43,41 @@ const props = defineProps({
 });
 const emit = defineEmits(["started", "stoped"]);
 
-const adbCameraStreaming = ref({});
-const webcam = ref({});
-const captureDevices = ref([{
-  id: "ADB",
-  label: "ADB",
-}]);
+const adbCameraStreaming = ref(null);
+const webSocketCameraStreaming = ref(null);
+const webcam = ref(null);
+const captureDevices = ref([]);
 const currentCaptureDeviceIndex = ref(0);
-const currentDevice = ref(null);
+
+const updateCaptureDevices = () => {
+  const devices = [];
+  if (workspaceStore.currentBoard) {
+    if (workspaceStore.currentBoard.protocol === 'web-adb') {
+      devices.push({ id: "ADB", label: "ADB" });
+    } else if (workspaceStore.currentBoard.protocol === 'websocket') {
+      devices.push({ id: "WebSocket", label: "WebSocket" });
+    }
+  }
+  // This part for webcam can be adjusted based on how they are detected
+  if (webcam.value?.cameras.length > 0) {
+      webcam.value.cameras.forEach(camera => {
+          devices.push({ id: camera.deviceId, label: "WEBCAM" });
+      });
+  } else {
+      devices.push({id: 'WEBCAM_PLACEHOLDER', label: 'WEBCAM'});
+  }
+  captureDevices.value = devices;
+  console.log("capture device : ", devices);
+};
+
 
 const onCameras = (cameras) => {
   console.log("Capture Device Loaded : ", cameras);
-  cameras.forEach((camera) => {
-    captureDevices.value.push({
-      id: camera.deviceId,
-      label: "WEBCAM",
-    });
-  });
+  const webcams = cameras.map(camera => ({ id: camera.deviceId, label: "WEBCAM" }));
+  // remove all webcam from captureDevices
+  captureDevices.value = captureDevices.value.filter(device => device.label !== 'WEBCAM');
+  // add new webcams
+  captureDevices.value.push(...webcams);
 };
 
 const onStarted = (stream) => {
@@ -75,18 +100,21 @@ const captureDevice = computed(() => {
   }
 });
 
-onMounted(() => {
-  
-});
+watch(() => workspaceStore.currentBoard, () => {
+    updateCaptureDevices();
+}, { deep: true, immediate: true });
+
 
 const snap = async () => {
-  let src = null;
-  if(captureDevice.value.label == "ADB"){
-    src = await adbCameraStreaming.value.capture();
-  }else if(captureDevice.value.label == "WEBCAM"){
-    src = await webcam.value.capture();
+  const deviceLabel = captureDevice.value.label;
+  if (deviceLabel === "ADB") {
+    return await adbCameraStreaming.value.capture();
+  } else if (deviceLabel === 'WebSocket') {
+    return await webSocketCameraStreaming.value.capture();
+  } else if (deviceLabel === "WEBCAM") {
+    return await webcam.value.capture();
   }
-  return src;
+  return null;
 };
 
 defineExpose({

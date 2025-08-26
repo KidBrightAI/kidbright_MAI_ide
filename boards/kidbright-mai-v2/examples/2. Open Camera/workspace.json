@@ -1,0 +1,71 @@
+{
+  "blocks": {
+    "languageVersion": 0,
+    "blocks": [
+      {
+        "type": "while_loop",
+        "id": "d|Ey.+!XP05Acv*:wybH",
+        "x": -110,
+        "y": -130,
+        "inputs": {
+          "condition": {
+            "shadow": {
+              "type": "logic_boolean",
+              "id": "~T.GrMA6l_oi2?lpl=4G",
+              "fields": {
+                "BOOL": "TRUE"
+              }
+            }
+          },
+          "DO": {
+            "block": {
+              "type": "display_draw_text",
+              "id": "uSfe@5{(-sU^s?NXtQP:",
+              "fields": {
+                "font": "FONT_SUPERMARKET_20"
+              },
+              "inputs": {
+                "text": {
+                  "shadow": {
+                    "type": "text",
+                    "id": "!decmcng-oUmp?Fn``17",
+                    "fields": {
+                      "TEXT": "Hello!"
+                    }
+                  }
+                },
+                "x": {
+                  "shadow": {
+                    "type": "math_number",
+                    "id": "=INDX$#MXW`R`[76=ozu",
+                    "fields": {
+                      "NUM": 60
+                    }
+                  }
+                },
+                "y": {
+                  "shadow": {
+                    "type": "math_number",
+                    "id": "8hv!s#xOP#fA[)HKN*nI",
+                    "fields": {
+                      "NUM": 60
+                    }
+                  }
+                },
+                "color": {
+                  "shadow": {
+                    "type": "colour_picker",
+                    "id": "@9M^,jLmLIq+x)w3.j]c",
+                    "fields": {
+                      "COLOUR": "#ffffff"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    ]
+  }
+}
