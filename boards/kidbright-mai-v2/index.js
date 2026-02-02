@@ -3,7 +3,11 @@ export default {
   name: "KidBright uAI v2",
   description: "บอร์ดสมองกลเพื่อการเรียนรู้ปัญญาประดิษฐ์",
   wsUrl: "ws://10.150.36.1:7899",
-  wsShell: "ws://10.150.36.1:5050",
+  wsShell: "wss://10.150.36.1:5050",
+  camera: {
+    type: "mjpeg",
+    port: 8000,
+  },
   image: "images/board.png",
   protocol: "websocket-shell",
   version: "1.0.0",

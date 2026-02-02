@@ -17,7 +17,13 @@
       />
       <WebSocketCameraStreaming
         v-if="captureDevice.label === 'WebSocket'"
-        ref="webSocketCameraStreaming"
+        @started="onStarted"
+        @stopped="onStoped"
+      />
+      <MjpegCameraStreaming
+        v-if="captureDevice.label === 'MJPEG'"
+        ref="mjpegCameraStreaming"
+        :url="mjpegUrl"
         @started="onStarted"
         @stopped="onStoped"
       />
@@ -40,6 +46,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import Webcam from "./Webcam.vue"
 import AdbCameraStreaming from "./AdbCameraStreaming.vue"
 import WebSocketCameraStreaming from './WebSocketCameraStreaming.vue'
+import MjpegCameraStreaming from './MjpegCameraStreaming.vue'
 import { useBoardStore } from "@/store/board"
 import { useWorkspaceStore } from "@/store/workspace"
 
@@ -55,6 +62,7 @@ const workspaceStore = useWorkspaceStore()
 
 const adbCameraStreaming = ref(null)
 const webSocketCameraStreaming = ref(null)
+const mjpegCameraStreaming = ref(null)
 const webcam = ref(null)
 const captureDevices = ref([])
 const currentCaptureDeviceIndex = ref(0)
@@ -66,6 +74,8 @@ const updateCaptureDevices = () => {
       devices.push({ id: "ADB", label: "ADB" })
     } else if (workspaceStore.currentBoard.protocol === 'websocket') {
       devices.push({ id: "WebSocket", label: "WebSocket" })
+    } else if (workspaceStore.currentBoard.camera?.type === 'mjpeg') {
+      devices.push({ id: "MJPEG", label: "MJPEG" })
     }
   }
 
@@ -80,6 +90,24 @@ const updateCaptureDevices = () => {
   captureDevices.value = devices
   console.log("capture device : ", devices)
 }
+
+const mjpegUrl = computed(() => {
+  const board = workspaceStore.currentBoard
+  if (board && board.camera && board.camera.type === 'mjpeg') {
+    if (board.camera.url) return board.camera.url
+    if (board.wsUrl && board.camera.port) {
+      try {
+        // wsUrl is like ws://10.150.36.1:7899
+        // We want http://10.150.36.1:8000
+        const urlObj = new URL(board.wsUrl)
+        return `http://${urlObj.hostname}:${board.camera.port}`
+      } catch (e) {
+        console.error("Invalid wsUrl", e)
+      }
+    }
+  }
+  return ""
+})
 
 
 const onCameras = cameras => {
@@ -126,6 +154,8 @@ const snap = async () => {
     return await webSocketCameraStreaming.value.capture()
   } else if (deviceLabel === "WEBCAM") {
     return await webcam.value.capture()
+  } else if (deviceLabel === "MJPEG") {
+    return await mjpegCameraStreaming.value.capture()
   }
   
   return null

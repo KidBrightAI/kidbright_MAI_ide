@@ -19,6 +19,7 @@ export const useBoardStore = defineStore({
       wifiConnecting: false,
       wifiListing: false,
       handler: null,
+      showSecureConnectDialog: false,
     }
   },
   getters: {

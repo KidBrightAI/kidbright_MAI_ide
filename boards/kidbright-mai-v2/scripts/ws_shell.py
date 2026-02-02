@@ -125,9 +125,26 @@ async def main():
     ip = "0.0.0.0"
     port = 5050
 
-    print(f"Starting PTY WebSocket shell server on ws://{ip}:{port}")
+    import ssl
+    ssl_context = None
+    cert_path = "cert.pem"
+    key_path = "key.pem"
+    
+    if os.path.exists(cert_path) and os.path.exists(key_path):
+        try:
+            print(f"Loading SSL certificates from {cert_path} and {key_path}")
+            ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+            ssl_context.load_cert_chain(cert_path, key_path)
+            print("SSL Context created successfully. Server will run as WSS.")
+        except Exception as e:
+            print(f"Failed to load SSL certificates: {e}")
+            ssl_context = None
+    else:
+        print("SSL certificates not found. Server will run as WS (insecure).")
 
-    async with websockets.serve(connection_handler, ip, port):
+    print(f"Starting PTY WebSocket shell server on {'wss' if ssl_context else 'ws'}://{ip}:{port}")
+
+    async with websockets.serve(connection_handler, ip, port, ssl=ssl_context):
         await asyncio.Future()  # Run forever
 
 if __name__ == "__main__":

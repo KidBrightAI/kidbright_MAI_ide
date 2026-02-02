@@ -53,7 +53,8 @@ export class WebSocketShellHandler {
 
       this.socket.onerror = error => {
         console.error("WebSocket Shell error:", error)
-        toast.error("Shell connection failed")
+        // toast.error("Shell connection failed") // Suppress generic toast, show dialog instead
+        this.boardStore.showSecureConnectDialog = true
         this.connected = false
         this.boardStore.connected = false // Sync with store
         this.cleanup()

@@ -1,5 +1,5 @@
-pythonGenerator.forBlock['print'] = function (block, generator) {
-  var value_value = generator.valueToCode(block, 'VALUE', Order.ORDER_ATOMIC)
+Blockly.Python['print'] = function (block) {
+  var value_value = Blockly.Python.valueToCode(block, 'VALUE', Blockly.Python.ORDER_ATOMIC)
   
   return `print(${value_value})\n`
 }

@@ -232,7 +232,12 @@ console.log(currentBoard)
 let defaultBlocks = import.meta.glob('@/blocks/*.js', { eager: true, as: 'raw' })
 for (const path in defaultBlocks) {
   let blockText = defaultBlocks[path]
-  eval(blockText, python)
+  const defaultBlocksFunc = new Function('python', 'pythonGenerator', 'Blockly', 'Order', blockText)
+  try {
+    defaultBlocksFunc(python, pythonGenerator, Blockly, python) // python serves as Order
+  } catch (e) {
+    console.error(`Error loading default block ${path}:`, e)
+  }
 }
 
 //---------init board ----------//

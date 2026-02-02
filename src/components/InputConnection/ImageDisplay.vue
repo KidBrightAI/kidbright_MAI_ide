@@ -3,7 +3,7 @@
     v-if="props.id != undefined"
     ref="img"
     crossorigin="anonymous"
-    :style="{ maxHeight: props.height, width: '100%', objectFit: 'fill' }"
+    :style="{ maxHeight: props.height, width: '100%', objectFit: 'contain' }"
     class="img-fluid"
     :src="`${datasetStore.baseURL}/${props.id}.${datasetStore.getExt(props.id)}`"
   >

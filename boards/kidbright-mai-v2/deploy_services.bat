@@ -78,10 +78,32 @@ if %errorlevel% neq 0 (
     goto :error_end
 )
 
+)
+
+)
+
+REM --- Step 2.8: Generate SSL Certificates LOCALLY and Upload ---
+echo [2.8/3] Generating SSL Certificates locally...
+if not exist "cert.pem" (
+    echo Generating new self-signed certs...
+    openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 365 -nodes -subj "//CN=10.150.36.1"
+) else (
+    echo Certs already exist locally.
+)
+
+echo Uploading certs to board...
+sshpass -p "%BOARD_PASS%" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "cert.pem" %BOARD_USER%@%BOARD_IP%:/root/cert.pem
+sshpass -p "%BOARD_PASS%" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "key.pem" %BOARD_USER%@%BOARD_IP%:/root/key.pem
+
+if %errorlevel% neq 0 (
+    echo.
+    echo [WARNING] Failed to upload SSL certs. WSS might not work.
+)
+
 REM --- Step 3: Execute startup script ---
 echo [3/3] executing enable_startup.sh...
 REM Use dos2unix to safely convert line endings
-sshpass -p "%BOARD_PASS%" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null %BOARD_USER%@%BOARD_IP% "dos2unix %REMOTE_STARTUP_SCRIPT% && chmod +x %REMOTE_STARTUP_SCRIPT% && %REMOTE_STARTUP_SCRIPT%"
+sshpass -p "%BOARD_PASS%" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null %BOARD_USER%@%BOARD_IP% "chmod +x %REMOTE_STARTUP_SCRIPT% && %REMOTE_STARTUP_SCRIPT%"
 
 if %errorlevel% neq 0 (
     echo.

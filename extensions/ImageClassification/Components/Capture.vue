@@ -8,10 +8,12 @@
         <Pane size="80">
           <div class="d-flex flex-column h-100">
             <div class="d-flex flex-fill aling-center justify-center view-panel">
-              <ImageDisplay
-                v-if="current.length"
-                :id="current.slice(-1).pop()"
-              />
+                <ImageDisplay
+                  v-if="current.length"
+                  :id="current.slice(-1).pop()"
+                  height="100%"
+                  style="max-height: 100%; max-width: 100%; object-fit: contain;"
+                />
               <p
                 v-if="!current.length"
                 class="d-flex align-center justify-center text-white"
@@ -159,8 +161,8 @@ $primary-color: #007e4e;
   background-color: #333;
   position: relative;
   img {
-    min-width: 50%;
-    min-height: 50%;
+    max-width: 100%;
+    max-height: 100%;
     object-fit: contain;
   }
   .view-img-desc {

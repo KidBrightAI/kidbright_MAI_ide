@@ -19,11 +19,13 @@ echo '    echo "Starting ws_shell (5050)..."' >> $INIT_SCRIPT
 echo '    /usr/bin/python3 -u /root/ws_shell.py > /root/ws_shell.log 2>&1 &' >> $INIT_SCRIPT
 echo '    sleep 5' >> $INIT_SCRIPT
 echo '    echo "Starting maix_stream (8000)..."' >> $INIT_SCRIPT
+# Revert to python (symlink) as manual test used it successfully
 echo '    /usr/bin/python -u /root/maix_stream.py > /root/maix_stream.log 2>&1 &' >> $INIT_SCRIPT
 echo '    ;;' >> $INIT_SCRIPT
 echo '  stop)' >> $INIT_SCRIPT
 echo '    killall python3 2>/dev/null' >> $INIT_SCRIPT
 echo '    killall python 2>/dev/null' >> $INIT_SCRIPT
+echo '    killall maixvision 2>/dev/null' >> $INIT_SCRIPT
 echo '    ;;' >> $INIT_SCRIPT
 echo '  restart|reload)' >> $INIT_SCRIPT
 echo '    "$0" stop' >> $INIT_SCRIPT

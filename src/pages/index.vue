@@ -38,6 +38,7 @@ import OpeningProjectDialog from "@/components/dialog/OpeningProjectDialog.vue"
 import NewModelDialog from "@/components/dialog/NewModelDialog.vue"
 import fileExplorerDialog from "@/components/dialog/FileExplorerDialog.vue"
 import SelectBoardDialog from "@/components/dialog/SelectBoardDialog.vue"
+import SecureConnectDialog from "@/components/dialog/SecureConnectDialog.vue"
 
 //------- Assets --------//
 import RobotPoker from "@/assets/images/png/Mask_Group_12.png"
@@ -575,6 +576,7 @@ watch(selectedMenu, val => {
     v-model="dialogs.selectBoard"
     @board-selected="onBoardSelected"
   />
+  <SecureConnectDialog />
 </template>
 
 <route lang="yaml">
