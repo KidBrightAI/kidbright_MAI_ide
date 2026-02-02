@@ -1,5 +1,6 @@
 import { toast } from "vue3-toastify"
 import { useBoardStore } from "@/store/board"
+import { useWorkspaceStore } from "@/store/workspace"
 
 
 export class WebSocketShellHandler {
@@ -97,6 +98,12 @@ export class WebSocketShellHandler {
 
     try {
       // 1. Prepare file
+      const workspaceStore = useWorkspaceStore()
+      const currentBoard = workspaceStore.currentBoard
+      if (currentBoard?.codeTemplate) {
+        code = currentBoard.codeTemplate.replace("##{main}##", code)
+      }
+      
       const filename = "/root/main.py" // or whatever default
       // Encode to base64
       // Use a browser-compatible way
@@ -110,6 +117,7 @@ export class WebSocketShellHandler {
 
       // 2. Send upload command
       console.log("Sending upload command via shell sidechannel...")
+      console.log('final code: ', code)
       this.socket.send(`__SYSTEM__:${payload}`)
 
       // Wait a bit or wait for ACK? 
