@@ -1,5 +1,5 @@
 <script setup>
-import { useServerStore } from '@/store/server';
+import { useServerStore } from '@/store/server'
 import { Line } from 'vue-chartjs'
 import {
   Chart as ChartJS,
@@ -9,9 +9,27 @@ import {
   LineElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
 } from 'chart.js'
-import { onMounted } from 'vue';
+import { onMounted } from 'vue'
+
+const props = defineProps({
+  title : {
+    type: String,
+    required: false,
+    default: 'Data',
+  },
+  chartOptions: {
+    type: Object,
+    required: true,
+  },
+  chartData : {
+    type: Array,
+    default: () => {
+      return []
+    },
+  },
+})
 
 ChartJS.register(
   CategoryScale,
@@ -20,28 +38,11 @@ ChartJS.register(
   LineElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
 )
 
-const serverStore = useServerStore();
+const serverStore = useServerStore()
 
-const props = defineProps({
-  title : {
-    type: String,
-    required: false,
-    default: 'Data'
-  },
-  chartOptions: {
-    type: Object,
-    required: true
-  },
-  chartData : {
-    type: Array,
-    default: () => {
-      return []
-    }
-  }
-});
 const colors = [
   "#00ff00",
   "#0000ff",
@@ -51,44 +52,49 @@ const colors = [
   "#ef00b3",
   "#7200d7",
   "#1800b3",
-  "#00a5ff"
-];
+  "#00a5ff",
+]
 
-const chartRef = ref(null);
+const chartRef = ref(null)
 
 const chartStyle = ref({
   width: '100%',
   height: '100%',
-  position: 'relative'
-});
+  position: 'relative',
+})
 const chartOptions = {
   responsive: true,
   maintainAspectRatio: false,
   layout: {
-      padding: {
-          bottom: 42
-      }
-  }
-};
+    padding: {
+      bottom: 42,
+    },
+  },
+}
 onMounted(() => {
   //console.log('chartRef', chartRef.value);
 })
 const data = computed(() => {
   return {
-    labels: serverStore.matric.map((m) => m.epoch),
+    labels: serverStore.matric.map(m => m.epoch),
     datasets: [ 
       {
         label: 'Accuracy | mAP',
         backgroundColor: 'rgba(255, 99, 132, 0.2)',
         borderColor: 'rgba(255, 99, 132, 1)',
         borderWidth: 1,
-        data: serverStore.matric.map((m) => m.matric.val_acc)
-      }
-    ]
+        data: serverStore.matric.map(m => m.matric.val_acc),
+      },
+    ],
   }
-});
-
+})
 </script>
+
 <template>
-  <Line ref="chartRef" :style="chartStyle" :chartData="data" :chartOptions="chartOptions" /> 
+  <Line
+    ref="chartRef"
+    :style="chartStyle"
+    :chart-data="data"
+    :chart-options="chartOptions"
+  /> 
 </template>

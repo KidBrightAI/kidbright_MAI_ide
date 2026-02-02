@@ -1,21 +1,35 @@
 <template>
   <div class="hint">
     <div class="main-hint txt">
-      <p class="p-color font-weight-bold">ขั้นตอนที่ 2 Annotate</p>
+      <p class="p-color font-weight-bold">
+        ขั้นตอนที่ 2 Annotate
+      </p>
       <p>ขั้นตอนนี้ใช้สำหรับติดป้ายกำกับให้กับรูปภาพ</p>
       <p>
-        <br />1. กดปุ่ม
-        <img src="@/assets/images/png/Group_97.png" alt="" srcset="" />
+        <br>1. กดปุ่ม
+        <img
+          src="@/assets/images/png/Group_97.png"
+          alt=""
+          srcset=""
+        >
         เพื่อตั้งชื่อป้ายกำกับให้กับรูปแต่ละประเภท
       </p>
       <p>
-        <br />2. กดปุ่ม
-        <img src="@/assets/images/png/interface-box.png" alt="" srcset="" />
+        <br>2. กดปุ่ม
+        <img
+          src="@/assets/images/png/interface-box.png"
+          alt=""
+          srcset=""
+        >
         หลังชื่อป้ายกำกับ เมื่อต้องการใช้ชื่อที่ตั้งไว้เเล้ว จะปรากฏป้ายกำกับบริเวณขวามือ
       </p>
     </div>
     <div class="mascot">
-      <img src="@/assets/images/png/Mask_Group_11.png" alt="" srcset="" />
+      <img
+        src="@/assets/images/png/Mask_Group_11.png"
+        alt=""
+        srcset=""
+      >
     </div>
   </div>
 </template>

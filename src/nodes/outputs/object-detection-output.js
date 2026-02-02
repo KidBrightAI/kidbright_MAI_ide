@@ -1,15 +1,15 @@
 import { 
-    defineNode, 
-    NodeInterface,
-    IntegerInterface, 
-    NumberInterface,
-    SelectInterface,
-    CheckboxInterface,
-    TextInterface 
-} from "baklavajs";
+  defineNode, 
+  NodeInterface,
+  IntegerInterface, 
+  NumberInterface,
+  SelectInterface,
+  CheckboxInterface,
+  TextInterface, 
+} from "baklavajs"
 
-import { setType } from "@baklavajs/interface-types";
-import { modelOutput } from "../interfaces/interface-types";
+import { setType } from "@baklavajs/interface-types"
+import { modelOutput } from "../interfaces/interface-types"
 
 export const ObjectDetectionOutputNode = defineNode({
   type: "ObjectDetectionOutputNode",
@@ -17,7 +17,7 @@ export const ObjectDetectionOutputNode = defineNode({
   inputs: {
     modelOutput: () => new NodeInterface("Model Output", "").use(setType, modelOutput),
     validateMatrix : () => new SelectInterface("Validate Matrix", "mAP",[
-        {text: "Mean Average Precision", value : "mAP"},
+      {text: "Mean Average Precision", value : "mAP"},
     ]).setPort(false),    
     saveMethod : () => new SelectInterface("Save Method", "Best value", 
       [
@@ -33,7 +33,7 @@ export const ObjectDetectionOutputNode = defineNode({
         validateMatrix: validateMatrix,
         saveMethod: saveMethod,
         ...modelOutput,
-      }
-    };
-  }
-});
+      },
+    }
+  },
+})

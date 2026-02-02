@@ -22,11 +22,11 @@ import {
   NumberInterface,
   IntegerInterface,
   SelectInterface,
-  NodeInterface
-} from "baklavajs";
+  NodeInterface,
+} from "baklavajs"
 
-import { setType } from "@baklavajs/interface-types";
-import { modelInput, modelOutput, tensor } from "../interfaces/interface-types";
+import { setType } from "@baklavajs/interface-types"
+import { modelInput, modelOutput, tensor } from "../interfaces/interface-types"
 
 export const FlattenNode = defineNode({
   type: "Flatten",
@@ -35,18 +35,19 @@ export const FlattenNode = defineNode({
     modelInput : () => new NodeInterface("Model Input | Tensor").use(setType, [modelInput, tensor]),
   },
   outputs: {
-    result: () => new NodeInterface("Tensor").use(setType, tensor)
+    result: () => new NodeInterface("Tensor").use(setType, tensor),
   },
   calculate({ modelInput }) {
-    let flatten = "torch.nn.Flatten(start_dim=1)\n";
+    let flatten = "torch.nn.Flatten(start_dim=1)\n"
     if (modelInput && modelInput.code) {
-      flatten = modelInput.code + flatten;
+      flatten = modelInput.code + flatten
     }
+    
     return {
       result: {
         ... modelInput,
         code : flatten,
-      }    
+      },    
     }
-  }
-});
+  },
+})

@@ -1,11 +1,15 @@
 <template>
   <div class="left-panel d-flex flex-column">
-    <div class="l-title font-weight-bold">KidBright μAI</div>    
+    <div class="l-title font-weight-bold">
+      KidBright μAI
+    </div>    
     <div class="left-bottom-content d-flex flex-fill position-relative">
       <div class="header-left-bar">
-        <!-- <div class="proj-name">
+        <!--
+          <div class="proj-name">
           {{ workspaceStore.name || 'สร้างหรือเลือกโปรเจคใหม่' }}
-        </div> -->
+          </div> 
+        -->
         <div class="text-h6 text-yellow font-weight-bold">
           {{ workspaceStore.projectTypeTitle || 'คุณยังไม่ได้เลือกประเภทโปรเจค' }}
         </div>
@@ -16,7 +20,9 @@
             color="teal-darken-4"
             @click="$emit('backToCoding')"
           >
-            <v-icon class="me-1">mdi-chevron-left</v-icon>
+            <VIcon class="me-1">
+              mdi-chevron-left
+            </VIcon>
             Back to Coding
           </VBtn>
           <VBtn 
@@ -25,7 +31,9 @@
             color="teal-darken-4"
             @click="$emit('resetModel')"
           >
-            <VIcon class="me-1">mdi-delete</VIcon>
+            <VIcon class="me-1">
+              mdi-delete
+            </VIcon>
             Reset
           </VBtn>
         </div>
@@ -43,9 +51,16 @@
             :disabled="workspaceStore.id == null || workspaceStore.projectType == null"
             @click="handleTabChange(1)"
           >
-            <VIcon class="me-2">mdi-camera</VIcon>
+            <VIcon class="me-2">
+              mdi-camera
+            </VIcon>
             Capture
-            <div class="step-text" :style="{ backgroundColor: selectedMenu === 1 ? '#007e4e' : '#5c5433' }">1</div>
+            <div
+              class="step-text"
+              :style="{ backgroundColor: selectedMenu === 1 ? '#007e4e' : '#5c5433' }"
+            >
+              1
+            </div>
           </VBtn>
 
           <VBtn
@@ -59,9 +74,16 @@
             :disabled="datasetStore.data.length === 0 || workspaceStore.id == null || workspaceStore.projectType == null"
             @click="handleTabChange(2)"
           >
-            <VIcon class="me-2">mdi-tag</VIcon>
+            <VIcon class="me-2">
+              mdi-tag
+            </VIcon>
             Annotate
-            <div class="step-text" :style="{ backgroundColor: selectedMenu === 2 ? '#007e4e' : '#5c5433' }">2</div>
+            <div
+              class="step-text"
+              :style="{ backgroundColor: selectedMenu === 2 ? '#007e4e' : '#5c5433' }"
+            >
+              2
+            </div>
           </VBtn>
       
           <VBtn
@@ -75,9 +97,16 @@
             :disabled="datasetStore.getLabeledLength === 0 || workspaceStore.id == null || workspaceStore.projectType == null"
             @click="handleTabChange(3)"
           >
-            <VIcon class="me-2">mdi-robot</VIcon>
+            <VIcon class="me-2">
+              mdi-robot
+            </VIcon>
             Train
-            <div class="step-text" :style="{ backgroundColor: selectedMenu === 3 ? '#007e4e' : '#5c5433' }">3</div>
+            <div
+              class="step-text"
+              :style="{ backgroundColor: selectedMenu === 3 ? '#007e4e' : '#5c5433' }"
+            >
+              3
+            </div>
           </VBtn>
 
           <VBtn
@@ -91,98 +120,111 @@
             style="border-color: #007e4e !important;"
             @click="$emit('backToCoding')"
           >
-            <img :src="KBRobot" width="42" height="42">
+            <img
+              :src="KBRobot"
+              width="42"
+              height="42"
+            >
             Model is Ready!
-            <div class="step-text" style="background-color: #007e4e;"><v-icon size="25" color="yellow-lighten-2">mdi-star</v-icon></div>
+            <div
+              class="step-text"
+              style="background-color: #007e4e;"
+            >
+              <VIcon
+                size="25"
+                color="yellow-lighten-2"
+              >
+                mdi-star
+              </VIcon>
+            </div>
           </VBtn>
-
         </div>
-        <v-spacer></v-spacer>
+        <VSpacer />
         <div class="mt-4">
           <div v-if="selectedMenu === 1">
             <InstructionAsyncComponent
               v-if="!workspaceStore?.extension?.instructions?.capture"
               target="CaptureInstruction.vue"
-            ></InstructionAsyncComponent>
-            <extension-async-component
+            />
+            <ExtensionAsyncComponent
               v-else
               :target="workspaceStore?.extension?.instructions?.capture"
-            ></extension-async-component>
+            />
           </div>
           <div v-if="selectedMenu === 2">
             <InstructionAsyncComponent
               v-if="!workspaceStore?.extension?.instructions?.annotate"
               target="AnnatateInstruction.vue"
-            ></InstructionAsyncComponent>
-            <extension-async-component
+            />
+            <ExtensionAsyncComponent
               v-else
               :target="workspaceStore?.extension?.instructions?.annotate"
-            ></extension-async-component>
+            />
           </div>
           <div v-if="selectedMenu === 3">
             <InstructionAsyncComponent
               v-if="!workspaceStore?.extension?.instructions?.train"
               target="TrainInstruction.vue"
-            ></InstructionAsyncComponent>
-            <extension-async-component
+            />
+            <ExtensionAsyncComponent
               v-else
               :target="workspaceStore?.extension?.instructions?.train"
-            ></extension-async-component>
+            />
           </div>
           <div v-if="selectedMenu === 4">
             <InstructionAsyncComponent
               v-if="!workspaceStore?.extension?.instructions?.coding"
               target="CodingInstruction.vue"
-            ></InstructionAsyncComponent>
-            <extension-async-component
+            />
+            <ExtensionAsyncComponent
               v-else
               :target="workspaceStore?.extension?.instructions?.coding"
-            ></extension-async-component>
+            />
           </div>
         </div>
       </div>
     </div>
   </div>
 </template>
+
 <script setup>
-import MainMenu from "@/components/MainPanel/MainMenu.vue";
-import { computed } from "vue";
-import InstructionAsyncComponent from "@/components/InstructionAsyncComponent.vue";
-import ExtensionAsyncComponent from "@/components/ExtensionAsyncComponent.vue";
-import { useWorkspaceStore } from "@/store/workspace";
-import { useBoardStore } from "@/store/board";
-import { useDatasetStore } from "@/store/dataset";
+import MainMenu from "@/components/MainPanel/MainMenu.vue"
+import { computed } from "vue"
+import InstructionAsyncComponent from "@/components/InstructionAsyncComponent.vue"
+import ExtensionAsyncComponent from "@/components/ExtensionAsyncComponent.vue"
+import { useWorkspaceStore } from "@/store/workspace"
+import { useBoardStore } from "@/store/board"
+import { useDatasetStore } from "@/store/dataset"
 
-import KBRobot from "@/assets/images/icons/robot.png";
-
-const workspaceStore = useWorkspaceStore();
-const datasetStore = useDatasetStore();
-const boardStore = useBoardStore();
+import KBRobot from "@/assets/images/icons/robot.png"
 
 const props = defineProps({
   selectedMenu : {
     type: Number,
     default: 1,
   },
-});
-
-
+})
 const emit = defineEmits([
   "update:selectedMenu", 
   "backToCoding",
-  "resetModel"
-  ]);
-//const exts = this.$extensions;
-const isOnline = computed(() => window.navigator.onLine);
+  "resetModel",
+])
+const workspaceStore = useWorkspaceStore()
+const datasetStore = useDatasetStore()
+const boardStore = useBoardStore()
 
-const handleTabChange = (tabIndex) => {
-  emit("update:selectedMenu", tabIndex);
-};
+//const exts = this.$extensions;
+const isOnline = computed(() => window.navigator.onLine)
+
+const handleTabChange = tabIndex => {
+  emit("update:selectedMenu", tabIndex)
+}
 
 const isConnected = computed(() => {
-  return boardStore.isConnected();
-});
+  return boardStore.isConnected()
+})
 </script>
+
 <style scoped>
 .step-text{
   position: absolute;

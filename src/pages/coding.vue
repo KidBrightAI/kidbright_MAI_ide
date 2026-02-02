@@ -1,331 +1,344 @@
 <script setup>
-import Header from '@/components/Header.vue';
-import BlocklyComponent from "@/components/Blockly.vue";
-import Blockly from "blockly";
-import { pythonGenerator } from "blockly/python";
-import Footer from "@/components/Footer.vue";
-import { useWorkspaceStore } from "@/store/workspace";
-import { useBoardStore } from "@/store/board";
-import { usePluginStore } from "@/store/plugin";
-import { useConfirm } from "@/components/comfirm-dialog";
-import { toast } from "vue3-toastify";
-import { onMounted, ref, shallowRef, nextTick } from "vue";
+import Header from '@/components/Header.vue'
+import BlocklyComponent from "@/components/Blockly.vue"
+import Blockly from "blockly"
+import { pythonGenerator } from "blockly/python"
+import Footer from "@/components/Footer.vue"
+import { useWorkspaceStore } from "@/store/workspace"
+import { useBoardStore } from "@/store/board"
+import { usePluginStore } from "@/store/plugin"
+import { useConfirm } from "@/components/comfirm-dialog"
+import { toast } from "vue3-toastify"
+import { onMounted, ref, shallowRef, nextTick , getCurrentInstance } from "vue"
 
 import { Splitpanes, Pane } from 'splitpanes'
 import 'splitpanes/dist/splitpanes.css'
-import { Terminal } from 'xterm';
-import 'xterm/css/xterm.css';
-import { FitAddon } from 'xterm-addon-fit';
-import { CanvasAddon } from 'xterm-addon-canvas';
+import { Terminal } from 'xterm'
+import 'xterm/css/xterm.css'
+import { FitAddon } from 'xterm-addon-fit'
+import { CanvasAddon } from 'xterm-addon-canvas'
 
-import MainPanel from "@/components/MainPanel/MainPanel.vue";
+import MainPanel from "@/components/MainPanel/MainPanel.vue"
 
 
-import { getCurrentInstance } from 'vue'
-import SingletonShell from "@/engine/SingletonShell";
 
-import NewProjectDialog from "@/components/dialog/NewProjectDialog.vue";
-import ExampleDialog from "@/components/dialog/ExampleDialog.vue";
-import PluginDialog from "@/components/dialog/PluginDialog.vue";
-import ConnectWifiDialog from "@/components/dialog/ConnectWifiDialog.vue";
-import SavingProjectDialog from "@/components/dialog/SavingProjectDialog.vue";
-import UploadProjectDialog from "@/components/dialog/UploadProjectDialog.vue";
-import OpeningProjectDialog from "@/components/dialog/OpeningProjectDialog.vue";
-import NewModelDialog from "@/components/dialog/NewModelDialog.vue";
-import fileExplorerDialog from "@/components/dialog/FileExplorerDialog.vue";
+import SingletonShell from "@/engine/SingletonShell"
 
-import {sleep } from "@/engine/helper";
+import NewProjectDialog from "@/components/dialog/NewProjectDialog.vue"
+import ExampleDialog from "@/components/dialog/ExampleDialog.vue"
+import PluginDialog from "@/components/dialog/PluginDialog.vue"
+import ConnectWifiDialog from "@/components/dialog/ConnectWifiDialog.vue"
+import SavingProjectDialog from "@/components/dialog/SavingProjectDialog.vue"
+import UploadProjectDialog from "@/components/dialog/UploadProjectDialog.vue"
+import OpeningProjectDialog from "@/components/dialog/OpeningProjectDialog.vue"
+import NewModelDialog from "@/components/dialog/NewModelDialog.vue"
+import fileExplorerDialog from "@/components/dialog/FileExplorerDialog.vue"
+
+import {sleep } from "@/engine/helper"
 import { loadPlugin } from "@/engine/board"
+
 //-------import image --------//
-import RobotPoker from "@/assets/images/png/Mask_Group_12.png";
+import RobotPoker from "@/assets/images/png/Mask_Group_12.png"
 
-import ExtensionAsyncComponent from "@/components/ExtensionAsyncComponent.vue";
+import ExtensionAsyncComponent from "@/components/ExtensionAsyncComponent.vue"
 
 
-const confirm = useConfirm();
-const workspaceStore = useWorkspaceStore();
-const boardStore = useBoardStore();
-const pluginStore = usePluginStore();
+const confirm = useConfirm()
+const workspaceStore = useWorkspaceStore()
+const boardStore = useBoardStore()
+const pluginStore = usePluginStore()
 
-const blocklyComp = ref();
+const blocklyComp = ref()
+
 //dialog state
-const newProjectDialogOpen = ref(false);
-const exampleDialogOpen = ref(false);
-const pluginDialogOpen = ref(false);
-const connectWifiDialogOpen = ref(false);
-const newModelDialogOpen = ref(false);
-const fileExplorerDialogOpen = ref(false);
+const newProjectDialogOpen = ref(false)
+const exampleDialogOpen = ref(false)
+const pluginDialogOpen = ref(false)
+const connectWifiDialogOpen = ref(false)
+const newModelDialogOpen = ref(false)
+const fileExplorerDialogOpen = ref(false)
 
-const footer = shallowRef();
-const isSerialPanelOpen = ref(false);
-const splitpanesRef = ref();
-const DEFAULT_FOOTER_HEIGHT = 68;
-const bottomMinPaneSize = ref(5);
-const bottomMaxPaneSize = ref(80);
-const bottomPaneSize = ref(5);
-let terminal = null;
-let fitAddon = null;
-let writer = null;
+const footer = shallowRef()
+const isSerialPanelOpen = ref(false)
+const splitpanesRef = ref()
+const DEFAULT_FOOTER_HEIGHT = 68
+const bottomMinPaneSize = ref(5)
+const bottomMaxPaneSize = ref(80)
+const bottomPaneSize = ref(5)
+let terminal = null
+let fitAddon = null
+let writer = null
+
 // terminal read write stream
-const vm = getCurrentInstance();
+const vm = getCurrentInstance()
 
 const calculateMinBottomPlaneSize = () => {
-  const minBottomPaneSize = DEFAULT_FOOTER_HEIGHT / (splitpanesRef.value.$el.clientHeight / 100);
-  bottomMinPaneSize.value = minBottomPaneSize;
+  const minBottomPaneSize = DEFAULT_FOOTER_HEIGHT / (splitpanesRef.value.$el.clientHeight / 100)
+  bottomMinPaneSize.value = minBottomPaneSize
   if(bottomPaneSize.value < minBottomPaneSize) {
-    bottomPaneSize.value = minBottomPaneSize;
+    bottomPaneSize.value = minBottomPaneSize
   }
   if(selectedMenu.value == 4){
     //lock bottom pane size if serial panel is closed
     if(!isSerialPanelOpen.value){
-      bottomPaneSize.value = bottomMinPaneSize.value;
-      bottomMaxPaneSize.value = bottomMinPaneSize.value;
+      bottomPaneSize.value = bottomMinPaneSize.value
+      bottomMaxPaneSize.value = bottomMinPaneSize.value
     }else{
-      bottomMaxPaneSize.value = 80;
+      bottomMaxPaneSize.value = 80
     }
   }else{
-    bottomMaxPaneSize.value = 0;
-    bottomPaneSize.value = 0;
+    bottomMaxPaneSize.value = 0
+    bottomPaneSize.value = 0
   }
-};
+}
 
-const serialMonitorCallback = (chank) => {  
-  let readableText = new TextDecoder().decode(chank);
+const serialMonitorCallback = chank => {  
+  let readableText = new TextDecoder().decode(chank)
   if(terminal){
-    terminal.write(readableText);
+    terminal.write(readableText)
   }  
 }
-const serialMonitorWrite = async (data) => {
- SingletonShell.write(data);
+const serialMonitorWrite = async data => {
+  SingletonShell.write(data)
 }
 const serialMonitorBridge = async () =>{
-  console.log("serial monitor bridge");
-  let res = await boardStore.deviceConnect();
+  console.log("serial monitor bridge")
+  let res = await boardStore.deviceConnect()
   if(res){
     try{
-      const adb = vm.appContext.config.globalProperties.$adb.adb;      
-      const shell = SingletonShell.getInstance(adb);
-      shell.setCallback(serialMonitorCallback);
-      await SingletonShell.waitWriter();
-      writer = shell.getWriter();
+      const adb = vm.appContext.config.globalProperties.$adb.adb      
+      const shell = SingletonShell.getInstance(adb)
+      shell.setCallback(serialMonitorCallback)
+      await SingletonShell.waitWriter()
+      writer = shell.getWriter()
     }catch(err){
-      console.log(err);
+      console.log(err)
     }
   }
 }
 
 const undo = () => {
-  blocklyComp.value.undo();
-};
+  blocklyComp.value.undo()
+}
 
 const redo = () => {
-  blocklyComp.value.redo();
-};
+  blocklyComp.value.redo()
+}
 
 const download = async () => {
-  console.log("download");
+  console.log("download")
   
   // check is serial monitor open, if not open it
   if(!isSerialPanelOpen.value){
-    await onSerial();
+    await onSerial()
   }
-  await sleep(1000);
+  await sleep(1000)
+
   //clear terminal screen
-  terminal.reset();
+  terminal.reset()
   
   //check mode
-  let res = null;
+  let res = null
+
   //blockly generate python code
-  let code = pythonGenerator.workspaceToCode(blocklyComp.value.workspace);
-  //console.log(code);
-  res = await boardStore.upload(code);
+  let code = pythonGenerator.workspaceToCode(blocklyComp.value.workspace)
+  console.log("code")
+  console.log(code)
+
+  res = await boardStore.upload(code)
   
-  if (res === true) {
-    toast.success("Upload success");
-  } else {
-    toast.error("Upload failed");
-  }
-};
+  // if (res === true) {
+  //   toast.success("Upload success")
+  // } else {
+  //   toast.error("Upload failed")
+  // }
+}
 
 //=====================================================================//
 //=========================== event project ===========================//
 //=====================================================================//
 
-const createdProject = async (projectInfo) => {
+const createdProject = async projectInfo => {
   try{
-    let res = await workspaceStore.createNewProject(projectInfo);
+    let res = await workspaceStore.createNewProject(projectInfo)
     if(selectedMenu.value == 4){
-      console.log("reload workspace");
-      blocklyComp.value.reload();
-      mountSerial();
+      console.log("reload workspace")
+      blocklyComp.value.reload()
+      mountSerial()
     }
     if (res) {
-      toast.success("สร้างโปรเจคเสร็จเรียบร้อย");
-      selectedMenu.value = 4;
+      toast.success("สร้างโปรเจคเสร็จเรียบร้อย")
+      selectedMenu.value = 4
       setTimeout(() => {
-        location.reload();
-      }, 1000);
+        location.reload()
+      }, 1000)
     } else {
-      toast.error("สร้างโปรเจคไม่สำเร็จ");
+      toast.error("สร้างโปรเจคไม่สำเร็จ")
     }  
   }catch(err){
-    toast.error("มีอย่างไม่ถูกต้อง : " + err.message);
+    toast.error("มีอย่างไม่ถูกต้อง : " + err.message)
   } finally {
-    newProjectDialogOpen.value = false;
+    newProjectDialogOpen.value = false
   }
-};
+}
 
 const openProject = async () => {
   try {
-    let message = "ข้อมูลโปรเจคปัจจุบันจะถูกลบทั้งหมด คุณต้องการเปิดโปรเจคใหม่หรือไม่";
-    await confirm({ title: "ยืนยันการเปิดโปรเจค" , content: message , dialogProps: { width: 'auto' } });
-    let res = await workspaceStore.openProjectFromZip();
+    let message = "ข้อมูลโปรเจคปัจจุบันจะถูกลบทั้งหมด คุณต้องการเปิดโปรเจคใหม่หรือไม่"
+    await confirm({ title: "ยืนยันการเปิดโปรเจค" , content: message , dialogProps: { width: 'auto' } })
+    let res = await workspaceStore.openProjectFromZip()
     if(res){
-      selectedMenu.value = 4;
-      blocklyComp.value.reload();
-      onResized();
+      selectedMenu.value = 4
+      blocklyComp.value.reload()
+      onResized()
 
     }
   } catch (err) {
-    console.log(err);
+    console.log(err)
   }
-};
+}
 
-const saveProject = async ($event) => {
+const saveProject = async $event => {
   try {    
-    await workspaceStore.saveProject();
+    await workspaceStore.saveProject()
   } catch (err) {
-    console.log(err);
+    console.log(err)
   }
-};
+}
 
 const deleteProject = async () => {
   try {
-    let message = "ข้อมูลโปรเจคปัจจุบันจะถูกลบทั้งหมด คุณต้องการลบโปรเจคหรือไม่";
-    await confirm({ title: "ยืนยันการลบโปรเจค", content: message , dialogProps: { width: 'auto' } });
-    selectedMenu.value = 0;
-    let res = await workspaceStore.deleteProject();
-    // blocklyComp.value.reload();
-    onResized();
-  } catch (err) {
-    console.log(err);
-  }
-};
+    let message = "ข้อมูลโปรเจคปัจจุบันจะถูกลบทั้งหมด คุณต้องการลบโปรเจคหรือไม่"
+    await confirm({ title: "ยืนยันการลบโปรเจค", content: message , dialogProps: { width: 'auto' } })
+    selectedMenu.value = 0
+    let res = await workspaceStore.deleteProject()
 
-const selectProjectType = async(selectedType) => {
-  newModelDialogOpen.value = false;
-  console.log("select project type");
-  console.log(selectedType);
-  let res = await workspaceStore.selectProjectType(selectedType);
-  if(res){
-    selectedMenu.value = 1;
-    blocklyComp.value.reload();
-    toast.success("เลือกประเภทโมเดลเสร็จเรียบร้อย");
-  }else{
-    toast.error("เลือกประเภทโมเดลไม่สำเร็จ");    
+    // blocklyComp.value.reload();
+    onResized()
+  } catch (err) {
+    console.log(err)
   }
-};
+}
+
+const selectProjectType = async selectedType => {
+  newModelDialogOpen.value = false
+  console.log("select project type")
+  console.log(selectedType)
+  let res = await workspaceStore.selectProjectType(selectedType)
+  if(res){
+    selectedMenu.value = 1
+    blocklyComp.value.reload()
+    toast.success("เลือกประเภทโมเดลเสร็จเรียบร้อย")
+  }else{
+    toast.error("เลือกประเภทโมเดลไม่สำเร็จ")    
+  }
+}
 
 //=====================================================================//
 //=========================== event boards ============================//
 //=====================================================================//
 
 const onSerial = async () => {
-  console.log(`======= ${ isSerialPanelOpen.value? 'Close':'Open' } serial console =========`);
+  console.log(`======= ${ isSerialPanelOpen.value? 'Close':'Open' } serial console =========`)
   if(isSerialPanelOpen.value){
     // close serial panel
-    isSerialPanelOpen.value = false;
-    bottomPaneSize.value = bottomMinPaneSize.value;    
+    isSerialPanelOpen.value = false
+    bottomPaneSize.value = bottomMinPaneSize.value    
   }else{
     // open serial panel
-    isSerialPanelOpen.value = true;
-    bottomPaneSize.value = 30;
-    await serialMonitorBridge();
+    isSerialPanelOpen.value = true
+    bottomPaneSize.value = 30
+    await serialMonitorBridge()
   }
-  onResized();
-};
+  onResized()
+}
 
 const onExampleOpen = async(mode, example) => {
   try{
-    await confirm({ title: "Confirm open example", content: "All code in this project will be delete, please save first!", dialogProps: { width: 'auto' } });
-    workspaceStore.switchMode(mode);
-    exampleDialogOpen.value = false;
+    await confirm({ title: "Confirm open example", content: "All code in this project will be delete, please save first!", dialogProps: { width: 'auto' } })
+    workspaceStore.switchMode(mode)
+    exampleDialogOpen.value = false
     if (mode == 'block') {
-      workspaceStore.block = example.block;
-      blocklyComp.value.reload();
+      workspaceStore.block = example.block
+      blocklyComp.value.reload()
     }else if(mode == 'code'){
-      workspaceStore.code = example.code;
+      workspaceStore.code = example.code
     }
-    onResized();
+    onResized()
   }catch(err){
-    console.log(err);
-    return;
+    console.log(err)
+    
+    return
   }
-};
+}
 
-const onInstallPlugin = async( plugin )=>{
-  console.log("====== install plugin ======");
+const onInstallPlugin = async plugin=>{
+  console.log("====== install plugin ======")
+
   // change status of plugin to installing
-  plugin.installing = true;  
+  plugin.installing = true  
   
   setTimeout(async() => {
     // install plugin    
-    pluginStore.installed.push(plugin);
-    // execute plugin blocks and generators
-    await loadPlugin(pluginStore.installed);
-    plugin.installing = false;        
-    toast.success("Install plugin success");
-    if(selectedMenu.value == 4){
-      console.log("reload workspace");
-      blocklyComp.value.reload();
-    }
-  }, 1000);
-};
+    pluginStore.installed.push(plugin)
 
-const onUninstallPlugin = async( plugin )=>{
-  console.log("====== uninstall plugin ======");
+    // execute plugin blocks and generators
+    await loadPlugin(pluginStore.installed)
+    plugin.installing = false        
+    toast.success("Install plugin success")
+    if(selectedMenu.value == 4){
+      console.log("reload workspace")
+      blocklyComp.value.reload()
+    }
+  }, 1000)
+}
+
+const onUninstallPlugin = async plugin=>{
+  console.log("====== uninstall plugin ======")
+
   // change status of plugin to uninstalling
-  plugin.installing = true;
+  plugin.installing = true
+
   // execute plugin block script
   setTimeout(() => {
     // uninstall plugin
-    let index = pluginStore.installed.findIndex((item) => item.name == plugin.name);
+    let index = pluginStore.installed.findIndex(item => item.name == plugin.name)
     if(index > -1){
-      pluginStore.installed.splice(index, 1);
+      pluginStore.installed.splice(index, 1)
     }
-    plugin.installing = false;            
-    toast.success("Uninstall plugin success");
+    plugin.installing = false            
+    toast.success("Uninstall plugin success")
     if(selectedMenu.value == 4){
-      console.log("reload workspace");
-      blocklyComp.value.reload();
+      console.log("reload workspace")
+      blocklyComp.value.reload()
     }
-  }, 1000);
-};
+  }, 1000)
+}
 
 const onHelp = () => {
-  console.log("onHelp");
-};
+  console.log("onHelp")
+}
 
 const onResized = () => {
-  calculateMinBottomPlaneSize();
+  calculateMinBottomPlaneSize()
   if(workspaceStore.currentBoard && selectedMenu.value == 4){
-    blocklyComp.value.resizeWorkspace();
+    blocklyComp.value.resizeWorkspace()
     nextTick(() => {
-        setTimeout(() => {
-          let footerHeight = footer.value.$el.clientHeight;
-          console.log(`footerHeight: ${footerHeight}`);
-          let serialMonitorHeight = footerHeight - 68
-          footer.value.$refs.terminalDiv.style.height = `${serialMonitorHeight}px`;
-          if(fitAddon){      
-            fitAddon.fit();
-          }
-        }, 500);      
-    });
+      setTimeout(() => {
+        let footerHeight = footer.value.$el.clientHeight
+        console.log(`footerHeight: ${footerHeight}`)
+        let serialMonitorHeight = footerHeight - 68
+        footer.value.$refs.terminalDiv.style.height = `${serialMonitorHeight}px`
+        if(fitAddon){      
+          fitAddon.fit()
+        }
+      }, 500)      
+    })
   }
-};
+}
 
 const mountSerial = () => {
-  console.log("mount serial monitor");
+  console.log("mount serial monitor")
   terminal = new Terminal(
     {
       cursorBlink: true,
@@ -341,44 +354,47 @@ const mountSerial = () => {
       fontWeightBold: 'bold',
       lineHeight: 1,
       scrollOnWrite: true,
-    }
-  );
+    },
+  )
 
-  fitAddon = new FitAddon();
-  terminal.loadAddon(fitAddon);
-  terminal.open(footer.value.$refs.terminalDiv);  
-  fitAddon.fit();
-  terminal.loadAddon(new CanvasAddon());    
+  fitAddon = new FitAddon()
+  terminal.loadAddon(fitAddon)
+  terminal.open(footer.value.$refs.terminalDiv)  
+  fitAddon.fit()
+  terminal.loadAddon(new CanvasAddon())    
   terminal.write('\r\n')
+
   //termimal listen typing
-  terminal.onData(serialMonitorWrite);
-};
+  terminal.onData(serialMonitorWrite)
+}
 
 const addChangeListener = () => {    
   blocklyComp.value.workspace.addChangeListener(() => {    
-    workspaceStore.block = blocklyComp.value.getSerializedWorkspace();
-  });
-};
+    workspaceStore.block = blocklyComp.value.getSerializedWorkspace()
+  })
+}
 
 onMounted(() => {
   if(workspaceStore.currentBoard){
     setTimeout(() => {
-      console.log("mount serial monitor when have board");
-      mountSerial();
-    }, 1000);
+      console.log("mount serial monitor when have board")
+      mountSerial()
+    }, 1000)
   }
   if(selectedMenu.value == 4){
-    console.log("add change listener");
-    addChangeListener();
+    console.log("add change listener")
+    addChangeListener()
   }
-});
+})
+
 //--------- menu ----------//
-const selectedMenu = ref(workspaceStore.currentBoard ? 4 : 0);
+const selectedMenu = ref(workspaceStore.currentBoard ? 4 : 0)
+
 //============= event from board ==============//
 
-watch(selectedMenu, (val) => {
-  console.log("selectedMenu: " + val);
-  calculateMinBottomPlaneSize();
+watch(selectedMenu, val => {
+  console.log("selectedMenu: " + val)
+  calculateMinBottomPlaneSize()
   if(val == 4){
     
     //mount serial monitor
@@ -386,19 +402,24 @@ watch(selectedMenu, (val) => {
     //listen block change and save to store
 
     nextTick(()=>{
-      onResized();
-      console.log("add change listener from watcher");
-      addChangeListener();
-    });    
+      onResized()
+      console.log("add change listener from watcher")
+      addChangeListener()
+    })    
 
   }
-});
+})
 </script>
 
 <template>
-  <v-layout class="rounded rounded-md main-bg">
-    <v-navigation-drawer permanent width="320" class="main-bg">
-      <MainPanel v-model:selectedMenu="selectedMenu" 
+  <VLayout class="rounded rounded-md main-bg">
+    <VNavigationDrawer
+      permanent
+      width="320"
+      class="main-bg"
+    >
+      <MainPanel
+        v-model:selectedMenu="selectedMenu" 
         @newProject="newProjectDialogOpen = true" 
         @openProject="openProject"
         @saveProject="saveProject"
@@ -409,53 +430,109 @@ watch(selectedMenu, (val) => {
         @terminal="onSerial"
         @restartBoard="boardStore.rebootBoard"
         @newModel="newModelDialogOpen = true"
+      />
+    </VNavigationDrawer>
+    <VMain
+      class="d-flex align-center justify-center"
+      style="min-height: 310px; height: calc(100vh);"
+    >
+      <Splitpanes
+        ref="splitpanesRef"
+        class="default-theme"
+        horizontal
+        :style="{ height: selectedMenu==4 ? 'calc(100vh - 64px)' : 'calc(100vh)'}"
+        @resized="onResized"
+        @ready="onResized"
       >
-      </MainPanel>
-    </v-navigation-drawer>
-    <v-main class="d-flex align-center justify-center" style="min-height: 310px; height: calc(100vh);">
-      <splitpanes ref="splitpanesRef" class="default-theme" horizontal :style="{ height: selectedMenu==4 ? 'calc(100vh - 64px)' : 'calc(100vh)'}" @resized="onResized" @ready="onResized">
-        <pane v-if="workspaceStore.currentBoard" :size="100 - bottomPaneSize">
-          <extension-async-component v-if="selectedMenu === 1 && workspaceStore.extension" :target="workspaceStore.extension.components.Capture"></extension-async-component>
-          <extension-async-component v-else-if="selectedMenu === 2 && workspaceStore.extension" :target="workspaceStore.extension.components.Annotate"></extension-async-component>
-          <extension-async-component v-else-if="selectedMenu === 3 && workspaceStore.extension" :target="workspaceStore.extension.components.Train"></extension-async-component>
-          <div v-if="selectedMenu == 4" class="w-100 h-100">
+        <Pane
+          v-if="workspaceStore.currentBoard"
+          :size="100 - bottomPaneSize"
+        >
+          <ExtensionAsyncComponent
+            v-if="selectedMenu === 1 && workspaceStore.extension"
+            :target="workspaceStore.extension.components.Capture"
+          />
+          <ExtensionAsyncComponent
+            v-else-if="selectedMenu === 2 && workspaceStore.extension"
+            :target="workspaceStore.extension.components.Annotate"
+          />
+          <ExtensionAsyncComponent
+            v-else-if="selectedMenu === 3 && workspaceStore.extension"
+            :target="workspaceStore.extension.components.Train"
+          />
+          <div
+            v-if="selectedMenu == 4"
+            class="w-100 h-100"
+          >
             <Header
               @serial="onSerial" 
               @help="onHelp" 
               @example="exampleDialogOpen = true" 
-              @plugin="pluginDialogOpen = true">
-            </Header>
-            <BlocklyComponent ref="blocklyComp"></BlocklyComponent> 
+              @plugin="pluginDialogOpen = true"
+            />
+            <BlocklyComponent ref="blocklyComp" /> 
           </div>
-        </pane>
-        <pane v-else :size="100 - bottomPaneSize">
-          <div class="d-flex flex-column align-center justify-center" style="height: calc(100vh);">
-            <img style="margin-top: 100px" width="400" :src="RobotPoker"/>
+        </Pane>
+        <Pane
+          v-else
+          :size="100 - bottomPaneSize"
+        >
+          <div
+            class="d-flex flex-column align-center justify-center"
+            style="height: calc(100vh);"
+          >
+            <img
+              style="margin-top: 100px"
+              width="400"
+              :src="RobotPoker"
+            >
             <span style="margin-top: 50px; display: block;text-align: center;font-size: 25px;"> สร้างโปรเจคใหม่ หรือ เลือกกดเมนูด้านซ้ายมือ</span>
           </div>
-        </pane>
-        <pane :min-size="bottomMinPaneSize" :size="bottomPaneSize" :max-size="bottomMaxPaneSize">
-          <Footer ref="footer" @undo="undo" @redo="redo" @download="download"></Footer>
-        </pane>
-      </splitpanes>
-    </v-main>
-  </v-layout>
-  <SavingProjectDialog></SavingProjectDialog>
-  <UploadProjectDialog></UploadProjectDialog>
-  <OpeningProjectDialog></OpeningProjectDialog>
+        </Pane>
+        <Pane
+          :min-size="bottomMinPaneSize"
+          :size="bottomPaneSize"
+          :max-size="bottomMaxPaneSize"
+        >
+          <Footer
+            ref="footer"
+            @undo="undo"
+            @redo="redo"
+            @download="download"
+          />
+        </Pane>
+      </Splitpanes>
+    </VMain>
+  </VLayout>
+  <SavingProjectDialog />
+  <UploadProjectDialog />
+  <OpeningProjectDialog />
   <ConnectWifiDialog v-model:isDialogVisible="connectWifiDialogOpen" />
-  <NewProjectDialog v-model:isDialogVisible="newProjectDialogOpen" @submit="createdProject" />
-  <ExampleDialog v-model:isDialogVisible="exampleDialogOpen" @loadExample="onExampleOpen" />
-  <PluginDialog v-model:isDialogVisible="pluginDialogOpen" @installPlugin="onInstallPlugin" @uninstallPlugin="onUninstallPlugin" />
-  <NewModelDialog v-model:isDialogVisible="newModelDialogOpen" @submit="selectProjectType" />
-  <fileExplorerDialog v-model:isDialogVisible="fileExplorerDialogOpen" />
-  
+  <NewProjectDialog
+    v-model:isDialogVisible="newProjectDialogOpen"
+    @submit="createdProject"
+  />
+  <ExampleDialog
+    v-model:isDialogVisible="exampleDialogOpen"
+    @loadExample="onExampleOpen"
+  />
+  <PluginDialog
+    v-model:isDialogVisible="pluginDialogOpen"
+    @installPlugin="onInstallPlugin"
+    @uninstallPlugin="onUninstallPlugin"
+  />
+  <NewModelDialog
+    v-model:isDialogVisible="newModelDialogOpen"
+    @submit="selectProjectType"
+  />
+  <FileExplorerDialog v-model:isDialogVisible="fileExplorerDialogOpen" />
 </template>
 
 <route lang="yaml">
 meta:
   layout: blank
 </route>
+
 <style lang="scss">
 .main-bg {
   background-color: #eeeeee;
@@ -653,5 +730,4 @@ ul {
     opacity: 0.7;
   }
 }
-
 </style>

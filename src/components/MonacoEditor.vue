@@ -1,5 +1,8 @@
 <template>
-  <div class="monaco-editor-vue3" :style="style"></div>
+  <div
+    class="monaco-editor-vue3"
+    :style="style"
+  />
 </template>
 
 <script>
@@ -35,76 +38,17 @@ export default defineComponent({
       const fixedHeight = height.value.toString().includes('%')
         ? height.value
         : `${height.value}px`
+      
       return {
         width: fixedWidth,
         height: fixedHeight,
         'text-align': 'left',
       }
     })
+    
     return {
       style,
     }
-  },
-  mounted() {
-    this.initMonaco()
-  },
-  beforeUnmount() {
-    this.editor && this.editor.dispose()
-  },
-  methods: {
-    initMonaco() {
-      this.$emit('editorWillMount', monaco)
-      const { value, language, theme, options, fontSize } = this
-      this.editor = monaco.editor[
-        this.diffEditor ? 'createDiffEditor' : 'create'
-      ](this.$el, {
-        value: value,
-        language: language,
-        theme: theme,
-        fontSize: fontSize,
-        ...options,
-      })
-      this.diffEditor && this._setModel(this.value, this.original)
-
-      // @event `change`
-      const editor = this._getEditor()
-      editor &&
-        editor.onDidChangeModelContent((event) => {
-          const value = editor.getValue()
-          if (this.value !== value) {
-            this.$emit('change', value, event)
-            this.$emit('update:value', value)
-          }
-        })
-
-      this.$emit('editorDidMount', this.editor)
-    },
-    _setModel(value, original) {
-      const { language } = this
-      const originalModel = monaco.editor.createModel(original, language)
-      const modifiedModel = monaco.editor.createModel(value, language)
-      this.editor.setModel({
-        original: originalModel,
-        modified: modifiedModel,
-      })
-    },
-    _setValue(value) {
-      let editor = this._getEditor()
-      if (editor) return editor.setValue(value)
-    },
-    _getValue() {
-      let editor = this._getEditor()
-      if (!editor) return ''
-      return editor.getValue()
-    },
-    _getEditor() {
-      if (!this.editor) return null
-      return this.diffEditor ? this.editor.modifiedEditor : this.editor
-    },
-    _setOriginal() {
-      const { original } = this.editor.getModel()
-      original.setValue(this.original)
-    },
   },
   watch: {
     options: {
@@ -130,6 +74,69 @@ export default defineComponent({
     },
     theme() {
       monaco.editor.setTheme(this.theme)
+    },
+  },
+  mounted() {
+    this.initMonaco()
+  },
+  beforeUnmount() {
+    this.editor && this.editor.dispose()
+  },
+  methods: {
+    initMonaco() {
+      this.$emit('editorWillMount', monaco)
+      const { value, language, theme, options, fontSize } = this
+      this.editor = monaco.editor[
+        this.diffEditor ? 'createDiffEditor' : 'create'
+      ](this.$el, {
+        value: value,
+        language: language,
+        theme: theme,
+        fontSize: fontSize,
+        ...options,
+      })
+      this.diffEditor && this._setModel(this.value, this.original)
+
+      // @event `change`
+      const editor = this._getEditor()
+      editor &&
+        editor.onDidChangeModelContent(event => {
+          const value = editor.getValue()
+          if (this.value !== value) {
+            this.$emit('change', value, event)
+            this.$emit('update:value', value)
+          }
+        })
+
+      this.$emit('editorDidMount', this.editor)
+    },
+    _setModel(value, original) {
+      const { language } = this
+      const originalModel = monaco.editor.createModel(original, language)
+      const modifiedModel = monaco.editor.createModel(value, language)
+      this.editor.setModel({
+        original: originalModel,
+        modified: modifiedModel,
+      })
+    },
+    _setValue(value) {
+      let editor = this._getEditor()
+      if (editor) return editor.setValue(value)
+    },
+    _getValue() {
+      let editor = this._getEditor()
+      if (!editor) return ''
+      
+      return editor.getValue()
+    },
+    _getEditor() {
+      if (!this.editor) return null
+      
+      return this.diffEditor ? this.editor.modifiedEditor : this.editor
+    },
+    _setOriginal() {
+      const { original } = this.editor.getModel()
+      original.setValue(this.original)
     },
   },
 })

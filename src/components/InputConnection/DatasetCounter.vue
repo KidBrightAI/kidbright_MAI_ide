@@ -1,28 +1,30 @@
 <template>
   <div class="img-counter">
-    <span class="current-img">{{props.prefix}} </span>
-    <span class="ov-img">{{props.current || "-"}} {{props.seperator}} {{datasetStore.dataLength}} {{props.suffix}}{{datasetStore.dataLength > 1? "s" : ""}}</span>
+    <span class="current-img">{{ props.prefix }} </span>
+    <span class="ov-img">{{ props.current || "-" }} {{ props.seperator }} {{ datasetStore.dataLength }} {{ props.suffix }}{{ datasetStore.dataLength > 1? "s" : "" }}</span>
   </div>
 </template>
+
 <script setup>
-import { useDatasetStore } from "@/store/dataset";
-const datasetStore = useDatasetStore();
+import { useDatasetStore } from "@/store/dataset"
 const props = defineProps({
   prefix : {
-    type : String
+    type : String,
   },
   current : {
-    type : [String, Number]
+    type : [String, Number],
   },
   seperator : {
     type: String,
-    default : "/"
+    default : "/",
   },
   suffix:{
-    type : String
+    type : String,
   },
-});
+})
+const datasetStore = useDatasetStore()
 </script>
+
 <style lang="scss" scoped>
 $primary-color: #007e4e;
 .img-counter {

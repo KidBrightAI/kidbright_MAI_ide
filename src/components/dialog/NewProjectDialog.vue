@@ -1,36 +1,36 @@
 <script setup>
-import DialogCloseBtn from "@/components/dialog/DialogCloseBtn.vue";
-import { useBoardStore } from "@/store/board";
-import { toast } from "vue3-toastify";
-import { useWorkspaceStore } from "@/store/workspace";
-import { onMounted } from "vue";
-import { randomId } from "../utils";
+import DialogCloseBtn from "@/components/dialog/DialogCloseBtn.vue"
+import { useBoardStore } from "@/store/board"
+import { toast } from "vue3-toastify"
+import { useWorkspaceStore } from "@/store/workspace"
+import { onMounted } from "vue"
+import { randomId } from "../utils"
 
 const props = defineProps({
   isDialogVisible: Boolean,
 })
 
-const emit = defineEmits(['update:isDialogVisible','submit']);
+const emit = defineEmits(['update:isDialogVisible','submit'])
 
-const boardStore = useBoardStore();
-const workspaceStore = useWorkspaceStore();
+const boardStore = useBoardStore()
+const workspaceStore = useWorkspaceStore()
 
-const extensions = inject('extensions');
-const models = extensions.map((el) => ({title : el.title, value : el.id}))
-const modelOptions = Object.fromEntries(extensions.map(el=> el.options? [el.id,el.options] : null).filter(el=>el!=null));
-const selectType = ref(extensions[0].id);
-const projectName = ref("โปรเจค KidBright Micro AI");
+const extensions = inject('extensions')
+const models = extensions.map(el => ({title : el.title, value : el.id}))
+const modelOptions = Object.fromEntries(extensions.map(el=> el.options? [el.id,el.options] : null).filter(el=>el!=null))
+const selectType = ref(extensions[0].id)
+const projectName = ref("โปรเจค KidBright Micro AI")
 
-const refVForm = ref({});
+const refVForm = ref({})
 
 const resetForm = () => {
-  emit('update:isDialogVisible', false);
+  emit('update:isDialogVisible', false)
 }
 
 const onFormSubmit = async() => {
   let { valid: isValid } = await refVForm.value?.validate()  
   if (isValid) {
-    let selectedExtension = extensions.find(el=>el.id == selectType.value);
+    let selectedExtension = extensions.find(el=>el.id == selectType.value)
     let project = {
       name: projectName.value,
       id: "kidbright_mai" + "_" + randomId(),
@@ -41,12 +41,11 @@ const onFormSubmit = async() => {
       model : null,
       dataset: [],
       labels: [],
-      board: "kidbright-mai"
-    };
-    emit('submit', project);
+      board: "kidbright-mai",
+    }
+    emit('submit', project)
   }
 }
-
 </script>
 
 <template>
@@ -66,12 +65,17 @@ const onFormSubmit = async() => {
         </VCardTitle>
       </VCardItem>
       <VCardText class="pt-0">
-        <VForm ref="refVForm" @submit.prevent="onFormSubmit">
+        <VForm
+          ref="refVForm"
+          @submit.prevent="onFormSubmit"
+        >
           <VRow>
-            <!--VCol cols="12">
+            <!--
+              VCol cols="12">
               <VSelect :items="models" label="ประเภทการเรียนรู้" v-model="selectType">
               </VSelect>
-            </VCol-->
+              </VCol
+            -->
             <VCol cols="12">
               <VTextField
                 v-model="projectName"
@@ -87,8 +91,15 @@ const onFormSubmit = async() => {
             </VCol>
           </VRow>
           <VRow>
-            <VCol cols="12" class="text-center mt-3">
-              <VBtn type="submit" class="me-3" color="primary">
+            <VCol
+              cols="12"
+              class="text-center mt-3"
+            >
+              <VBtn
+                type="submit"
+                class="me-3"
+                color="primary"
+              >
                 สร้างโปรเจคใหม่
               </VBtn>
             </VCol>
@@ -98,6 +109,7 @@ const onFormSubmit = async() => {
     </VCard>
   </VDialog>
 </template>
+
 <style scoped>
 .selected-block{
   background-color: #3e3481 !important;

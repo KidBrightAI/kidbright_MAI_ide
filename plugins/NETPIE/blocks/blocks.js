@@ -1,43 +1,43 @@
 const MAX_INSTANCES = {
-    'netpie_connect' : 1
+  'netpie_connect' : 1,
 }
 
 Blockly.defineBlocksWithJsonArray(
-[{
-  "type": "netpie_connect",
-  "message0": "Connect NETPIE.io %1 Device ID: %2 Device Token: %3 Subscribe private msg: %4 %5 Subscribe shadow updated: %6",
-  "args0": [
-    {
-      "type": "input_dummy"
-    },
-    {
-      "type": "input_value",
-      "name": "device_id",
-      "check": "String",
-      "align": "RIGHT"
-    },
-    {
-      "type": "input_value",
-      "name": "device_token",
-      "check": "String",
-      "align": "RIGHT"
-    },
-    {
-      "type": "field_checkbox",
-      "name": "sub_private_msg",
-      "align": "RIGHT",
-      "checked": true,
-    },
-    {
-      "type": "input_dummy",
-      "align": "RIGHT"
-    },
-    {
-      "type": "field_checkbox",
-      "name": "sub_shadow_updated",
-      "align": "RIGHT",
-      "checked": true
-    },
+  [{
+    "type": "netpie_connect",
+    "message0": "Connect NETPIE.io %1 Device ID: %2 Device Token: %3 Subscribe private msg: %4 %5 Subscribe shadow updated: %6",
+    "args0": [
+      {
+        "type": "input_dummy",
+      },
+      {
+        "type": "input_value",
+        "name": "device_id",
+        "check": "String",
+        "align": "RIGHT",
+      },
+      {
+        "type": "input_value",
+        "name": "device_token",
+        "check": "String",
+        "align": "RIGHT",
+      },
+      {
+        "type": "field_checkbox",
+        "name": "sub_private_msg",
+        "align": "RIGHT",
+        "checked": true,
+      },
+      {
+        "type": "input_dummy",
+        "align": "RIGHT",
+      },
+      {
+        "type": "field_checkbox",
+        "name": "sub_shadow_updated",
+        "align": "RIGHT",
+        "checked": true,
+      },
     ],
     "inputsInline": false,
     "previousStatement": null,
@@ -52,16 +52,16 @@ Blockly.defineBlocksWithJsonArray(
     "message0": "On Connected %1 do %2",
     "args0": [
       {
-        "type": "input_dummy"
+        "type": "input_dummy",
       },
       {
         "type": "input_statement",
-        "name": "callback"
-      }
+        "name": "callback",
+      },
     ],
     "previousStatement": null,
     "nextStatement": null,
-    "colour": "#4A7CCC"
+    "colour": "#4A7CCC",
   },
 
   {
@@ -69,16 +69,16 @@ Blockly.defineBlocksWithJsonArray(
     "message0": "On Disconnected %1 do %2",
     "args0": [
       {
-        "type": "input_dummy"
+        "type": "input_dummy",
       },
       {
         "type": "input_statement",
-        "name": "callback"
-      }
+        "name": "callback",
+      },
     ],
     "previousStatement": null,
     "nextStatement": null,
-    "colour": "#4A7CCC"
+    "colour": "#4A7CCC",
   },
 
 
@@ -89,7 +89,7 @@ Blockly.defineBlocksWithJsonArray(
       {
         "type": "field_input",
         "name": "topic",
-        "text": "home/switch"
+        "text": "home/switch",
       },
       {
         "type": "input_value",
@@ -97,17 +97,17 @@ Blockly.defineBlocksWithJsonArray(
         "check": [
           "Boolean",
           "Number",
-          "String"
+          "String",
         ],
-        "align": "RIGHT"
-      }
+        "align": "RIGHT",
+      },
     ],
     "inputsInline": true,
     "previousStatement": null,
     "nextStatement": null,
     "colour": "#339980",
     "tooltip": "",
-    "helpUrl": ""
+    "helpUrl": "",
   },
 
   {
@@ -117,15 +117,15 @@ Blockly.defineBlocksWithJsonArray(
       {
         "type": "field_input",
         "name": "topic",
-        "text": "home/switch"
-      }
+        "text": "home/switch",
+      },
     ],
     "inputsInline": true,
     "previousStatement": null,
     "nextStatement": null,
     "colour": "#339980",
     "tooltip": "",
-    "helpUrl": ""
+    "helpUrl": "",
   },
 
 
@@ -136,19 +136,19 @@ Blockly.defineBlocksWithJsonArray(
       {
         "type": "field_input",
         "name": "topic",
-        "text": "home/#"
+        "text": "home/#",
       },
       {
-        "type": "input_dummy"
+        "type": "input_dummy",
       },
       {
         "type": "input_statement",
-        "name": "callback"
-      }
+        "name": "callback",
+      },
     ],
     "previousStatement": null,
     "nextStatement": null,
-    "colour": "#339980"
+    "colour": "#339980",
   },
 
 
@@ -162,23 +162,23 @@ Blockly.defineBlocksWithJsonArray(
         "options": [
           [
             "string",
-            "string"
+            "string",
           ],
           [
             "int",
-            "int"
+            "int",
           ],
           [
             "float",
-            "float"
-          ]
-        ]
+            "float",
+          ],
+        ],
       },
 
     ],
     "inputsInline": true,
     "output": null,
-    "colour": "#339980"
+    "colour": "#339980",
   },
 
 
@@ -189,7 +189,7 @@ Blockly.defineBlocksWithJsonArray(
       {
         "type": "input_value",
         "name": "field",
-        "text": ""
+        "text": "",
       },
       {
         "type": "input_value",
@@ -197,17 +197,17 @@ Blockly.defineBlocksWithJsonArray(
         "check": [
           "Boolean",
           "Number",
-          "String"
+          "String",
         ],
-        "align": "RIGHT"
-      }
+        "align": "RIGHT",
+      },
     ],
     "inputsInline": true,
     "previousStatement": null,
     "nextStatement": null,
     "colour": "#c76b99",
     "tooltip": "",
-    "helpUrl": ""
+    "helpUrl": "",
   },
 
 
@@ -216,16 +216,16 @@ Blockly.defineBlocksWithJsonArray(
     "message0": "Read @shadow %1 %2",
     "args0": [
       {
-        "type": "input_dummy"
+        "type": "input_dummy",
       },
       {
         "type": "input_statement",
-        "name": "callback"
-      }
+        "name": "callback",
+      },
     ],
     "previousStatement": null,
     "nextStatement": null,
-    "colour": "#c76b99"
+    "colour": "#c76b99",
   },
 
 
@@ -234,16 +234,16 @@ Blockly.defineBlocksWithJsonArray(
     "message0": "On @shadow updated %1 do %2",
     "args0": [
       {
-        "type": "input_dummy"
+        "type": "input_dummy",
       },
       {
         "type": "input_statement",
-        "name": "callback"
-      }
+        "name": "callback",
+      },
     ],
     "previousStatement": null,
     "nextStatement": null,
-    "colour": "#c76b99"
+    "colour": "#c76b99",
   },
 
 
@@ -254,7 +254,7 @@ Blockly.defineBlocksWithJsonArray(
       {
         "type": "input_value",
         "name": "field",
-        "text": ""
+        "text": "",
       },
       {
         "type": "field_dropdown",
@@ -262,28 +262,28 @@ Blockly.defineBlocksWithJsonArray(
         "options": [
           [
             "int",
-            "int"
+            "int",
           ],
           [
             "float",
-            "float"
+            "float",
           ],
           [
             "string",
-            "string"
+            "string",
           ],
           [
             "bool",
-            "bool"
-          ]
-        ]
-      }
+            "bool",
+          ],
+        ],
+      },
     ],
     "inputsInline": true,
     "output": null,
     "colour": "#c76b99",
     "tooltip": "",
-    "helpUrl": ""
+    "helpUrl": "",
   },
 
 
@@ -294,19 +294,19 @@ Blockly.defineBlocksWithJsonArray(
       {
         "type": "field_input",
         "name": "topic",
-        "text": "command"
+        "text": "command",
       },
       {
-        "type": "input_dummy"
+        "type": "input_dummy",
       },
       {
         "type": "input_statement",
-        "name": "callback"
-      }
+        "name": "callback",
+      },
     ],
     "previousStatement": null,
     "nextStatement": null,
-    "colour": "#d27e4b"
+    "colour": "#d27e4b",
   },
 
 
@@ -320,23 +320,23 @@ Blockly.defineBlocksWithJsonArray(
         "options": [
           [
             "string",
-            "string"
+            "string",
           ],
           [
             "int",
-            "int"
+            "int",
           ],
           [
             "float",
-            "float"
-          ]
-        ]
+            "float",
+          ],
+        ],
       },
 
     ],
     "inputsInline": true,
     "output": null,
-    "colour": "#d27e4b"
+    "colour": "#d27e4b",
   },
 
 
@@ -347,7 +347,7 @@ Blockly.defineBlocksWithJsonArray(
       {
         "type": "field_input",
         "name": "title",
-        "text": "KidBright Alert"
+        "text": "KidBright Alert",
       },
       {
         "type": "input_value",
@@ -355,10 +355,10 @@ Blockly.defineBlocksWithJsonArray(
         "check": [
           "Boolean",
           "Number",
-          "String"
+          "String",
         ],
-        "align": "RIGHT"
-      }
+        "align": "RIGHT",
+      },
 
 
 
@@ -368,7 +368,7 @@ Blockly.defineBlocksWithJsonArray(
     "nextStatement": null,
     "colour": "#cdac4c",
     "tooltip": "",
-    "helpUrl": ""
+    "helpUrl": "",
   },
 
 
@@ -381,13 +381,13 @@ Blockly.defineBlocksWithJsonArray(
         "name": "value",
         "text": "Hello",
         "check": [
-          "String"
-        ]
-      }
+          "String",
+        ],
+      },
     ],
     "inputsInline": true,
     "output": null,
-    "colour": "#b3b3b3"
+    "colour": "#b3b3b3",
   },
 
   {
@@ -400,12 +400,12 @@ Blockly.defineBlocksWithJsonArray(
         "text": "1",
         "check": [
           "Number",
-        ]
-      }
+        ],
+      },
     ],
     "inputsInline": true,
     "output": null,
-    "colour": "#b3b3b3"
+    "colour": "#b3b3b3",
   },
 
 
@@ -419,39 +419,37 @@ Blockly.defineBlocksWithJsonArray(
         "options": [
           [
             "True",
-            "True"
+            "True",
           ],
           [
             "False",
-            "False"
-          ]
-        ]
+            "False",
+          ],
+        ],
       },
     ],
     "inputsInline": true,
     "output": null,
-    "colour": "#b3b3b3"
-  }
-
-]);
+    "colour": "#b3b3b3",
+  }])
 
 setTimeout(function() {
-    let workspaces = Blockly.Workspace.getAll();
-    if (workspaces.length > 0) {
-        let workspace = workspaces[0];
-        workspace.addChangeListener(function(event) {
-            if (event.type == Blockly.Events.BLOCK_CREATE) {
-                event.ids.forEach(function(blockid) {
-                    let block = workspace.getBlockById(blockid);
+  let workspaces = Blockly.Workspace.getAll()
+  if (workspaces.length > 0) {
+    let workspace = workspaces[0]
+    workspace.addChangeListener(function(event) {
+      if (event.type == Blockly.Events.BLOCK_CREATE) {
+        event.ids.forEach(function(blockid) {
+          let block = workspace.getBlockById(blockid)
 
-                    if (block && MAX_INSTANCES[block.type]) {
-                        let instances = workspace.getAllBlocks().filter(b => b.type === block.type);
-                        if (instances.length > MAX_INSTANCES[block.type]) {
-                            block.dispose(true, true);
-                        }
-                    }
-                });
+          if (block && MAX_INSTANCES[block.type]) {
+            let instances = workspace.getAllBlocks().filter(b => b.type === block.type)
+            if (instances.length > MAX_INSTANCES[block.type]) {
+              block.dispose(true, true)
             }
-        });
-    }
-}, 1000);
+          }
+        })
+      }
+    })
+  }
+}, 1000)

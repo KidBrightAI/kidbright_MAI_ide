@@ -7,21 +7,21 @@ Blockly.defineBlocksWithJsonArray([{
       "name": "value",
       "check": [
         "Boolean",
-        "Number"
-      ]
+        "Number",
+      ],
     },
     {
       "type": "input_value",
       "name": "pin",
-      "check": "Number"
-    }
+      "check": "Number",
+    },
   ],
   "inputsInline": true,
   "previousStatement": null,
   "nextStatement": null,
   "colour": "#E74C3C",
   "tooltip": "",
-  "helpUrl": ""
+  "helpUrl": "",
 },
 {
   "type": "pin_pwm_write",
@@ -30,23 +30,23 @@ Blockly.defineBlocksWithJsonArray([{
     {
       "type": "input_value",
       "name": "pin",
-      "check": "Number"
+      "check": "Number",
     },
     {
       "type": "input_value",
       "name": "value",
       "check": [
         "Boolean",
-        "Number"
-      ]
-    }
+        "Number",
+      ],
+    },
   ],
   "inputsInline": true,
   "previousStatement": null,
   "nextStatement": null,
   "colour": "#E74C3C",
   "tooltip": "",
-  "helpUrl": ""
+  "helpUrl": "",
 },
 {
   "type": "pin_digital_read",
@@ -55,17 +55,17 @@ Blockly.defineBlocksWithJsonArray([{
     {
       "type": "input_value",
       "name": "pin",
-      "check": "Number"
-    }
+      "check": "Number",
+    },
   ],
   "inputsInline": true,
   "output": [
     "Number",
-    "Boolean"
+    "Boolean",
   ],
   "colour": "#E74C3C",
   "tooltip": "",
-  "helpUrl": ""
+  "helpUrl": "",
 },
 {
   "type": "pin_analog_read",
@@ -74,12 +74,12 @@ Blockly.defineBlocksWithJsonArray([{
     {
       "type": "input_value",
       "name": "pin",
-      "check": "Number"
-    }
+      "check": "Number",
+    },
   ],
   "inputsInline": true,
   "output": "Number",
   "colour": "#E74C3C",
   "tooltip": "",
-  "helpUrl": ""
-}]);
+  "helpUrl": "",
+}])

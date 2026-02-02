@@ -1,59 +1,61 @@
 <script setup>
-import { useServerStore } from "@/store/server";
-import { computed, onMounted } from "vue";
-
-const serverStore = useServerStore();
+import { useServerStore } from "@/store/server"
+import { computed, onMounted } from "vue"
 
 let props = defineProps({
   colabUrl : {
     type: String,
-    default: ''
-  }
-});
+    default: '',
+  },
+})
 
-let emits = defineEmits(['train', 'terminate', 'test', 'download']);
+let emits = defineEmits(['train', 'terminate', 'test', 'download'])
 
-const serverUrl = ref('');
-let currentUrl = '';
+const serverStore = useServerStore()
+
+const serverUrl = ref('')
+let currentUrl = ''
 
 const openColab = () => {
-  window.open(props.colabUrl, '_blank');
-};
+  window.open(props.colabUrl, '_blank')
+}
 
 //validate the url with port
-const validateUrl = (url) => {
-  console.log("Validating url: ", url);
-  const regex = new RegExp('^(https?|ftp)://(www\\.)?([a-zA-Z0-9]+)\\.[a-zA-Z]{2,3}(\\.[a-zA-Z]{2})?(:[0-9]+)?(/\\S*)?$');
-  return regex.test(url);
-};
+const validateUrl = url => {
+  console.log("Validating url: ", url)
+  const regex = new RegExp('^(https?|ftp)://(www\\.)?([a-zA-Z0-9]+)\\.[a-zA-Z]{2,3}(\\.[a-zA-Z]{2})?(:[0-9]+)?(/\\S*)?$')
+  
+  return regex.test(url)
+}
 
-const onColab = async (focused) => {
+const onColab = async focused => {
   if(!focused) {
     if(serverUrl.value && serverUrl.value !== currentUrl) {
-      currentUrl = serverUrl.value; 
-      await setServerAndConnect(currentUrl);
+      currentUrl = serverUrl.value 
+      await setServerAndConnect(currentUrl)
     }
   }
-};
+}
 const resolveDownloadMessage = computed(() => {
   if(serverStore.isConverting){
-    return "Converting";
+    return "Converting"
   }else if(serverStore.isDownloading){
-    return `Downloading ${serverStore.downloadingFiles}/${serverStore.totalDownloadingFiles}`;
+    return `Downloading ${serverStore.downloadingFiles}/${serverStore.totalDownloadingFiles}`
   }else{
-    return "Download";
+    return "Download"
   }
-});
+})
 
-const setServerAndConnect = async (url) => {
-  serverStore.serverUrl = url;
-  console.log("Set colab url: ", url);
-  await serverStore.connectColab();
-};
+const setServerAndConnect = async url => {
+  serverStore.serverUrl = url
+  console.log("Set colab url: ", url)
+  await serverStore.connectColab()
+}
 onMounted(() => {
-  serverUrl.value = serverStore.serverUrl;
-});
+  serverUrl.value = serverStore.serverUrl
+})
 </script>
+
 <template>
   <div>
     <VToolbar      
@@ -68,19 +70,19 @@ onMounted(() => {
         class="me-0 rounded-0 rounded-s-lg"       
         @click="openColab" 
       >
-      Create
+        Create
       </VBtn>
       <VTextField 
-        class="ms-0 colab-url-input"                 
+        v-model="serverUrl"                 
+        class="ms-0 colab-url-input"
         color="white"
         label="Put TUNNEL URL here ..."
         hide-details
         variant="solo"
         single-line
-        @update:focused="onColab"
         :loading="serverStore.isColabConnecting"
         :disabled="serverStore.isColabConnecting || serverStore.isColabConnected"
-        v-model="serverUrl"
+        @update:focused="onColab"
         @keyup.enter="setServerAndConnect(serverUrl)"
       />
       <VBtn
@@ -91,8 +93,8 @@ onMounted(() => {
         variant="flat"
         size="large"
         style="min-width: 140px;"        
-        @click="$emit('train')"
         :disabled="!serverStore.isColabConnected"
+        @click="$emit('train')"
       >
         Train
       </VBtn>
@@ -138,8 +140,8 @@ onMounted(() => {
           size="20"
           class="me-2"
           :model-value="serverStore.downloadProgress"
-        ></VProgressCircular>
-         {{ resolveDownloadMessage }}
+        />
+        {{ resolveDownloadMessage }}
       </VBtn>
     </VToolbar>
   </div>  

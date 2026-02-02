@@ -1,5 +1,5 @@
 
-import Blockly from 'blockly/core';
+import Blockly from 'blockly/core'
 
 const defaultBlockStyles = {
   'colour_blocks': {
@@ -30,7 +30,7 @@ const defaultBlockStyles = {
     'colourPrimary': '#995ba5',
   },
   
-};
+}
 
 /**
  * Tritanopia theme.
@@ -47,5 +47,5 @@ export default Blockly.Theme.defineTheme('tritanopia', {
     'colour': '#000',
   },  
   'startHats': null,
-});
+})
 

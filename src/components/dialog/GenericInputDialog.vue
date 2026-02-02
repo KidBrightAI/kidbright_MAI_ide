@@ -1,35 +1,35 @@
 <script setup>
-
 const props = defineProps({
   isDialogVisible: Boolean,
   title : {
     type : String,
-    default : 'Dialog Title'
+    default : 'Dialog Title',
   },
   label : {
     type : String,
-    default : 'Label'
+    default : 'Label',
   },
   buttonName : {
     type : String,
-    default : 'Submit'
-  }
+    default : 'Submit',
+  },
 })
 
-const name = ref('');
+const emit = defineEmits(['update:isDialogVisible','value'])
 
-const emit = defineEmits(['update:isDialogVisible','value']);
+const name = ref('')
 
 const resetForm = () => {
-  name.value = '';
-  emit('update:isDialogVisible', false);
+  name.value = ''
+  emit('update:isDialogVisible', false)
 }
 
 const submitLabel = () => {
-  emit('value', name.value);
-  resetForm();
+  emit('value', name.value)
+  resetForm()
 }
 </script>
+
 <template>
   <VDialog
     :model-value="props.isDialogVisible"
@@ -39,8 +39,12 @@ const submitLabel = () => {
     <VCard>
       <VToolbar density="compact">
         <VToolbarTitle>{{ props.title }}</VToolbarTitle>
-        <VSpacer/> 
-        <VBtn icon @click="resetForm" density="compact">
+        <VSpacer /> 
+        <VBtn
+          icon
+          density="compact"
+          @click="resetForm"
+        >
           <VIcon>mdi-close</VIcon>
         </VBtn>
       </VToolbar>
@@ -49,11 +53,18 @@ const submitLabel = () => {
           v-model="name"
           :label="props.label"
           outlined
-        ></VTextField>
+        />
       </VCardText>
       <VCardActions>
-        <VSpacer/>
-        <VBtn color="primary" @click="submitLabel" variant="elevated" :disabled="!name.length">{{buttonName}}</VBtn>
+        <VSpacer />
+        <VBtn
+          color="primary"
+          variant="elevated"
+          :disabled="!name.length"
+          @click="submitLabel"
+        >
+          {{ buttonName }}
+        </VBtn>
       </VCardActions>
     </VCard>
   </VDialog>

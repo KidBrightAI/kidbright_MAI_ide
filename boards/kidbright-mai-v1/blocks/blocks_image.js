@@ -6,48 +6,48 @@ Blockly.defineBlocksWithJsonArray(
       {
         "type": "input_value",
         "name": "image",
-        "check": "Image"
+        "check": "Image",
       },
       {
         "type": "input_value",
         "name": "text",
-        "check": "String"
+        "check": "String",
       },
       {
         "type": "input_value",
         "name": "x",
-        "check": "Number"
+        "check": "Number",
       },
       {
         "type": "input_value",
         "name": "y",
-        "check": "Number"
+        "check": "Number",
       },
       {
         "type": "field_colour",
         "name": "color",
-        "colour": "#ff0000"
+        "colour": "#ff0000",
       },
       {
-        "type": "input_dummy"
+        "type": "input_dummy",
       },
       {
         "type": "input_value",
         "name": "scale",
-        "check": "Number"
+        "check": "Number",
       },
       {
         "type": "input_value",
         "name": "thickness",
-        "check": "Number"
-      }
+        "check": "Number",
+      },
     ],
     "inputsInline": true,
     "previousStatement": null,
     "nextStatement": null,
     "colour": 120,
     "tooltip": "",
-    "helpUrl": ""
+    "helpUrl": "",
   },
   {
     "type": "maix3_image_draw_line",
@@ -56,48 +56,48 @@ Blockly.defineBlocksWithJsonArray(
       {
         "type": "input_value",
         "name": "image",
-        "check": "Image"
+        "check": "Image",
       },
       {
         "type": "input_value",
         "name": "x1",
-        "check": "Number"
+        "check": "Number",
       },
       {
         "type": "input_value",
         "name": "y1",
-        "check": "Number"
+        "check": "Number",
       },
       {
         "type": "input_value",
         "name": "x2",
-        "check": "Number"
+        "check": "Number",
       },
       {
         "type": "input_value",
         "name": "y2",
-        "check": "Number"
+        "check": "Number",
       },
       {
         "type": "field_colour",
         "name": "color",
-        "colour": "#ff0000"
+        "colour": "#ff0000",
       },
       {
-        "type": "input_dummy"
+        "type": "input_dummy",
       },
       {
         "type": "input_value",
         "name": "thickness",
-        "check": "Number"
-      }
+        "check": "Number",
+      },
     ],
     "inputsInline": true,
     "previousStatement": null,
     "nextStatement": null,
     "colour": 120,
     "tooltip": "",
-    "helpUrl": ""
+    "helpUrl": "",
   },
   {
     "type": "maix3_image_draw_rectangle",
@@ -106,48 +106,48 @@ Blockly.defineBlocksWithJsonArray(
       {
         "type": "input_value",
         "name": "image",
-        "check": "Image"
+        "check": "Image",
       },
       {
         "type": "input_value",
         "name": "x1",
-        "check": "Number"
+        "check": "Number",
       },
       {
         "type": "input_value",
         "name": "y1",
-        "check": "Number"
+        "check": "Number",
       },
       {
         "type": "input_value",
         "name": "x2",
-        "check": "Number"
+        "check": "Number",
       },
       {
         "type": "input_value",
         "name": "y2",
-        "check": "Number"
+        "check": "Number",
       },
       {
         "type": "field_colour",
         "name": "color",
-        "colour": "#ff0000"
+        "colour": "#ff0000",
       },
       {
-        "type": "input_dummy"
+        "type": "input_dummy",
       },
       {
         "type": "input_value",
         "name": "thickness",
-        "check": "Number"
-      }
+        "check": "Number",
+      },
     ],
     "inputsInline": true,
     "previousStatement": null,
     "nextStatement": null,
     "colour": 120,
     "tooltip": "",
-    "helpUrl": ""
+    "helpUrl": "",
   },
   {
     "type": "maix3_image_draw_circle",
@@ -156,43 +156,43 @@ Blockly.defineBlocksWithJsonArray(
       {
         "type": "input_value",
         "name": "image",
-        "check": "Image"
+        "check": "Image",
       },
       {
         "type": "input_value",
         "name": "x1",
-        "check": "Number"
+        "check": "Number",
       },
       {
         "type": "input_value",
         "name": "y1",
-        "check": "Number"
+        "check": "Number",
       },
       {
         "type": "input_value",
         "name": "radius",
-        "check": "Number"
+        "check": "Number",
       },
       {
         "type": "field_colour",
         "name": "color",
-        "colour": "#ff0000"
+        "colour": "#ff0000",
       },
       {
-        "type": "input_dummy"
+        "type": "input_dummy",
       },
       {
         "type": "input_value",
         "name": "thickness",
-        "check": "Number"
-      }
+        "check": "Number",
+      },
     ],
     "inputsInline": true,
     "previousStatement": null,
     "nextStatement": null,
     "colour": 120,
     "tooltip": "",
-    "helpUrl": ""
+    "helpUrl": "",
   },
   {
     "type": "maix3_image_draw_ellipse",
@@ -201,63 +201,63 @@ Blockly.defineBlocksWithJsonArray(
       {
         "type": "input_value",
         "name": "image",
-        "check": "Image"
+        "check": "Image",
       },
       {
         "type": "input_value",
         "name": "x1",
-        "check": "Number"
+        "check": "Number",
       },
       {
         "type": "input_value",
         "name": "y1",
-        "check": "Number"
+        "check": "Number",
       },
       {
         "type": "input_value",
         "name": "radius_x",
-        "check": "Number"
+        "check": "Number",
       },
       {
         "type": "input_value",
         "name": "radius_y",
-        "check": "Number"
+        "check": "Number",
       },
       {
         "type": "input_value",
         "name": "rotate",
-        "check": "Number"
+        "check": "Number",
       },
       {
         "type": "input_value",
         "name": "angle_start",
-        "check": "Number"
+        "check": "Number",
       },
       {
         "type": "input_value",
         "name": "angle_end",
-        "check": "Number"
+        "check": "Number",
       },
       {
         "type": "field_colour",
         "name": "color",
-        "colour": "#ff0000"
+        "colour": "#ff0000",
       },
       {
-        "type": "input_dummy"
+        "type": "input_dummy",
       },
       {
         "type": "input_value",
         "name": "thickness",
-        "check": "Number"
-      }
+        "check": "Number",
+      },
     ],
     "inputsInline": true,
     "previousStatement": null,
     "nextStatement": null,
     "colour": 120,
     "tooltip": "",
-    "helpUrl": ""
+    "helpUrl": "",
   },
   {
     "type": "maix3_image_crop",
@@ -266,34 +266,34 @@ Blockly.defineBlocksWithJsonArray(
       {
         "type": "input_value",
         "name": "image",
-        "check": "Image"
+        "check": "Image",
       },
       {
         "type": "input_value",
         "name": "x1",
-        "check": "Number"
+        "check": "Number",
       },
       {
         "type": "input_value",
         "name": "y1",
-        "check": "Number"
+        "check": "Number",
       },
       {
         "type": "input_value",
         "name": "x2",
-        "check": "Number"
+        "check": "Number",
       },
       {
         "type": "input_value",
         "name": "y2",
-        "check": "Number"
-      }
+        "check": "Number",
+      },
     ],
     "inputsInline": true,
     "output": "Image",
     "colour": 120,
     "tooltip": "",
-    "helpUrl": ""
+    "helpUrl": "",
   },
   {
     "type": "maix3_image_resize",
@@ -302,24 +302,24 @@ Blockly.defineBlocksWithJsonArray(
       {
         "type": "input_value",
         "name": "image",
-        "check": "Image"
+        "check": "Image",
       },
       {
         "type": "input_value",
         "name": "width",
-        "check": "Number"
+        "check": "Number",
       },
       {
         "type": "input_value",
         "name": "height",
-        "check": "Number"
-      }
+        "check": "Number",
+      },
     ],
     "inputsInline": true,
     "output": "Image",
     "colour": 120,
     "tooltip": "",
-    "helpUrl": ""
+    "helpUrl": "",
   },
   {
     "type": "maix3_image_flip",
@@ -328,7 +328,7 @@ Blockly.defineBlocksWithJsonArray(
       {
         "type": "input_value",
         "name": "image",
-        "check": "Image"
+        "check": "Image",
       },
       {
         "type": "field_dropdown",
@@ -336,24 +336,24 @@ Blockly.defineBlocksWithJsonArray(
         "options": [
           [
             "horizontal",
-            "1"
+            "1",
           ],
           [
             "vertical",
-            "0"
+            "0",
           ],
           [
             "horizontal & vertical",
-            "-1"
-          ]
-        ]
-      }
+            "-1",
+          ],
+        ],
+      },
     ],
     "inputsInline": true,
     "output": "Image",
     "colour": 120,
     "tooltip": "",
-    "helpUrl": ""
+    "helpUrl": "",
   },
   {
     "type": "maix3_image_rotate",
@@ -362,19 +362,19 @@ Blockly.defineBlocksWithJsonArray(
       {
         "type": "input_value",
         "name": "image",
-        "check": "Image"
+        "check": "Image",
       },
       {
         "type": "field_angle",
         "name": "angle",
-        "angle": 90
-      }
+        "angle": 90,
+      },
     ],
     "inputsInline": true,
     "output": "Image",
     "colour": 120,
     "tooltip": "",
-    "helpUrl": ""
+    "helpUrl": "",
   },
   {
     "type": "maix3_image_copy",
@@ -383,14 +383,14 @@ Blockly.defineBlocksWithJsonArray(
       {
         "type": "input_value",
         "name": "image",
-        "check": "Image"
-      }
+        "check": "Image",
+      },
     ],
     "inputsInline": true,
     "output": "Image",
     "colour": 120,
     "tooltip": "",
-    "helpUrl": ""
+    "helpUrl": "",
   },
   {
     "type": "maix3_image_save",
@@ -399,21 +399,22 @@ Blockly.defineBlocksWithJsonArray(
       {
         "type": "input_value",
         "name": "image",
-        "check": "Image"
+        "check": "Image",
       },
       {
         "type": "field_input",
         "name": "path",
-        "text": "./tmp.png"
-      }
+        "text": "./tmp.png",
+      },
     ],
     "inputsInline": true,
     "previousStatement": null,
     "nextStatement": null,
     "colour": 120,
     "tooltip": "",
-    "helpUrl": ""
+    "helpUrl": "",
   },
+
   // {
   //   "type": "maix3_image_open",
   //   "message0": "Open image from path %1 to variable %2",
@@ -437,23 +438,23 @@ Blockly.defineBlocksWithJsonArray(
       {
         "type": "field_input",
         "name": "path",
-        "text": "./tmp.png"
+        "text": "./tmp.png",
       },
       {
-        "type": "input_dummy"
+        "type": "input_dummy",
       },
       {
         "type": "input_value",
         "name": "var",
-        "check": ""
-      }
+        "check": "",
+      },
     ],
     "inputsInline": true,
     "previousStatement": null,
     "nextStatement": null,
     "colour": 120,
     "tooltip": "",
-    "helpUrl": ""
+    "helpUrl": "",
   },
   {
     "type": "maix3_image_new",
@@ -462,24 +463,24 @@ Blockly.defineBlocksWithJsonArray(
       {
         "type": "input_value",
         "name": "width",
-        "check": "Number"
+        "check": "Number",
       },
       {
         "type": "input_value",
         "name": "height",
-        "check": "Number"
+        "check": "Number",
       },
       {
         "type": "field_colour",
         "name": "color",
-        "colour": "#000000"
-      }
+        "colour": "#000000",
+      },
     ],
     "inputsInline": true,
     "output": "Image",
     "colour": 120,
     "tooltip": "",
-    "helpUrl": ""
-  }]
-);
+    "helpUrl": "",
+  }],
+)
   

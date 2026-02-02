@@ -1,54 +1,52 @@
 
 <script setup>
+import ImageDisplay from "@/components/InputConnection/ImageDisplay.vue"
+import ImageDatasetList from "@/components/InputConnection/ImageDatasetList.vue"
+import SoundDatasetList from "@/components/InputConnection/SoundDatasetList.vue"
+import DatasetCounter from "@/components/InputConnection/DatasetCounter.vue"
+import NewLabelDialog from "@/components/dialog/NewLabelDialog.vue"
+import { useDatasetStore } from "@/store/dataset"
+import { useWorkspaceStore } from "@/store/workspace"
+import { useConfirm } from "@/components/comfirm-dialog"
 
-import ImageDisplay from "@/components/InputConnection/ImageDisplay.vue";
-import ImageDatasetList from "@/components/InputConnection/ImageDatasetList.vue";
-import SoundDatasetList from "@/components/InputConnection/SoundDatasetList.vue";
-import DatasetCounter from "@/components/InputConnection/DatasetCounter.vue";
-import NewLabelDialog from "@/components/dialog/NewLabelDialog.vue";
-import { useDatasetStore } from "@/store/dataset";
-import { useWorkspaceStore } from "@/store/workspace";
-import { useConfirm } from "@/components/comfirm-dialog";
+const confirm = useConfirm()
+const datasetStore = useDatasetStore()
+const workspaceStore = useWorkspaceStore()
 
-const confirm = useConfirm();
-const datasetStore = useDatasetStore();
-const workspaceStore = useWorkspaceStore();
+const current = ref([])
+const onLabelChangeDialog = ref(false)
+const changeLabelName = ref("")
+const tobeChangeLabel = ref("")
 
-const current = ref([]);
-const onLabelChangeDialog = ref(false);
-const changeLabelName = ref("");
-const tobeChangeLabel = ref("");
-
-const onNewLabel = (label) => {
-  workspaceStore.addLabel({label : label});  
-};
-const selecteLabel = (label) => {
+const onNewLabel = label => {
+  workspaceStore.addLabel({label : label})  
+}
+const selecteLabel = label => {
   if (current.value.length) {
-    datasetStore.setClass({ids: current.value, label : label});
+    datasetStore.setClass({ids: current.value, label : label})
   }
-};
-const onRemoveLabel = async(label) => {
+}
+const onRemoveLabel = async label => {
   try{
-    await confirm({ title: "ยืนยันการลบป้ายกำกับ", content: `หากลบ '${label}' ภาพที่ใช้ป้ายกำกับนี้จะถูกล้างค่า`, dialogProps: { width: 'auto' } });
-    datasetStore.changeClassData({oldLabel : label, newLabel : null});
-    workspaceStore.removeLabel(label);
+    await confirm({ title: "ยืนยันการลบป้ายกำกับ", content: `หากลบ '${label}' ภาพที่ใช้ป้ายกำกับนี้จะถูกล้างค่า`, dialogProps: { width: 'auto' } })
+    datasetStore.changeClassData({oldLabel : label, newLabel : null})
+    workspaceStore.removeLabel(label)
   }catch(e){
-    return;
+    return
   }
-};
-const onChangeLabel = (oldLabel) => {  
-  datasetStore.changeClassData({oldLabel : oldLabel, newLabel : tobeChangeLabel.value});
-  workspaceStore.changeLabel({oldLabel : oldLabel, newLabel : tobeChangeLabel.value});
-  onLabelChangeDialog.value = false;
-  tobeChangeLabel.value = "";
-  changeLabelName.value = "";
-};
-const onRemoveAnnotatedLabel = (label) => {
+}
+const onChangeLabel = oldLabel => {  
+  datasetStore.changeClassData({oldLabel : oldLabel, newLabel : tobeChangeLabel.value})
+  workspaceStore.changeLabel({oldLabel : oldLabel, newLabel : tobeChangeLabel.value})
+  onLabelChangeDialog.value = false
+  tobeChangeLabel.value = ""
+  changeLabelName.value = ""
+}
+const onRemoveAnnotatedLabel = label => {
   if (current.value.length) {
-    datasetStore.changeClassDataWhere({ids: current.value, oldLabel : label, newLabel : null});
+    datasetStore.changeClassDataWhere({ids: current.value, oldLabel : label, newLabel : null})
   }
-};
-
+}
 </script>
 
 <template>
@@ -56,50 +54,94 @@ const onRemoveAnnotatedLabel = (label) => {
     <div class="d-flex w-100 h-100 outer-wrap">
       <div class="d-flex flex-fill flex-column main-panel bg-white">
         <div class="d-flex flex-fill align-center justify-center view-panel">
-          <ImageDisplay v-if="current.length" :id="current.slice(-1).pop()" :height="'250px'"></ImageDisplay>
-          <p class="view-img-desc" v-if="!current.length">
+          <ImageDisplay
+            v-if="current.length"
+            :id="current.slice(-1).pop()"
+            height="250px"
+          />
+          <p
+            v-if="!current.length"
+            class="view-img-desc"
+          >
             No selected image, please click on the image below to select.
           </p>
-          <DatasetCounter class="second-counter" prefix="Labeled" seperator="of" :current="datasetStore.getLabeledLength" suffix="Image"></DatasetCounter>
-          <DatasetCounter prefix="Selected" seperator="of" :current="current.length" suffix="Image"></DatasetCounter>
+          <DatasetCounter
+            class="second-counter"
+            prefix="Labeled"
+            seperator="of"
+            :current="datasetStore.getLabeledLength"
+            suffix="Image"
+          />
+          <DatasetCounter
+            prefix="Selected"
+            seperator="of"
+            :current="current.length"
+            suffix="Image"
+          />
         </div>
-        <SoundDatasetList v-model="current" :multiple="true" :showInfo="true"></SoundDatasetList>
+        <SoundDatasetList
+          v-model="current"
+          :multiple="true"
+          :show-info="true"
+        />
       </div>
       <div class="side-panel">
         <div class="w-100">
-          <h4 class="side-panel-ttl">LABEL</h4>
+          <h4 class="side-panel-ttl">
+            LABEL
+          </h4>
           <div class="feature-wrap">
-            <VBtn block rounded="xl">
-              <NewLabelDialog @newLabel="onNewLabel"></NewLabelDialog>
+            <VBtn
+              block
+              rounded="xl"
+            >
+              <NewLabelDialog @newLabel="onNewLabel" />
               <VIcon>mdi-plus</VIcon> New label
             </VBtn>
             <div class="pills w-100">
-              <button class="rounded-xl w-100 bg-secondary px-3 py-1 my-1" @click="selecteLabel(cls.label)" v-for="(cls, index) in workspaceStore.labels">
+              <button
+                v-for="(cls, index) in workspaceStore.labels"
+                class="rounded-xl w-100 bg-secondary px-3 py-1 my-1"
+                @click="selecteLabel(cls.label)"
+              >
                 <div class="d-flex align-center justify-space-between w-100">
                   {{ cls.label }}
                   <div>
-                    <v-btn density="compact" icon="mdi-rotate-left" variant="text" color="white" @click.stop="()=> {changeLabelName = cls.label, onLabelChangeDialog = true}">
-                    </v-btn>
-                    <v-btn density="compact" icon="mdi-trash-can" variant="text" color="white" @click.stop="onRemoveLabel(cls.label)"></v-btn>
+                    <VBtn
+                      density="compact"
+                      icon="mdi-rotate-left"
+                      variant="text"
+                      color="white"
+                      @click.stop="()=> {changeLabelName = cls.label, onLabelChangeDialog = true}"
+                    />
+                    <VBtn
+                      density="compact"
+                      icon="mdi-trash-can"
+                      variant="text"
+                      color="white"
+                      @click.stop="onRemoveLabel(cls.label)"
+                    />
                   </div>
                 </div>
               </button>
             </div>
           </div>
-          <h4 class="side-panel-ttl">ANNOTATE</h4>
+          <h4 class="side-panel-ttl">
+            ANNOTATE
+          </h4>
           <div class="feature-wrap">
             <div class="annotate-cn-list w-100">
               <div
-                class="annotate-cn"
                 v-for="(item, idx) in datasetStore.getLabelByIds(current)"
                 :key="'class-' + idx"
+                class="annotate-cn"
               >
                 <div class="annotate-cn-list-content">
                   <img
                     class="tag"
                     src="@/assets/images/png/Group_177_green.svg"
                     height="24"
-                  />
+                  >
                   <span class="annotation-txt">{{ item }}</span>
                 </div>
                 <img
@@ -107,35 +149,49 @@ const onRemoveAnnotatedLabel = (label) => {
                   src="@/assets/images/png/cancel.png"
                   height="24"
                   @click="onRemoveAnnotatedLabel(item)"
-                />
+                >
               </div>
             </div>
           </div>
         </div>
-        <div class="w-100"></div>
+        <div class="w-100" />
       </div>
     </div>
-    <VDialog v-model="onLabelChangeDialog" width="500px">
-      <v-card>
-        <v-toolbar density="compact">
-          <v-toolbar-title>แก้ไขป้ายกำกับ</v-toolbar-title>
-          <v-spacer/> 
-          <v-btn icon @click="onLabelChangeDialog = false" density="compact">
-            <v-icon>mdi-close</v-icon>
-          </v-btn>
-        </v-toolbar>
-        <v-card-text>
-          <v-text-field
+    <VDialog
+      v-model="onLabelChangeDialog"
+      width="500px"
+    >
+      <VCard>
+        <VToolbar density="compact">
+          <VToolbarTitle>แก้ไขป้ายกำกับ</VToolbarTitle>
+          <VSpacer /> 
+          <VBtn
+            icon
+            density="compact"
+            @click="onLabelChangeDialog = false"
+          >
+            <VIcon>mdi-close</VIcon>
+          </VBtn>
+        </VToolbar>
+        <VCardText>
+          <VTextField
             v-model="tobeChangeLabel"
             :label="`เปลี่ยนชื่อป้ายกำกับจาก ${changeLabelName} ใหม่เป็น`"
             outlined
-          ></v-text-field>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="primary" @click="onChangeLabel(changeLabelName)" variant="elevated" :disabled="!tobeChangeLabel.length">แก้ไขป้ายกำกับ</v-btn>
-        </v-card-actions>
-      </v-card>
+          />
+        </VCardText>
+        <VCardActions>
+          <VSpacer />
+          <VBtn
+            color="primary"
+            variant="elevated"
+            :disabled="!tobeChangeLabel.length"
+            @click="onChangeLabel(changeLabelName)"
+          >
+            แก้ไขป้ายกำกับ
+          </VBtn>
+        </VCardActions>
+      </VCard>
     </VDialog>
   </div>
 </template>

@@ -1,15 +1,15 @@
 import { 
-    defineNode, 
-    NodeInterface,
-    IntegerInterface, 
-    NumberInterface,
-    SelectInterface,
-    CheckboxInterface,
-    TextInterface 
-} from "baklavajs";
+  defineNode, 
+  NodeInterface,
+  IntegerInterface, 
+  NumberInterface,
+  SelectInterface,
+  CheckboxInterface,
+  TextInterface, 
+} from "baklavajs"
 
-import { setType } from "@baklavajs/interface-types";
-import { modelOutput, tensor } from "../interfaces/interface-types";
+import { setType } from "@baklavajs/interface-types"
+import { modelOutput, tensor } from "../interfaces/interface-types"
 
 export const ClassificationOutputNode = defineNode({
   type: "ClassifiyOutputNode",
@@ -17,8 +17,8 @@ export const ClassificationOutputNode = defineNode({
   inputs: {
     modelOutput: () => new NodeInterface("Model Output | Tensor", "").use(setType, [modelOutput, tensor]),
     validateMatrix : () => new SelectInterface("Validate Matrix", "val_accuracy",[
-        {text: "Validation Accuracy", value : "val_accuracy"},
-        {text: "Validation Loss", value : "val_loss"},
+      {text: "Validation Accuracy", value : "val_accuracy"},
+      {text: "Validation Loss", value : "val_loss"},
     ]).setPort(false),    
     saveMethod : () => new SelectInterface("Save Method", "best", 
       [
@@ -34,7 +34,7 @@ export const ClassificationOutputNode = defineNode({
         validateMatrix: validateMatrix,
         saveMethod: saveMethod,
         ...modelOutput,
-      }
-    };
-  }
-});
+      },
+    }
+  },
+})

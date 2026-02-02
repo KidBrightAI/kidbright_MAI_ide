@@ -3,66 +3,117 @@
     <div class="d-flex w-100 h-100 outer-wrap">
       <div class="d-flex flex-fill flex-column main-panel bg-white">
         <div class="d-flex flex-fill align-center justify-center view-panel">
-          <ImageDisplay v-show="current.length" :id="current.slice(-1).pop()" ref="img"></ImageDisplay>
-          <div class="cropbox_container" :style="{width: cropboxSize[0] + 'px', height: cropboxSize[1]+'px'}">
+          <ImageDisplay
+            v-show="current.length"
+            :id="current.slice(-1).pop()"
+            ref="img"
+          />
+          <div
+            class="cropbox_container"
+            :style="{width: cropboxSize[0] + 'px', height: cropboxSize[1]+'px'}"
+          >
             <VueCrop
-              :disabled="!(cropboxSize[2] > 0 && cropboxSize[3] > 0 && currentLabel)"
               :id="current.slice(-1).pop()"
-              :allowStartNewCrop="true"
+              ref="cropbox"
+              :disabled="!(cropboxSize[2] > 0 && cropboxSize[3] > 0 && currentLabel)"
+              :allow-start-new-crop="true"
               :label="currentLabel"
               :dimension="cropboxSize"
-              ref="cropbox"
-            >
-            </VueCrop>
+            />
           </div>
-          <p class="view-img-desc" v-if="!current.length">
+          <p
+            v-if="!current.length"
+            class="view-img-desc"
+          >
             No selected image, please click on the image below to select.
           </p>
         </div>
-        <ImageDatasetList v-model="current" :multiple="true" :showInfo="true"></ImageDatasetList>
+        <ImageDatasetList
+          v-model="current"
+          :multiple="true"
+          :show-info="true"
+        />
       </div>
       <div class="side-panel">
         <div class="w-100">
-          <h4 class="side-panel-ttl">LABEL</h4>
+          <h4 class="side-panel-ttl">
+            LABEL
+          </h4>
           <div class="feature-wrap">
-            <VBtn block rounded="xl" @click="onLabelInputDialog = true">
+            <VBtn
+              block
+              rounded="xl"
+              @click="onLabelInputDialog = true"
+            >
               <VIcon>mdi-plus</VIcon> New label
             </VBtn>
             <div class="pills w-100">
-              <button class="rounded-xl w-100 bg-secondary px-3 py-1 my-1" @click="selectLabel(cls.label)" v-for="(cls, index) in workspaceStore.labels">
+              <button
+                v-for="(cls, index) in workspaceStore.labels"
+                class="rounded-xl w-100 bg-secondary px-3 py-1 my-1"
+                @click="selectLabel(cls.label)"
+              >
                 <div class="d-flex align-center justify-space-between w-100">
-                  <div class="annotation-label-color" :style="{backgroundColor: getColorIndex(index)}"></div>
+                  <div
+                    class="annotation-label-color"
+                    :style="{backgroundColor: getColorIndex(index)}"
+                  />
                   {{ cls.label }}
                   <div>
-                    <v-btn density="compact" icon="mdi-rotate-left" variant="text" color="white" @click.stop="()=> {changeLabelName = cls.label, onLabelChangeDialog = true}">
-                    </v-btn>
-                    <v-btn density="compact" icon="mdi-trash-can" variant="text" color="white" @click.stop="onRemoveLabel(cls.label)"></v-btn>
+                    <VBtn
+                      density="compact"
+                      icon="mdi-rotate-left"
+                      variant="text"
+                      color="white"
+                      @click.stop="()=> {changeLabelName = cls.label, onLabelChangeDialog = true}"
+                    />
+                    <VBtn
+                      density="compact"
+                      icon="mdi-trash-can"
+                      variant="text"
+                      color="white"
+                      @click.stop="onRemoveLabel(cls.label)"
+                    />
                   </div>
                 </div>
               </button>
             </div>
           </div>
-          <h4 class="side-panel-ttl">ANNOTATE</h4>
+          <h4 class="side-panel-ttl">
+            ANNOTATE
+          </h4>
           <div class="feature-wrap">
             <div class="annotate-cn-list w-100">
               <div
-                class="annotate-cn active"
                 v-for="(item, idx) in datasetStore.getAnnotateByIds(current)"
                 :key="'class-' + idx"
+                class="annotate-cn active"
               >
                 <div class="annotate-cn-list-ttl">
-                  <img src="@/assets/images/png/Group_177_white.svg"/>
+                  <img src="@/assets/images/png/Group_177_white.svg">
                   {{ item.label }}
                 </div>
                 <div class="annotate-cn-list-content">
                   <div class="d-flex flex-fill flex-column justify-content-between text-right">
-                    <div class="annotation-txt">X:{{ item.x1 }},Y:{{ item.y1 }}</div>
-                    <div class="annotation-txt">X:{{ item.x1 }},Y:{{ item.y2 }}</div>
+                    <div class="annotation-txt">
+                      X:{{ item.x1 }},Y:{{ item.y1 }}
+                    </div>
+                    <div class="annotation-txt">
+                      X:{{ item.x1 }},Y:{{ item.y2 }}
+                    </div>
                   </div>
-                  <img src="@/assets/images/png/interface-1.png" width="60" class="ml-1 mr-1"/>
+                  <img
+                    src="@/assets/images/png/interface-1.png"
+                    width="60"
+                    class="ml-1 mr-1"
+                  >
                   <div class="d-flex flex-fill flex-column justify-content-between text-left">
-                    <div class="annotation-txt">  X:{{ item.x2 }},Y:{{ item.y1 }} </div>
-                    <div class="annotation-txt">  X:{{ item.x2 }},Y:{{ item.y2 }} </div>
+                    <div class="annotation-txt">
+                      X:{{ item.x2 }},Y:{{ item.y1 }}
+                    </div>
+                    <div class="annotation-txt">
+                      X:{{ item.x2 }},Y:{{ item.y2 }}
+                    </div>
                   </div>
                 </div>
                 <img
@@ -70,99 +121,110 @@
                   src="@/assets/images/png/cancel.png"
                   height="24"
                   @click="onRemoveAnnotatedLabel(item.id)"
-                />
+                >
               </div>
             </div>
           </div>
-          <DatasetCounter class="second-counter" prefix="Labeled" seperator="of" :current="datasetStore.getLabeledLength" suffix="Image"></DatasetCounter>
-          <DatasetCounter prefix="Selected" seperator="of" :current="current.length" suffix="Image"></DatasetCounter>
+          <DatasetCounter
+            class="second-counter"
+            prefix="Labeled"
+            seperator="of"
+            :current="datasetStore.getLabeledLength"
+            suffix="Image"
+          />
+          <DatasetCounter
+            prefix="Selected"
+            seperator="of"
+            :current="current.length"
+            suffix="Image"
+          />
           <AddEditLabelDialog
             v-model:isDialogVisible="onLabelInputDialog"
             @submit="onNewLabel"
-          ></AddEditLabelDialog>
+          />
           <AddEditLabelDialog
             v-model:isDialogVisible="onLabelChangeDialog"
             :label-name="changeLabelName"
             @submit="onChangeLabel"
-          ></AddEditLabelDialog>
+          />
         </div>
-        <div class="w-100"></div>
+        <div class="w-100" />
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { useDatasetStore } from '@/store/dataset';
-import { useWorkspaceStore } from '@/store/workspace';
-import { useConfirm } from "@/components/comfirm-dialog";
+import { useDatasetStore } from '@/store/dataset'
+import { useWorkspaceStore } from '@/store/workspace'
+import { useConfirm } from "@/components/comfirm-dialog"
 
-import ImageDisplay from '@/components/InputConnection/ImageDisplay.vue';
-import ImageDatasetList from "@/components/InputConnection/ImageDatasetList.vue";
-import DatasetCounter from '@/components/InputConnection/DatasetCounter.vue';
-import VueCrop from "@/components/Tools/VueCrop.vue";
-import { watch, nextTick } from 'vue';
-import { getColorIndex } from '@/components/utils';
-import AddEditLabelDialog from '../../../src/components/dialog/AddEditLabelDialog.vue';
-const datasetStore = useDatasetStore();
-const workspaceStore = useWorkspaceStore();
-const confirm = useConfirm();
+import ImageDisplay from '@/components/InputConnection/ImageDisplay.vue'
+import ImageDatasetList from "@/components/InputConnection/ImageDatasetList.vue"
+import DatasetCounter from '@/components/InputConnection/DatasetCounter.vue'
+import VueCrop from "@/components/Tools/VueCrop.vue"
+import { watch, nextTick } from 'vue'
+import { getColorIndex } from '@/components/utils'
+import AddEditLabelDialog from '../../../src/components/dialog/AddEditLabelDialog.vue'
+const datasetStore = useDatasetStore()
+const workspaceStore = useWorkspaceStore()
+const confirm = useConfirm()
 
-const currentLabel = ref("");
-const current = ref([]);
-const cropboxSize = ref([0,0]);
-const img = ref({});
-const cropbox = ref({});
+const currentLabel = ref("")
+const current = ref([])
+const cropboxSize = ref([0,0])
+const img = ref({})
+const cropbox = ref({})
 
-const onLabelInputDialog = ref(false);
-const onLabelChangeDialog = ref(false);
-const labelName = ref("");
-const changeLabelName = ref("");
-const tobeChangeLabel = ref("");
+const onLabelInputDialog = ref(false)
+const onLabelChangeDialog = ref(false)
+const labelName = ref("")
+const changeLabelName = ref("")
+const tobeChangeLabel = ref("")
 
-const onNewLabel = async(label) => {
-  workspaceStore.addLabel({label : label});
-  onLabelInputDialog.value = false;
-  labelName.value = "";
-};
-
-const onChangeLabel = (newLabel) => {  
-  datasetStore.changeDataAnnotation({oldLabel : changeLabelName.value, newLabel : newLabel});
-  workspaceStore.changeLabel({oldLabel : changeLabelName.value, newLabel : newLabel});
-  onLabelChangeDialog.value = false;
-  tobeChangeLabel.value = "";
-  changeLabelName.value = "";
-  current.value = [];
-};
-
-const selectLabel = (label) => {
-  currentLabel.value = label;
+const onNewLabel = async label => {
+  workspaceStore.addLabel({label : label})
+  onLabelInputDialog.value = false
+  labelName.value = ""
 }
 
-const onRemoveLabel = async(label) => {
-  try{
-    await confirm({ title: "ยืนยันการลบป้ายกำกับ", content: `หากลบ '${label}' ภาพที่ใช้ป้ายกำกับนี้จะถูกล้างค่า`, dialogProps: { width: 'auto' } });
-    datasetStore.removeAllDataAnnotationByLabel(label);
-    workspaceStore.removeLabel(label);
-    currentLabel.value = "";
-  }catch(e){
-    return;
-  }
-};
+const onChangeLabel = newLabel => {  
+  datasetStore.changeDataAnnotation({oldLabel : changeLabelName.value, newLabel : newLabel})
+  workspaceStore.changeLabel({oldLabel : changeLabelName.value, newLabel : newLabel})
+  onLabelChangeDialog.value = false
+  tobeChangeLabel.value = ""
+  changeLabelName.value = ""
+  current.value = []
+}
 
-const onRemoveAnnotatedLabel = async (id) => {
-  datasetStore.removeDataAnnotationWhere({ ids: current.value, annotationId : id });
-};
+const selectLabel = label => {
+  currentLabel.value = label
+}
+
+const onRemoveLabel = async label => {
+  try{
+    await confirm({ title: "ยืนยันการลบป้ายกำกับ", content: `หากลบ '${label}' ภาพที่ใช้ป้ายกำกับนี้จะถูกล้างค่า`, dialogProps: { width: 'auto' } })
+    datasetStore.removeAllDataAnnotationByLabel(label)
+    workspaceStore.removeLabel(label)
+    currentLabel.value = ""
+  }catch(e){
+    return
+  }
+}
+
+const onRemoveAnnotatedLabel = async id => {
+  datasetStore.removeDataAnnotationWhere({ ids: current.value, annotationId : id })
+}
 
 const processBbox = async ()=>{
   if(img.value){
-    let actualSize = await img.value.getActualSize();
-    cropboxSize.value = actualSize;
+    let actualSize = await img.value.getActualSize()
+    cropboxSize.value = actualSize
     if(cropbox.value){
-      cropbox.value.loadBboxFromDataset(current.value.slice(-1).pop());
+      cropbox.value.loadBboxFromDataset(current.value.slice(-1).pop())
     }
   }
-};
+}
 
 watch(current, async (val, oldVal) => {
   
@@ -170,9 +232,9 @@ watch(current, async (val, oldVal) => {
   //   await this.processBbox();
   // });
   //next tick in vue3
-  await nextTick();
-  await processBbox();
-});
+  await nextTick()
+  await processBbox()
+})
 </script>
 
 <style lang="scss" scoped>

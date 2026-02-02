@@ -1,10 +1,14 @@
 <script setup>
-import { useWorkspaceStore } from "@/store/workspace";
-const workspaceStore = useWorkspaceStore();
+import { useWorkspaceStore } from "@/store/workspace"
+const workspaceStore = useWorkspaceStore()
 </script>
 
 <template>
-  <VDialog :model-value="workspaceStore.opening" width="auto" persistent>
+  <VDialog
+    :model-value="workspaceStore.opening"
+    width="auto"
+    persistent
+  >
     <VCard width="480">
       <VCardTitle class="bg-primary d-flex flex-row">
         เปิดโปรเจค        
@@ -17,7 +21,12 @@ const workspaceStore = useWorkspaceStore();
           :model-value="workspaceStore.openingProgress"
           color="primary"
         >
-          <h4 class="my-3 text-center" text-black>กำลังนำเข้าข้อมูล ...<br/> {{workspaceStore.openingProgress}}%</h4>
+          <h4
+            class="my-3 text-center"
+            text-black
+          >
+            กำลังนำเข้าข้อมูล ...<br> {{ workspaceStore.openingProgress }}%
+          </h4>
         </VProgressCircular>
       </VCardItem>
     </VCard>

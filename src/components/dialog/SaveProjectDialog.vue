@@ -1,31 +1,31 @@
 <script setup>
-import DialogCloseBtn from "@/components/dialog/DialogCloseBtn.vue";
+import DialogCloseBtn from "@/components/dialog/DialogCloseBtn.vue"
 
 const props = defineProps({
   isDialogVisible: Boolean,
 })
 
-const emit = defineEmits(['update:isDialogVisible','submit']);
+const emit = defineEmits(['update:isDialogVisible','submit'])
 
-const refVForm = ref({});
-const filename = ref("");
+const refVForm = ref({})
+const filename = ref("")
 
 const resetForm = () => {
-  emit('update:isDialogVisible', false);
+  emit('update:isDialogVisible', false)
 }
 
 const onFormSubmit = async() => {
   let { valid: isValid } = await refVForm.value?.validate()  
   if (isValid) {    
-    emit('submit', filename.value);
+    emit('submit', filename.value)
   }
 }
 
-watch(() => props.isDialogVisible, (val) => {
+watch(() => props.isDialogVisible, val => {
   if(val){
-    filename.value = "";
+    filename.value = ""
   }
-});
+})
 </script>
 
 <template>
@@ -45,7 +45,10 @@ watch(() => props.isDialogVisible, (val) => {
         </VCardTitle>
       </VCardItem>
       <VCardText class="pt-0">
-        <VForm ref="refVForm" @submit.prevent="onFormSubmit">
+        <VForm
+          ref="refVForm"
+          @submit.prevent="onFormSubmit"
+        >
           <VRow>
             <VCol cols="12">
               <VTextField
@@ -70,8 +73,15 @@ watch(() => props.isDialogVisible, (val) => {
             </VCol>
           </VRow>
           <VRow>
-            <VCol cols="12" class="text-center mt-3">
-              <VBtn type="submit" class="me-3" color="primary">
+            <VCol
+              cols="12"
+              class="text-center mt-3"
+            >
+              <VBtn
+                type="submit"
+                class="me-3"
+                color="primary"
+              >
                 บันทึกโปรเจค
               </VBtn>
             </VCol>
@@ -81,6 +91,7 @@ watch(() => props.isDialogVisible, (val) => {
     </VCard>
   </VDialog>
 </template>
+
 <style scoped>
 .selected-block{
   background-color: #3e3481 !important;

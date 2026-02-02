@@ -1,27 +1,37 @@
 <script setup>
-import { useServerStore } from '@/store/server';
+import { useServerStore } from '@/store/server'
 
-const serverStore = useServerStore();
+const serverStore = useServerStore()
 
 //watch message and scroll to bottom
 watch(serverStore.messagesLog, () => {
-  console.log("Scrolling to bottom");
-  const monitor = document.querySelector('.monitor-console');
+  console.log("Scrolling to bottom")
+  const monitor = document.querySelector('.monitor-console')
   if(monitor) {
-    monitor.scrollTop = monitor.scrollHeight - monitor.clientHeight;
+    monitor.scrollTop = monitor.scrollHeight - monitor.clientHeight
   }
-});
+})
 </script>
+
 <template>
   <!-- display log message -->
   <div class="monitor-console">
-      <ol ref="monitor" class="monitor-line">
-        <li v-for="(line,inx) in serverStore.messagesLog" :key="inx" class="serial-line" :style="[line.includes('Error') ? {'color':'orangered'} : {}]">
-          {{line}}
-        </li>
-      </ol>
+    <ol
+      ref="monitor"
+      class="monitor-line"
+    >
+      <li
+        v-for="(line,inx) in serverStore.messagesLog"
+        :key="inx"
+        class="serial-line"
+        :style="[line.includes('Error') ? {'color':'orangered'} : {}]"
+      >
+        {{ line }}
+      </li>
+    </ol>
   </div>  
 </template>
+
 <style scoped>  
   ol{
     list-style-type: none;

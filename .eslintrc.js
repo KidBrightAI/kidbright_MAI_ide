@@ -86,6 +86,7 @@ module.exports = {
       ],
     }],
     'no-unused-locals': 'off',
+
     // Thanks: https://stackoverflow.com/a/63961972/10796681
     'no-shadow': 'off',
 

@@ -1,28 +1,8 @@
 <script setup>
-import WaveFormPlayer from '@/components/InputConnection/WaveFormPlayer.vue';
-import { useDatasetStore } from '@/store/dataset';
-import { useWorkspaceStore } from '@/store/workspace';
-import { useConfirm } from "@/components/comfirm-dialog";
-
-const workspaceStore = useWorkspaceStore();
-const datasetStore = useDatasetStore();
-
-const duration = workspaceStore.extension.options.durations.value;
-
-const value = defineModel({
-  type: [String, Array],
-  default: null,
-  required: true,
-});
-
-const showMFCCDialog = ref(false);
-const targetMFCC = ref(null);
-const confirm = useConfirm();
-
-const lastSelectedIndex = ref(0);
-const selected = ref([]);
-const playing = ref(null);
-const player = ref([]);
+import WaveFormPlayer from '@/components/InputConnection/WaveFormPlayer.vue'
+import { useDatasetStore } from '@/store/dataset'
+import { useWorkspaceStore } from '@/store/workspace'
+import { useConfirm } from "@/components/comfirm-dialog"
 
 const props = defineProps({
   multiple: {
@@ -37,18 +17,38 @@ const props = defineProps({
     type: Number,
     default: 1,
   },
-});
-const emit = defineEmits(["mfcc", "play"]);
-const onMFCC = (id) => {
-  targetMFCC.value = id;
-  showMFCCDialog.value = true;
-};
-const onPlay = (id) => {
-  emit("play", id);
-};
-const onEnd = (id) => {
-  console.log("end", id);
-};
+})
+const emit = defineEmits(["mfcc", "play"])
+const workspaceStore = useWorkspaceStore()
+const datasetStore = useDatasetStore()
+
+const duration = workspaceStore.extension.options.durations.value
+
+const value = defineModel({
+  type: [String, Array],
+  default: null,
+  required: true,
+})
+
+const showMFCCDialog = ref(false)
+const targetMFCC = ref(null)
+const confirm = useConfirm()
+
+const lastSelectedIndex = ref(0)
+const selected = ref([])
+const playing = ref(null)
+const player = ref([])
+
+const onMFCC = id => {
+  targetMFCC.value = id
+  showMFCCDialog.value = true
+}
+const onPlay = id => {
+  emit("play", id)
+}
+const onEnd = id => {
+  console.log("end", id)
+}
 const selectImage = (event, item, index) => {
   // if(props.multiple){
   //   // ---- multiple select ---- //
@@ -84,34 +84,36 @@ const selectImage = (event, item, index) => {
   if(props.multiple) {
     // ---- multiple select ---- //
     if (event.shiftKey) {
-      let ds = datasetStore.data;
-      let range = null;
+      let ds = datasetStore.data
+      let range = null
       if (index < lastSelectedIndex.value) {
-        range = ds.slice(index, event.ctrlKey ? lastSelectedIndex.value : lastSelectedIndex.value + 1);
+        range = ds.slice(index, event.ctrlKey ? lastSelectedIndex.value : lastSelectedIndex.value + 1)
       } else if (index > lastSelectedIndex.value) {
-        range = ds.slice(event.ctrlKey ? lastSelectedIndex.value + 1 : lastSelectedIndex.value, index + 1);
+        range = ds.slice(event.ctrlKey ? lastSelectedIndex.value + 1 : lastSelectedIndex.value, index + 1)
       }
       if (range) {
-        selected.value = event.ctrlKey ? selected.value.concat(range.map((el) => el.id)) : range.map((el) => el.id);
+        selected.value = event.ctrlKey ? selected.value.concat(range.map(el => el.id)) : range.map(el => el.id)
       }
     } else if (event.ctrlKey) {
-      let indexed = selected.value.indexOf(item);
+      let indexed = selected.value.indexOf(item)
       if (indexed !== -1) {
         //selected item contained, let remove
-        selected.value.splice(indexed, 1);
+        selected.value.splice(indexed, 1)
       } else {
-        selected.value.push(item);
+        selected.value.push(item)
       }
     } else {
-      selected.value = [item];
+      selected.value = [item]
     }
-    value.value = selected.value;
+    value.value = selected.value
+
     // ---------------------- //
   } else {
-    value.value = item;
+    value.value = item
   }
-  lastSelectedIndex.value = index;
-};
+  lastSelectedIndex.value = index
+}
+
 /*
 const selectImage = (e, id, index) => {
   if (e.ctrlKey) {
@@ -130,63 +132,72 @@ const selectImage = (e, id, index) => {
 };
 */
 const removeItem = async (e, item) => {
-  e.stopPropagation();
+  e.stopPropagation()
   if (props.multiple) {
     if (e.ctrlKey) {
       if (selected.value.length > 1) {
         try {
-          await confirm({ title: "ยืนยันการลบเสียงที่เลือก", content: `ต้องการลบรูปที่เลือก ${selected.value.length} รูป`, dialogProps: { width: 'auto' } });
-          await datasetStore.deleteDatasetItems(selected.value);
-          selected.value = [];
-          value.value = [];
+          await confirm({ title: "ยืนยันการลบเสียงที่เลือก", content: `ต้องการลบรูปที่เลือก ${selected.value.length} รูป`, dialogProps: { width: 'auto' } })
+          await datasetStore.deleteDatasetItems(selected.value)
+          selected.value = []
+          value.value = []
         } catch (e) {
-          return;
+          return
         }
       }
     } else {
-      await datasetStore.deleteDatasetItem(item);
+      await datasetStore.deleteDatasetItem(item)
       if (selected.value.includes(item.id)) {
-        selected.value = selected.value.filter((v) => v !== item.id) || [];
-        value.value = selected.value;
+        selected.value = selected.value.filter(v => v !== item.id) || []
+        value.value = selected.value
       }
     }
   } else {
-    await datasetStore.deleteDatasetItem(item);
+    await datasetStore.deleteDatasetItem(item)
     if (item.id === value.value) {
-      value.value = null;
+      value.value = null
     }
   }
-};
-const playHandler = (id) => {
-  emit("play", id);
-  let target = player.value.find((el) => el.id === id);
+}
+const playHandler = id => {
+  emit("play", id)
+  let target = player.value.find(el => el.id === id)
   if (target) {
-    target.play();
+    target.play()
   }
-};
-
+}
 </script>
+
 <template>
   <div class="img-slider">
-    <v-dialog max-width="500" v-model="showMFCCDialog">
-      <v-card title="MFCC">
-        <v-card-text>
-          <img width="455px" height="450px" :src="`${datasetStore.baseURL}/${targetMFCC}_mfcc.png`"></img>
-        </v-card-text>
-        <v-card-actions>
-          <VSpacer></VSpacer>
-          <v-btn @click="showMFCCDialog = false">Close</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <VDialog
+      v-model="showMFCCDialog"
+      max-width="500"
+    >
+      <VCard title="MFCC">
+        <VCardText>
+          <img
+            width="455px"
+            height="450px"
+            :src="`${datasetStore.baseURL}/${targetMFCC}_mfcc.png`"
+          ></img>
+        </VCardText>
+        <VCardActions>
+          <VSpacer />
+          <VBtn @click="showMFCCDialog = false">
+            Close
+          </VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
     <DynamicScroller
+      ref="img_scroller"
       :items="datasetStore.data"
       :item-size="65"
       class="scroller"
-      ref="img_scroller"
       :min-item-size="60"
     >
-      <template v-slot="{ item, index, active }">
+      <template #default="{ item, index, active }">
         <DynamicScrollerItem
           :item="item"
           :active="active"
@@ -195,43 +206,66 @@ const playHandler = (id) => {
         >
           <div
             :key="index"
+            class="dataset-item"
             :class="{
-              'dataset-item' : true,
               active: multiple? value.includes(item.id) : value === item.id,
             }"
             @click="selectImage($event,item.id,index)"
           >
-            <div v-if="showInfo && item.annotate.length" class="annotate-data">
-              <span>{{item.annotate.length}}</span>
+            <div
+              v-if="showInfo && item.annotate.length"
+              class="annotate-data"
+            >
+              <span>{{ item.annotate.length }}</span>
             </div>
             <WaveFormPlayer 
               :id="item.id" 
+              :ref="el => player.includes(el) || player.push(el)" 
               :sound_ext="item.sound_ext" 
               :img_ext="item.ext" 
-              :delay="duration" 
-              :ref="el => player.includes(el) || player.push(el)"
+              :delay="duration"
+              :volume="volume"
               @onPlay="onPlay"
               @onEnd="onEnd"
-              :volume="volume"
+            />
+            <div
+              v-if="showInfo && item.class"
+              class="label-data"
             >
-            </WaveFormPlayer>
-            <div v-if="showInfo && item.class" class="label-data">
-              <img src="@/assets/images/png/Group_177_green.svg" height="20" style="padding-right: 10px"/>
-              {{item.class}}
+              <img
+                src="@/assets/images/png/Group_177_green.svg"
+                height="20"
+                style="padding-right: 10px"
+              >
+              {{ item.class }}
             </div>
             <div v-if="showInfo && item.class">
-              <img src="@/assets/images/png/Group_177_grey.svg" height="20"/>
-              </div>
-            <div class="control">
-              <img src="@/assets/images/png/wave-sound.png" height="20" class="op-btn" @click="onMFCC(item.id)"/>              
+              <img
+                src="@/assets/images/png/Group_177_grey.svg"
+                height="20"
+              >
             </div>
-            <img title="กดปุ่ม CTRL ค้างไว้ เพื่อทำการลบรูปที่เลือก" class="cancel-btn" src="@/assets/images/png/cancel.png" @click.stop="removeItem($event,item)"/>
+            <div class="control">
+              <img
+                src="@/assets/images/png/wave-sound.png"
+                height="20"
+                class="op-btn"
+                @click="onMFCC(item.id)"
+              >              
+            </div>
+            <img
+              title="กดปุ่ม CTRL ค้างไว้ เพื่อทำการลบรูปที่เลือก"
+              class="cancel-btn"
+              src="@/assets/images/png/cancel.png"
+              @click.stop="removeItem($event,item)"
+            >
           </div>
         </DynamicScrollerItem>
       </template>
     </DynamicScroller>
   </div>
 </template>
+
 <style lang="scss" scoped>
 $primary-color: #007e4e;
 $secondary-color: #007e4e;

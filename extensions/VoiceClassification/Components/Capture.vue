@@ -1,66 +1,86 @@
 <script setup>    
-  import AdbSoundCapture from "@/components/InputConnection/AdbSoundCapture.vue";
-  import DatasetCounter from "@/components/InputConnection/DatasetCounter.vue";
-  import SoundDatasetList from "@/components/InputConnection/SoundDatasetList.vue";
-  import { randomId } from "@/components/utils";
-  import { useDatasetStore } from '@/store/dataset';
-  import { useWorkspaceStore } from '@/store/workspace';
+import AdbSoundCapture from "@/components/InputConnection/AdbSoundCapture.vue"
+import DatasetCounter from "@/components/InputConnection/DatasetCounter.vue"
+import SoundDatasetList from "@/components/InputConnection/SoundDatasetList.vue"
+import { randomId } from "@/components/utils"
+import { useDatasetStore } from '@/store/dataset'
+import { useWorkspaceStore } from '@/store/workspace'
 
-  const datasetStore = useDatasetStore();
-  const workspaceStore = useWorkspaceStore();
+const datasetStore = useDatasetStore()
+const workspaceStore = useWorkspaceStore()
 
-  const current = ref([]);
-  const status = ref("disconnected");
-  const isRecording = ref(false);  
-  const soundCapture = ref(null);
-  const showMFCCDialog = ref(false);
-  const targetMFCC = ref(null);
-  const record = () => {
-    soundCapture.value.listen();
-  };
-  const onRecordComplete = async(data) => {
-    if(data) {
-      let tobesave = {
-        id : randomId(),
-        thumbnail : null,
-        image: data.preview,
-        mfcc: data.mfcc,
-        sound : data.sound,
-        annotate: [],
-        class: null,
-        ext: "png",
-        sound_ext: "wav",
-        mfcc_ext: "png",
-        duration: data.duration,
-      };
-      await datasetStore.addData(tobesave);
-      current.value = [data.id];
+const current = ref([])
+const status = ref("disconnected")
+const isRecording = ref(false)  
+const soundCapture = ref(null)
+const showMFCCDialog = ref(false)
+const targetMFCC = ref(null)
+const record = () => {
+  soundCapture.value.listen()
+}
+const onRecordComplete = async data => {
+  if(data) {
+    let tobesave = {
+      id : randomId(),
+      thumbnail : null,
+      image: data.preview,
+      mfcc: data.mfcc,
+      sound : data.sound,
+      annotate: [],
+      class: null,
+      ext: "png",
+      sound_ext: "wav",
+      mfcc_ext: "png",
+      duration: data.duration,
     }
-    //datasetStore.addVoice(data);
-  };
+    await datasetStore.addData(tobesave)
+    current.value = [data.id]
+  }
+
+  //datasetStore.addVoice(data);
+}
 </script>
+
 <template>
   <div class="w-100 h-100">
     <div class="d-flex w-100 h-100 outer-wrap">
       <div class="d-flex flex-fill flex-column main-panel bg-white">
         <div class="d-flex flex-fill align-items-center justify-content-center view-panel">
-          <AdbSoundCapture ref="soundCapture" v-model="status" @recorded="onRecordComplete" :id="current.slice(-1).pop()"></AdbSoundCapture>
-          <p class="view-img-desc center-pos" v-if="(current.length == null || current.length <= 0) && !isRecording">
+          <AdbSoundCapture
+            :id="current.slice(-1).pop()"
+            ref="soundCapture"
+            v-model="status"
+            @recorded="onRecordComplete"
+          />
+          <p
+            v-if="(current.length == null || current.length <= 0) && !isRecording"
+            class="view-img-desc center-pos"
+          >
             No selected item, please click on the list below to select.
           </p>
           <DatasetCounter
-                :current="
-                  current.length ? datasetStore.positionOf(current.slice(-1).pop()) + 1 : null
-                "
-                prefix="Selected "
-                suffix="Sound"
-          ></DatasetCounter>
+            :current="
+              current.length ? datasetStore.positionOf(current.slice(-1).pop()) + 1 : null
+            "
+            prefix="Selected "
+            suffix="Sound"
+          />
         </div>
-        <SoundDatasetList v-model="current" :multiple="true" :showInfo="false" :volume="volume"></SoundDatasetList>
+        <SoundDatasetList
+          v-model="current"
+          :multiple="true"
+          :show-info="false"
+          :volume="volume"
+        />
       </div>
-      <div class="side-panel d-flex justify-space-between" style="width: 300px">
+      <div
+        class="side-panel d-flex justify-space-between"
+        style="width: 300px"
+      >
         <div class="w-100">
-          <h5 class="side-panel-ttl">Recorder Settings</h5>
+          <h5 class="side-panel-ttl">
+            Recorder Settings
+          </h5>
           <div class="feature-wrap">
             <p>Range : <b> {{ workspaceStore.extension.options.durations.value }} </b> seconds</p>            
           </div>
@@ -74,7 +94,7 @@
             alt=""
             srcset=""
             @click="record"
-          />
+          >
           <img
             v-else
             class="op-btn op-btn-disable"
@@ -82,7 +102,7 @@
             height="96"
             alt=""
             srcset=""
-          />
+          >
         </div>
       </div>
     </div>

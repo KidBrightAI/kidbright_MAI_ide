@@ -355,4 +355,4 @@ export default `<xml>
     </block>
     <block type="stop_move"></block>
   </category>
-</xml>`;
+</xml>`

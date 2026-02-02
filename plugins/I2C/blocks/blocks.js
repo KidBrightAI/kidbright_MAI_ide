@@ -9,32 +9,32 @@ Blockly.defineBlocksWithJsonArray([
         "options": [
           [
             "2",
-            "2"
+            "2",
           ],
           [
             "0",
-            "0"
+            "0",
           ],
           [
             "1",
-            "1"
+            "1",
           ],
           [
             "3",
-            "3"
-          ]
-        ]
+            "3",
+          ],
+        ],
       },
       {
         "type": "field_input",
         "name": "addr",
-        "text": "0x44"
-      }
+        "text": "0x44",
+      },
     ],
     "output": "I2CDevice",
     "colour": 45,
     "tooltip": "",
-    "helpUrl": ""
+    "helpUrl": "",
   },
   {
     "type": "pylibi2c_write",
@@ -43,24 +43,24 @@ Blockly.defineBlocksWithJsonArray([
       {
         "type": "input_value",
         "name": "device",
-        "check": "I2CDevice"
+        "check": "I2CDevice",
       },
       {
         "type": "field_input",
         "name": "internal_addr",
-        "text": "0x0"
+        "text": "0x0",
       },
       {
         "type": "field_input",
         "name": "data",
-        "text": "0x0, 0x1"
-      }
+        "text": "0x0, 0x1",
+      },
     ],
     "previousStatement": null,
     "nextStatement": null,
     "colour": 45,
     "tooltip": "",
-    "helpUrl": ""
+    "helpUrl": "",
   },
   {
     "type": "pylibi2c_read",
@@ -69,23 +69,23 @@ Blockly.defineBlocksWithJsonArray([
       {
         "type": "input_value",
         "name": "device",
-        "check": "I2CDevice"
+        "check": "I2CDevice",
       },
       {
         "type": "field_input",
         "name": "internal_addr",
-        "text": "0x0"
+        "text": "0x0",
       },
       {
         "type": "input_value",
         "name": "nbyte",
-        "check": "Number"
-      }
+        "check": "Number",
+      },
     ],
     "output": "Array",
     "colour": 45,
     "tooltip": "",
-    "helpUrl": ""
-  }
-]);
+    "helpUrl": "",
+  },
+])
     

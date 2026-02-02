@@ -1,23 +1,23 @@
 <script setup>
-
 const props = defineProps({
   isDialogVisible: Boolean,
 })
 
-const labelName = ref('');
-const showDialog = ref(false);
+const emit = defineEmits(['newLabel'])
 
-const emit = defineEmits(['newLabel']);
+const labelName = ref('')
+const showDialog = ref(false)
 
 const resetForm = () => {
-  labelName.value = '';
-  showDialog.value = false;
+  labelName.value = ''
+  showDialog.value = false
 }
 const submitLabel = () => {
-  emit('newLabel', labelName.value);
-  resetForm();
+  emit('newLabel', labelName.value)
+  resetForm()
 }
 </script>
+
 <template>
   <VDialog
     v-model="showDialog"
@@ -27,8 +27,12 @@ const submitLabel = () => {
     <VCard>
       <VToolbar density="compact">
         <VToolbarTitle>เพิ่มป้ายกำกับใหม่</VToolbarTitle>
-        <VSpacer/> 
-        <VBtn icon @click="resetForm" density="compact">
+        <VSpacer /> 
+        <VBtn
+          icon
+          density="compact"
+          @click="resetForm"
+        >
           <VIcon>mdi-close</VIcon>
         </VBtn>
       </VToolbar>
@@ -37,11 +41,18 @@ const submitLabel = () => {
           v-model="labelName"
           label="ตั้งชื่อป้ายกำกับ"
           outlined
-        ></VTextField>
+        />
       </VCardText>
       <VCardActions>
-        <VSpacer/>
-        <VBtn color="primary" @click="submitLabel" variant="elevated" :disabled="!labelName.length">เพิ่มป้ายกำกับ</VBtn>
+        <VSpacer />
+        <VBtn
+          color="primary"
+          variant="elevated"
+          :disabled="!labelName.length"
+          @click="submitLabel"
+        >
+          เพิ่มป้ายกำกับ
+        </VBtn>
       </VCardActions>
     </VCard>
   </VDialog>

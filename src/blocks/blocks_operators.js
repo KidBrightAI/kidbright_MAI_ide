@@ -6,7 +6,7 @@ Blockly.defineBlocksWithJsonArray([
     "nextStatement": null,
     "colour": "#34495E",
     "tooltip": "initialize the pseudo-random number generator",
-    "helpUrl": ""
+    "helpUrl": "",
   },
   {
     "type": "math_map",
@@ -15,33 +15,33 @@ Blockly.defineBlocksWithJsonArray([
       {
         "type": "input_value",
         "name": "value",
-        "check": "Number"
+        "check": "Number",
       },
       {
         "type": "input_value",
         "name": "from_min",
-        "check": "Number"
+        "check": "Number",
       },
       {
         "type": "input_value",
         "name": "from_max",
-        "check": "Number"
+        "check": "Number",
       },
       {
         "type": "input_value",
         "name": "to_min",
-        "check": "Number"
+        "check": "Number",
       },
       {
         "type": "input_value",
         "name": "to_max",
-        "check": "Number"
-      }
+        "check": "Number",
+      },
     ],
     "inputsInline": true,
     "output": "Number",
     "colour": "#34495E",
     "tooltip": "",
-    "helpUrl": ""
-  }
-]);
+    "helpUrl": "",
+  },
+])

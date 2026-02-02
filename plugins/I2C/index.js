@@ -1,14 +1,14 @@
 export default {
-    name: "I2C",    
-    description: "I2C raw data read and write via pylibi2c",
-    category: "Communication",
-    author: "comdet",
-    version: "1.0.0",
-    icon: "/static/i2c.png",
-    color: "#8b507c",
-    blocks: [
-        {
-            xml : 
+  name: "I2C",    
+  description: "I2C raw data read and write via pylibi2c",
+  category: "Communication",
+  author: "comdet",
+  version: "1.0.0",
+  icon: "/static/i2c.png",
+  color: "#8b507c",
+  blocks: [
+    {
+      xml : 
             `<block type="variables_set">
             <field name="VAR">i2c_device</field>
             <value name="VALUE">
@@ -58,7 +58,7 @@ export default {
               </shadow>
             </value>
           </block>
-        </category>`
-        }
-    ]
+        </category>`,
+    },
+  ],
 }

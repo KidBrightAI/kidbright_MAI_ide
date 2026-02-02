@@ -1,25 +1,25 @@
 <script setup>
 import { Splitpanes, Pane } from 'splitpanes'
 import 'splitpanes/dist/splitpanes.css'
-import { randomId } from "@/components/utils";
-import ImportImageClassifiy from "@/components/dialog/ImportImageClassify.vue";
-import ImportObjectDetectDialog from "@/components/dialog/ImportObjectDetectDialog.vue";
-import ImageCapture from "@/components/InputConnection/ImageCapture.vue";
-import ImageDisplay from "@/components/InputConnection/ImageDisplay.vue";
-import ImageDatasetList from "@/components/InputConnection/ImageDatasetList.vue";
-import DatasetCounter from "@/components/InputConnection/DatasetCounter.vue";
+import { randomId } from "@/components/utils"
+import ImportImageClassifiy from "@/components/dialog/ImportImageClassify.vue"
+import ImportObjectDetectDialog from "@/components/dialog/ImportObjectDetectDialog.vue"
+import ImageCapture from "@/components/InputConnection/ImageCapture.vue"
+import ImageDisplay from "@/components/InputConnection/ImageDisplay.vue"
+import ImageDatasetList from "@/components/InputConnection/ImageDatasetList.vue"
+import DatasetCounter from "@/components/InputConnection/DatasetCounter.vue"
 
-import { useDatasetStore } from '@/store/dataset';
+import { useDatasetStore } from '@/store/dataset'
 
-const datasetStore = useDatasetStore();
+const datasetStore = useDatasetStore()
 
-const current = ref([]);
-const cameraReady = ref(false);
-const camera = ref({});
-const showImportDialog = ref(false);
+const current = ref([])
+const cameraReady = ref(false)
+const camera = ref({})
+const showImportDialog = ref(false)
 
 const snapAndSave = async () => {
-  let { image, width, height } = await camera.value.snap();
+  let { image, width, height } = await camera.value.snap()
   let data = {
     id : randomId(12),
     image: image,
@@ -28,23 +28,30 @@ const snapAndSave = async () => {
     annotate: [],
     class: null,
     ext: "jpg",
-  };
-  await datasetStore.addData(data);
-  current.value = [data.id];
-};
+  }
+  await datasetStore.addData(data)
+  current.value = [data.id]
+}
 </script>
+
 <template>
   <div class="w-100 h-100">
     <div class="d-flex w-100 h-100 outer-wrap">
-      <splitpanes class="default-theme" style="width: 100%;">
-        <pane size="80">
+      <Splitpanes
+        class="default-theme"
+        style="width: 100%;"
+      >
+        <Pane size="80">
           <div class="d-flex flex-column h-100">
             <div class="d-flex flex-fill aling-center justify-center view-panel">
-              <image-display
+              <ImageDisplay
                 v-if="current.length"
                 :id="current.slice(-1).pop()"
-              ></image-display>
-              <p class="d-flex align-center justify-center text-white" v-if="!current.length">
+              />
+              <p
+                v-if="!current.length"
+                class="d-flex align-center justify-center text-white"
+              >
                 No selected image, please click on the image below to select.
               </p>
               <DatasetCounter
@@ -52,48 +59,49 @@ const snapAndSave = async () => {
                   current.length ? datasetStore.positionOf(current.slice(-1).pop()) + 1 : null
                 "
                 suffix="Image"
-              ></DatasetCounter>
+              />
             </div>
             <ImageDatasetList
               v-model="current"
               :multiple="true"
-              :showInfo="true">
-            </ImageDatasetList>
+              :show-info="true"
+            />
           </div>
-        </pane>
-        <pane class="d-flex justify-center" size="20">
+        </Pane>
+        <Pane
+          class="d-flex justify-center"
+          size="20"
+        >
           <div class="side-panel">
             <ImageCapture
-              source=""
               ref="camera"
+              source=""
               @started="(_) => (cameraReady = true)"
               @stoped="(_) => (cameraReady = false)"
-            >
-            </ImageCapture>
+            />
             <div class="d-flex align-center justify-center flex-wrap">
               <img
-                v-on:click.prevent
+                class="mt-2 op-btn"
                 :class="[
-                  'mt-2',
-                  'op-btn',
                   { 'op-btn-disable': !cameraReady },
                 ]"
                 src="@/assets/images/png/Group198.png"
                 height="96"
+                @click.prevent
                 @click="snapAndSave"
-              />
+              >
               <img
-                v-on:click.prevent="showImportDialog = true"
                 class="mt-2 op-btn"
                 src="@/assets/images/png/Group199.png"
                 height="96"
-              />
+                @click.prevent="showImportDialog = true"
+              >
             </div>
           </div>
-        </pane>
-      </splitpanes>
+        </Pane>
+      </Splitpanes>
     </div>
-    <ImportObjectDetectDialog v-model:isDialogVisible="showImportDialog"></ImportObjectDetectDialog>
+    <ImportObjectDetectDialog v-model:isDialogVisible="showImportDialog" />
   </div>
 </template>
 

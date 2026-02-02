@@ -1,33 +1,33 @@
 <script setup>
-import { watch } from 'vue';
+import { watch } from 'vue'
 
 
 const props = defineProps({
   isDialogVisible: Boolean,
   labelName: {
     type: String,
-    default: ''
-  }
+    default: '',
+  },
 })
 
-const labelName = ref('');
+const emit = defineEmits(['submit'])
 
-const emit = defineEmits(['submit']);
+const labelName = ref('')
 
 const resetForm = () => {
-  labelName.value = '';
-  emit('update:isDialogVisible', false);
+  labelName.value = ''
+  emit('update:isDialogVisible', false)
 }
 const submitLabel = () => {
-  emit('submit', labelName.value);
-  resetForm();
+  emit('submit', labelName.value)
+  resetForm()
 }
 
-watch(() => props.isDialogVisible, (newVal) => {
-  labelName.value = props.labelName;
-});
-
+watch(() => props.isDialogVisible, newVal => {
+  labelName.value = props.labelName
+})
 </script>
+
 <template>
   <VDialog
     :model-value="props.isDialogVisible"
@@ -36,8 +36,12 @@ watch(() => props.isDialogVisible, (newVal) => {
     <VCard>
       <VToolbar density="compact">
         <VToolbarTitle>{{ !props.labelName? 'เพิ่ม' : 'แก้ไข' }} ป้ายกำกับใหม่</VToolbarTitle>
-        <VSpacer/> 
-        <VBtn icon @click="resetForm" density="compact">
+        <VSpacer /> 
+        <VBtn
+          icon
+          density="compact"
+          @click="resetForm"
+        >
           <VIcon>mdi-close</VIcon>
         </VBtn>
       </VToolbar>
@@ -46,11 +50,18 @@ watch(() => props.isDialogVisible, (newVal) => {
           v-model="labelName"
           :label="!props.labelName? 'ตั้งชื่อป้ายกำกับ' : 'แก้ไขชื่อป้ายกำกับ'"
           outlined
-        ></VTextField>
+        />
       </VCardText>
       <VCardActions>
-        <VSpacer/>
-        <VBtn color="primary" @click="submitLabel" variant="elevated" :disabled="!labelName.length">{{ !props.labelName? 'เพิ่ม' : 'แก้ไข' }}ป้ายกำกับ</VBtn>
+        <VSpacer />
+        <VBtn
+          color="primary"
+          variant="elevated"
+          :disabled="!labelName.length"
+          @click="submitLabel"
+        >
+          {{ !props.labelName? 'เพิ่ม' : 'แก้ไข' }}ป้ายกำกับ
+        </VBtn>
       </VCardActions>
     </VCard>
   </VDialog>

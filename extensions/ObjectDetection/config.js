@@ -11,4 +11,4 @@ export default {
     annotate: "ObjectDetection/Instructions/AnnotateInstruction.vue",
     train: "ObjectDetection/Instructions/TrainInstruction.vue",
   },
-};
+}

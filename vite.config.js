@@ -1,5 +1,6 @@
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
+
 //import monaco from 'rollup-plugin-monaco-editor'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
@@ -10,12 +11,15 @@ import Pages from 'vite-plugin-pages'
 import Layouts from 'vite-plugin-vue-layouts'
 import vuetify from 'vite-plugin-vuetify'
 import AsyncComponentLoader from 'vite-async-component-loader'
+
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     vue(),
+
     //monaco({languages: ['python']}),
     vueJsx(),
+
     // https://github.com/vuetifyjs/vuetify-loader/tree/next/packages/vite-plugin
     vuetify({
       styles: {

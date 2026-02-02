@@ -11,5 +11,6 @@ export default {
     annotate: "ImageClassification/Instructions/AnnotateInstruction.vue",
     train: "ImageClassification/Instructions/TrainInstruction.vue",
   },
+
   //components : ['image_classification/components/Capture.vue'] // this will register auto by ExtensionManager
-};
+}

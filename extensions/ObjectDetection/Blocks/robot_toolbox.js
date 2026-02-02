@@ -369,4 +369,4 @@ export default `<xml>
       </value>
     </block>
   </category>
-</xml>`;
+</xml>`

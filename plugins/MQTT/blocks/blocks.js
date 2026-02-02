@@ -5,79 +5,79 @@ Blockly.defineBlocksWithJsonArray([
     "message0": "MQTT Connect %1 Host %2 Port %3 Client Id %4 Username %5 Password %6 Wait Internet %7",
     "args0": [
       {
-        "type": "input_dummy"
+        "type": "input_dummy",
       },
       {
         "type": "input_value",
         "name": "host",
         "check": "String",
-        "align": "RIGHT"
+        "align": "RIGHT",
       },
       {
         "type": "input_value",
         "name": "port",
         "check": "Number",
-        "align": "RIGHT"
+        "align": "RIGHT",
       },
       {
         "type": "input_value",
         "name": "client_id",
         "check": "String",
-        "align": "RIGHT"
+        "align": "RIGHT",
       },
       {
         "type": "input_value",
         "name": "username",
         "check": "String",
-        "align": "RIGHT"
+        "align": "RIGHT",
       },
       {
         "type": "input_value",
         "name": "password",
         "check": "String",
-        "align": "RIGHT"
+        "align": "RIGHT",
       },
       {
         "type": "field_checkbox",
         "name": "wait",
         "checked": true,
-      }
+      },
     ],
     inputsInline: false,
     "previousStatement": null,
     "nextStatement": null,
     "colour": 180,
     "tooltip": "",
-    "helpUrl": ""
+    "helpUrl": "",
   },
   {
     "type": "mqtt_on_connected",
     "message0": "MQTT on Connected %1 %2",
     "args0": [
       {
-        "type": "input_dummy"
+        "type": "input_dummy",
       },
       {
         "type": "input_statement",
-        "name": "callback"
-      }
+        "name": "callback",
+      },
     ],
     "previousStatement": null,
     "nextStatement": null,
     "colour": 180,
     "tooltip": "",
-    "helpUrl": ""
+    "helpUrl": "",
   },
   {
     "type": "mqtt_is_connect",
     "message0": "MQTT is connected ?",
     "output": [
       "Number",
-      "Boolean"
+      "Boolean",
     ],
     "colour": 180,
     "tooltip": "",
-    "helpUrl": ""
+    "helpUrl": "",
   },
   {
     "type": "mqtt_publish",
@@ -86,7 +86,7 @@ Blockly.defineBlocksWithJsonArray([
       {
         "type": "field_input",
         "name": "topic",
-        "text": ""
+        "text": "",
       },
       {
         "type": "input_value",
@@ -94,17 +94,17 @@ Blockly.defineBlocksWithJsonArray([
         "check": [
           "Boolean",
           "Number",
-          "String"
+          "String",
         ],
-        "align": "RIGHT"
-      }
+        "align": "RIGHT",
+      },
     ],
     "inputsInline": true,
     "previousStatement": null,
     "nextStatement": null,
     "colour": 180,
     "tooltip": "",
-    "helpUrl": ""
+    "helpUrl": "",
   },
   {
     "type": "mqtt_subscribe",
@@ -113,34 +113,36 @@ Blockly.defineBlocksWithJsonArray([
       {
         "type": "field_input",
         "name": "topic",
-        "text": ""
-      }
+        "text": "",
+      },
     ],
     "previousStatement": null,
     "nextStatement": null,
     "colour": 180,
     "tooltip": "",
-    "helpUrl": ""
+    "helpUrl": "",
   },
+
   //mqtt on message
   {
     "type": "mqtt_on_message",
     "message0": "MQTT on Message %1 %2",
     "args0": [
       {
-        "type": "input_dummy"
+        "type": "input_dummy",
       },
       {
         "type": "input_statement",
-        "name": "callback"
-      }
+        "name": "callback",
+      },
     ],
     "previousStatement": null,
     "nextStatement": null,
     "colour": 180,
     "tooltip": "",
-    "helpUrl": ""
+    "helpUrl": "",
   },
+
   //mqtt loop
   {
     "type": "mqtt_loop",
@@ -149,7 +151,7 @@ Blockly.defineBlocksWithJsonArray([
     "nextStatement": null,
     "colour": 180,
     "tooltip": "",
-    "helpUrl": ""
+    "helpUrl": "",
   },
   {
     "type": "mqtt_get_topic",
@@ -157,18 +159,18 @@ Blockly.defineBlocksWithJsonArray([
     "output": "String",
     "colour": 180,
     "tooltip": "",
-    "helpUrl": ""
+    "helpUrl": "",
   },
   {
     "type": "mqtt_get_number",
     "message0": "MQTT get payload number",
     "output": [
       "Number",
-      "Boolean"
+      "Boolean",
     ],
     "colour": 180,
     "tooltip": "",
-    "helpUrl": ""
+    "helpUrl": "",
   },
   {
     "type": "mqtt_get_text",
@@ -176,7 +178,8 @@ Blockly.defineBlocksWithJsonArray([
     "output": "String",
     "colour": 180,
     "tooltip": "",
-    "helpUrl": ""
-  }
-]);
+    "helpUrl": "",
+  },
+])
+
 //================================//

@@ -3,11 +3,11 @@ import {
   NumberInterface,
   IntegerInterface,
   SelectInterface,
-  NodeInterface
-} from "baklavajs";
+  NodeInterface,
+} from "baklavajs"
 
-import { setType } from "@baklavajs/interface-types";
-import { modelInput, modelOutput, tensor } from "../interfaces/interface-types";
+import { setType } from "@baklavajs/interface-types"
+import { modelInput, modelOutput, tensor } from "../interfaces/interface-types"
 
 export const Conv2dNode = defineNode({
   type: "Conv2d",
@@ -19,7 +19,7 @@ export const Conv2dNode = defineNode({
     strides : () => new IntegerInterface("Strides", 1).setPort(false),
     padding : () => new IntegerInterface("Padding", 0).setPort(false),
     activation : () => new SelectInterface("Activation", "ReLU",
-    [
+      [
         { text: "ReLU", value : "ReLU" },
         { text: "Sigmoid", value : "Sigmoid" },
         { text: "Tanh", value : "Tanh" },
@@ -27,26 +27,27 @@ export const Conv2dNode = defineNode({
         { text: "LeakyReLU", value : "LeakyReLU" },
         { text: "ELU", value : "ELU" },
         { text: "PReLU", value : "PReLU" },
-    ]).setPort(false),
+      ]).setPort(false),
   },
   outputs: {
-    result: () => new NodeInterface("Tensor").use(setType, tensor)
+    result: () => new NodeInterface("Tensor").use(setType, tensor),
   },
   calculate({ modelInput, filters, kernel_size, strides, padding, activation})  {
-    let activationCode = "torch.nn." + activation + "()\n";
-    let use_bias = "True";
+    let activationCode = "torch.nn." + activation + "()\n"
+    let use_bias = "True"
     if (activation === "Softmax" || activation === "Sigmoid") {
-      use_bias = "False";
+      use_bias = "False"
     }
-    let conv = "torch.nn.LazyConv2d(" + filters + ", " + kernel_size + ", " + strides + ", padding=" + padding + ", bias=" + use_bias + ")\n";
+    let conv = "torch.nn.LazyConv2d(" + filters + ", " + kernel_size + ", " + strides + ", padding=" + padding + ", bias=" + use_bias + ")\n"
     if (modelInput && modelInput.code) {
-      conv = modelInput.code + conv;
+      conv = modelInput.code + conv
     }
+    
     return {
       result: {
         ... modelInput,
         code : conv + activationCode,
-      }    
+      },    
     }
-  }
-});
+  },
+})

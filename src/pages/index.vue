@@ -1,59 +1,59 @@
 <script setup>
-import Header from '@/components/Header.vue';
-import BlocklyComponent from "@/components/Blockly.vue";
-import { pythonGenerator } from "blockly/python";
-import Footer from "@/components/Footer.vue";
-import { useWorkspaceStore } from "@/store/workspace";
-import { useBoardStore } from "@/store/board";
-import { usePluginStore } from "@/store/plugin";
-import { useConfirm } from "@/components/comfirm-dialog";
-import { toast } from "vue3-toastify";
-import { useRouter } from 'vue-router';
+import Header from '@/components/Header.vue'
+import BlocklyComponent from "@/components/Blockly.vue"
+import { pythonGenerator } from "blockly/python"
+import Footer from "@/components/Footer.vue"
+import { useWorkspaceStore } from "@/store/workspace"
+import { useBoardStore } from "@/store/board"
+import { usePluginStore } from "@/store/plugin"
+import { useConfirm } from "@/components/comfirm-dialog"
+import { toast } from "vue3-toastify"
+import { useRouter } from 'vue-router'
 
-import { randomId } from "@/components/utils";
+import { randomId } from "@/components/utils"
 
-import { onMounted, ref, shallowRef, nextTick, watch, getCurrentInstance } from "vue";
+import { onMounted, ref, shallowRef, nextTick, watch, getCurrentInstance } from "vue"
 
 import { Splitpanes, Pane } from 'splitpanes'
 import 'splitpanes/dist/splitpanes.css'
-import { Terminal } from 'xterm';
-import 'xterm/css/xterm.css';
-import { FitAddon } from 'xterm-addon-fit';
-import { CanvasAddon } from 'xterm-addon-canvas';
+import { Terminal } from 'xterm'
+import 'xterm/css/xterm.css'
+import { FitAddon } from 'xterm-addon-fit'
+import { CanvasAddon } from 'xterm-addon-canvas'
 
-import SingletonShell from "@/engine/SingletonShell";
-import WebSocketShell from "@/engine/WebSocketShell";
-import { sleep } from "@/engine/helper";
+import SingletonShell from "@/engine/SingletonShell"
+import WebSocketShell from "@/engine/WebSocketShell"
+import { sleep } from "@/engine/helper"
 import { loadPlugin } from "@/engine/board"
 
 //------- Dialogs --------//
-import NewProjectDialog from "@/components/dialog/NewProjectDialog.vue";
-import ExampleDialog from "@/components/dialog/ExampleDialog.vue";
-import PluginDialog from "@/components/dialog/PluginDialog.vue";
-import ConnectWifiDialog from "@/components/dialog/ConnectWifiDialog.vue";
-import SavingProjectDialog from "@/components/dialog/SavingProjectDialog.vue";
-import SaveProjectDialog from "@/components/dialog/SaveProjectDialog.vue";
-import UploadProjectDialog from "@/components/dialog/UploadProjectDialog.vue";
-import OpeningProjectDialog from "@/components/dialog/OpeningProjectDialog.vue";
-import NewModelDialog from "@/components/dialog/NewModelDialog.vue";
-import fileExplorerDialog from "@/components/dialog/FileExplorerDialog.vue";
-import SelectBoardDialog from "@/components/dialog/SelectBoardDialog.vue";
+import NewProjectDialog from "@/components/dialog/NewProjectDialog.vue"
+import ExampleDialog from "@/components/dialog/ExampleDialog.vue"
+import PluginDialog from "@/components/dialog/PluginDialog.vue"
+import ConnectWifiDialog from "@/components/dialog/ConnectWifiDialog.vue"
+import SavingProjectDialog from "@/components/dialog/SavingProjectDialog.vue"
+import SaveProjectDialog from "@/components/dialog/SaveProjectDialog.vue"
+import UploadProjectDialog from "@/components/dialog/UploadProjectDialog.vue"
+import OpeningProjectDialog from "@/components/dialog/OpeningProjectDialog.vue"
+import NewModelDialog from "@/components/dialog/NewModelDialog.vue"
+import fileExplorerDialog from "@/components/dialog/FileExplorerDialog.vue"
+import SelectBoardDialog from "@/components/dialog/SelectBoardDialog.vue"
 
 //------- Assets --------//
-import RobotPoker from "@/assets/images/png/Mask_Group_12.png";
+import RobotPoker from "@/assets/images/png/Mask_Group_12.png"
 
-const confirm = useConfirm();
-const workspaceStore = useWorkspaceStore();
-const boardStore = useBoardStore();
-const pluginStore = usePluginStore();
-const router = useRouter();
-const vm = getCurrentInstance();
+const confirm = useConfirm()
+const workspaceStore = useWorkspaceStore()
+const boardStore = useBoardStore()
+const pluginStore = usePluginStore()
+const router = useRouter()
+const vm = getCurrentInstance()
 
-const blocklyComp = ref();
-const footer = shallowRef();
-const splitpanesRef = ref();
-const adb_shell = ref(null);
-const ws_shell = ref(null);
+const blocklyComp = ref()
+const footer = shallowRef()
+const splitpanesRef = ref()
+const adb_shell = ref(null)
+const ws_shell = ref(null)
 
 // Dialog states
 const dialogs = ref({
@@ -65,28 +65,28 @@ const dialogs = ref({
   newModel: false,
   fileExplorer: false,
   saveProject: false,
-});
+})
 
-const isProjectCreating = ref(false);
+const isProjectCreating = ref(false)
 
 // UI states
-const selectedMenu = ref(workspaceStore.currentBoard ? 4 : 0);
-const isSerialPanelOpen = ref(false);
-const bottomMinPaneSize = ref(5);
-const bottomMaxPaneSize = ref(80);
-const bottomPaneSize = ref(5);
-const DEFAULT_FOOTER_HEIGHT = 18;
+const selectedMenu = ref(workspaceStore.currentBoard ? 4 : 0)
+const isSerialPanelOpen = ref(false)
+const bottomMinPaneSize = ref(5)
+const bottomMaxPaneSize = ref(80)
+const bottomPaneSize = ref(5)
+const DEFAULT_FOOTER_HEIGHT = 18
 
-let terminal = null;
-let fitAddon = null;
+let terminal = null
+let fitAddon = null
 
 //=====================================================================//
 //========================= Business Logic ========================== //
 //=====================================================================//
 
-const onBoardSelected = async (board) => {
-  if (isProjectCreating.value) return;
-  isProjectCreating.value = true;
+const onBoardSelected = async board => {
+  if (isProjectCreating.value) return
+  isProjectCreating.value = true
   try {
     const project = {
       name: `${board.name} project`,
@@ -99,301 +99,322 @@ const onBoardSelected = async (board) => {
       dataset: [],
       labels: [],
       board: board.id,
-    };
-    await createdProject(project);
+    }
+    await createdProject(project)
   } catch (error) {
-    console.error("Error creating project from board selection:", error);
-    toast.error("เกิดข้อผิดพลาดในการสร้างโปรเจค");
+    console.error("Error creating project from board selection:", error)
+    toast.error("เกิดข้อผิดพลาดในการสร้างโปรเจค")
   } finally {
-    isProjectCreating.value = false;
+    isProjectCreating.value = false
   }
-};
+}
 
 const openSelectBoardDialog = () => {
   if (workspaceStore.currentBoard) {
-    newProjectConfirm();
+    newProjectConfirm()
   } else {
-    dialogs.value.selectBoard = true;
+    dialogs.value.selectBoard = true
   }
-};
+}
 
 //=====================================================================//
 //========================= Terminal Logic ========================== //
 //=====================================================================//
 
-const serialMonitorCallback = (chunk) => {
+const serialMonitorCallback = chunk => {
   if (terminal) {
-    terminal.write(typeof chunk === "string" ? chunk : new TextDecoder().decode(chunk));
+    terminal.write(typeof chunk === "string" ? chunk : new TextDecoder().decode(chunk))
   }
-};
+}
 
-const serialMonitorWrite = (data) => {
+const serialMonitorWrite = data => {
   if (workspaceStore.currentBoard.protocol === "web-adb") {
     if (adb_shell.value) {
-      adb_shell.value.write(data);
+      adb_shell.value.write(data)
     }
-  } else if (workspaceStore.currentBoard.protocol === "websocket") {
+  } else if (["websocket", "websocket-shell"].includes(workspaceStore.currentBoard.protocol)) {
     if (ws_shell.value) {
-      ws_shell.value.exec(data);
+      ws_shell.value.exec(data)
     }
   }
-};
+}
 
 const serialMonitorBridge = async () => {
   // --- Add guard to prevent multiple connections ---
   if (workspaceStore.currentBoard.protocol === "web-adb" && adb_shell.value && adb_shell.value.hasWriter()) {
-    console.log("ADB shell already connected.");
-    return;
+    console.log("ADB shell already connected.")
+    
+    return
   }
-  if (workspaceStore.currentBoard.protocol === "websocket" && ws_shell.value && ws_shell.value.isConnected) {
-    console.log("WebSocket shell already connected.");
-    return;
+  // Check if connected (handle both property and method)
+  const isWsShellConnected = ws_shell.value && (
+    (typeof ws_shell.value.isConnected === 'function' && ws_shell.value.isConnected()) ||
+    (typeof ws_shell.value.isConnected === 'boolean' && ws_shell.value.isConnected)
+  )
+
+  if (["websocket", "websocket-shell"].includes(workspaceStore.currentBoard.protocol) && isWsShellConnected) {
+    console.log("WebSocket shell already connected.")
+    
+    return
   }
+
   // -------------------------------------------------
 
   if (await boardStore.deviceConnect()) {
     if (workspaceStore.currentBoard.protocol === "web-adb") {
       try {
-        const adb = vm.appContext.config.globalProperties.$adb.adb;
-        adb_shell.value = SingletonShell.getInstance(adb);
-        adb_shell.value.setCallback(serialMonitorCallback);
-        await adb_shell.value.waitWriter();
+        const adb = vm.appContext.config.globalProperties.$adb.adb
+        adb_shell.value = SingletonShell.getInstance(adb)
+        adb_shell.value.setCallback(serialMonitorCallback)
+        await adb_shell.value.waitWriter()
       } catch (err) {
-        console.error(err);
-        serialMonitorCallback(`\r\nError creating adb shell: ${err.message}\r\n`);
+        console.error(err)
+        serialMonitorCallback(`\r\nError creating adb shell: ${err.message}\r\n`)
       }
-    } else if (workspaceStore.currentBoard.protocol === "websocket") {
+    } else if (["websocket", "websocket-shell"].includes(workspaceStore.currentBoard.protocol)) {
       try {
-        // You might need to get the URL from the board configuration
-        const ws_url = workspaceStore.currentBoard.wsShell || "ws://10.90.153.1:5555";
-        ws_shell.value = new WebSocketShell(ws_url, serialMonitorCallback);
-        await ws_shell.value.connect();
-        serialMonitorCallback(`\r\nWebSocket shell connected to ${ws_url}\r\n`);
+        if (workspaceStore.currentBoard.protocol === "websocket-shell") {
+            // Reuse the handler from boardStore to avoid port conflict
+            if (boardStore.handler) {
+                ws_shell.value = boardStore.handler
+                // Subscribe to log events
+                ws_shell.value.on('log', serialMonitorCallback)
+                // If it's the handler, it might already be connected, but bridging calls is enough
+                serialMonitorCallback(`\r\nBridged to Board Shell ...\r\n`)
+            }
+        } else {
+            // Legacy/Direct websocket mode
+            const ws_url = workspaceStore.currentBoard.wsShell || "ws://10.150.36.1:5555"
+            ws_shell.value = new WebSocketShell(ws_url, serialMonitorCallback)
+            await ws_shell.value.connect()
+            serialMonitorCallback(`\r\nWebSocket shell connected to ${ws_url}\r\n`)
+        }
       } catch (err) {
-        console.error(err);
-        serialMonitorCallback(`\r\nError creating websocket shell: ${err.message}\r\n`);
+        console.error(err)
+        serialMonitorCallback(`\r\nError creating websocket shell: ${err.message}\r\n`)
       }
     }
   }
-};
+}
 
 
 //=====================================================================//
 //========================= Blockly Actions =========================//
 //=====================================================================//
 
-const undo = () => blocklyComp.value.undo();
-const redo = () => blocklyComp.value.redo();
+const undo = () => blocklyComp.value.undo()
+const redo = () => blocklyComp.value.redo()
 
-const download = async (event) => {
+const download = async event => {
   if (!isSerialPanelOpen.value) {
-    await onSerial();
-    await sleep(1000);
+    await onSerial()
+    await sleep(1000)
   }
-  terminal.reset();
+  terminal.reset()
 
-  const code = pythonGenerator.workspaceToCode(blocklyComp.value.workspace);
-  const isWriteStartupScriptNeeded = event?.ctrlKey;
+  const code = pythonGenerator.workspaceToCode(blocklyComp.value.workspace)
+  console.log(code)
+  const isWriteStartupScriptNeeded = event?.ctrlKey
   if (isWriteStartupScriptNeeded) {
-    toast.info("Write startup script");
+    toast.info("Write startup script")
   }
 
-  const res = await boardStore.upload(code, isWriteStartupScriptNeeded);
-  toast[res ? 'success' : 'error'](`Upload ${res ? 'success' : 'failed'}`);
-};
+  const res = await boardStore.upload(code, isWriteStartupScriptNeeded)
+  toast[res ? 'success' : 'error'](`Upload ${res ? 'success' : 'failed'}`)
+}
 
 //=====================================================================//
 //=========================== Project Events ==========================
 //=====================================================================//
 
-const createdProject = async (projectInfo) => {
+const createdProject = async projectInfo => {
   try {
-    const res = await workspaceStore.createNewProject(projectInfo);
+    const res = await workspaceStore.createNewProject(projectInfo)
     if (res) {
-      toast.success("สร้างโปรเจคเสร็จเรียบร้อย");
-      setTimeout(() => location.reload(), 1000);
+      toast.success("สร้างโปรเจคเสร็จเรียบร้อย")
+      setTimeout(() => location.reload(), 1000)
     } else {
-      toast.error("สร้างโปรเจคไม่สำเร็จ");
+      toast.error("สร้างโปรเจคไม่สำเร็จ")
     }
   } catch (err) {
-    toast.error(`มีข้อผิดพลาด: ${err.message}`);
+    toast.error(`มีข้อผิดพลาด: ${err.message}`)
   } finally {
-    dialogs.value.newProject = false;
-    dialogs.value.selectBoard = false;
+    dialogs.value.newProject = false
+    dialogs.value.selectBoard = false
   }
-};
+}
 
 const newProjectConfirm = async () => {
   try {
-    await confirm({ title: "ยืนยันการสร้างโปรเจค", content: "ข้อมูลโปรเจคปัจจุบันจะถูกลบทั้งหมด คุณต้องการสร้างโปรเจคใหม่หรือไม่", dialogProps: { width: 'auto' } });
-    dialogs.value.selectBoard = true;
+    await confirm({ title: "ยืนยันการสร้างโปรเจค", content: "ข้อมูลโปรเจคปัจจุบันจะถูกลบทั้งหมด คุณต้องการสร้างโปรเจคใหม่หรือไม่", dialogProps: { width: 'auto' } })
+    dialogs.value.selectBoard = true
   } catch (err) {
     // User cancelled
   }
-};
+}
 
 const openProject = async () => {
   try {
-    await confirm({ title: "ยืนยันการเปิดโปรเจค", content: "ข้อมูลโปรเจคปัจจุบันจะถูกลบทั้งหมด คุณต้องการเปิดโปรเจคใหม่หรือไม่", dialogProps: { width: 'auto' } });
+    await confirm({ title: "ยืนยันการเปิดโปรเจค", content: "ข้อมูลโปรเจคปัจจุบันจะถูกลบทั้งหมด คุณต้องการเปิดโปรเจคใหม่หรือไม่", dialogProps: { width: 'auto' } })
     if (await workspaceStore.openProjectFromZip()) {
-      selectedMenu.value = 4;
-      blocklyComp.value.reload();
-      onResized();
+      selectedMenu.value = 4
+      blocklyComp.value.reload()
+      onResized()
     }
   } catch (err) {
     // User cancelled
   }
-};
+}
 
-const saveProject = async (filename) => {
+const saveProject = async filename => {
   try {
-    dialogs.value.saveProject = false;
-    await workspaceStore.saveProject("download", filename);
+    dialogs.value.saveProject = false
+    await workspaceStore.saveProject("download", filename)
   } catch (err) {
-    console.error(err);
+    console.error(err)
   }
-};
+}
 
 const deleteProject = async () => {
   try {
-    await confirm({ title: "ยืนยันการลบโปรเจค", content: "ข้อมูลโปรเจคปัจจุบันจะถูกลบทั้งหมด คุณต้องการลบโปรเจคหรือไม่", dialogProps: { width: 'auto' } });
-    selectedMenu.value = 0;
-    await workspaceStore.deleteProject();
-    onResized();
+    await confirm({ title: "ยืนยันการลบโปรเจค", content: "ข้อมูลโปรเจคปัจจุบันจะถูกลบทั้งหมด คุณต้องการลบโปรเจคหรือไม่", dialogProps: { width: 'auto' } })
+    selectedMenu.value = 0
+    await workspaceStore.deleteProject()
+    onResized()
   } catch (err) {
     // User cancelled
   }
-};
+}
 
-const selectProjectType = async (selectedType) => {
-  dialogs.value.newModel = false;
+const selectProjectType = async selectedType => {
+  dialogs.value.newModel = false
   if (await workspaceStore.selectProjectType(selectedType)) {
-    router.push("/ai");
+    router.push("/ai")
   } else {
-    toast.error("เลือกประเภทโมเดลไม่สำเร็จ");
+    toast.error("เลือกประเภทโมเดลไม่สำเร็จ")
   }
-};
+}
 
 //=====================================================================//
 //=========================== Board Events ============================
 //=====================================================================//
 
 const onSerial = async () => {
-  isSerialPanelOpen.value = !isSerialPanelOpen.value;
-  bottomPaneSize.value = isSerialPanelOpen.value ? 30 : bottomMinPaneSize.value;
+  isSerialPanelOpen.value = !isSerialPanelOpen.value
+  bottomPaneSize.value = isSerialPanelOpen.value ? 30 : bottomMinPaneSize.value
   if (isSerialPanelOpen.value) {
-    await serialMonitorBridge();
+    await serialMonitorBridge()
   } else {
     if (workspaceStore.currentBoard.protocol === "web-adb") {
       // SingletonShell is managed by its own lifecycle, no need to disconnect here
     } else if (workspaceStore.currentBoard.protocol === "websocket") {
       if (ws_shell.value) {
-        ws_shell.value.disconnect();
-        ws_shell.value = null;
+        ws_shell.value.disconnect()
+        ws_shell.value = null
       }
     }
   }
-  onResized();
-};
+  onResized()
+}
 
 const onExampleOpen = async (mode, example) => {
   try {
-    await confirm({ title: "Confirm open example", content: "All code in this project will be deleted, please save first!", dialogProps: { width: 'auto' } });
-    dialogs.value.example = false;
-    workspaceStore.switchMode(mode);
+    await confirm({ title: "Confirm open example", content: "All code in this project will be deleted, please save first!", dialogProps: { width: 'auto' } })
+    dialogs.value.example = false
+    workspaceStore.switchMode(mode)
     if (mode === 'block') {
-      workspaceStore.block = example.block;
-      blocklyComp.value.reload();
+      workspaceStore.block = example.block
+      blocklyComp.value.reload()
     } else if (mode === 'code') {
-      workspaceStore.code = example.code;
+      workspaceStore.code = example.code
     }
-    onResized();
+    onResized()
   } catch (err) {
     // User cancelled
   }
-};
+}
 
 const onAiOpen = async () => {
   if (!workspaceStore.projectType) {
-    dialogs.value.newModel = true;
+    dialogs.value.newModel = true
   } else {
-    router.push("/ai");
+    router.push("/ai")
   }
-};
+}
 
 //=====================================================================//
 //========================== Plugin Events ==========================
 //=====================================================================//
 
-const onInstallPlugin = async (plugin) => {
-  plugin.installing = true;
+const onInstallPlugin = async plugin => {
+  plugin.installing = true
   setTimeout(async () => {
-    pluginStore.installed.push(plugin);
-    await loadPlugin(pluginStore.installed);
-    plugin.installing = false;
-    toast.success("Install plugin success");
+    pluginStore.installed.push(plugin)
+    await loadPlugin(pluginStore.installed)
+    plugin.installing = false
+    toast.success("Install plugin success")
     if (selectedMenu.value === 4) {
-      blocklyComp.value.reload();
+      blocklyComp.value.reload()
     }
-  }, 1000);
-};
+  }, 1000)
+}
 
-const onUninstallPlugin = async (plugin) => {
-  plugin.installing = true;
+const onUninstallPlugin = async plugin => {
+  plugin.installing = true
   setTimeout(() => {
-    const index = pluginStore.installed.findIndex((item) => item.name === plugin.name);
+    const index = pluginStore.installed.findIndex(item => item.name === plugin.name)
     if (index > -1) {
-      pluginStore.installed.splice(index, 1);
+      pluginStore.installed.splice(index, 1)
     }
-    plugin.installing = false;
-    toast.success("Uninstall plugin success");
+    plugin.installing = false
+    toast.success("Uninstall plugin success")
     if (selectedMenu.value === 4) {
-      blocklyComp.value.reload();
+      blocklyComp.value.reload()
     }
-  }, 1000);
-};
+  }, 1000)
+}
 
 //=====================================================================//
 //======================== UI & Layout Events =======================//
 //=====================================================================//
 
 const calculateMinBottomPlaneSize = () => {
-  if (!splitpanesRef.value || !splitpanesRef.value.$el) return;
-  const minBottomPaneSize = DEFAULT_FOOTER_HEIGHT / (splitpanesRef.value.$el.clientHeight / 100);
-  bottomMinPaneSize.value = minBottomPaneSize;
+  if (!splitpanesRef.value || !splitpanesRef.value.$el) return
+  const minBottomPaneSize = DEFAULT_FOOTER_HEIGHT / (splitpanesRef.value.$el.clientHeight / 100)
+  bottomMinPaneSize.value = minBottomPaneSize
   if (bottomPaneSize.value < minBottomPaneSize) {
-    bottomPaneSize.value = minBottomPaneSize;
+    bottomPaneSize.value = minBottomPaneSize
   }
 
   if (selectedMenu.value === 4) {
-    bottomMaxPaneSize.value = isSerialPanelOpen.value ? 80 : minBottomPaneSize;
+    bottomMaxPaneSize.value = isSerialPanelOpen.value ? 80 : minBottomPaneSize
     if (!isSerialPanelOpen.value) {
-        bottomPaneSize.value = minBottomPaneSize;
+      bottomPaneSize.value = minBottomPaneSize
     }
   } else {
-    bottomMaxPaneSize.value = 0;
-    bottomPaneSize.value = 0;
+    bottomMaxPaneSize.value = 0
+    bottomPaneSize.value = 0
   }
-};
+}
 
 const onResized = () => {
-  calculateMinBottomPlaneSize();
+  calculateMinBottomPlaneSize()
   if (workspaceStore.currentBoard && selectedMenu.value === 4) {
-    blocklyComp.value.resizeWorkspace();
+    blocklyComp.value.resizeWorkspace()
     nextTick(() => {
       setTimeout(() => {
-        if (!footer.value || !footer.value.$refs.terminalDiv) return;
-        const footerHeight = footer.value.$el.clientHeight;
-        const serialMonitorHeight = footerHeight - DEFAULT_FOOTER_HEIGHT;
-        footer.value.$refs.terminalDiv.style.height = `${serialMonitorHeight}px`;
-        fitAddon?.fit();
-      }, 500);
-    });
+        if (!footer.value || !footer.value.$refs.terminalDiv) return
+        const footerHeight = footer.value.$el.clientHeight
+        const serialMonitorHeight = footerHeight - DEFAULT_FOOTER_HEIGHT
+        footer.value.$refs.terminalDiv.style.height = `${serialMonitorHeight}px`
+        fitAddon?.fit()
+      }, 500)
+    })
   }
-};
+}
 
 const mountSerial = () => {
-  if (!footer.value || !footer.value.$refs.terminalDiv) return;
+  if (!footer.value || !footer.value.$refs.terminalDiv) return
   terminal = new Terminal({
     cursorBlink: true,
     scrollback: 1000,
@@ -403,26 +424,26 @@ const mountSerial = () => {
     fontSize: 14,
     lineHeight: 1,
     scrollOnWrite: true,
-  });
+  })
 
-  fitAddon = new FitAddon();
-  terminal.loadAddon(fitAddon);
-  terminal.loadAddon(new CanvasAddon());
-  terminal.open(footer.value.$refs.terminalDiv);
-  fitAddon.fit();
-  terminal.write('\r\n');
-  terminal.onData(serialMonitorWrite);
-};
+  fitAddon = new FitAddon()
+  terminal.loadAddon(fitAddon)
+  terminal.loadAddon(new CanvasAddon())
+  terminal.open(footer.value.$refs.terminalDiv)
+  fitAddon.fit()
+  terminal.write('\r\n')
+  terminal.onData(serialMonitorWrite)
+}
 
 const addChangeListener = () => {
   if (blocklyComp.value?.workspace) {
     blocklyComp.value.workspace.addChangeListener(() => {
       if (blocklyComp.value) {
-        workspaceStore.block = blocklyComp.value.getSerializedWorkspace();
+        workspaceStore.block = blocklyComp.value.getSerializedWorkspace()
       }
-    });
+    })
   }
-};
+}
 
 //=====================================================================//
 //========================= Lifecycle Hooks =========================//
@@ -430,30 +451,42 @@ const addChangeListener = () => {
 
 onMounted(() => {
   if (workspaceStore.currentBoard) {
-    setTimeout(mountSerial, 1000);
+    setTimeout(mountSerial, 1000)
   }
   if (selectedMenu.value === 4) {
-    addChangeListener();
+    addChangeListener()
   }
-});
+})
 
-watch(selectedMenu, (val) => {
-  calculateMinBottomPlaneSize();
+watch(selectedMenu, val => {
+  calculateMinBottomPlaneSize()
   if (val === 4) {
     nextTick(() => {
-      onResized();
-      addChangeListener();
-    });
+      onResized()
+      addChangeListener()
+    })
   }
-});
-
+})
 </script>
 
 <template>
-  <v-layout class="rounded rounded-md main-bg">
-    <v-main class="d-flex align-center justify-center" style="min-height: 310px; height: calc(100vh);">
-      <splitpanes ref="splitpanesRef" class="default-theme" horizontal :style="{ height: selectedMenu==4 ? 'calc(100vh - 100px)' : 'calc(100vh)'}" @resized="onResized" @ready="onResized">
-        <pane v-if="workspaceStore.currentBoard" :size="100 - bottomPaneSize">
+  <VLayout class="rounded rounded-md main-bg">
+    <VMain
+      class="d-flex align-center justify-center"
+      style="min-height: 310px; height: calc(100vh);"
+    >
+      <Splitpanes
+        ref="splitpanesRef"
+        class="default-theme"
+        horizontal
+        :style="{ height: selectedMenu==4 ? 'calc(100vh - 100px)' : 'calc(100vh)'}"
+        @resized="onResized"
+        @ready="onResized"
+      >
+        <Pane
+          v-if="workspaceStore.currentBoard"
+          :size="100 - bottomPaneSize"
+        >
           <div class="w-100 h-100">
             <Header
               @download="download"
@@ -467,37 +500,81 @@ watch(selectedMenu, (val) => {
               @terminal="onSerial"
               @restartBoard="boardStore.rebootBoard"
               @newModel="onAiOpen"
-              @plugin="dialogs.plugin = true">
-            </Header>
-            <BlocklyComponent ref="blocklyComp"></BlocklyComponent>
+              @plugin="dialogs.plugin = true"
+            />
+            <BlocklyComponent ref="blocklyComp" />
           </div>
-        </pane>
-        <pane v-else :size="100 - bottomPaneSize">
-          <div class="d-flex flex-column align-center justify-center" style="height: calc(100vh);">
-            <img style="margin-top: 100px" width="400" :src="RobotPoker"/>
-            <v-btn class="mt-10" color="primary" @click="openSelectBoardDialog">สร้างโปรเจคใหม่</v-btn>
+        </Pane>
+        <Pane
+          v-else
+          :size="100 - bottomPaneSize"
+        >
+          <div
+            class="d-flex flex-column align-center justify-center"
+            style="height: calc(100vh);"
+          >
+            <img
+              style="margin-top: 100px"
+              width="400"
+              :src="RobotPoker"
+            >
+            <VBtn
+              class="mt-10"
+              color="primary"
+              @click="openSelectBoardDialog"
+            >
+              สร้างโปรเจคใหม่
+            </VBtn>
           </div>
-        </pane>
-        <pane :min-size="bottomMinPaneSize" :size="bottomPaneSize" :max-size="bottomMaxPaneSize">
-          <Footer ref="footer" @undo="undo" @redo="redo" @download="download" @terminal="onSerial"></Footer>
-        </pane>
-      </splitpanes>
-    </v-main>
-  </v-layout>
+        </Pane>
+        <Pane
+          :min-size="bottomMinPaneSize"
+          :size="bottomPaneSize"
+          :max-size="bottomMaxPaneSize"
+        >
+          <Footer
+            ref="footer"
+            @undo="undo"
+            @redo="redo"
+            @download="download"
+            @terminal="onSerial"
+          />
+        </Pane>
+      </Splitpanes>
+    </VMain>
+  </VLayout>
 
   <!-- Dialogs -->
-  <SavingProjectDialog></SavingProjectDialog>
-  <SaveProjectDialog v-model="dialogs.saveProject" @submit="saveProject"></SaveProjectDialog>
-  <UploadProjectDialog></UploadProjectDialog>
-  <OpeningProjectDialog></OpeningProjectDialog>
+  <SavingProjectDialog />
+  <SaveProjectDialog
+    v-model="dialogs.saveProject"
+    @submit="saveProject"
+  />
+  <UploadProjectDialog />
+  <OpeningProjectDialog />
   <ConnectWifiDialog v-model="dialogs.connectWifi" />
-  <NewProjectDialog v-model="dialogs.newProject" @submit="createdProject" />
-  <ExampleDialog v-model="dialogs.example" @loadExample="onExampleOpen" />
-  <PluginDialog v-model="dialogs.plugin" @installPlugin="onInstallPlugin" @uninstallPlugin="onUninstallPlugin" />
-  <NewModelDialog v-model="dialogs.newModel" @submit="selectProjectType" />
-  <fileExplorerDialog v-model="dialogs.fileExplorer" />
-  <SelectBoardDialog v-model="dialogs.selectBoard" @board-selected="onBoardSelected" />
-
+  <NewProjectDialog
+    v-model="dialogs.newProject"
+    @submit="createdProject"
+  />
+  <ExampleDialog
+    v-model="dialogs.example"
+    @loadExample="onExampleOpen"
+  />
+  <PluginDialog
+    v-model="dialogs.plugin"
+    @installPlugin="onInstallPlugin"
+    @uninstallPlugin="onUninstallPlugin"
+  />
+  <NewModelDialog
+    v-model="dialogs.newModel"
+    @submit="selectProjectType"
+  />
+  <FileExplorerDialog v-model="dialogs.fileExplorer" />
+  <SelectBoardDialog
+    v-model="dialogs.selectBoard"
+    @board-selected="onBoardSelected"
+  />
 </template>
 
 <route lang="yaml">
@@ -693,5 +770,4 @@ ul {
     opacity: 0.7;
   }
 }
-
 </style>

@@ -32,7 +32,39 @@ async def ws_to_pty(websocket, pty_master_fd):
     loop = asyncio.get_event_loop()
     try:
         async for message in websocket:
-            await loop.run_in_executor(None, lambda: os.write(pty_master_fd, message.encode('utf-8')))
+            if isinstance(message, str) and message.startswith("__SYSTEM__:"):
+                try:
+                    import json
+                    import base64
+                    payload = message[len("__SYSTEM__:"):]
+                    cmd_data = json.loads(payload)
+                    
+                    if cmd_data.get("cmd") == "upload":
+                        path = cmd_data["path"]
+                        content_b64 = cmd_data["data"]
+                        content = base64.b64decode(content_b64)
+                        
+                        # Ensure directory exists
+                        dir_path = os.path.dirname(path)
+                        if dir_path:
+                            os.makedirs(dir_path, exist_ok=True)
+                            
+                        with open(path, "wb") as f:
+                            f.write(content)
+                        
+                        print(f"System: Uploaded file to {path}")
+                        await websocket.send(f"\r\n>>> System: Uploaded {path} success\r\n")
+                except Exception as e:
+                    print(f"System command error: {e}")
+                    await websocket.send(f"\r\n>>> System: Upload error {e}\r\n")
+                continue
+
+            if isinstance(message, str):
+                data = message.encode('utf-8')
+            else:
+                data = message
+                
+            await loop.run_in_executor(None, lambda: os.write(pty_master_fd, data))
     except websockets.exceptions.ConnectionClosed:
         # This is expected when the client disconnects.
         print(f"Client {websocket.remote_address} disconnected (ws_to_pty).")
@@ -62,8 +94,6 @@ async def connection_handler(websocket, path):
     else:  # Parent process
         print(f"PTY process created for {client_addr} with PID: {pid}")
         
-        
-
         loop = asyncio.get_event_loop()
         
         ws_reader_task = asyncio.create_task(ws_to_pty(websocket, master_fd))
@@ -93,7 +123,7 @@ async def connection_handler(websocket, path):
 
 async def main():
     ip = "0.0.0.0"
-    port = 5555
+    port = 5050
 
     print(f"Starting PTY WebSocket shell server on ws://{ip}:{port}")
 

@@ -45,11 +45,11 @@ import {
   NumberInterface,
   IntegerInterface,
   SelectInterface,
-  NodeInterface
-} from "baklavajs";
+  NodeInterface,
+} from "baklavajs"
 
-import { setType } from "@baklavajs/interface-types";
-import { modelInput, modelOutput, tensor } from "../interfaces/interface-types";
+import { setType } from "@baklavajs/interface-types"
+import { modelInput, modelOutput, tensor } from "../interfaces/interface-types"
 
 export const DenseNode = defineNode({
   type: "Dense",
@@ -58,32 +58,33 @@ export const DenseNode = defineNode({
     modelInput : () => new NodeInterface("Model Input | Tensor").use(setType, [modelInput, tensor]),
     output_nodes : () => new IntegerInterface("Output Nodes", 50).setPort(false),
     activation : () => new SelectInterface("Activation", "ReLU",
-    [
-      { text: "ReLU", value : "ReLU" },
+      [
+        { text: "ReLU", value : "ReLU" },
         { text: "Sigmoid", value : "Sigmoid" },
         { text: "Tanh", value : "Tanh" },
         { text: "Softmax", value : "Softmax" },
-    ]).setPort(false),
+      ]).setPort(false),
     use_bias : () => new SelectInterface("Use Bias", "True",
-    [
+      [
         { text: "True", value : "True" },
         { text: "Talse", value : "False" },
-    ]).setPort(false),
+      ]).setPort(false),
   },
   outputs: {
-    result: () => new NodeInterface("Tensor").use(setType, tensor)
+    result: () => new NodeInterface("Tensor").use(setType, tensor),
   },
   calculate({ modelInput, output_nodes, activation, use_bias})  {
-    let activationCode = "torch.nn." + activation + "()\n";
-    let dense = "torch.nn.LazyLinear(out_features = " + output_nodes + ", bias=" + use_bias + ")\n";
+    let activationCode = "torch.nn." + activation + "()\n"
+    let dense = "torch.nn.LazyLinear(out_features = " + output_nodes + ", bias=" + use_bias + ")\n"
     if (modelInput && modelInput.code) {
-      dense = modelInput.code + dense;
+      dense = modelInput.code + dense
     }
+    
     return {
       result: {
         ... modelInput,
         code : dense + activationCode,
-      }    
+      },    
     }
-  }
-});
+  },
+})

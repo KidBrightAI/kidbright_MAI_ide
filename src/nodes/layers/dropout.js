@@ -21,7 +21,7 @@ export default {
       default: 0.5,
     },
   ],
-  generator: (n) => {
-    return "torch.nn.Dropout(" + n.options.rate + ")";
+  generator: n => {
+    return "torch.nn.Dropout(" + n.options.rate + ")"
   },
-};
+}

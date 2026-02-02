@@ -46,11 +46,11 @@ import {
   NumberInterface,
   IntegerInterface,
   SelectInterface,
-  NodeInterface
-} from "baklavajs";
+  NodeInterface,
+} from "baklavajs"
 
-import { setType } from "@baklavajs/interface-types";
-import { modelInput, modelOutput, tensor } from "../interfaces/interface-types";
+import { setType } from "@baklavajs/interface-types"
+import { modelInput, modelOutput, tensor } from "../interfaces/interface-types"
 
 export const MaxPooling2DNode = defineNode({
   type: "MaxPooling2D",
@@ -62,18 +62,19 @@ export const MaxPooling2DNode = defineNode({
     padding : () => new IntegerInterface("Padding", 0).setPort(false),
   },
   outputs: {
-    result: () => new NodeInterface("Tensor").use(setType, tensor)
+    result: () => new NodeInterface("Tensor").use(setType, tensor),
   },
   calculate({ modelInput, pool_size, strides, padding }) {
-    let maxpool = "torch.nn.MaxPool2d(kernel_size=" + pool_size + ", stride=" + strides + ", padding=" + padding + ")\n";
+    let maxpool = "torch.nn.MaxPool2d(kernel_size=" + pool_size + ", stride=" + strides + ", padding=" + padding + ")\n"
     if (modelInput && modelInput.code) {
-      maxpool = modelInput.code + maxpool;
+      maxpool = modelInput.code + maxpool
     }
+    
     return {
       result: {
         ... modelInput,
         code : maxpool,
-      }    
+      },    
     }
-  }
-});
+  },
+})

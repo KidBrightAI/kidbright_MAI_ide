@@ -5,7 +5,7 @@ Blockly.defineBlocksWithJsonArray(
     "output": "Number",
     "colour": 65,
     "tooltip": "",
-    "helpUrl": ""
+    "helpUrl": "",
   },
   {
     "type": "maix3_display_height",
@@ -13,32 +13,32 @@ Blockly.defineBlocksWithJsonArray(
     "output": "Number",
     "colour": 65,
     "tooltip": "",
-    "helpUrl": ""
+    "helpUrl": "",
   },
   {
     "type": "maix3_display_resolution",
     "message0": "display set resolution %1 width %2 height %3",
     "args0": [
       {
-        "type": "input_dummy"
+        "type": "input_dummy",
       },
       {
         "type": "input_value",
         "name": "width",
-        "check": "Number"
+        "check": "Number",
       },
       {
         "type": "input_value",
         "name": "height",
-        "check": "Number"
-      }
+        "check": "Number",
+      },
     ],
     "inputsInline": true,
     "previousStatement": null,
     "nextStatement": null,
     "colour": 65,
     "tooltip": "",
-    "helpUrl": ""
+    "helpUrl": "",
   },
   {
     "type": "maix3_display_get_image",
@@ -47,26 +47,26 @@ Blockly.defineBlocksWithJsonArray(
     "output": "Image",
     "colour": 65,
     "tooltip": "",
-    "helpUrl": ""
+    "helpUrl": "",
   },
   {
     "type": "maix3_display_dislay",
     "message0": "display %1 %2",
     "args0": [
       {
-        "type": "input_dummy"
+        "type": "input_dummy",
       },
       {
         "type": "input_value",
         "name": "image",
-        "check": "Image"
-      }
+        "check": "Image",
+      },
     ],
     "inputsInline": true,
     "previousStatement": null,
     "nextStatement": null,
     "colour": 65,
     "tooltip": "",
-    "helpUrl": ""
-  }]
-);
+    "helpUrl": "",
+  }],
+)
