@@ -78,6 +78,9 @@ if %errorlevel% neq 0 (
     goto :error_end
 )
 
+echo [2.6/3] Fixing line endings for maix_stream.py...
+sshpass -p "%BOARD_PASS%" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null %BOARD_USER%@%BOARD_IP% "dos2unix %REMOTE_STREAM_SCRIPT%"
+
 )
 
 )

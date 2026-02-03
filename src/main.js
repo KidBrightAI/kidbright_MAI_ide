@@ -68,6 +68,7 @@ app.use(router)
 const extensions = import.meta.glob('extensions/*/config.js', { eager: true })
 const defaultGraphs = import.meta.glob('extensions/*/model-graph.json', { eager: true })
 const extensionComponents = import.meta.glob('extensions/*/Components/*.vue', { eager: false })
+const extensionInstructions = import.meta.glob('extensions/*/Instructions/*.vue', { eager: false })
 let extensionList = []
 for (const path in extensions) {
   let extension = extensions[path].default
@@ -78,7 +79,27 @@ for (const path in extensions) {
     if (componentPath.startsWith(path.replace('config.js', ''))) {
       // get file name from path
       let fileName = componentPath.split('/').pop().split('.')[0]
-      extension.components[fileName] = componentPath.replace("/extensions/", "")
+      extension.components[fileName] = extensionComponents[componentPath]
+    }
+  }
+
+  //find corresponding instructions
+  if(extension.instructions){
+    for (const key in extension.instructions) {
+      // Robust matching: find the glob key that ends with the config path
+      let configPath = extension.instructions[key];
+      const matchedKey = Object.keys(extensionInstructions).find(k => k.endsWith(configPath));
+      
+      if(matchedKey){
+        extension.instructions[key] = extensionInstructions[matchedKey];
+      } else {
+        console.warn(`[Extension Load] Could not find instruction loader for ${configPath}`);
+        // Fallback: try constructing path if not found (though endsWith should cover it)
+        let fallbackPath = "extensions/" + configPath;
+        if(extensionInstructions[fallbackPath]){
+             extension.instructions[key] = extensionInstructions[fallbackPath];
+        }
+      }
     }
   }
 
@@ -146,6 +167,7 @@ for (const path in boardModules) {
 
   boards.push({ path: path.replace('index.js', ''), ...board })
 }
+boards.sort((a, b) => a.name.localeCompare(b.name))
 console.log("===== all boards =====")
 console.log(boards)
 

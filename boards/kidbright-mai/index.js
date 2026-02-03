@@ -1,17 +1,11 @@
 export default {
-  id: "kidbright-mai-v2",
-  name: "KidBright uAI v2",
+  id: "kidbright-mai",
+  name: "KidBright uAI",
   description: "บอร์ดสมองกลเพื่อการเรียนรู้ปัญญาประดิษฐ์",
-  wsUrl: "ws://10.150.36.1:7899",
-  wsShell: "wss://10.150.36.1:5050",
-  camera: {
-    type: "mjpeg",
-    port: 8000,
-  },
   image: "images/board.png",
-  protocol: "websocket-shell",
+  protocol: "web-adb",
   version: "1.0.0",
-  chip: "RISC-V",
+  chip: "MaixII",
   firmware: [],
   usb: [
     {
@@ -32,8 +26,6 @@ export default {
     "blocks/generators_display.js",
     "blocks/generators_gpio.js",
     "blocks/generators_ai.js",
-    "blocks/blocks_maix_v4.js",
-    "blocks/generators_maix_v4.js",
   ],
   autoCompletion: {},
 }

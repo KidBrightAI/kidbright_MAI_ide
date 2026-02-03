@@ -13,12 +13,16 @@ const props = defineProps({
     default: () => ({}),
   },
   target: {
-    type: String,
+    type: [String, Function],
     required: true,
   },
 })
 const AsyncComponent = shallowRef(null)
 watchEffect(() => {
-  AsyncComponent.value = defineAsyncComponent(() => import(`/extensions/${props.target}`))
+  if (typeof props.target === 'function') {
+    AsyncComponent.value = defineAsyncComponent(props.target)
+  } else {
+    AsyncComponent.value = defineAsyncComponent(() => import(`/extensions/${props.target}`))
+  }
 })
 </script>

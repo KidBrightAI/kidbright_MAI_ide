@@ -127,8 +127,8 @@ async def main():
 
     import ssl
     ssl_context = None
-    cert_path = "cert.pem"
-    key_path = "key.pem"
+    cert_path = "/root/cert.pem"
+    key_path = "/root/key.pem"
     
     if os.path.exists(cert_path) and os.path.exists(key_path):
         try:

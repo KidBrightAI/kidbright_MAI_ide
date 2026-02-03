@@ -1,10 +1,10 @@
 from maix import camera
-# import display, app - Removed to prevent cleanup conflicts
 import socket
 import time
 import gc
 import sys
 import signal
+import select
 
 def signal_handler(sig, frame):
     print("\nCtrl+C pressed. Exiting gracefully...")
@@ -61,6 +61,12 @@ def stream_mjpeg(host='0.0.0.0', port=8000):
                     
                     while True:
                         try:
+                            # Check if a NEW connection is waiting (Kick the old one)
+                            r, _, _ = select.select([server_socket], [], [], 0)
+                            if r:
+                                print("New connection request detected! Dropping current client...")
+                                break
+
                             img = cam.read()
                             if img is None:
                                 error_count += 1
