@@ -20,6 +20,7 @@ export const useBoardStore = defineStore({
       wifiListing: false,
       handler: null,
       showSecureConnectDialog: false,
+      boardIp: "10.150.36.1",
     }
   },
   getters: {
