@@ -14,16 +14,15 @@ python.pythonGenerator.forBlock['maixpy3_gpio_when_switch'] = function(block, ge
 }
 
 python.pythonGenerator.forBlock['maixpy3_gpio_switch'] = function(block, generator) {
-  generator.definitions_['from_maix_import_gpio'] = 'from maix import gpio'
-  generator.definitions_['from_v831adc_import_v83x_ADC'] = 'from v831adc import v83x_ADC'
-  generator.definitions_['__adc_key'] = '__adc_key = v83x_ADC()'
+  generator.definitions_['from_maix_import_gpio'] = 'from maix import adc'
+  generator.definitions_['__adc_key'] = '__adc_key = adc.ADC(0, adc.RES_BIT_12)'
 
   //generator.definitions_['from_evdev_import_InputDevice'] = 'from evdev import InputDevice';
   //generator.definitions_['keys_device'] = 'keys_device = InputDevice("/dev/input/event0")';
   var functionName = generator.provideFunction_(
     '_keyADC_isKeyPressed',
     ['def ' + "_keyADC_isKeyPressed" + '(key):', 
-      '  adc_val = __adc_key.value()',
+      '  adc_val = __adc_key.read()',
       '  if adc_val < 300 and key == "S1":',
       '    return True',
       '  if adc_val > 300 and adc_val < 1000 and key == "S2":',
@@ -36,17 +35,23 @@ python.pythonGenerator.forBlock['maixpy3_gpio_switch'] = function(block, generat
 }
 
 python.pythonGenerator.forBlock['maixpy3_gpio_buzzer'] = function(block, generator) {
-  generator.definitions_['import_os'] = 'import os'
+  //generator.definitions_['import_os'] = 'import os'
+  generator.definitions_['import_audio'] = 'from maix import audio'
+  generator.definitions_['import_time'] = 'import time'
+  generator.definitions_['__player'] = 'player = audio.Player("/root/beep_mid.wav")'
+  
   var value_delay = generator.valueToCode(block, 'delay', python.Order.ATOMIC)  
   
-  return "os.system('speaker-test -t sine -f 4000 -l 1 > /dev/null & sleep "+ value_delay+" && kill -9 $!')\n"
+  //return "os.system('speaker-test -t sine -f 4000 -l 1 > /dev/null & sleep "+ value_delay+" && kill -9 $!')\n"
+ return "player.play();time.sleep(" + value_delay + ")\n"
+
 }
 
 python.pythonGenerator.forBlock['maixpy3_gpio_get'] = function(block, generator) {
   generator.definitions_['from_maix_import_gpio'] = 'from maix import gpio'
   var dropdown_pin = block.getFieldValue('pin')
-  generator.definitions_['_gpio_'+dropdown_pin] = '_gpio_'+dropdown_pin+' = gpio.gpio('+dropdown_pin+', "H", 1, line_mode = 2)'
-  var code = '(1 - (_gpio_'+dropdown_pin+'.get_value()))'
+  generator.definitions_['_gpio_'+dropdown_pin] = '_gpio_'+dropdown_pin+' = gpio.GPIO(\''+dropdown_pin+'\',gpio.Mode.IN)'
+  var code = '_gpio_'+dropdown_pin+'.value()'
   
   return [code, python.Order.ATOMIC]
 }
