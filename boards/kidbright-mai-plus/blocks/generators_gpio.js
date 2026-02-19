@@ -54,12 +54,12 @@ python.pythonGenerator.forBlock['maixpy3_gpio_get'] = function(block, generator)
 python.pythonGenerator.forBlock['maixpy3_gpio_set'] = function(block, generator) {
   generator.definitions_['from_maix_import_gpio'] = 'from maix import gpio'  
   var dropdown_pin = block.getFieldValue('pin')
-  generator.definitions_['_gpio_'+dropdown_pin] = '_gpio_'+dropdown_pin+' = gpio.gpio('+dropdown_pin+', "H", 1)'
+  generator.definitions_['_gpio_'+dropdown_pin] = '_gpio_'+dropdown_pin+' = gpio.GPIO(\''+dropdown_pin+'\',gpio.Mode.OUT)'
   var value_value = generator.valueToCode(block, 'value', python.Order.ATOMIC)  
 
-  //if(value_value == 'True') value_value = '1';
-  //if(value_value == 'False') value_value = '0';
-  return '_gpio_'+dropdown_pin+'.set_value('+value_value+')\n'
+  if(value_value == 'True') value_value = '1';
+  if(value_value == 'False') value_value = '0';
+  return '_gpio_'+dropdown_pin+'.value('+value_value+')\n'
 }
 
 python.pythonGenerator.forBlock['maixpy3_gpio_rgb'] = function(block, generator) {
