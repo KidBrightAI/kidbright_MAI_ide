@@ -30,6 +30,19 @@ def kill_system_app():
     except Exception as e:
         print(f"Error killing system apps: {e}")
 
+    # Kill python3 /root/main.py if running
+    cmd_main = "ps | grep 'python3 /root/main.py' | grep -v grep"
+    try:
+        with os.popen(cmd_main) as f:
+            for line in f:
+                parts = line.strip().split()
+                if len(parts) > 0 and parts[0].isdigit():
+                    pid = parts[0]
+                    print(f"Killing running main.py (PID: {pid})")
+                    os.system(f"kill -9 {pid}")
+    except Exception as e:
+        print(f"Error killing main.py: {e}")
+
 def start_system_app():
     print("Starting system app...")
     os.system("/maixapp/apps/launcher/launcher daemon &")
