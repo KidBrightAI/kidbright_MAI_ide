@@ -1,17 +1,27 @@
 python.pythonGenerator.forBlock['maix4_camera_width'] = function (block, generator) {
+  generator.definitions_['from_maix_import_camera'] = 'from maix import camera'
+  generator.definitions_['from_maix_import_display'] = 'from maix import display'
+  generator.definitions_['init_display'] = 'disp = display.Display()'
+  generator.definitions_['init_camera'] = 'cam = camera.Camera(disp.width(), disp.height())'
   var code = 'cam.width()'
-  
+
   return [code, python.Order.ATOMIC]
 }
 
 python.pythonGenerator.forBlock['maix4_camera_height'] = function (block, generator) {
+  generator.definitions_['from_maix_import_camera'] = 'from maix import camera'
+  generator.definitions_['from_maix_import_display'] = 'from maix import display'
+  generator.definitions_['init_display'] = 'disp = display.Display()'
+  generator.definitions_['init_camera'] = 'cam = camera.Camera(disp.width(), disp.height())'
   var code = 'cam.height()'
-  
+
   return [code, python.Order.ATOMIC]
 }
 
 python.pythonGenerator.forBlock['maix4_camera_resolution'] = function (block, generator) {
   generator.definitions_['from_maix_import_camera'] = 'from maix import camera'
+  generator.definitions_['from_maix_import_display'] = 'from maix import display'
+  generator.definitions_['init_display'] = 'disp = display.Display()'
   var value_width = generator.valueToCode(block, 'width', python.Order.ATOMIC) || '320'
   var value_height = generator.valueToCode(block, 'height', python.Order.ATOMIC) || '240'
 
@@ -22,12 +32,19 @@ python.pythonGenerator.forBlock['maix4_camera_resolution'] = function (block, ge
 
 python.pythonGenerator.forBlock['maix4_camera_capture'] = function (block, generator) {
   generator.definitions_['from_maix_import_camera'] = 'from maix import camera'
+  generator.definitions_['from_maix_import_display'] = 'from maix import display'
+  generator.definitions_['init_display'] = 'disp = display.Display()'
+  generator.definitions_['init_camera'] = 'cam = camera.Camera(disp.width(), disp.height())'
   var code = 'cam.read()'
-  
+
   return [code, python.Order.NONE]
 }
 
 python.pythonGenerator.forBlock['maix4_camera_close'] = function (block, generator) {
+  generator.definitions_['from_maix_import_camera'] = 'from maix import camera'
+  generator.definitions_['from_maix_import_display'] = 'from maix import display'
+  generator.definitions_['init_display'] = 'disp = display.Display()'
+  generator.definitions_['init_camera'] = 'cam = camera.Camera(disp.width(), disp.height())'
   return 'cam.close()\n'
 }
 
@@ -36,7 +53,7 @@ python.pythonGenerator.forBlock['maix4_display_width'] = function (block, genera
   generator.definitions_['from_maix_import_display'] = 'from maix import display'
   generator.definitions_['init_display'] = 'disp = display.Display()'
   var code = 'disp.width()'
-  
+
   return [code, python.Order.ATOMIC]
 }
 
@@ -44,7 +61,7 @@ python.pythonGenerator.forBlock['maix4_display_height'] = function (block, gener
   generator.definitions_['from_maix_import_display'] = 'from maix import display'
   generator.definitions_['init_display'] = 'disp = display.Display()'
   var code = 'disp.height()'
-  
+
   return [code, python.Order.ATOMIC]
 }
 
@@ -52,7 +69,7 @@ python.pythonGenerator.forBlock['maix4_display_resolution'] = function (block, g
   generator.definitions_['from_maix_import_display'] = 'from maix import display'
   var value_width = generator.valueToCode(block, 'width', python.Order.ATOMIC)
   var value_height = generator.valueToCode(block, 'height', python.Order.ATOMIC)
-  
+
   return `disp = display.Display(width=${value_width}, height=${value_height})\n`
 }
 
@@ -65,7 +82,7 @@ python.pythonGenerator.forBlock['maix4_display_show'] = function (block, generat
   }
 
   var value_image = generator.valueToCode(block, 'image', python.Order.ATOMIC)
-  
+
   return `disp.show(${value_image})\n`
 }
 
@@ -76,7 +93,7 @@ python.pythonGenerator.forBlock['maix4_image_new'] = function (block, generator)
   var h = generator.valueToCode(block, 'height', python.Order.ATOMIC)
   var c = block.getFieldValue('color')
   var code = `image.Image(${w}, ${h})` // Simplified
-  
+
   return [code, python.Order.ATOMIC]
 }
 
@@ -86,7 +103,7 @@ python.pythonGenerator.forBlock['maix4_image_draw_string'] = function (block, ge
   var x = generator.valueToCode(block, 'x', python.Order.ATOMIC)
   var y = generator.valueToCode(block, 'y', python.Order.ATOMIC)
   var color = block.getFieldValue('color')
-  
+
   return `${img}.draw_string(${x}, ${y}, ${text}, color="${color}")\n`
 }
 
@@ -142,6 +159,6 @@ python.pythonGenerator.forBlock['maix4_draw_string'] = function (block, generato
 
 python.pythonGenerator.forBlock['maix4_forever'] = function (block, generator) {
   var statements_code = generator.statementToCode(block, 'code')
-  
+
   return `while True:\n${statements_code || "  pass"}\n`
 }

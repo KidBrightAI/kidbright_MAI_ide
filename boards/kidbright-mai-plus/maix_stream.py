@@ -5,6 +5,8 @@ import gc
 import sys
 import signal
 import select
+import os
+import atexit
 
 def signal_handler(sig, frame):
     print("\nCtrl+C pressed. Exiting gracefully...")
@@ -12,6 +14,27 @@ def signal_handler(sig, frame):
 
 # Register signal handler
 signal.signal(signal.SIGINT, signal_handler)
+
+def kill_system_app():
+    # Kill any process containing 'maixapp/apps' but exclude 'launcher_daemon'
+    cmd = "ps | grep maixapp/apps | grep -v grep"
+    try:
+        with os.popen(cmd) as f:
+            for line in f:
+                parts = line.strip().split()
+                if len(parts) > 0 and parts[0].isdigit():
+                    pid = parts[0]
+                    content = line[line.find(pid)+len(pid):].strip()
+                    print(f"Killing {content} (PID: {pid})")
+                    os.system(f"kill -9 {pid}")
+    except Exception as e:
+        print(f"Error killing system apps: {e}")
+
+def start_system_app():
+    print("Starting system app...")
+    os.system("/maixapp/apps/launcher/launcher daemon &")
+
+atexit.register(start_system_app)
 
 def stream_mjpeg(host='0.0.0.0', port=8000):
     print("Starting MJPEG Stream Script (Lazy Load Mode)...")
@@ -34,10 +57,9 @@ def stream_mjpeg(host='0.0.0.0', port=8000):
                 
                 # Lazy Init Camera
                 try:
+                    kill_system_app()
                     print("Initializing camera (640x480)...")
                     cam = camera.Camera(640, 480)
-                    cam.vflip(1)
-                    cam.hmirror(1)
                     cam.skip_frames(30)
                     print("Camera initialized successfully.")
                 except Exception as e:
@@ -133,6 +155,8 @@ def stream_mjpeg(host='0.0.0.0', port=8000):
                     except Exception as e:
                         print(f"Error releasing camera: {e}")
 
+                start_system_app()
+
     except KeyboardInterrupt:
         print("Server stopping...")
     except Exception as e:
@@ -140,6 +164,8 @@ def stream_mjpeg(host='0.0.0.0', port=8000):
     finally:
         server_socket.close()
         print("Server closed.")
+        start_system_app()
+
 
 if __name__ == "__main__":
     stream_mjpeg()

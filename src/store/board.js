@@ -20,10 +20,31 @@ export const useBoardStore = defineStore({
       wifiListing: false,
       handler: null,
       showSecureConnectDialog: false,
-      boardIp: "10.150.36.1",
     }
   },
   getters: {
+    boardIp() {
+      const workspaceStore = useWorkspaceStore()
+      const currentBoard = workspaceStore.currentBoard
+      if (currentBoard?.wsShell) {
+        try {
+          // Parse IP from wsShell URL (e.g. wss://10.155.55.1:5050)
+          const url = new URL(currentBoard.wsShell)
+          return url.hostname
+        } catch (e) {
+          console.error("Failed to parse board IP", e)
+        }
+      } else if (currentBoard?.wsUrl) {
+        try {
+          // Parse IP from wsUrl URL (e.g. ws://10.155.55.1:7899)
+          const url = new URL(currentBoard.wsUrl)
+          return url.hostname
+        } catch (e) {
+          console.error("Failed to parse board IP", e)
+        }
+      }
+      return "10.155.55.1" // Fallback
+    },
     isBoardConnected() {
       return this.handler?.isConnected() ?? false
     },

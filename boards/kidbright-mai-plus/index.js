@@ -2,8 +2,8 @@ export default {
   id: "kidbright-mai-plus",
   name: "KidBright uAI plus",
   description: "บอร์ดสมองกลเพื่อการเรียนรู้ปัญญาประดิษฐ์",
-  wsUrl: "ws://10.150.36.1:7899",
-  wsShell: "wss://10.150.36.1:5050",
+  wsUrl: "ws://10.155.55.1:7899",
+  wsShell: "wss://10.155.55.1:5050",
   camera: {
     type: "mjpeg",
     port: 8000,

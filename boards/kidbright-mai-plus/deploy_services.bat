@@ -9,7 +9,7 @@ REM    (Often included with Git for Windows: C:\Program Files\Git\usr\bin)
 REM 2. sshpass must be installed and in your system's PATH to handle password authentication automatically.
 
 REM --- Configuration ---
-set "BOARD_IP=10.150.36.1"
+set "BOARD_IP=10.155.55.1"
 set "BOARD_USER=root"
 set "BOARD_PASS=root"
 set "LOCAL_SCRIPT_PATH=scripts\ws_shell.py"
@@ -49,19 +49,14 @@ if %errorlevel% neq 0 (
     goto :error_end
 )
 
-echo [1.5/3] Fixing line endings for ws_shell.py...
-sshpass -p "%BOARD_PASS%" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null %BOARD_USER%@%BOARD_IP% "dos2unix %REMOTE_SCRIPT_PATH%"
-
 REM --- Step 2: Upload startup script ---
-echo [2/3] Uploading enable_startup.sh...
-set "LOCAL_STARTUP_SCRIPT=scripts\enable_startup.sh"
-set "REMOTE_STARTUP_SCRIPT=/root/enable_startup.sh"
+echo [2/3] Uploading S99ws_shell...
+set "LOCAL_INIT_SCRIPT=scripts\S99ws_shell"
+set "REMOTE_INIT_SCRIPT=/root/S99ws_shell"
 
-sshpass -p "%BOARD_PASS%" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "%LOCAL_STARTUP_SCRIPT%" %BOARD_USER%@%BOARD_IP%:%REMOTE_STARTUP_SCRIPT%
-
+sshpass -p "%BOARD_PASS%" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "%LOCAL_INIT_SCRIPT%" %BOARD_USER%@%BOARD_IP%:%REMOTE_INIT_SCRIPT%
 if %errorlevel% neq 0 (
-    echo.
-    echo [ERROR] Failed to upload enable_startup.sh.
+    echo [ERROR] Failed to upload S99ws_shell.
     goto :error_end
 )
 
@@ -78,8 +73,8 @@ if %errorlevel% neq 0 (
     goto :error_end
 )
 
-echo [2.6/3] Fixing line endings for maix_stream.py...
-sshpass -p "%BOARD_PASS%" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null %BOARD_USER%@%BOARD_IP% "dos2unix %REMOTE_STREAM_SCRIPT%"
+echo [2.6/3] Fixing line endings...
+sshpass -p "%BOARD_PASS%" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null %BOARD_USER%@%BOARD_IP% "dos2unix %REMOTE_SCRIPT_PATH% %REMOTE_INIT_SCRIPT% %REMOTE_STREAM_SCRIPT%"
 
 )
 
@@ -103,14 +98,14 @@ if %errorlevel% neq 0 (
     echo [WARNING] Failed to upload SSL certs. WSS might not work.
 )
 
-REM --- Step 3: Execute startup script ---
-echo [3/3] executing enable_startup.sh...
-REM Use dos2unix to safely convert line endings
-sshpass -p "%BOARD_PASS%" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null %BOARD_USER%@%BOARD_IP% "chmod +x %REMOTE_STARTUP_SCRIPT% && %REMOTE_STARTUP_SCRIPT%"
+REM --- Step 3: Configure and Start Services ---
+echo [3/3] Configuring and starting services...
+REM Move S99ws_shell to init.d, set permissions, and restart
+sshpass -p "%BOARD_PASS%" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null %BOARD_USER%@%BOARD_IP% "mv %REMOTE_INIT_SCRIPT% /etc/init.d/S99ws_shell && chmod 755 /etc/init.d/S99ws_shell && sync"
 
 if %errorlevel% neq 0 (
     echo.
-    echo [ERROR] Failed to execute startup script.
+    echo [ERROR] Failed to configure services.
     goto :error_end
 )
 

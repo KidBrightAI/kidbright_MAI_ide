@@ -104,7 +104,7 @@ export class WebSocketShellHandler {
       if (currentBoard?.codeTemplate) {
         code = currentBoard.codeTemplate.replace("##{main}##", code)
       }
-      
+
       const filename = "/root/main.py" // or whatever default
       // Encode to base64
       // Use a browser-compatible way
@@ -132,8 +132,14 @@ export class WebSocketShellHandler {
 
       // 3. Execution
       // Send Ctrl+C to stop invalid programs
-      // this.socket.send("\x03")
-      // await new Promise(r => setTimeout(r, 300))
+      this.socket.send("\x03")
+      await new Promise(r => setTimeout(r, 300))
+
+      // Kill previous python script
+      // We use a pattern that matches the script execution command
+      const killCmd = `ps | grep "python3 ${filename}" | grep -v grep | awk '{print $1}' | xargs kill -9\r`
+      this.socket.send(killCmd)
+      await new Promise(r => setTimeout(r, 500))
 
       // Run python
       const runCmd = `python3 ${filename}\r`

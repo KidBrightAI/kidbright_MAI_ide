@@ -1,0 +1,22 @@
+#!/bin/sh
+case "$1" in
+  start)
+    echo "Starting ws_shell (5050)..."
+    /usr/bin/python3 -u /root/ws_shell.py > /root/ws_shell.log 2>&1 &
+    sleep 5
+    echo "Starting maix_stream (8000)..."
+    /usr/bin/python3 -u /root/maix_stream.py > /root/maix_stream.log 2>&1 &
+    ;;
+  stop)
+    killall python3 2>/dev/null
+    killall maixvision 2>/dev/null
+    ;;
+  restart|reload)
+    "$0" stop
+    "$0" start
+    ;;
+  *)
+    echo "Usage: $0 {start|stop|restart}"
+    exit 1
+esac
+exit 0
