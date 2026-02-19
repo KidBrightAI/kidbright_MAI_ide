@@ -197,7 +197,7 @@ Blockly.defineBlocksWithJsonArray(
             ],
             [
               "IO6",
-              "A24",
+              "A24", 
             ],
             [
               "IO7",

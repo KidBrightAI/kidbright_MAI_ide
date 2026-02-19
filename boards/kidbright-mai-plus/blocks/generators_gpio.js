@@ -22,7 +22,7 @@ python.pythonGenerator.forBlock['maixpy3_gpio_switch'] = function(block, generat
   //generator.definitions_['keys_device'] = 'keys_device = InputDevice("/dev/input/event0")';
   var functionName = generator.provideFunction_(
     '_keyADC_isKeyPressed',
-    ['def ' + "_keyADC_isKeyPressed" + '(key):',
+    ['def ' + "_keyADC_isKeyPressed" + '(key):', 
       '  adc_val = __adc_key.value()',
       '  if adc_val < 300 and key == "S1":',
       '    return True',
