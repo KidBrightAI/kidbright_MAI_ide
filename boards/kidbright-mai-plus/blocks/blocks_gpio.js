@@ -164,6 +164,34 @@ Blockly.defineBlocksWithJsonArray(
       "helpUrl": "",
     },
     {
+      "type": "board_get_gyro",
+      "message0": "get gyroscope %1",
+      "args0": [
+        {
+          "type": "field_dropdown",
+          "name": "axis",
+          "options": [
+            [
+              "x",
+              "3",
+            ],
+            [
+              "y",
+              "4",
+            ],
+            [
+              "z",
+              "5",
+            ],
+          ],
+        },
+      ],
+      "output": null,
+      "colour": "#a5745b",
+      "tooltip": "",
+      "helpUrl": "",
+    },
+    {
       "type": "board_get_acc_tap",
       "message0": "is tapped",
       "output": "Boolean",
