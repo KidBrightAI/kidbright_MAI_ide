@@ -3,6 +3,7 @@ import "blockly/blocks_compressed.js"
 import python, { pythonGenerator } from 'blockly/python'
 import "blockly/python_compressed.js"
 import { useWorkspaceStore } from '@/store/workspace'
+import { useBoardStore } from '@/store/board'
 
 export async function loadBoard(board) {
   // load scripts
@@ -23,6 +24,7 @@ export async function loadBoard(board) {
 }
 
 export async function loadPlugin(plugins) {
+  const boardStore = useBoardStore()
   for (let plugin of plugins) {
     if (!plugin.blockFiles) {
       continue
@@ -32,7 +34,7 @@ export async function loadPlugin(plugins) {
       if (blockResponse.ok) {
         let blockData = await blockResponse.text()
         try {
-          execScript(blockData, { python, pythonGenerator, Blockly })
+          execScript(blockData, { python, pythonGenerator, Blockly }, boardStore)
         } catch (e) {
           console.error(`Error loading plugin script ${blockFilePath}:`, e)
         }

@@ -45,17 +45,27 @@ const isInstalled = plugin => {
 }
 
 const installedPlugins = computed(() => {
-  return pluginStore.plugins.filter(plugin => {
+  return filteredPlugins.value.filter(plugin => {
     return isInstalled(plugin)
+  })
+})
+
+const filteredPlugins = computed(() => {
+  const currentBoardId = workspaceStore.currentBoard?.id
+  return pluginStore.plugins.filter(plugin => {
+    if (!plugin.boards || !Array.isArray(plugin.boards)) {
+      return true // If not defined, support all boards
+    }
+    return plugin.boards.includes(currentBoardId)
   })
 })
 
 const listPluginByCategory = category => {
   if(category === "all"){
-    return pluginStore.plugins
+    return filteredPlugins.value
   }
   
-  return pluginStore.plugins.filter(plugin => {
+  return filteredPlugins.value.filter(plugin => {
     return plugin.category === category
   })
 }

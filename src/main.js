@@ -84,20 +84,20 @@ for (const path in extensions) {
   }
 
   //find corresponding instructions
-  if(extension.instructions){
+  if (extension.instructions) {
     for (const key in extension.instructions) {
       // Robust matching: find the glob key that ends with the config path
       let configPath = extension.instructions[key];
       const matchedKey = Object.keys(extensionInstructions).find(k => k.endsWith(configPath));
-      
-      if(matchedKey){
+
+      if (matchedKey) {
         extension.instructions[key] = extensionInstructions[matchedKey];
       } else {
         console.warn(`[Extension Load] Could not find instruction loader for ${configPath}`);
         // Fallback: try constructing path if not found (though endsWith should cover it)
         let fallbackPath = "extensions/" + configPath;
-        if(extensionInstructions[fallbackPath]){
-             extension.instructions[key] = extensionInstructions[fallbackPath];
+        if (extensionInstructions[fallbackPath]) {
+          extension.instructions[key] = extensionInstructions[fallbackPath];
         }
       }
     }
@@ -256,7 +256,7 @@ for (const path in defaultBlocks) {
   let blockText = defaultBlocks[path]
   const defaultBlocksFunc = new Function('python', 'pythonGenerator', 'Blockly', 'Order', blockText)
   try {
-    defaultBlocksFunc(python, pythonGenerator, Blockly, python) // python serves as Order
+    defaultBlocksFunc(python, pythonGenerator, Blockly, python, currentBoard) // python serves as Order
   } catch (e) {
     console.error(`Error loading default block ${path}:`, e)
   }
