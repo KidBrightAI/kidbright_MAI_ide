@@ -41,9 +41,10 @@ import { OutputNode } from "@/nodes/outputs/default-output"
 import { ClassificationOutputNode } from "@/nodes/outputs/classification-output"
 import { ObjectDetectionOutputNode } from "@/nodes/outputs/object-detection-output"
 import { YoloNode } from "@/nodes/models/yolo"
-import { ResnetNode } from "@/nodes/models/resnet"
 import { VoiceClassifyNode } from "@/nodes/models/voice_classification"
 import { MobileNetNode } from "@/nodes/models/mobilenet"
+import { ResnetNode } from "@/nodes/models/resnet"
+import { ImageClassificationNode } from "@/nodes/models/image_classification"
 import { Conv2dNode } from "@/nodes/layers/conv2d"
 import { DenseNode } from "@/nodes/layers/dense"
 import { FlattenNode } from "@/nodes/layers/flatten"
@@ -75,7 +76,7 @@ editor.registerNodeType(ClassificationOutputNode, { category: "Output" })
 editor.registerNodeType(ObjectDetectionOutputNode, { category: "Output" })
 
 //editor.registerNodeType(MobileNetNode, { category: "Model" });
-editor.registerNodeType(ResnetNode, { category: "Model" })
+editor.registerNodeType(ImageClassificationNode, { category: "Model" })
 editor.registerNodeType(YoloNode, { category: "Model" })
 editor.registerNodeType(VoiceClassifyNode, { category: "Model" })
 

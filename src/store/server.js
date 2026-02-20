@@ -17,7 +17,7 @@ export const useServerStore = defineStore({
 
       //colab training server
       serverUrl: null,
-      
+
 
       //training
       isColabConnecting: false,
@@ -29,9 +29,9 @@ export const useServerStore = defineStore({
       isConvertingSuccess: false,
       isDownloading: false,
       isDownloadingSuccess: false,
-      downloadProgress : 0,
-      downloadingFiles : 0,
-      totalDownloadingFiles : 2,
+      downloadProgress: 0,
+      downloadingFiles: 0,
+      totalDownloadingFiles: 2,
       isUploading: false,
       uploadProgress: 0,
 
@@ -43,51 +43,51 @@ export const useServerStore = defineStore({
 
       messagesLog: [],
       step: 0,
-      progress: 0,      
+      progress: 0,
       matric: [],
     }
   },
   persist: {
     paths: [
-      "serverUrl","matric",
+      "serverUrl", "matric",
     ],
   },
   actions: {
-    clear(){
+    clear() {
       this.serverUrl = null
     },
-    async connectColab(){
+    async connectColab() {
       console.log("connecting to colab")
 
       //axios request /ping and server return json success with message "pong"
       this.isColabConnecting = true
-      try{    
-        let response = await axios.get(this.serverUrl + "/ping")      
-        if(response.data.result == "pong"){
+      try {
+        let response = await axios.get(this.serverUrl + "/ping")
+        if (response.data.result == "pong") {
           // Server stage
           let stage = response.data.stage
 
           //STAGE = 0 #0 none, 1 = prepare dataset, 2 = training, 3 = trained, 4 = converting, 5 converted
-          if(stage == 0){
+          if (stage == 0) {
             //this.step = 0;
-          }else if(stage == 1){
+          } else if (stage == 1) {
             //this.step = 1;
-          }else if(stage == 2){
+          } else if (stage == 2) {
             this.isTraining = true
             this.isTrainingSuccess = false
             this.isConverting = false
             this.isConvertingSuccess = false
-          }else if(stage == 3){
+          } else if (stage == 3) {
             this.isTraining = false
             this.isTrainingSuccess = true
             this.isConverting = false
             this.isConvertingSuccess = false
-          }else if(stage == 4){
+          } else if (stage == 4) {
             this.isTraining = false
             this.isTrainingSuccess = true
             this.isConverting = true
             this.isConvertingSuccess = false
-          }else if(stage == 5){
+          } else if (stage == 5) {
             this.isTraining = false
             this.isTrainingSuccess = true
             this.isConverting = false
@@ -95,7 +95,7 @@ export const useServerStore = defineStore({
           }
 
           //check if event is not null, close it
-          if(this.event != null){
+          if (this.event != null) {
             this.event.close()
           }
 
@@ -103,26 +103,26 @@ export const useServerStore = defineStore({
           this.event = new EventSource(this.serverUrl + "/listen")
 
           //this.event.addEventListener('message', this.onmessage);
-          this.event.onmessage = this.onmessage          
+          this.event.onmessage = this.onmessage
           console.log("connected to colab")
-          this.isColabConnected = true          
-          
+          this.isColabConnected = true
+
           return true
         }
         this.isColabConnected = false
-        
+
         return false
-      }catch(e){
+      } catch (e) {
         console.log(e)
         this.isColabConnected = false
-        
+
         return false
-      }finally{
+      } finally {
         this.isColabConnecting = false
       }
     },
 
-    onmessage(event){      
+    onmessage(event) {
       let data = JSON.parse(event.data)
       let dt = new Date(data.time * 1000)
       let eventType = data.event
@@ -131,49 +131,49 @@ export const useServerStore = defineStore({
         this.messagesLog = []
         this.matric = []
       } else
-      if (eventType == "epoch_start") {
-        this.messagesLog.push(`[${dt.toLocaleString()}]: training epoch ${data.epoch}`)
-        this.epoch = data.epoch
-        this.totalEpoch = data.max_epoch
-      } else if (eventType == "epoch_end") {
-        this.messagesLog.push(`[${dt.toLocaleString()}]: epoch [${data.epoch}] ended`)
+        if (eventType == "epoch_start") {
+          this.messagesLog.push(`[${dt.toLocaleString()}]: training epoch ${data.epoch}`)
+          this.epoch = data.epoch
+          this.totalEpoch = data.max_epoch
+        } else if (eventType == "epoch_end") {
+          this.messagesLog.push(`[${dt.toLocaleString()}]: epoch [${data.epoch}] ended`)
 
-        //add server matric and notify change        
-        this.matric = [... this.matric, {
-          epoch: data.epoch,
-          max_epoch: data.max_epoch,
-          label: data.epoch,
-          matric: data.matric,
-          prefix: "train_",
-        }]
-      } else if (eventType == "batch_start") {
-        this.batch = data.batch
-        this.totalBatch = data.max_batch
-        this.progress = (data.batch / data.max_batch) * 100
-      } else if (eventType == "batch_end") {
-        this.progress = (data.batch / data.max_batch) * 100        
-      } else if (eventType == "train_end") {
-        this.isTrainingSuccess = true
-        this.isTraining = false
-        this.messagesLog.push(`[${dt.toLocaleString()}]: ${data["msg"]}`)
-        toast.success("Training end")
-      }
+          //add server matric and notify change        
+          this.matric = [... this.matric, {
+            epoch: data.epoch,
+            max_epoch: data.max_epoch,
+            label: data.epoch,
+            matric: data.matric,
+            prefix: "train_",
+          }]
+        } else if (eventType == "batch_start") {
+          this.batch = data.batch
+          this.totalBatch = data.max_batch
+          this.progress = (data.batch / data.max_batch) * 100
+        } else if (eventType == "batch_end") {
+          this.progress = (data.batch / data.max_batch) * 100
+        } else if (eventType == "train_end") {
+          this.isTrainingSuccess = true
+          this.isTraining = false
+          this.messagesLog.push(`[${dt.toLocaleString()}]: ${data["msg"]}`)
+          toast.success("Training end")
+        }
 
-      //convert model  
-      else if(eventType == "convert_model_init"){
-        this.messagesLog.push(`[${dt.toLocaleString()}]: ${data["msg"]}`)
-      }else if(eventType == "convert_model_progress"){
-        this.messagesLog.push(`[${dt.toLocaleString()}]: ${data["msg"]}`)
-      }else if(eventType == "convert_model_end"){
-        this.messagesLog.push(`[${dt.toLocaleString()}]: ${data["msg"]}`)
+        //convert model  
+        else if (eventType == "convert_model_init") {
+          this.messagesLog.push(`[${dt.toLocaleString()}]: ${data["msg"]}`)
+        } else if (eventType == "convert_model_progress") {
+          this.messagesLog.push(`[${dt.toLocaleString()}]: ${data["msg"]}`)
+        } else if (eventType == "convert_model_end") {
+          this.messagesLog.push(`[${dt.toLocaleString()}]: ${data["msg"]}`)
 
-        // download model
-      }else {
-        this.messagesLog.push(`[${dt.toLocaleString()}]: ${data["msg"]}`)
-      }
+          // download model
+        } else {
+          this.messagesLog.push(`[${dt.toLocaleString()}]: ${data["msg"]}`)
+        }
     },
-    async terminateColab(){
-      try{
+    async terminateColab() {
+      try {
         let workspaceStore = useWorkspaceStore()
 
         // axios request /terminate
@@ -183,7 +183,7 @@ export const useServerStore = defineStore({
           },
         })
         console.log(response.data)
-        if(response.data.result == "OK"){
+        if (response.data.result == "OK") {
           this.isTraining = false
           this.isTrainingSuccess = false
           this.isConverting = false
@@ -197,40 +197,40 @@ export const useServerStore = defineStore({
           this.event = null
           toast.success("Colab terminated")
         }
-      }catch(e){
+      } catch (e) {
         console.log(e)
-      }finally{
+      } finally {
         console.log("==================TERMINATE DONE=================")
       }
     },
-    async trainColab(){
-      try{        
+    async trainColab() {
+      try {
         let workspaceStore = useWorkspaceStore()
         this.isTraining = true
 
         // upload project
         let uploaded = await this.uploadProject()
-        if(!uploaded){
+        if (!uploaded) {
           console.log("project upload failed")
-          
+
           return false
-        }        
+        }
 
         // axios request /train
         let response = await axios.post(this.serverUrl + "/train", {
-          project : workspaceStore.id,
-          train_config : workspaceStore.trainConfig,
+          project: workspaceStore.id,
+          train_config: workspaceStore.trainConfig,
         })
         console.log(response.data)
 
-      }catch(e){
+      } catch (e) {
         console.log(e)
-      }finally{
+      } finally {
         console.log("==================TRAIN DONE=================")
       }
     },
-    async convertModel(){
-      try{
+    async convertModel() {
+      try {
         let workspaceStore = useWorkspaceStore()
         this.isConverting = true
         this.isConvertingSuccess = false
@@ -241,7 +241,7 @@ export const useServerStore = defineStore({
             project_id: workspaceStore.id,
           },
         })
-        if(response.data.result == "OK"){
+        if (response.data.result == "OK") {
           this.isConvertingSuccess = true
           this.isConverting = false
 
@@ -249,7 +249,20 @@ export const useServerStore = defineStore({
           this.isDownloading = true
           this.isDownloadingSuccess = false
           this.downloadingFiles = 1
-          let modelInt8Response = await axios.get(this.serverUrl + "/projects/" + workspaceStore.id + "/output/model_int8.bin", 
+
+          let ext1 = "bin"
+          let ext2 = "param"
+          let file1 = "model_int8.bin"
+          let file2 = "model_int8.param"
+
+          if (workspaceStore.currentBoard.id === "kidbright-mai-plus") {
+            ext1 = "cvimodel"
+            ext2 = "mud"
+            file1 = "model.cvimodel"
+            file2 = "model.mud"
+          }
+
+          let modelInt8Response = await axios.get(this.serverUrl + "/projects/" + workspaceStore.id + "/output/" + file1,
 
             //download progress
             {
@@ -259,7 +272,7 @@ export const useServerStore = defineStore({
               },
             })
           this.downloadingFiles = 2
-          let modelParamResponse = await axios.get(this.serverUrl + "/projects/" + workspaceStore.id + "/output/model_int8.param", {
+          let modelParamResponse = await axios.get(this.serverUrl + "/projects/" + workspaceStore.id + "/output/" + file2, {
             responseType: 'blob',
             onDownloadProgress: progressEvent => {
               this.downloadProgress = Math.round((progressEvent.loaded / progressEvent.total) * 100)
@@ -270,23 +283,23 @@ export const useServerStore = defineStore({
           this.downloadingFiles = 0
 
           //import model
-          await workspaceStore.importModelFromBlob(modelInt8Response.data, modelParamResponse.data)
+          await workspaceStore.importModelFromBlob(modelInt8Response.data, modelParamResponse.data, ext1, ext2)
 
           //read model to calculate hash
           toast.success("Model Downloaded")
-        }else{
+        } else {
           console.log("model convert failed")
           toast.error("Model Convert Failed")
         }
 
-      }catch(e){
+      } catch (e) {
         console.log(e)
-      }finally{
+      } finally {
         console.log("==================CONVERT AND DOWNLOAD DONE=================")
       }
     },
-    async downloadModel(){
-      try{
+    async downloadModel() {
+      try {
         let workspaceStore = useWorkspaceStore()
         let response = await axios.get(this.serverUrl + "/download", {
           params: {
@@ -295,21 +308,21 @@ export const useServerStore = defineStore({
           responseType: 'json',
         })
         console.log(response.data)
-      }catch(e){
+      } catch (e) {
         console.log(e)
       }
     },
-    async uploadProject(){
+    async uploadProject() {
       // axios http post request to /upload with blob zip file
-      try{
+      try {
         let workspaceStore = useWorkspaceStore()
         let blob = await workspaceStore.saveProject('upload')
         blob.name = "project.zip"
-        this.isUploading = true    
+        this.isUploading = true
         let formData = new FormData()
 
         // add zip file to formData
-        formData.append("project", blob)              
+        formData.append("project", blob)
         formData.append("project_id", workspaceStore.id)
 
         let response = await axios.post(this.serverUrl + "/upload", formData, {
@@ -321,18 +334,18 @@ export const useServerStore = defineStore({
           },
         })
         console.log(response.data)
-        if(response.data.result == "success"){
+        if (response.data.result == "success") {
           console.log("project uploaded")
-          
+
           return true
-        }else{
+        } else {
           console.log("project upload failed")
-          
+
           return false
-        }        
-      }catch(e){
+        }
+      } catch (e) {
         console.log(e)
-      }finally{
+      } finally {
         this.isUploading = false
       }
     },

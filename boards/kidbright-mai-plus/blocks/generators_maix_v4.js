@@ -103,8 +103,14 @@ python.pythonGenerator.forBlock['maix4_image_draw_string'] = function (block, ge
   var x = generator.valueToCode(block, 'x', python.Order.ATOMIC)
   var y = generator.valueToCode(block, 'y', python.Order.ATOMIC)
   var color = block.getFieldValue('color')
+  var scale = generator.valueToCode(block, 'scale', python.Order.ATOMIC) || "1"
+  var thickness = generator.valueToCode(block, 'thickness', python.Order.ATOMIC) || "1"
 
-  return `${img}.draw_string(${x}, ${y}, ${text}, color="${color}")\n`
+  var r = parseInt(color.substring(1, 3), 16)
+  var g = parseInt(color.substring(3, 5), 16)
+  var b = parseInt(color.substring(5, 7), 16)
+
+  return `${img}.draw_string(${x}, ${y}, str(${text}), scale=${scale}, thickness=${thickness}, color=image.Color.from_rgb(${r}, ${g}, ${b}))\n`
 }
 
 // Basic Blocks Generators
@@ -135,7 +141,7 @@ python.pythonGenerator.forBlock['maix4_set_display_color'] = function (block, ge
   var g = parseInt(colour_color.substr(3, 2), 16)
   var b = parseInt(colour_color.substr(5, 2), 16)
 
-  return `_tmp_img = image.Image(disp.width(), disp.height())\n_tmp_img.draw_rect(0, 0, disp.width(), disp.height(), color=(${r}, ${g}, ${b}), thickness=-1)\ndisp.show(_tmp_img)\n`
+  return `_tmp_img = image.Image(disp.width(), disp.height())\n_tmp_img.draw_rect(0, 0, disp.width(), disp.height(), color=image.Color.from_rgb(${r}, ${g}, ${b}), thickness=-1)\ndisp.show(_tmp_img)\n`
 }
 
 python.pythonGenerator.forBlock['maix4_draw_string'] = function (block, generator) {
@@ -147,14 +153,14 @@ python.pythonGenerator.forBlock['maix4_draw_string'] = function (block, generato
   var value_x = generator.valueToCode(block, 'x', python.Order.ATOMIC)
   var value_y = generator.valueToCode(block, 'y', python.Order.ATOMIC)
   var colour_color = block.getFieldValue('color')
-  var value_scale = generator.valueToCode(block, 'scale', python.Order.ATOMIC)
+  var value_scale = generator.valueToCode(block, 'scale', python.Order.ATOMIC) || "1"
 
   var r = parseInt(colour_color.substring(1, 3), 16)
   var g = parseInt(colour_color.substring(3, 5), 16)
   var b = parseInt(colour_color.substring(5, 7), 16)
 
   // Create a new image to draw on and show, similar to V3 behavior
-  return `_display_text_image = image.Image(disp.width(), disp.height())\n_display_text_image.draw_string(${value_x}, ${value_y}, str(${value_text}), scale=${value_scale}, color=(${r}, ${g}, ${b}))\ndisp.show(_display_text_image)\n`
+  return `_display_text_image = image.Image(disp.width(), disp.height())\n_display_text_image.draw_string(${value_x}, ${value_y}, str(${value_text}), scale=${value_scale}, color=image.Color.from_rgb(${r}, ${g}, ${b}))\ndisp.show(_display_text_image)\n`
 }
 
 python.pythonGenerator.forBlock['maix4_forever'] = function (block, generator) {

@@ -75,9 +75,9 @@ export const useWorkspaceStore = defineStore({
       this.saving = true
       this.savingProgress = 0
       console.log("saving project")
-      
+
       const projectIOService = new ProjectIOService(this.$fs)
-      
+
       try {
         const stateToSave = {
           ...this.$state,
@@ -85,12 +85,12 @@ export const useWorkspaceStore = defineStore({
         }
 
         const result = await projectIOService.saveProject(
-          stateToSave, 
-          useDatasetStore(), 
-          filename, 
+          stateToSave,
+          useDatasetStore(),
+          filename,
           mode,
         )
-        
+
         if (mode === 'upload') return result
 
       } catch (e) {
@@ -138,7 +138,7 @@ export const useWorkspaceStore = defineStore({
         await loadPlugin(projectInfo.plugin)
       }
       await loadBoard(this.currentBoard)
-      
+
       return true
     },
     async deleteProject() {
@@ -186,7 +186,7 @@ export const useWorkspaceStore = defineStore({
       //set graph
       this.defaultGraph = this.extension.graph
       await datasetStore.createDataset(dataset)
-      
+
       return true
     },
     async resetProjectType() {
@@ -207,7 +207,7 @@ export const useWorkspaceStore = defineStore({
       //----- clear server store -----//
       const serverStore = useServerStore()
       serverStore.$reset()
-      
+
       return true
     },
     selectAndReadFile(ext = '.zip') {
@@ -249,7 +249,7 @@ export const useWorkspaceStore = defineStore({
       try {
         let datasetStore = useDatasetStore()
         let data = await this.selectAndReadFile()
-        
+
         this.opening = true
         this.openingProgress = 0
 
@@ -272,7 +272,7 @@ export const useWorkspaceStore = defineStore({
 
         this.defaultGraph = projectData.defaultGraph
         this.graph = projectData.graph
-        this.trainConfig = projectData.trainConfig        
+        this.trainConfig = projectData.trainConfig
 
         datasetStore.project = datasetData.project
         datasetStore.datasetType = datasetData.datasetType
@@ -287,7 +287,7 @@ export const useWorkspaceStore = defineStore({
         await loadBoard(this.currentBoard)
 
         this.openingProgress = 100
-        
+
         setTimeout(() => {
           window.location.reload()
         }, 1000)
@@ -298,14 +298,14 @@ export const useWorkspaceStore = defineStore({
           console.log('no file selected')
         } else {
           console.log(e)
-          
+
           return false
         }
       } finally {
         this.opening = false
       }
     },
-    async importModelFromBlob(modelBin, modelParam) {
+    async importModelFromBlob(modelBin, modelParam, ext1 = "bin", ext2 = "param") {
       try {
         let modelBinaries = new Blob([modelBin], { type: 'application/octet-stream' })
         let modelParams = new Blob([modelParam], { type: 'application/octet-stream' })
@@ -313,28 +313,31 @@ export const useWorkspaceStore = defineStore({
         //remove old model
         try {
           await this.$fs.removeFile(`${this.id}/model.bin`)
-        } catch (e) {
-          console.log(e)
-        }
+        } catch (e) { }
         try {
           await this.$fs.removeFile(`${this.id}/model.param`)
-        } catch (e) {
-          console.log(e)
-        }
-        await this.$fs.writeFile(`${this.id}/model.bin`, modelBinaries)
-        await this.$fs.writeFile(`${this.id}/model.param`, modelParams)
+        } catch (e) { }
+        try {
+          await this.$fs.removeFile(`${this.id}/model.cvimodel`)
+        } catch (e) { }
+        try {
+          await this.$fs.removeFile(`${this.id}/model.mud`)
+        } catch (e) { }
+
+        await this.$fs.writeFile(`${this.id}/model.${ext1}`, modelBinaries)
+        await this.$fs.writeFile(`${this.id}/model.${ext2}`, modelParams)
         let hash = await md5(new Uint8Array(await modelBin.arrayBuffer()))
         this.model = {
           name: 'model',
-          type: 'bin',
+          type: ext1,
           hash: hash,
         }
         console.log("model data", this.model)
-        
+
         return true
       } catch (e) {
         console.log(e)
-        
+
         return false
       }
     },
@@ -383,14 +386,14 @@ export const useWorkspaceStore = defineStore({
           hash: hash,
         }
         console.log("model data", this.model)
-        
+
         return true
       } catch (e) {
         if (e == "NOFILE") {
           console.log('no file selected')
         } else {
           console.log(e)
-          
+
           return false
         }
       }
@@ -448,14 +451,14 @@ export const useWorkspaceStore = defineStore({
           hash: hash,
         }
         console.log("model data", this.model)
-        
+
         return true
       } catch (e) {
         if (e == "NOFILE") {
           console.log('no file selected')
         } else {
           console.log(e)
-          
+
           return false
         }
       }

@@ -60,16 +60,18 @@ export default class ProjectIOService {
       // So yes, if projectType is unknown, it pretty much does nothing with files.
     }
 
-    // Save Model
     if (workspaceState.model) {
       let modelFolder = zip.folder("model")
       try {
+        let type = workspaceState.model.type || 'bin'
+        let ext2 = (type === 'cvimodel') ? 'mud' : 'param'
+
         // Note: workspace.js used storage.readAsFile(this.$fs, ...)
         // Helper:
-        let modelBinaries = await this.fs.readAsFile(`${workspaceState.id}/model.bin`)
-        let modelParams = await this.fs.readAsFile(`${workspaceState.id}/model.param`)
-        modelFolder.file("model.bin", modelBinaries)
-        modelFolder.file("model.param", modelParams)
+        let modelBinaries = await this.fs.readAsFile(`${workspaceState.id}/model.${type}`)
+        let modelParams = await this.fs.readAsFile(`${workspaceState.id}/model.${ext2}`)
+        modelFolder.file(`model.${type}`, modelBinaries)
+        modelFolder.file(`model.${ext2}`, modelParams)
       } catch (e) {
         console.warn("Model files not found for saving", e)
       }
@@ -84,7 +86,7 @@ export default class ProjectIOService {
     if (mode === 'download') {
       filename = filename.endsWith(".zip") ? filename : filename + ".zip"
       this.downloadBlob(filename, zipBlob)
-      
+
       return true
     } else {
       return zipBlob
@@ -121,10 +123,13 @@ export default class ProjectIOService {
     if (projectData.model) {
       let model = await zip.folder("model")
       if (model) {
-        let modelBinaries = await model.file("model.bin").async("blob")
-        let modelParams = await model.file("model.param").async("blob")
-        await this.fs.writeFile(`${projectData.id}/model.bin`, modelBinaries)
-        await this.fs.writeFile(`${projectData.id}/model.param`, modelParams)
+        let type = projectData.model.type || 'bin'
+        let ext2 = (type === 'cvimodel') ? 'mud' : 'param'
+
+        let modelBinaries = await model.file(`model.${type}`).async("blob")
+        let modelParams = await model.file(`model.${ext2}`).async("blob")
+        await this.fs.writeFile(`${projectData.id}/model.${type}`, modelBinaries)
+        await this.fs.writeFile(`${projectData.id}/model.${ext2}`, modelParams)
       }
     }
 

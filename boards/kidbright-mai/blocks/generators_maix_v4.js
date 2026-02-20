@@ -118,7 +118,7 @@ python.pythonGenerator.forBlock['maix4_set_display_color'] = function (block, ge
   var g = parseInt(colour_color.substr(3, 2), 16)
   var b = parseInt(colour_color.substr(5, 2), 16)
 
-  return `_tmp_img = image.Image(disp.width(), disp.height())\n_tmp_img.draw_rect(0, 0, disp.width(), disp.height(), color=(${r}, ${g}, ${b}), thickness=-1)\ndisp.show(_tmp_img)\n`
+  return `_tmp_img = image.Image(disp.width(), disp.height())\n_tmp_img.draw_rect(0, 0, disp.width(), disp.height(), color=image.Color.from_rgb(${r}, ${g}, ${b}), thickness=-1)\ndisp.show(_tmp_img)\n`
 }
 
 python.pythonGenerator.forBlock['maix4_draw_string'] = function (block, generator) {
@@ -137,7 +137,7 @@ python.pythonGenerator.forBlock['maix4_draw_string'] = function (block, generato
   var b = parseInt(colour_color.substring(5, 7), 16)
 
   // Create a new image to draw on and show, similar to V3 behavior
-  return `_display_text_image = image.Image(disp.width(), disp.height())\n_display_text_image.draw_string(${value_x}, ${value_y}, str(${value_text}), scale=${value_scale}, color=(${r}, ${g}, ${b}))\ndisp.show(_display_text_image)\n`
+  return `_display_text_image = image.Image(disp.width(), disp.height())\n_display_text_image.draw_string(${value_x}, ${value_y}, str(${value_text}), scale=${value_scale}, color=image.Color.from_rgb(${r}, ${g}, ${b}))\ndisp.show(_display_text_image)\n`
 }
 
 python.pythonGenerator.forBlock['maix4_forever'] = function (block, generator) {

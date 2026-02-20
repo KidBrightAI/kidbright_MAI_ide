@@ -42,6 +42,7 @@ async def ws_to_pty(websocket, pty_master_fd):
                     if cmd_data.get("cmd") == "upload":
                         path = cmd_data["path"]
                         content_b64 = cmd_data["data"]
+                        mode = cmd_data.get("mode", "wb")
                         content = base64.b64decode(content_b64)
                         
                         # Ensure directory exists
@@ -49,14 +50,23 @@ async def ws_to_pty(websocket, pty_master_fd):
                         if dir_path:
                             os.makedirs(dir_path, exist_ok=True)
                             
-                        with open(path, "wb") as f:
+                        with open(path, mode) as f:
                             f.write(content)
                         
                         print(f"System: Uploaded file to {path}")
                         await websocket.send(f"\r\n>>> System: Uploaded {path} success\r\n")
+
+                    elif cmd_data.get("cmd") == "stat":
+                        path = cmd_data["path"]
+                        if os.path.exists(path):
+                            size = os.path.getsize(path)
+                            await websocket.send(f"\r\n>>> System: Stat {path} exists {size}\r\n")
+                        else:
+                            await websocket.send(f"\r\n>>> System: Stat {path} notfound\r\n")
+
                 except Exception as e:
                     print(f"System command error: {e}")
-                    await websocket.send(f"\r\n>>> System: Upload error {e}\r\n")
+                    await websocket.send(f"\r\n>>> System: Command error {e}\r\n")
                 continue
 
             if isinstance(message, str):
@@ -144,7 +154,7 @@ async def main():
 
     print(f"Starting PTY WebSocket shell server on {'wss' if ssl_context else 'ws'}://{ip}:{port}")
 
-    async with websockets.serve(connection_handler, ip, port, ssl=ssl_context):
+    async with websockets.serve(connection_handler, ip, port, ssl=ssl_context, max_size=None):
         await asyncio.Future()  # Run forever
 
 if __name__ == "__main__":

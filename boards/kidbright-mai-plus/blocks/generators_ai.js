@@ -1,79 +1,54 @@
-python.pythonGenerator.forBlock['maix3_nn_classify_load'] = function(block, generator) {
+python.pythonGenerator.forBlock['maix3_nn_classify_load'] = function (block, generator) {
+  generator.definitions_['from_maix_import_camera'] = 'from maix import camera'
+  generator.definitions_['from_maix_import_display'] = 'from maix import display'
+  generator.definitions_['from_maix_import_image'] = 'from maix import image'
   generator.definitions_['from_maix_import_nn'] = 'from maix import nn'
-  generator.definitions_['class_Resnet'] = `
-class _Resnet:
-  m = {
-    "bin": "/root/model/${workspaceStore.model.hash}.bin",
-    "param": "/root/model/${workspaceStore.model.hash}.param"
-  }
 
-  options = {
-    "model_type": "awnn",
-    "inputs": {
-      "input0": (224, 224, 3)
-    },
-    "outputs": {
-      "output0": (1, 1, ${workspaceStore.labels.map(lb => lb.label).length})
-    },
-    "first_layer_conv_no_pad": False,
-    "mean": [127.5, 127.5, 127.5],
-    "norm": [0.00784313725490196, 0.00784313725490196, 0.00784313725490196],
-  }
-
+  generator.definitions_['class_Classifier'] = `
+class _Classifier:
   def __init__(self):
-    from maix import nn
-    self.model = nn.load(self.m, opt=self.options)
+    self.classifier = nn.Classifier(model="/root/model/${workspaceStore.model.hash}.mud", dual_buff=True)
 
-  def __del__(self):
-    del self.model
+  def classify(self, img):
+    self.res = self.classifier.classify(img)
+    return self.res
+    
+  def get_labels(self):
+    return self.classifier.labels
 
-_model = _Resnet()
-_labels = [${ workspaceStore.labels.map(label => `"${label.label}"`).sort().join(', ') }]
-`    
-
-  // var functionName = generator.provideFunction_(
-  //     '_isKeyPressed',
-  //     ['def ' + "_isKeyPressed" + '(key):',
-  //     '  event = keys_device.read_one()',      
-  //     '  if event is None:',
-  //     '    return False',
-  //     '  if event.value == 1 and event.code == 0x02 and key == "S1":',
-  //     '    return True',
-  //     '  if event.value == 1 and event.code == 0x03 and key == "S2":',
-  //     '    return True',
-  //     '  return False']);      
-
-  return 'print(_model.model)\n'
+_model = _Classifier()
+`
+  return 'print("Classifier loaded")\n'
 }
-  
-python.pythonGenerator.forBlock['maix3_nn_classify_classify'] = function(block, generator) {
-  var value_image = generator.valueToCode(block, 'image', python.Order.ATOMIC)    
-  
-  return `_model_result = _model.model.forward(${value_image}, quantize=True)\n`
+
+python.pythonGenerator.forBlock['maix3_nn_classify_classify'] = function (block, generator) {
+  var value_image = generator.valueToCode(block, 'image', python.Order.ATOMIC)
+  return `_model_result = _model.classify(${value_image})\n`
 }
-  
-python.pythonGenerator.forBlock['maix3_nn_classify_get_result'] = function(block, generator) {
+
+python.pythonGenerator.forBlock['maix3_nn_classify_get_result'] = function (block, generator) {
   var dropdown_data = block.getFieldValue('data')
   let code = ''
   let order = python.Order.NONE
-  if(dropdown_data == 'label'){
-    code = '_labels[_model_result.argmax()]\n'
+
+  if (dropdown_data == 'label') {
+    code = '_model.get_labels()[_model_result[0][0]] if _model_result else "None"\n'
     block.setOutput(true, 'String')
-  }else if(dropdown_data == 'class_id'){
-    code = '_model_result.argmax()'      
+  } else if (dropdown_data == 'class_id') {
+    code = '_model_result[0][0] if _model_result else -1'
     block.setOutput(true, 'Number')
     order = python.Order.ATOMIC
-  }else if(dropdown_data == 'probability'){
-    code = '_model_result.max()'      
+  } else if (dropdown_data == 'probability') {
+    code = '_model_result[0][1] if _model_result else 0.0'
     block.setOutput(true, 'Number')
     order = python.Order.ATOMIC
   }
-  
+
   return [code, order]
 }
 
 // voice 
-python.pythonGenerator.forBlock['maix3_nn_voice_load'] = function(block, generator) {
+python.pythonGenerator.forBlock['maix3_nn_voice_load'] = function (block, generator) {
   generator.definitions_['from_maix_import_nn'] = 'from maix import nn'
   generator.definitions_['import_voice_mfcc'] = 'import voice_mfcc'
   generator.definitions_['from_maix_import_image'] = 'from maix import image'
@@ -112,23 +87,23 @@ if _stream is None:
 else:
   print("Success: _stream is not None")
 _model = _Resnet()
-_labels = [${ workspaceStore.labels.map(label => `"${label.label}"`).sort().join(', ') }]
+_labels = [${workspaceStore.labels.map(label => `"${label.label}"`).sort().join(', ')}]
 
 `
-  
+
   return 'print(_model.model)\n'
 }
 
 
 //maix3_nn_voice_get_rms
-python.pythonGenerator.forBlock['maix3_nn_voice_get_rms'] = function(block, generator) {
+python.pythonGenerator.forBlock['maix3_nn_voice_get_rms'] = function (block, generator) {
   var code = 'voice_mfcc.get_rms(_stream)\n'
-  
+
   return [code, python.Order.NONE]
 }
 
 //maix3_nn_voice_classify
-python.pythonGenerator.forBlock['maix3_nn_voice_classify'] = function(block, generator) {
+python.pythonGenerator.forBlock['maix3_nn_voice_classify'] = function (block, generator) {
   var number_duration = block.getFieldValue('duration')
   var code = `voice_mfcc.audio_record(_stream, _p, record_sec=${number_duration})\n`
   code += `mfcc_image = image.open('/root/app/mfcc_run.png')\n`
@@ -141,7 +116,7 @@ python.pythonGenerator.forBlock['maix3_nn_voice_classify'] = function(block, gen
 // python.pythonGenerator.forBlock['maix3_nn_voice_classify'] = function(block, generator) {
 //   var number_threshold = block.getFieldValue('threshold');
 //   var number_duration = block.getFieldValue('duration');
-    
+
 //   var code = `res_listen = voice_mfcc.audio_listener(_stream, _p, threshold=${number_threshold}, record_sec=${number_duration})\n`;
 //   code += `if res_listen is not None:\n`;
 //   code += `  mfcc_image = image.open('/root/app/mfcc_run.png')\n`;
@@ -152,32 +127,32 @@ python.pythonGenerator.forBlock['maix3_nn_voice_classify'] = function(block, gen
 //   return code;
 // };
 
-python.pythonGenerator.forBlock['maix3_nn_voice_get_result'] = function(block, generator) {
+python.pythonGenerator.forBlock['maix3_nn_voice_get_result'] = function (block, generator) {
   var dropdown_data = block.getFieldValue('data')
   let code = ''
   let order = python.Order.NONE
-  if(dropdown_data == 'label'){
+  if (dropdown_data == 'label') {
     code = '_labels[_model_result.argmax()]\n'
     block.setOutput(true, 'String')
-  }else if(dropdown_data == 'class_id'){
+  } else if (dropdown_data == 'class_id') {
     code = '_model_result.argmax()'
     block.setOutput(true, 'Number')
     order = python.Order.ATOMIC
-  }else if(dropdown_data == 'probability'){
+  } else if (dropdown_data == 'probability') {
     code = '_model_result.max()'
     block.setOutput(true, 'Number')
     order = python.Order.ATOMIC
   }
-  
+
   return [code, order]
 }
 
 // yolo
-python.pythonGenerator.forBlock['maix3_nn_yolo_load'] = function(block, generator) {
+python.pythonGenerator.forBlock['maix3_nn_yolo_load'] = function (block, generator) {
   generator.definitions_['from_maix_import_nn'] = 'from maix import nn'
   generator.definitions_['class_Resnet'] = `
 class Yolo:
-  labels = [${ workspaceStore.labels.map(label => `"${label.label}"`).sort().join(', ') }]
+  labels = [${workspaceStore.labels.map(label => `"${label.label}"`).sort().join(', ')}]
   anchors = [1.19,1.98, 2.79,4.59, 4.53,8.92, 8.06,5.29, 10.32,10.65]
   #anchors = [5.4, 5.38, 1.65, 2.09, 0.8, 1.83, 2.45, 4.14, 0.46, 0.8]
   m = {
@@ -203,11 +178,11 @@ class Yolo:
     del self.model
     del self.decoder
 `
-  
+
   return '_yolo = Yolo()\n'
 }
-  
-python.pythonGenerator.forBlock['maix3_nn_yolo_detect'] = function(block, generator) {
+
+python.pythonGenerator.forBlock['maix3_nn_yolo_detect'] = function (block, generator) {
   var value_image = generator.valueToCode(block, 'image', python.Order.ATOMIC)
   var number_nms = block.getFieldValue('nms')
   var number_threshold = block.getFieldValue('threshold')
@@ -217,71 +192,70 @@ python.pythonGenerator.forBlock['maix3_nn_yolo_detect'] = function(block, genera
   return `_out = _yolo.model.forward(${value_image}.tobytes(), quantize=True, layout="hwc")
 _boxes, _probs = _yolo.decoder.run(_out, nms=${number_nms}, threshold=${number_threshold}, img_size=(224, 224))\n`
 }
-  
-python.pythonGenerator.forBlock['maix3_nn_yolo_get_result_array'] = function(block, generator) {
+
+python.pythonGenerator.forBlock['maix3_nn_yolo_get_result_array'] = function (block, generator) {
   var code = 'zip(_boxes, _probs)'
-  
+
   return [code, python.Order.NONE]
 }
 
 //maix3_nn_yolo_get_count
-python.pythonGenerator.forBlock['maix3_nn_yolo_get_count'] = function(block, generator) {
+python.pythonGenerator.forBlock['maix3_nn_yolo_get_count'] = function (block, generator) {
   var code = 'len(_boxes)'
-  
+
   return [code, python.Order.ATOMIC]
 }
-python.pythonGenerator.forBlock['maix3_nn_yolo_get'] = function(block, generator) {
+python.pythonGenerator.forBlock['maix3_nn_yolo_get'] = function (block, generator) {
   var dropdown_data = block.getFieldValue('data')
   var value_obj = generator.valueToCode(block, 'obj', python.Order.ATOMIC)
-    
-  if(dropdown_data == "x1"){    
+
+  if (dropdown_data == "x1") {
     var code = `${value_obj}[0][0]`
     var order = python.Order.ATOMIC
     block.setOutput(true, 'Number')
 
-  } else if(dropdown_data == "y1"){
+  } else if (dropdown_data == "y1") {
     var code = `${value_obj}[0][1]`
     var order = python.Order.ATOMIC
-    block.setOutput(true, 'Number')      
+    block.setOutput(true, 'Number')
 
-  } else if(dropdown_data == "x2"){
+  } else if (dropdown_data == "x2") {
     var code = `(${value_obj}[0][0]+${value_obj}[0][2])`
     var order = python.Order.ATOMIC
     block.setOutput(true, 'Number')
 
-  } else if(dropdown_data == "y2"){
+  } else if (dropdown_data == "y2") {
     var code = `(${value_obj}[0][1]+${value_obj}[0][3])`
     var order = python.Order.ATOMIC
-    block.setOutput(true, 'Number')    
+    block.setOutput(true, 'Number')
 
-  } else if(dropdown_data == "width"){
+  } else if (dropdown_data == "width") {
     var code = `${value_obj}[0][2]`
     var order = python.Order.ATOMIC
     block.setOutput(true, 'Number')
 
-  } else if(dropdown_data == "height"){
+  } else if (dropdown_data == "height") {
     var code = `${value_obj}[0][3]`
     var order = python.Order.ATOMIC
-    block.setOutput(true, 'Number')    
+    block.setOutput(true, 'Number')
 
-  } else if(dropdown_data == "label"){
+  } else if (dropdown_data == "label") {
     var code = `_yolo.labels[${value_obj}[1][0]]`
     var order = python.Order.NONE
     block.setOutput(true, 'String')
 
-  } else if(dropdown_data == "class_id"){
+  } else if (dropdown_data == "class_id") {
     var code = `${value_obj}[1][0]`
     var order = python.Order.ATOMIC
     block.setOutput(true, 'Number')
 
-  } else if(dropdown_data == "probability"){
+  } else if (dropdown_data == "probability") {
     var code = `${value_obj}[1][1][${value_obj}[1][0]]`
     var order = python.Order.ATOMIC
     block.setOutput(true, 'Number')
 
-  }    
-  
+  }
+
   return [code, order]
 }
-  
-  
+
