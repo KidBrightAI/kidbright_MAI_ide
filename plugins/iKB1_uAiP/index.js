@@ -1,5 +1,5 @@
 export default {
-  name: "iKB-1_uAi-P",    
+  name: "iKB_uAiP",
   description: "Universal I/O board For uAI plus",
   category: "Signal Input/Output",    
   author: "comdet",
