@@ -84,13 +84,43 @@ python.pythonGenerator.forBlock['maixpy3_gpio_rgb_hex'] = function(block, genera
 }
 
 python.pythonGenerator.forBlock['board_get_acc'] = function(block, generator) {
-  generator.definitions_['import_msa311'] = 'import msa311'
-  generator.definitions_['from_maix_import_i2c'] = 'from maix import i2c'  
-  generator.definitions_['_i2c_msa311'] = '_i2c_msa311 = i2c.I2C("/dev/i2c-1", 0x62)'
-  generator.definitions_['_msa311'] = '_msa311 = msa311.MSA311(_i2c_msa311)'
-  generator.definitions_['_msa311_enable_tap_detection'] = '_msa311.enable_tap_detection()'
+  generator.definitions_['import_imu'] = 'from maix.ext_dev import imu'
+  
+  generator.definitions_['_imu'] = '_imu = imu.IMU("qmi8658", mode=imu.Mode.DUAL,\n'
+                              +'acc_scale=imu.AccScale.ACC_SCALE_2G,\n'
+                              +'acc_odr=imu.AccOdr.ACC_ODR_8000,\n'
+                              +'gyro_scale=imu.GyroScale.GYRO_SCALE_16DPS,\n'
+                              +'gyro_odr=imu.GyroOdr.GYRO_ODR_8000)'
+
   var dropdown_axis = block.getFieldValue('axis')
-  var code = `_msa311.acceleration[${dropdown_axis}]`
+  var code = `_imu.read()[${dropdown_axis}]`
+  
+  return [code, python.Order.ATOMIC]
+}
+python.pythonGenerator.forBlock['board_get_gyro'] = function(block, generator) {
+  generator.definitions_['import_imu'] = 'from maix.ext_dev import imu'
+  
+  generator.definitions_['_imu'] = '_imu = imu.IMU("qmi8658", mode=imu.Mode.DUAL,\n'
+                              +'acc_scale=imu.AccScale.ACC_SCALE_2G,\n'
+                              +'acc_odr=imu.AccOdr.ACC_ODR_8000,\n'
+                              +'gyro_scale=imu.GyroScale.GYRO_SCALE_16DPS,\n'
+                              +'gyro_odr=imu.GyroOdr.GYRO_ODR_8000)'
+
+  var dropdown_axis = block.getFieldValue('axis')
+  var code = `_imu.read()[${dropdown_axis}]`
+  
+  return [code, python.Order.ATOMIC]
+}
+python.pythonGenerator.forBlock['board_get_temp'] = function(block, generator) {
+  generator.definitions_['import_imu'] = 'from maix.ext_dev import imu'
+  
+  generator.definitions_['_imu'] = '_imu = imu.IMU("qmi8658", mode=imu.Mode.DUAL,\n'
+                              +'acc_scale=imu.AccScale.ACC_SCALE_2G,\n'
+                              +'acc_odr=imu.AccOdr.ACC_ODR_8000,\n'
+                              +'gyro_scale=imu.GyroScale.GYRO_SCALE_16DPS,\n'
+                              +'gyro_odr=imu.GyroOdr.GYRO_ODR_8000)'
+
+  var code = `_imu.read()[6]`
   
   return [code, python.Order.ATOMIC]
 }
