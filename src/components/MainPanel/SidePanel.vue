@@ -188,7 +188,6 @@
 </template>
 
 <script setup>
-import MainMenu from "@/components/MainPanel/MainMenu.vue"
 import { computed } from "vue"
 import InstructionAsyncComponent from "@/components/InstructionAsyncComponent.vue"
 import ExtensionAsyncComponent from "@/components/ExtensionAsyncComponent.vue"

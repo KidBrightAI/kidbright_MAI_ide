@@ -548,32 +548,32 @@ watch(selectedMenu, val => {
   <!-- Dialogs -->
   <SavingProjectDialog />
   <SaveProjectDialog
-    v-model="dialogs.saveProject"
+    v-model:isDialogVisible="dialogs.saveProject"
     @submit="saveProject"
   />
   <UploadProjectDialog />
   <OpeningProjectDialog />
-  <ConnectWifiDialog v-model="dialogs.connectWifi" />
+  <ConnectWifiDialog v-model:isDialogVisible="dialogs.connectWifi" />
   <NewProjectDialog
-    v-model="dialogs.newProject"
+    v-model:isDialogVisible="dialogs.newProject"
     @submit="createdProject"
   />
   <ExampleDialog
-    v-model="dialogs.example"
+    v-model:isDialogVisible="dialogs.example"
     @loadExample="onExampleOpen"
   />
   <PluginDialog
-    v-model="dialogs.plugin"
+    v-model:isDialogVisible="dialogs.plugin"
     @installPlugin="onInstallPlugin"
     @uninstallPlugin="onUninstallPlugin"
   />
   <NewModelDialog
-    v-model="dialogs.newModel"
+    v-model:isDialogVisible="dialogs.newModel"
     @submit="selectProjectType"
   />
-  <FileExplorerDialog v-model="dialogs.fileExplorer" />
+  <FileExplorerDialog v-model:isDialogVisible="dialogs.fileExplorer" />
   <SelectBoardDialog
-    v-model="dialogs.selectBoard"
+    v-model:isDialogVisible="dialogs.selectBoard"
     @board-selected="onBoardSelected"
   />
   <SecureConnectDialog />

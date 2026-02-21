@@ -10,7 +10,6 @@ import { useRoute, useRouter } from 'vue-router'
 
 import { Splitpanes, Pane } from 'splitpanes'
 import 'splitpanes/dist/splitpanes.css'
-import MainPanel from "@/components/MainPanel/MainPanel.vue"
 import SidePanel from "@/components/MainPanel/SidePanel.vue"
 
 import SavingProjectDialog from "@/components/dialog/SavingProjectDialog.vue"

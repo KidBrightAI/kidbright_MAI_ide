@@ -1,15 +1,15 @@
 Blockly.defineBlocksWithJsonArray([
   {
-    "type": "maix3_display_camera",
+    "type": "display_camera",
     "message0": "display camera",
     "previousStatement": null,
     "nextStatement": null,
-    "tooltip": "",
-    "helpUrl": "",
     "colour": "#5BA58C",
+    "tooltip": "Continuously display camera feed",
+    "helpUrl": "",
   },
   {
-    "type": "maix3_set_display_color",
+    "type": "display_fill_color",
     "message0": "set display color %1",
     "args0": [
       {
@@ -21,11 +21,11 @@ Blockly.defineBlocksWithJsonArray([
     "previousStatement": null,
     "nextStatement": null,
     "colour": "#5BA58C",
-    "tooltip": "",
+    "tooltip": "Fill display with color",
     "helpUrl": "",
   },
   {
-    "type": "maix3_draw_string",
+    "type": "display_draw_string",
     "message0": "draw text %1 at X %2 Y %3 color %4 scale %5",
     "args0": [
       {
@@ -77,7 +77,7 @@ Blockly.defineBlocksWithJsonArray([
     'helpUrl': '',
   },
   {
-    "type": "maix3_forever",
+    "type": "main_forever",
     "message0": "forever %1 %2",
     "args0": [
       {

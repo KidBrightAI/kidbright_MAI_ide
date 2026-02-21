@@ -6,11 +6,9 @@ import { useWorkspaceStore } from "@/store/workspace"
 import { onMounted } from "vue"
 import { randomId } from "../utils"
 
-const props = defineProps({
-  isDialogVisible: Boolean,
-})
+const isDialogVisible = defineModel('isDialogVisible', { type: Boolean, default: false })
 
-const emit = defineEmits(['update:isDialogVisible','submit'])
+const emit = defineEmits(['submit'])
 
 const boardStore = useBoardStore()
 const workspaceStore = useWorkspaceStore()
@@ -24,7 +22,7 @@ const projectName = ref("โปรเจค KidBright Micro AI")
 const refVForm = ref({})
 
 const resetForm = () => {
-  emit('update:isDialogVisible', false)
+  isDialogVisible.value = false
 }
 
 const onFormSubmit = async() => {
@@ -51,7 +49,7 @@ const onFormSubmit = async() => {
 <template>
   <VDialog
     :width="$vuetify.display.smAndDown ? 'auto' : '600'"
-    :model-value="props.isDialogVisible"
+    v-model="isDialogVisible"
   >
     <VCard class="pa-sm-3 pa-3 bg-background">
       <DialogCloseBtn

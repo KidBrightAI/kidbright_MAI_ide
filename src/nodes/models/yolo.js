@@ -17,7 +17,7 @@ export const YoloNode = defineNode({
     modelType: () => new SelectInterface("Model Type", "yolo_v11s",
       [
         { text: "YOLO v2 slim", value: "slim_yolo_v2" },
-        { text: "YOLO v11 S", value: "yolo11s" }
+        { text: "YOLO v11n", value: "yolo11n" }
       ]).setPort(false),
     objectThreshold: () => new NumberInterface("Object Threshold", 0.5, 0.1, 1).setPort(false),
     iouThreshold: () => new NumberInterface("IOU Threshold", 0.5, 0.1, 1).setPort(false),

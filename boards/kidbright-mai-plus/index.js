@@ -32,8 +32,6 @@ export default {
     "blocks/generators_display.js",
     "blocks/generators_gpio.js",
     "blocks/generators_ai.js",
-    "blocks/blocks_maix_v4.js",
-    "blocks/generators_maix_v4.js",
   ],
   autoCompletion: {},
 }

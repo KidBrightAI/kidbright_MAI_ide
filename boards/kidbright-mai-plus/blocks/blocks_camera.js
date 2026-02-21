@@ -1,6 +1,6 @@
 Blockly.defineBlocksWithJsonArray([
   {
-    "type": "maix3_camera_width",
+    "type": "camera_width",
     "message0": "get camera width",
     "output": "Number",
     "colour": 20,
@@ -8,7 +8,7 @@ Blockly.defineBlocksWithJsonArray([
     "helpUrl": "",
   },
   {
-    "type": "maix3_camera_height",
+    "type": "camera_height",
     "message0": "get camera height",
     "output": "Number",
     "colour": 20,
@@ -16,7 +16,7 @@ Blockly.defineBlocksWithJsonArray([
     "helpUrl": "",
   },
   {
-    "type": "maix3_camera_resolution",
+    "type": "camera_resolution",
     "message0": "set camera resolution %1 width %2 height %3",
     "args0": [
       {
@@ -41,7 +41,7 @@ Blockly.defineBlocksWithJsonArray([
     "helpUrl": "",
   },
   {
-    "type": "maix3_camera_capture",
+    "type": "camera_capture",
     "message0": "camera capture",
     "inputsInline": true,
     "output": "Image",
@@ -50,7 +50,7 @@ Blockly.defineBlocksWithJsonArray([
     "helpUrl": "",
   },
   {
-    "type": "maix3_camera_close",
+    "type": "camera_close",
     "message0": "camera close",
     "inputsInline": true,
     "previousStatement": null,

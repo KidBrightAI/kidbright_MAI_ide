@@ -9,11 +9,9 @@ import { onMounted } from "vue"
 import { useConfirm } from "@/components/comfirm-dialog"
 import { toast } from "vue3-toastify"
 
-const props = defineProps({
-  isDialogVisible: Boolean,
-})
+const isDialogVisible = defineModel('isDialogVisible', { type: Boolean, default: false })
 
-const emit = defineEmits(['update:isDialogVisible','installPlugin', 'uninstallPlugin'])
+const emit = defineEmits(['installPlugin', 'uninstallPlugin'])
 
 const boardStore = useBoardStore()
 const workspaceStore = useWorkspaceStore()
@@ -35,7 +33,7 @@ const categories = ref([
 ])
 
 const resetForm = () => {
-  emit('update:isDialogVisible', false)
+  isDialogVisible.value = false
 }
 
 const isInstalled = plugin => {
@@ -74,7 +72,7 @@ const listPluginByCategory = category => {
 <template>
   <VDialog
     :width="$vuetify.display.smAndDown ? 'auto' : '70%'"
-    :model-value="props.isDialogVisible"
+    v-model="isDialogVisible"
   >
     <VCard class="pa-sm-3 pa-3 bg-background">
       <DialogCloseBtn

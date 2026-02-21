@@ -5,10 +5,8 @@ import { useDatasetStore } from "@/store/dataset"
 import { useWorkspaceStore } from "@/store/workspace"
 import { toast } from "vue3-toastify"
 
-const props = defineProps({
-  isDialogVisible: Boolean,
-})
-const emit = defineEmits(['update:isDialogVisible'])
+const isDialogVisible = defineModel('isDialogVisible', { type: Boolean, default: false })
+
 const datasetStore = useDatasetStore()
 const workspaceStore = useWorkspaceStore()
 
@@ -69,7 +67,7 @@ const resetAndClose = e=>{
   importWithLabel.value = false
   step.value = 1
   progress.value = 0
-  emit('update:isDialogVisible', false)
+  isDialogVisible.value = false
   
   return
 }
@@ -77,7 +75,7 @@ const resetAndClose = e=>{
 
 <template>
   <VDialog
-    :model-value="props.isDialogVisible"
+    v-model="isDialogVisible"
     width="auto"
     persistent
   >

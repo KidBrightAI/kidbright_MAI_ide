@@ -2,9 +2,9 @@
 import { watch } from 'vue'
 
 
-const props = defineProps({
-  isDialogVisible: Boolean,
-  labelName: {
+const isDialogVisible = defineModel('isDialogVisible', { type: Boolean, default: false })
+
+const props = defineProps({  labelName: {
     type: String,
     default: '',
   },
@@ -16,21 +16,21 @@ const labelName = ref('')
 
 const resetForm = () => {
   labelName.value = ''
-  emit('update:isDialogVisible', false)
+  isDialogVisible.value = false
 }
 const submitLabel = () => {
   emit('submit', labelName.value)
   resetForm()
 }
 
-watch(() => props.isDialogVisible, newVal => {
+watch(isDialogVisible, newVal => {
   labelName.value = props.labelName
 })
 </script>
 
 <template>
   <VDialog
-    :model-value="props.isDialogVisible"
+    v-model="isDialogVisible"
     width="500px"
   >
     <VCard>
