@@ -36,7 +36,7 @@ import SaveProjectDialog from "@/components/dialog/SaveProjectDialog.vue"
 import UploadProjectDialog from "@/components/dialog/UploadProjectDialog.vue"
 import OpeningProjectDialog from "@/components/dialog/OpeningProjectDialog.vue"
 import NewModelDialog from "@/components/dialog/NewModelDialog.vue"
-import fileExplorerDialog from "@/components/dialog/FileExplorerDialog.vue"
+import FileExplorerDialog from "@/components/dialog/FileExplorerDialog.vue"
 import SelectBoardDialog from "@/components/dialog/SelectBoardDialog.vue"
 import SecureConnectDialog from "@/components/dialog/SecureConnectDialog.vue"
 

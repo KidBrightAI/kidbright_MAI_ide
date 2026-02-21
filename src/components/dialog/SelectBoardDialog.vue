@@ -1,6 +1,6 @@
 <template>
   <VDialog
-    v-model="dialog"
+    v-model="isDialogVisible"
     persistent
     max-width="800px"
   >
@@ -49,7 +49,7 @@
         <VBtn
           color="blue-darken-1"
           variant="text"
-          @click="dialog = false"
+          @click="isDialogVisible = false"
         >
           Close
         </VBtn>
@@ -62,7 +62,7 @@
 import { computed, getCurrentInstance } from 'vue'
 
 const emit = defineEmits(['board-selected'])
-const dialog = defineModel()
+const isDialogVisible = defineModel('isDialogVisible', { type: Boolean, default: false })
 const app = getCurrentInstance()
 const boards = computed(() => app.appContext.config.globalProperties.$boards || [])
 
@@ -72,7 +72,7 @@ const getImagePath = board => {
 
 const selectBoard = board => {
   emit('board-selected', board)
-  dialog.value = false
+  isDialogVisible.value = false
 }
 </script>
 
