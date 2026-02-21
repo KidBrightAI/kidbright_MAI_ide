@@ -8,11 +8,9 @@ import { toast } from "vue3-toastify"
 import { useWorkspaceStore } from "@/store/workspace"
 import { onMounted } from "vue"
 
-const props = defineProps({
-  isDialogVisible: Boolean,
-})
+const isDialogVisible = defineModel('isDialogVisible', { type: Boolean, default: false })
 
-const emit = defineEmits(['update:isDialogVisible','loadExample'])
+const emit = defineEmits(['loadExample'])
 
 const boardStore = useBoardStore()
 const workspaceStore = useWorkspaceStore()
@@ -21,14 +19,14 @@ const confirm = useConfirm()
 const refVForm = ref({})
 
 const resetForm = () => {
-  emit('update:isDialogVisible', false)
+  isDialogVisible.value = false
 }
 </script>
 
 <template>
   <VDialog
     :width="$vuetify.display.smAndDown ? 'auto' : '1000'"
-    :model-value="props.isDialogVisible"
+    v-model="isDialogVisible"
   >
     <VCard class="pa-sm-3 pa-3 bg-background">
       <DialogCloseBtn

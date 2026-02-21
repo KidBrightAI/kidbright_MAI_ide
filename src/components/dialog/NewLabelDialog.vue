@@ -1,7 +1,5 @@
 <script setup>
-const props = defineProps({
-  isDialogVisible: Boolean,
-})
+const isDialogVisible = defineModel('isDialogVisible', { type: Boolean, default: false })
 
 const emit = defineEmits(['newLabel'])
 

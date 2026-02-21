@@ -52,7 +52,7 @@ export default function () {
   const isHasAI = () => {
     const workspaceStore = useWorkspaceStore()
     console.log(workspaceStore.model)
-    
+
     return workspaceStore.model
   }
 
@@ -68,7 +68,7 @@ export default function () {
     if (modelType == "VOICE_CLASSIFICATION") {
       return blockAIVoiceClassification
     }
-    
+
     return ""
   }
 
@@ -79,9 +79,9 @@ export default function () {
       icon: `images/icons/basic_block_icon.svg`,
       blocks: [
         {
-          xml: `<block type="maix4_display_camera"></block>
-            <block type="maix4_set_display_color"></block>
-            <block type="maix4_draw_string">
+          xml: `<block type="display_camera"></block>
+            <block type="display_fill_color"></block>
+            <block type="display_draw_string">
               <field name="color">#ff0000</field>
               <value name="text">
                 <shadow type="text">
@@ -118,7 +118,7 @@ export default function () {
                 </shadow>
               </value>
             </block>
-            <block type="maix4_forever"></block>
+            <block type="main_forever"></block>
             `,
         },
       ],
@@ -135,14 +135,14 @@ export default function () {
         ],
       } : {},
     {
-      name: "Display / Image",
+      name: "Display & Camera",
       color: "#9fa55b",
       icon: `images/icons/lcd.png`,
       blocks: [
         {
-          xml: `<block type="maix4_display_width"></block>
-          <block type="maix4_display_height"></block>
-          <block type="maix4_display_resolution">
+          xml: `<block type="display_get_width"></block>
+          <block type="display_get_height"></block>
+          <block type="display_resolution">
             <value name="width">
               <shadow type="math_number">
                 <field name="NUM">240</field>
@@ -154,14 +154,34 @@ export default function () {
               </shadow>
             </value>
           </block>
-          <block type="maix4_display_show"></block>`,
+          <block type="display_get_image"></block>
+          <block type="display_show"></block>`,
+        },
+        {
+          xml: `<label text="Camera"></label>
+            <block type="camera_width"></block>
+            <block type="camera_height"></block>
+            <block type="camera_resolution">
+              <value name="width">
+                <shadow type="math_number">
+                  <field name="NUM">240</field>
+                </shadow>
+              </value>
+              <value name="height">
+                <shadow type="math_number">
+                  <field name="NUM">240</field>
+                </shadow>
+              </value>
+            </block>
+            <block type="camera_capture"></block>
+            <block type="camera_close"></block>`,
         },
         {
           xml: `           
           <block type="variables_set">
             <field name="VAR">img1</field>
             <value name="VALUE">
-              <block type="maix4_image_new">
+              <block type="image_new">
                 <field name="color">#000000</field>
                 <value name="width">
                   <shadow type="math_number">
@@ -179,11 +199,79 @@ export default function () {
           <block type="variables_set">
             <field name="VAR">img1</field>
             <value name="VALUE">
-            <block type="maix4_camera_capture"></block>
+            <block type="camera_capture"></block>
             </value>
           </block>
+        <label text="Image Manipulation"></label>
+        <block type="image_copy">
+          <value name="image">
+            <block type="variables_get">
+              <field name="VAR">img1</field>
+            </block>
+          </value>
+        </block>
+        <block type="image_resize">
+          <value name="image">
+            <block type="variables_get">
+              <field name="VAR">img1</field>
+            </block>
+          </value>
+          <value name="width">
+            <shadow type="math_number">
+              <field name="NUM">90</field>
+            </shadow>
+          </value>
+          <value name="height">
+            <shadow type="math_number">
+              <field name="NUM">90</field>
+            </shadow>
+          </value>
+        </block>
+        <block type="image_rotate">
+          <field name="angle">90</field>
+          <value name="image">
+            <block type="variables_get">
+              <field name="VAR">img1</field>
+            </block>
+          </value>
+        </block>
+        <block type="image_flip">
+          <field name="direction">1</field>
+          <value name="image">
+            <block type="variables_get">
+              <field name="VAR">img1</field>
+            </block>
+          </value>
+        </block>
+        <block type="image_crop">
+          <value name="image">
+            <block type="variables_get">
+              <field name="VAR">img1</field>
+            </block>
+          </value>
+          <value name="x">
+            <shadow type="math_number">
+              <field name="NUM">10</field>
+            </shadow>
+          </value>
+          <value name="y">
+            <shadow type="math_number">
+              <field name="NUM">10</field>
+            </shadow>
+          </value>
+          <value name="w">
+            <shadow type="math_number">
+              <field name="NUM">50</field>
+            </shadow>
+          </value>
+          <value name="h">
+            <shadow type="math_number">
+              <field name="NUM">50</field>
+            </shadow>
+          </value>
+        </block>
         <label text="Image drawing"></label>
-        <block type="maix4_image_draw_string">
+        <block type="image_draw_string">
           <field name="color">#ff0000</field>
           <value name="image">
             <block type="variables_get">
@@ -215,7 +303,253 @@ export default function () {
               <field name="NUM">1</field>
             </shadow>
           </value>
-        </block>`,
+        </block>
+        <block type="image_draw_line">
+          <field name="color">#ff0000</field>
+          <value name="image">
+            <block type="variables_get">
+              <field name="VAR">img1</field>
+            </block>
+          </value>
+          <value name="x1">
+            <shadow type="math_number">
+              <field name="NUM">10</field>
+            </shadow>
+          </value>
+          <value name="y1">
+            <shadow type="math_number">
+              <field name="NUM">10</field>
+            </shadow>
+          </value>
+          <value name="x2">
+            <shadow type="math_number">
+              <field name="NUM">60</field>
+            </shadow>
+          </value>
+          <value name="y2">
+            <shadow type="math_number">
+              <field name="NUM">60</field>
+            </shadow>
+          </value>
+          <value name="thickness">
+            <shadow type="math_number">
+              <field name="NUM">3</field>
+            </shadow>
+          </value>
+        </block>
+        <block type="image_draw_rectangle">
+          <field name="color">#ff0000</field>
+          <value name="image">
+            <block type="variables_get">
+              <field name="VAR">img1</field>
+            </block>
+          </value>
+          <value name="x">
+            <shadow type="math_number">
+              <field name="NUM">10</field>
+            </shadow>
+          </value>
+          <value name="y">
+            <shadow type="math_number">
+              <field name="NUM">10</field>
+            </shadow>
+          </value>
+          <value name="w">
+            <shadow type="math_number">
+              <field name="NUM">50</field>
+            </shadow>
+          </value>
+          <value name="h">
+            <shadow type="math_number">
+              <field name="NUM">50</field>
+            </shadow>
+          </value>
+          <value name="thickness">
+            <shadow type="math_number">
+              <field name="NUM">3</field>
+            </shadow>
+          </value>
+        </block>
+        <block type="image_draw_circle">
+          <field name="color">#ff0000</field>
+          <value name="image">
+            <block type="variables_get">
+              <field name="VAR">img1</field>
+            </block>
+          </value>
+          <value name="x1">
+            <shadow type="math_number">
+              <field name="NUM">50</field>
+            </shadow>
+          </value>
+          <value name="y1">
+            <shadow type="math_number">
+              <field name="NUM">50</field>
+            </shadow>
+          </value>
+          <value name="radius">
+            <shadow type="math_number">
+              <field name="NUM">20</field>
+            </shadow>
+          </value>
+          <value name="thickness">
+            <shadow type="math_number">
+              <field name="NUM">3</field>
+            </shadow>
+          </value>
+        </block>
+        <block type="image_draw_ellipse">
+          <field name="color">#ff0000</field>
+          <value name="image">
+            <block type="variables_get">
+              <field name="VAR">img1</field>
+            </block>
+          </value>
+          <value name="x1">
+            <shadow type="math_number">
+              <field name="NUM">100</field>
+            </shadow>
+          </value>
+          <value name="y1">
+            <shadow type="math_number">
+              <field name="NUM">100</field>
+            </shadow>
+          </value>
+          <value name="radius_x">
+            <shadow type="math_number">
+              <field name="NUM">40</field>
+            </shadow>
+          </value>
+          <value name="radius_y">
+            <shadow type="math_number">
+              <field name="NUM">60</field>
+            </shadow>
+          </value>
+          <value name="rotate">
+            <shadow type="math_number">
+              <field name="NUM">0</field>
+            </shadow>
+          </value>
+          <value name="angle_start">
+            <shadow type="math_number">
+              <field name="NUM">0</field>
+            </shadow>
+          </value>
+          <value name="angle_end">
+            <shadow type="math_number">
+              <field name="NUM">360</field>
+            </shadow>
+          </value>
+          <value name="thickness">
+            <shadow type="math_number">
+              <field name="NUM">3</field>
+            </shadow>
+          </value>
+        </block>
+        <block type="image_draw_cross">
+          <field name="color">#ff0000</field>
+          <value name="image">
+            <block type="variables_get">
+              <field name="VAR">img1</field>
+            </block>
+          </value>
+          <value name="x">
+            <shadow type="math_number"><field name="NUM">10</field></shadow>
+          </value>
+          <value name="y">
+            <shadow type="math_number"><field name="NUM">10</field></shadow>
+          </value>
+          <value name="size">
+            <shadow type="math_number"><field name="NUM">5</field></shadow>
+          </value>
+          <value name="thickness">
+            <shadow type="math_number"><field name="NUM">1</field></shadow>
+          </value>
+        </block>
+        <block type="image_draw_arrow">
+          <field name="color">#ff0000</field>
+          <value name="image">
+            <block type="variables_get">
+              <field name="VAR">img1</field>
+            </block>
+          </value>
+          <value name="x1">
+            <shadow type="math_number"><field name="NUM">10</field></shadow>
+          </value>
+          <value name="y1">
+            <shadow type="math_number"><field name="NUM">10</field></shadow>
+          </value>
+          <value name="x2">
+            <shadow type="math_number"><field name="NUM">50</field></shadow>
+          </value>
+          <value name="y2">
+            <shadow type="math_number"><field name="NUM">50</field></shadow>
+          </value>
+          <value name="thickness">
+            <shadow type="math_number"><field name="NUM">1</field></shadow>
+          </value>
+        </block>
+        <block type="image_draw_image">
+          <value name="image">
+            <block type="variables_get">
+              <field name="VAR">img1</field>
+            </block>
+          </value>
+          <value name="image2">
+            <block type="variables_get">
+              <field name="VAR">img2</field>
+            </block>
+          </value>
+          <value name="x">
+            <shadow type="math_number"><field name="NUM">0</field></shadow>
+          </value>
+          <value name="y">
+            <shadow type="math_number"><field name="NUM">0</field></shadow>
+          </value>
+        </block>
+        `,
+        },
+        {
+          xml: `<label text="load / save / format image"></label> 
+          <block type="image_open">
+            <field name="path">./tmp.png</field>
+            <value name="var">
+              <block type="variables_get">
+                <field name="VAR">img1</field>
+              </block>
+            </value>
+          </block>
+          <block type="image_save">
+            <field name="path">./tmp.png</field>
+            <value name="image">
+              <block type="variables_get">
+                <field name="VAR">img1</field>
+              </block>
+            </value>
+          </block>
+          <block type="image_to_format">
+            <value name="image">
+              <block type="variables_get">
+                <field name="VAR">img1</field>
+              </block>
+            </value>
+          </block>
+          <block type="image_to_bytes">
+            <value name="image">
+              <block type="variables_get">
+                <field name="VAR">img1</field>
+              </block>
+            </value>
+          </block>
+          <block type="image_from_bytes">
+            <value name="width">
+              <shadow type="math_number"><field name="NUM">240</field></shadow>
+            </value>
+            <value name="height">
+              <shadow type="math_number"><field name="NUM">240</field></shadow>
+            </value>
+          </block>
+          `,
         },
       ],
     },
@@ -463,25 +797,6 @@ export default function () {
           //   </value>
           // </block>
         },
-        {
-          xml: `<label text="camera"></label>
-            <block type="maix4_camera_width"></block>
-            <block type="maix4_camera_height"></block>
-            <block type="maix4_camera_resolution">
-              <value name="width">
-                <shadow type="math_number">
-                  <field name="NUM">240</field>
-                </shadow>
-              </value>
-              <value name="height">
-                <shadow type="math_number">
-                  <field name="NUM">240</field>
-                </shadow>
-              </value>
-            </block>
-            <block type="maix4_camera_capture"></block>
-            <block type="maix4_camera_close"></block>`,
-        },
       ],
     },
     {
@@ -693,5 +1008,5 @@ export default function () {
       icon: `images/icons/function.png`,
       blocks: "PROCEDURE",
     },
-  ]
+  ];
 }

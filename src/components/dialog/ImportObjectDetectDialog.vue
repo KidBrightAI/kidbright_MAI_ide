@@ -7,10 +7,8 @@ import { toast } from "vue3-toastify"
 import JSZip from "jszip"
 import { useConfirm } from "@/components/comfirm-dialog"
 
-const props = defineProps({
-  isDialogVisible: Boolean,
-})
-const emit = defineEmits(['update:isDialogVisible'])
+const isDialogVisible = defineModel('isDialogVisible', { type: Boolean, default: false })
+
 const datasetStore = useDatasetStore()
 const workspaceStore = useWorkspaceStore()
 const confirm = useConfirm()
@@ -263,7 +261,7 @@ const resetAndClose = e=>{
   //importWithLabel.value = false;
   step.value = 1
   progress.value = 0
-  emit('update:isDialogVisible', false)
+  isDialogVisible.value = false
   
   return
 }
@@ -272,7 +270,7 @@ const tab = ref("PASCAL VOL")
 
 <template>
   <VDialog
-    :model-value="props.isDialogVisible"
+    v-model="isDialogVisible"
     width="auto"
     persistent
   >

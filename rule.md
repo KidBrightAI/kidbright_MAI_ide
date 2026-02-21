@@ -1,39 +1,48 @@
-# KidBright mAI IDE: AI Code Generation Rules (rule.md)
+# KidBright IDE Project Rules
 
-This file serves as the strict guideline for any AI assistant tasked with modifying, refactoring, or extending the **KidBright mAI IDE** codebase. You must adhere to the following architectural, framework, and organizational conventions.
+กฏและแนวทางการเขียนโค้ดสำหรับโปรเจค KidBright IDE เพื่อเป็นมาตรฐานเดียวกัน
 
-## 1. General Constraints
-- **Framework**: Use Vue 3 exclusively with the Composition API (`<script setup>`).
-- **Styling**: Use Vuetify 3 (since it's configured in `plugins/vuetify.js`) and SCSS (`@core/scss` and `styles/`).
-- **State Management**: Use Pinia (`store/`) when managing cross-component states such as active boards, plugins, or workspace configurations.
-- **Do not overwrite core engine unnecessarily**: Subsystems in `src/engine/` (WebSockets, board deployment, storage) are stable. If you need new functionality, prefer adding it via a Plugin or Extension.
+## 1. Vue 3 Composition API & `<script setup>`
+- ใช้ Vue 3 Composition API และ `<script setup>` เป็นหลัก 
+- หลีกเลี่ยงการใช้ Options API (`data(), methods: {}, computed: {}` ฝั่งเก่า) ในคอมโพเนนต์ใหม่
 
-## 2. Dealing with Blockly & Code Generation
-- The IDE utilizes `blockly` and `blockly/python` to translate visual blocks to python scripts.
-- When generating new blocks, use standard Blockly JSON or JavaScript definitions in `blocks/` or `plugins/<plugin_name>/blocks/`.
-- Ensure that the Python string generator function handles indentation properly (using `Blockly.Python.INDENT`) since Python relies on strict indentation.
+## 2. การจัดการ Dialog และ Two-Way Binding (v-model)
+เมื่อสร้างหรือ Component ใดๆ ที่หน้าตาเป็น Popup / Dialog ที่ต้องมีการเปิดและปิด ให้ยึดหลักดังนี้:
 
-## 3. Creating or Modifying Boards
-A board directory (`boards/<board_name>/`) strictly requires:
-- `index.js` (Exporting name, description, and ID).
-- `toolbox.js` (The XML defining the Blockly sidebar for this board).
-- `workspace.json` (Default blocks rendered upon initialization).
-- `main.py` (The entry template template containing `##{main}##` where the user's code is injected).
-- `scripts/` (Optional python scripts running on the target hardware before/after deployment, e.g., killing old tasks or preparing to run).
-- `libs/` (Core python libary files specific to the board firmware).
+**2.1 ใช้ `defineModel` เสมอ**
+- ให้ยุติการใช้แพทเทิร์นเก่า (`props: ['modelValue']` และ `emit('update:modelValue')`)
+- ให้ใช้ `defineModel` ของ Vue 3.4+ สำหรับทำ Two-Way Binding ที่เกี่ยวกับ Visibility 
 
-## 4. Creating AI Extensions (Image, Object, Voice)
-AI processes run on Google Colab, and the resulting payload is sent to the KidBright board. Extensions (`extensions/<extension_name>/`) must have:
-- `config.js`: Defines ID, name, and paths to views.
-- `Instructions/`: Vue components structured into `CaptureInstruction.vue`, `AnnotateInstruction.vue`, and `TrainInstruction.vue`.
-- `model-graph.json`: Expected graph structure for the resulting AI model.
+**2.2 การตั้งชื่อ Model (Named Model)**
+เพื่อให้เห็นภาพชัดเจนจาก Parent ว่า `v-model` ตัวนี้ทำหน้าที่อะไร:
+✅ **บังคับใช้ชื่อ**: `isDialogVisible` สำหรับกำหนด State การเปิดปิด Dialog เสมอ
+✅ **ฝั่ง Parent**: ให้เรียกใช้งานผ่าน Named Model:
+   ```vue
+   <MyDialog v-model:isDialogVisible="dialogState" />
+   ```
+✅ **ฝั่ง Child (ไฟล์ Dialog)**: ต้องประกาศรับชื่อที่ตรงกัน และควรระบุ Option ไว้เพิ่อความปลอดภัย:
+   ```vue
+   <script setup>
+   const isDialogVisible = defineModel('isDialogVisible', { type: Boolean, default: false })
+   
+   const closeDialog = () => {
+     isDialogVisible.value = false // ใช้ .value เพื่ออัปเดตและส่ง emit คืน Parent อัตโนมัติ
+   }
+   </script>
+   ```
 
-## 5. Adding Hardware Plugins
-Plugins (`plugins/<plugin_name>/`) are reserved for general hardware components (e.g., DHT11, MQTT). They require:
-- `index.js` (Config mapping blocks and categories).
-- `blocks/` (Blockly logic specific to this hardware).
-- `libs/` (The python script to be transferred to the board upon execution).
+**2.3 ข้อห้าม (Anti-Patterns) ของ defineModel**
+- ❌ **ห้าม** เรียกใช้ `emit('update:isDialogVisible')` ซ้ำซ้อน หากมีการใช้ `defineModel` ไปแล้ว 
+- ❌ **ห้าม** ประกาศ `const isDialogVisible = defineModel()` ลอยๆ โดยไม่มี argument `('isDialogVisible')` หากฝั่ง Parent ใช้งานแบบ Named Model (`v-model:isDialogVisible`) เพราะจะเกิด Mismatch และ Binding ไม่ทำงาน
+- ❌ กรณี Dialog มีสถานะภายในเยอะๆ ห้ามพยายามผูกแบบ `v-model` กลับไปที่ Parent ทุกค่า (Multiple v-model) ให้แยก State ที่ใช้งานเฉพาะใน Dialog ไว้ที่ Child Component และใช้ `emit('submit', payload)` หรือ `emit('value', val)` กลับไปเมื่อทำงานเสร็จ
 
-## 6. Execution Mindset
-- Always use `list_dir` or `find_by_name` to orient yourself within a target folder (`boards`, `plugins`, `extensions`) before proposing new files.
-- Double-check how `src/main.js` globs and imports configurations to ensure any newly created entity is automatically picked up without manually altering `main.js`.
+## 3. Tooling & Libraries
+- ใช้ `Vuetify 3` เป็น UI Framework หลัก (อ้างอิงจาก `<VDialog>`, `<VBtn>`, เป็นต้น)
+- โปรเจคนี้ใช้ `vite-plugin-pages` สำหรับทำ Auto-routing ไฟล์ที่อยู่ใน `src/pages/` จะกลายเป็น Route โดยอัตโนมัติตามโครงสร้างโฟลเดอร์
+
+## 4. โครงสร้างและการจัดระเบียบไฟล์
+- **Dialog Components**: ให้อยู่ภายใต้ `src/components/dialog/` เท่านั้น เพื่อความเป็นระเบียบ
+- **View / Pages**: ให้อยู่ภายใต้ `src/pages/` (แต่ละไฟล์จะผูกกับระบบ Router ดึงไปใช้เป็นหน้าเว็บ)
+
+## 5. การใช้ความรู้จาก Knowledge Base
+ทุกครั้งที่พบปัญหาที่น่าสงสัย หรือต้องการอ้างอิงลอจิกการทำงานเชิงลึกของโปรเจค ให้ตรวจสอบและดูที่ไฟล์ **Knowledge.md** ประกอบการวิเคราะห์เสมอ

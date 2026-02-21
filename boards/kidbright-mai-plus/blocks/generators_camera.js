@@ -1,4 +1,4 @@
-python.pythonGenerator.forBlock['maix3_camera_width'] = function (block, generator) {
+python.pythonGenerator.forBlock['camera_width'] = function (block, generator) {
   generator.definitions_['from_maix_import_camera'] = 'from maix import camera'
   generator.definitions_['from_maix_import_display'] = 'from maix import display'
   generator.definitions_['init_display'] = 'disp = display.Display()'
@@ -8,7 +8,7 @@ python.pythonGenerator.forBlock['maix3_camera_width'] = function (block, generat
   return [code, python.Order.ATOMIC]
 }
 
-python.pythonGenerator.forBlock['maix3_camera_height'] = function (block, generator) {
+python.pythonGenerator.forBlock['camera_height'] = function (block, generator) {
   generator.definitions_['from_maix_import_camera'] = 'from maix import camera'
   generator.definitions_['from_maix_import_display'] = 'from maix import display'
   generator.definitions_['init_display'] = 'disp = display.Display()'
@@ -18,18 +18,19 @@ python.pythonGenerator.forBlock['maix3_camera_height'] = function (block, genera
   return [code, python.Order.ATOMIC]
 }
 
-python.pythonGenerator.forBlock['maix3_camera_resolution'] = function (block, generator) {
+python.pythonGenerator.forBlock['camera_resolution'] = function (block, generator) {
   generator.definitions_['from_maix_import_camera'] = 'from maix import camera'
   generator.definitions_['from_maix_import_display'] = 'from maix import display'
   generator.definitions_['init_display'] = 'disp = display.Display()'
-  generator.definitions_['init_camera'] = 'cam = camera.Camera(disp.width(), disp.height())'
-  var value_width = generator.valueToCode(block, 'width', python.Order.ATOMIC)
-  var value_height = generator.valueToCode(block, 'height', python.Order.ATOMIC)
+  var value_width = generator.valueToCode(block, 'width', python.Order.ATOMIC) || '320'
+  var value_height = generator.valueToCode(block, 'height', python.Order.ATOMIC) || '240'
 
-  return 'cam.set_resolution(width=' + value_width + ', height=' + value_height + ')\n'
+  // Initialize camera object 'cam'
+  // 3 for RGB? usually default.
+  return `cam = camera.Camera(${value_width}, ${value_height}, 3)\n`
 }
 
-python.pythonGenerator.forBlock['maix3_camera_capture'] = function (block, generator) {
+python.pythonGenerator.forBlock['camera_capture'] = function (block, generator) {
   generator.definitions_['from_maix_import_camera'] = 'from maix import camera'
   generator.definitions_['from_maix_import_display'] = 'from maix import display'
   generator.definitions_['init_display'] = 'disp = display.Display()'
@@ -39,11 +40,10 @@ python.pythonGenerator.forBlock['maix3_camera_capture'] = function (block, gener
   return [code, python.Order.NONE]
 }
 
-python.pythonGenerator.forBlock['maix3_camera_close'] = function (block, generator) {
+python.pythonGenerator.forBlock['camera_close'] = function (block, generator) {
   generator.definitions_['from_maix_import_camera'] = 'from maix import camera'
   generator.definitions_['from_maix_import_display'] = 'from maix import display'
   generator.definitions_['init_display'] = 'disp = display.Display()'
   generator.definitions_['init_camera'] = 'cam = camera.Camera(disp.width(), disp.height())'
-
   return 'cam.close()\n'
 }

@@ -6,17 +6,15 @@ import { useConfirm } from "@/components/comfirm-dialog"
 import { toast } from "vue3-toastify"
 
 
-const props = defineProps({
-  isDialogVisible: Boolean,
-})
+const isDialogVisible = defineModel('isDialogVisible', { type: Boolean, default: false })
 
-const emit = defineEmits(['update:isDialogVisible'])
+
 
 const boardStore = useBoardStore()
 const confirm = useConfirm()
 
 const resetForm = () => {
-  emit('update:isDialogVisible', false)
+  isDialogVisible.value = false
 }
 const openNewFolderDialog = ref(false)
 const currentPath = ref('/root')
@@ -193,7 +191,7 @@ const currentDirInfo = computed(() => {
 })
 
 //watch when dialog is visible
-watch(() => props.isDialogVisible, async value => {
+watch(isDialogVisible, async value => {
   if(value) {
     await listDir(currentPath.value)
   }
@@ -203,7 +201,7 @@ watch(() => props.isDialogVisible, async value => {
 <template>
   <VDialog
     :width="$vuetify.display.smAndDown ? 'auto' : '1000'"
-    :model-value="props.isDialogVisible"
+    v-model="isDialogVisible"
   >
     <VCard class="pa-sm-3 pa-3 bg-background">
       <DialogCloseBtn

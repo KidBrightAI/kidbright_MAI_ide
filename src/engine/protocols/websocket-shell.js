@@ -239,6 +239,7 @@ export class WebSocketShellHandler {
         if (modelParams && uploadParam) {
           let buffer = await modelParams.arrayBuffer();
           if (ext2 === 'mud') {
+            return;
             const dec = new TextDecoder('utf-8');
             let mudStr = dec.decode(buffer);
             mudStr = mudStr.replace(/model\s*=\s*[^\r\n]+/g, `model = ${model.hash}.cvimodel`);

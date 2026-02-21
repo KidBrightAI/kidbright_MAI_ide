@@ -5,11 +5,9 @@ import { onMounted } from "vue"
 import { useConfirm } from "@/components/comfirm-dialog"
 import { toast } from "vue3-toastify"
 
-const props = defineProps({
-  isDialogVisible: Boolean,
-})
+const isDialogVisible = defineModel('isDialogVisible', { type: Boolean, default: false })
 
-const emit = defineEmits(['update:isDialogVisible'])
+
 
 const boardStore = useBoardStore()
 const confirm = useConfirm()
@@ -20,7 +18,7 @@ const selectedSSID = ref('')
 const password = ref('')
 
 const resetForm = () => {
-  emit('update:isDialogVisible', false)
+  isDialogVisible.value = false
 }
 
 const connectWifi = async() => {
@@ -29,7 +27,7 @@ const connectWifi = async() => {
     let res = await boardStore.connectWifi(selectedSSID.value, password.value)
     if(res){
       toast.success("เชื่อมต่อ WiFi สำเร็จ")
-      emit('update:isDialogVisible', false)
+      isDialogVisible.value = false
     }else if(res === false){
       toast.error("เกิดข้อผิดพลาดในการเชื่อมต่อ WiFi")
     }
@@ -37,7 +35,7 @@ const connectWifi = async() => {
 }
 
 //list wifi when dialog is opened
-watch(()=>props.isDialogVisible, async val=>{
+watch(isDialogVisible, async val=>{
   if(val){
     //console.log("... check wifi");
     //let resWifiInfo = await boardStore.checkWifi();
@@ -56,7 +54,7 @@ watch(()=>props.isDialogVisible, async val=>{
 <template>
   <VDialog
     width="450px"
-    :model-value="props.isDialogVisible"
+    v-model="isDialogVisible"
   >
     <VCard
       :loading="boardStore.wifiConnecting || boardStore.wifiListing"

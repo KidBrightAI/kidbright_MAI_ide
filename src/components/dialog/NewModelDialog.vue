@@ -7,11 +7,9 @@ import { onMounted } from "vue"
 import { randomId } from "../utils"
 import { VTextField } from "vuetify/lib/components/index.mjs"
 
-const props = defineProps({
-  isDialogVisible: Boolean,
-})
+const isDialogVisible = defineModel('isDialogVisible', { type: Boolean, default: false })
 
-const emit = defineEmits(['update:isDialogVisible','submit'])
+const emit = defineEmits(['submit'])
 
 const boardStore = useBoardStore()
 const workspaceStore = useWorkspaceStore()
@@ -23,7 +21,7 @@ const selectType = ref(extensions[0].id)
 const refVForm = ref({})
 
 const resetForm = () => {
-  emit('update:isDialogVisible', false)
+  isDialogVisible.value = false
 }
 const selectedExtension = computed(() => extensions.find(el=>el.id == selectType.value))
 
@@ -49,7 +47,7 @@ const onFormSubmit = async() => {
 <template>
   <VDialog
     :width="$vuetify.display.smAndDown ? 'auto' : '600'"
-    :model-value="props.isDialogVisible"
+    v-model="isDialogVisible"
   >
     <VCard class="pa-sm-3 pa-3 bg-background">
       <DialogCloseBtn

@@ -1,17 +1,15 @@
 <script setup>
 import DialogCloseBtn from "@/components/dialog/DialogCloseBtn.vue"
 
-const props = defineProps({
-  isDialogVisible: Boolean,
-})
+const isDialogVisible = defineModel('isDialogVisible', { type: Boolean, default: false })
 
-const emit = defineEmits(['update:isDialogVisible','submit'])
+const emit = defineEmits(['submit'])
 
 const refVForm = ref({})
 const filename = ref("")
 
 const resetForm = () => {
-  emit('update:isDialogVisible', false)
+  isDialogVisible.value = false
 }
 
 const onFormSubmit = async() => {
@@ -21,7 +19,7 @@ const onFormSubmit = async() => {
   }
 }
 
-watch(() => props.isDialogVisible, val => {
+watch(isDialogVisible, val => {
   if(val){
     filename.value = ""
   }
@@ -31,7 +29,7 @@ watch(() => props.isDialogVisible, val => {
 <template>
   <VDialog
     :width="$vuetify.display.smAndDown ? 'auto' : '600'"
-    :model-value="props.isDialogVisible"
+    v-model="isDialogVisible"
   >
     <VCard class="pa-sm-3 pa-3 bg-background">
       <DialogCloseBtn

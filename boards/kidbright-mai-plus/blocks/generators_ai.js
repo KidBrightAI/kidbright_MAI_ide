@@ -150,33 +150,14 @@ python.pythonGenerator.forBlock['maix3_nn_voice_get_result'] = function (block, 
 // yolo
 python.pythonGenerator.forBlock['maix3_nn_yolo_load'] = function (block, generator) {
   generator.definitions_['from_maix_import_nn'] = 'from maix import nn'
-  generator.definitions_['class_Resnet'] = `
+  generator.definitions_['class_Yolo'] = `
 class Yolo:
   labels = [${workspaceStore.labels.map(label => `"${label.label}"`).sort().join(', ')}]
-  anchors = [1.19,1.98, 2.79,4.59, 4.53,8.92, 8.06,5.29, 10.32,10.65]
-  #anchors = [5.4, 5.38, 1.65, 2.09, 0.8, 1.83, 2.45, 4.14, 0.46, 0.8]
-  m = {
-    "bin": "/root/model/${workspaceStore.model.hash}.bin",
-    "param": "/root/model/${workspaceStore.model.hash}.param"
-  }
-  options = {
-    "model_type":  "awnn",
-    "inputs": {
-      "input0": (224, 224, 3)
-    },
-    "outputs": {
-      "output0": (7, 7, (1+4+len(labels))*5)
-    },
-    "mean": [127.5, 127.5, 127.5],
-    "norm": [0.0078125, 0.0078125, 0.0078125],
-  }
   def __init__(self):    
-    from maix.nn import decoder
-    self.model = nn.load(self.m, opt=self.options)
-    self.decoder = decoder.Yolo2(len(self.labels), self.anchors, net_in_size=(224, 224), net_out_size=(7, 7))
+    from maix import nn
+    self.detector = nn.YOLO11(model="/root/model/${workspaceStore.model.hash}.mud", dual_buff=True)
   def __del__(self):
-    del self.model
-    del self.decoder
+    del self.detector
 `
 
   return '_yolo = Yolo()\n'
@@ -188,13 +169,11 @@ python.pythonGenerator.forBlock['maix3_nn_yolo_detect'] = function (block, gener
   var number_threshold = block.getFieldValue('threshold')
 
   // TODO: Assemble python into code variable.
-  // restruct two array to one array with properties in python code of _boxes and _probs 
-  return `_out = _yolo.model.forward(${value_image}.tobytes(), quantize=True, layout="hwc")
-_boxes, _probs = _yolo.decoder.run(_out, nms=${number_nms}, threshold=${number_threshold}, img_size=(224, 224))\n`
+  return `_boxes = _yolo.detector.detect(${value_image}, conf_th=${number_threshold}, iou_th=${number_nms})\n`
 }
 
 python.pythonGenerator.forBlock['maix3_nn_yolo_get_result_array'] = function (block, generator) {
-  var code = 'zip(_boxes, _probs)'
+  var code = '_boxes'
 
   return [code, python.Order.NONE]
 }
@@ -210,47 +189,47 @@ python.pythonGenerator.forBlock['maix3_nn_yolo_get'] = function (block, generato
   var value_obj = generator.valueToCode(block, 'obj', python.Order.ATOMIC)
 
   if (dropdown_data == "x1") {
-    var code = `${value_obj}[0][0]`
+    var code = `${value_obj}.x`
     var order = python.Order.ATOMIC
     block.setOutput(true, 'Number')
 
   } else if (dropdown_data == "y1") {
-    var code = `${value_obj}[0][1]`
+    var code = `${value_obj}.y`
     var order = python.Order.ATOMIC
     block.setOutput(true, 'Number')
 
   } else if (dropdown_data == "x2") {
-    var code = `(${value_obj}[0][0]+${value_obj}[0][2])`
+    var code = `(${value_obj}.x+${value_obj}.w)`
     var order = python.Order.ATOMIC
     block.setOutput(true, 'Number')
 
   } else if (dropdown_data == "y2") {
-    var code = `(${value_obj}[0][1]+${value_obj}[0][3])`
+    var code = `(${value_obj}.y+${value_obj}.h)`
     var order = python.Order.ATOMIC
     block.setOutput(true, 'Number')
 
   } else if (dropdown_data == "width") {
-    var code = `${value_obj}[0][2]`
+    var code = `${value_obj}.w`
     var order = python.Order.ATOMIC
     block.setOutput(true, 'Number')
 
   } else if (dropdown_data == "height") {
-    var code = `${value_obj}[0][3]`
+    var code = `${value_obj}.h`
     var order = python.Order.ATOMIC
     block.setOutput(true, 'Number')
 
   } else if (dropdown_data == "label") {
-    var code = `_yolo.labels[${value_obj}[1][0]]`
+    var code = `_yolo.detector.labels[${value_obj}.class_id]`
     var order = python.Order.NONE
     block.setOutput(true, 'String')
 
   } else if (dropdown_data == "class_id") {
-    var code = `${value_obj}[1][0]`
+    var code = `${value_obj}.class_id`
     var order = python.Order.ATOMIC
     block.setOutput(true, 'Number')
 
   } else if (dropdown_data == "probability") {
-    var code = `${value_obj}[1][1][${value_obj}[1][0]]`
+    var code = `${value_obj}.score`
     var order = python.Order.ATOMIC
     block.setOutput(true, 'Number')
 

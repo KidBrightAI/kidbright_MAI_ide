@@ -1,7 +1,7 @@
 <script setup>
-const props = defineProps({
-  isDialogVisible: Boolean,
-  title : {
+const isDialogVisible = defineModel('isDialogVisible', { type: Boolean, default: false })
+
+const props = defineProps({  title : {
     type : String,
     default : 'Dialog Title',
   },
@@ -15,13 +15,13 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['update:isDialogVisible','value'])
+const emit = defineEmits(['value'])
 
 const name = ref('')
 
 const resetForm = () => {
   name.value = ''
-  emit('update:isDialogVisible', false)
+  isDialogVisible.value = false
 }
 
 const submitLabel = () => {
@@ -32,7 +32,7 @@ const submitLabel = () => {
 
 <template>
   <VDialog
-    :model-value="props.isDialogVisible"
+    v-model="isDialogVisible"
     width="500px"
     persistent
   >
