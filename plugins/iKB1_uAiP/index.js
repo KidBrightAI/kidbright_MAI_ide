@@ -1,12 +1,12 @@
 export default {
-  name: "iKB_uAiP",
+  name: "iKB uAiP",
   description: "Universal I/O board For uAI plus",
   category: "Signal Input/Output",    
   author: "comdet",
   version: "1.0.0",
   icon: "/static/icon.png",
   color: "#191e3e",
-boards: ['kidbright-mai-plus'],
+  boards: ['kidbright-mai-plus'],
   blocks: [
     "ikb1_select_i2c_address",
     "ikb1_digital_read",
