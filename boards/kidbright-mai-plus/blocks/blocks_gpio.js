@@ -311,17 +311,9 @@ Blockly.defineBlocksWithJsonArray(
           "name": "pin",
           "options": [
             [
-              "PH6",
-              "6",
-            ],
-            [
-              "PH7",
-              "7",
-            ],              
-            [
-              "PH8",
-              "8",
-            ],
+              "IO7",
+              "2",
+            ]
           ],
         },
         {

@@ -130,3 +130,32 @@ class V831Servo:
 
     def deinit(self):    
         self.pin.unexport()
+
+class C906Servo:
+    def __init__(self, pin):
+        from maix import pwm, pinmap
+        # all units are in ns
+        self.pin = pin
+        if(pin==2):
+           pinmap.set_pin_function("P24", "PWM2")
+        self.min = 2.5 # 5% duty cycle 5% of 20ms = 1ms 0.68
+        self.max = 12.25 # 10% duty cycle 10% of 20ms = 2ms 2.50
+        self.angle = 0
+        self.out = pwm.PWM(self.pin, freq=50, duty=0, enable=True)
+            
+    def set_angle(self, angle):
+        if angle < 0:
+            angle = 0
+        elif angle > 180:
+            angle = 180
+        self.angle = angle
+        #print("angle: ", angle)
+        target_duty_cycle = (angle / 180 * (self.max - self.min) + self.min)
+        #print("target_duty_cycle: ", target_duty_cycle)    
+        self.out.duty(target_duty_cycle)
+
+    def get_angle(self):
+        return self.angle
+
+    def deinit(self):    
+        self.out.duty(-1)

@@ -763,7 +763,14 @@ export default function () {
             </block>
             <block type="board_get_gyro">       
             </block>
-
+            <block type="maixpy3_gpio_servo">
+              <field name="pin">IO7</field>
+              <value name="angle">
+                <shadow type="math_number">
+                  <field name="NUM">90</field>
+                </shadow>
+              </value>
+            </block>
                       `,
           //  <block type="board_get_acc_tap">
           //  </block> 

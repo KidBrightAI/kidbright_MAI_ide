@@ -138,9 +138,9 @@ python.pythonGenerator.forBlock['board_get_acc_tap'] = function(block, generator
 
 //servo motor
 python.pythonGenerator.forBlock['maixpy3_gpio_servo'] = function(block, generator) {
-  generator.definitions_['from_servo_import_V831Servo'] = 'from servo import V831Servo'  
+  generator.definitions_['from_servo_import_V831Servo'] =  'from servo import C906Servo'  
   var dropdown_pin = block.getFieldValue('pin')
-  generator.definitions_['_servo_' + dropdown_pin] = '_servo_' + dropdown_pin + ' = V831Servo(' + dropdown_pin + ')'
+  generator.definitions_['_servo_' + dropdown_pin] = '_servo_' + dropdown_pin + ' = C906Servo(' + dropdown_pin + ')'
   var value_angle = generator.valueToCode(block, 'angle', python.Order.ATOMIC)  
   
   return '_servo_' + dropdown_pin + '.set_angle(' + value_angle + ')\n'
