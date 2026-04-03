@@ -248,6 +248,9 @@ $primary-color: #007e4e;
 .cropbox_container{
   display: block;
   position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 .second-counter{
   margin-bottom: 50px;

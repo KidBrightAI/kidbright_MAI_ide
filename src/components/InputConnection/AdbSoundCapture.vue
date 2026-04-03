@@ -115,8 +115,7 @@ const init = async()=>{
   }
 }
 let startPos = 0
-let duration = workspaceStore.extension.options.durations.value
-let barWidth = (RATE / SAMPLES_PER_FRAME * duration)
+let barWidth = (RATE / SAMPLES_PER_FRAME * (workspaceStore.extension.options.durations.value || 3))
 const drawWaveform = data=>{
   const value = parseInt(data) / 2
 
@@ -188,13 +187,14 @@ const processStream = chunk=>{
 }
 
 const listen = async()=>{
-  //sending command to start recording  
+  //sending command to start recording
   clearCanvas()
   status.value = "listening"
   let th = threshold.value || 128
   let sec = workspaceStore.extension.options.durations.value || 3
-  let command = `#start,${th},${sec}\n`  
-  writer.write(new Consumable(encodeUtf8(command))) 
+  barWidth = (RATE / SAMPLES_PER_FRAME * sec)
+  let command = `#start,${th},${sec}\n`
+  writer.write(new Consumable(encodeUtf8(command)))
 }
 
 const onFinish = async()=>{
