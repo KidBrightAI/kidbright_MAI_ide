@@ -19,11 +19,12 @@ The codebase is built on **Vue 3** (Composition API) + **Vite** and uses **Pinia
 
 ```
 KidBright_MAI_IDE/
-├── boards/         # Harware target definitions.
-│   ├── kidbright-mai/
-│   └── kidbright-mai-plus/
+├── boards/         # Hardware target definitions.
+│   ├── kidbright-mai/        # MaixII board (NCNN, web-adb protocol)
+│   └── kidbright-mai-plus/   # MaixCAM CV181x board (cvimodel, websocket-shell)
 │       # Each board contains block definitions, examples, python boilerplate (main.py), 
 │       # workspace layouts and specific execution/deployment scripts.
+│       # main.py: kills maixapp/apps processes on start, restarts launcher on exit.
 │
 ├── extensions/     # Subsystems for AI or specialized pipelines.
 │   ├── ImageClassification/
@@ -51,7 +52,59 @@ This IDE significantly simplifies the AI workflow for hardware boards:
 1. **Capture**: Instructions provided to use the board's camera/mic to collect a dataset inside the IDE.
 2. **Annotate**: Built-in interfaces to label images or voice segments.
 3. **Train**: The IDE connects to a Google Colab notebook, uploading the dataset and executing a training job remotely.
-4. **Deploy**: The trained model graph (`model-graph.json`) and weights are sent to the board and executed by Python blocks (`maix` vision libraries).
+4. **Convert**: Trained model is exported to ONNX, then converted to board-specific format (`.cvimodel` for MaixCAM, NCNN for mAI).
+5. **Deploy**: The converted model and MUD metadata are sent to the board and executed by Python blocks (`maix` vision libraries).
+
+### Supported Object Detection Models
+
+| Model | Value | Board | FPS | Accuracy | Use Case |
+|-------|-------|-------|-----|----------|----------|
+| YOLO v2 slim | `slim_yolo_v2` | mAI / mAI Plus | ~30 | Low | Legacy |
+| YOLO 11n | `yolo11n` | mAI Plus | ~60 | Medium (mAP 39.5) | Speed mode (default) |
+| YOLO 11s | `yolo11s` | mAI Plus | ~20 | High (mAP 47.0) | Accuracy mode |
+
+Model selection is configured in the **YOLO node** (`src/nodes/models/yolo.js`), which outputs `trainConfig.modelType`.
+
+### trainConfig Flow
+
+```
+Frontend                                         Backend (Colab)
+────────                                         ───────
+YOLO Node (yolo.js)
+  → modelType, objectThreshold, iouThreshold
+Input Node (default-input.js)
+  → epochs, batch_size, learning_rate, train_split
+Output Node (object-detection-output.js)
+  → validateMatrix, saveMethod
+                ↓
+ModelDesigner.computeGraph()
+  → workspaceStore.trainConfig
+                ↓
+uploadProject() → project.zip
+  containing project.json { trainConfig, labels }
+  and dataset/ (VOC: JPEGImages/, Annotations/)
+                ↓
+POST /train { project_id }
+                                                 training_task():
+                                                   read project.json
+                                                   route by modelType
+                                                   → train_object_detection_yolo11()
+                                                 convert_model():
+                                                   ONNX export → model_transform
+                                                   → calibration → model_deploy
+                                                   → .cvimodel + .mud
+                ↓
+GET /download_model → model.zip
+  → deploy to board via websocket-shell
+```
+
+### Conversion Details (MaixCAM / mAI Plus)
+
+- **Method B** (2 output nodes): `/model.23/dfl/conv/Conv_output_0` + `/model.23/Sigmoid_output_0`
+- **Input size**: 224x320
+- **Quantization**: INT8 via tpu-mlir (CVITEK TPU)
+- **Tolerance**: yolo11n = `0.9,0.6` / yolo11s = `0.85,0.5` (hardcoded in backend)
+- **MUD file**: `model_type = yolo11`, no `type` field for detection
 
 ---
 
