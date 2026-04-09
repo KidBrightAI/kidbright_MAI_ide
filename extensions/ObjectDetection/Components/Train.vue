@@ -8,7 +8,7 @@
     >
       <Pane>
         <TrainingToolbar 
-          colab-url="https://colab.research.google.com/drive/1jTfJ5oBaNA57ASt4IsDng-kcQhUQDJ3t"
+          colab-url="https://colab.research.google.com/drive/1teuNY7eLTSY0BfpuzQyAgT3bn5KpZXn3"
           @train="train"
           @test="test"
           @download="download"
