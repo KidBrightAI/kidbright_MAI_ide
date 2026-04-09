@@ -14,11 +14,11 @@ export const YoloNode = defineNode({
   title: "Object detection model",
   inputs: {
     modelInput: () => new NodeInterface("Model Input").use(setType, modelInput),
-    modelType: () => new SelectInterface("Model Type", "yolo_v11s",
+    modelType: () => new SelectInterface("Model Type", "yolo11n",
       [
         { text: "YOLO v2 slim", value: "slim_yolo_v2" },
-        { text: "YOLO v5s", value: "yolo5s" },
-        { text: "YOLO v11n", value: "yolo11n" }
+        { text: "YOLO 11n (Speed)", value: "yolo11n" },
+        { text: "YOLO 11s (Accuracy)", value: "yolo11s" }
       ]).setPort(false),
     objectThreshold: () => new NumberInterface("Object Threshold", 0.5, 0.1, 1).setPort(false),
     iouThreshold: () => new NumberInterface("IOU Threshold", 0.5, 0.1, 1).setPort(false),
