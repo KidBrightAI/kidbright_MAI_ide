@@ -1,13 +1,9 @@
 <script setup>
 import { sleep } from "@/engine/helper"
 import {
-  WrapConsumableStream,
-  WrapReadableStream,
   Consumable,
-  InspectStream,
   WritableStream,
 } from "@yume-chan/stream-extra"
-import WaveFormPlayer from "@/components/InputConnection/WaveFormPlayer.vue"
 import { Adb, AdbDaemonTransport, LinuxFileType, encodeUtf8  } from "@yume-chan/adb"
 
 import SingletonShell from "@/engine/SingletonShell"
@@ -16,12 +12,6 @@ import { useWorkspaceStore } from "@/store/workspace"
 import { useBoardStore } from "@/store/board"
 import { onBeforeMount, onUnmounted } from "vue"
 
-const props = defineProps({
-  id: {
-    type: String,
-    default: null,
-  },
-})
 const emits = defineEmits(["recorded"])
 const workspaceStore = useWorkspaceStore()
 const boardStore = useBoardStore()
@@ -31,9 +21,7 @@ const status = defineModel({
 })
 const recording = ref(false)
 const counting = ref(0)
-const volume = ref(0.5)
 const threshold = ref(80)
-const id = ref(null)
 const timeCurrent = ref(0)
 
 const canvas = ref(null)
@@ -295,7 +283,6 @@ defineExpose({
   init,
   listen,
   stop,
-  volume,
 })
 </script>
 
@@ -319,10 +306,7 @@ defineExpose({
         height="250"
       />
     </div>
-    <div
-      v-show="props.id == null || ['listening', 'recording', 'processing', 'finishing'].includes(status)"
-      class="full"
-    >
+    <div class="full">
       <canvas
         id="waveform-client"
         style="width: 100%; height: 250px;"
@@ -332,19 +316,6 @@ defineExpose({
         width="224"
         height="224"
         style="display:none;"
-      />
-    </div>
-    <div
-      v-if="props.id != null && !['listening', 'recording', 'processing', 'finishing'].includes(status)"
-      class="full"
-    >
-      <WaveFormPlayer 
-        :id="props.id" 
-        ref="wavsuf" 
-        sound_ext="wav" 
-        img_ext="png" 
-        :delay="workspaceStore.extension.options.durations.value"
-        :mute="true"
       />
     </div>
     <div class="recorder-wrap">
@@ -372,16 +343,7 @@ defineExpose({
             </VListItem>
           </VListItem>
         </VList>
-      </VMenu>            
-      <div class="vol-adj d-flex">        
-        <VSlider
-          v-model="volume"
-          min="0"
-          max="1"
-          step="0.1"
-          prepend-icon="mdi-volume-high"
-        />
-      </div>
+      </VMenu>
       <div class="time-counter">
         <span class="current-time">{{
           timeCurrent ? timeCurrent + ":00": "0:00"
@@ -415,19 +377,6 @@ $primary-color: #007e4e;
     bottom: 30px;
     left: 30px;
     z-index: 1;
-    .vol-adj {
-      background-color: #fff;
-      border-radius: 19px;
-      padding: 6px 15px;
-      box-shadow: 0 0 10px #33333333;
-      margin-right: 10px;
-      display: flex;
-      align-items: center;
-      width: 200px;
-      img {
-        margin-right: 0.3em;
-      }
-    }
     .time-counter {
       background-color: #fff;
       border-radius: 19px;
