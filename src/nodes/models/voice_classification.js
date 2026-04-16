@@ -14,9 +14,9 @@ export const VoiceClassifyNode = defineNode({
   title: "Voice Classification",
   inputs: {        
     modelInput : () => new NodeInterface("Model Input").use(setType, modelInput),    
-    modelType : () => new SelectInterface("Model Type", "voice1d-cnn",
+    modelType : () => new SelectInterface("Model Type", "voice-cnn",
       [
-        { text: "1D CNN (Recommended)", value : "voice1d-cnn" },
+        { text: "Voice CNN (Recommended)", value : "voice-cnn" },
         { text: "Resnet-18", value : "resnet18" },
       ]).setPort(false),  
   },
