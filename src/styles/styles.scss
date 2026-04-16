@@ -1,1 +1,21 @@
 // Write your overrides
+
+// Disable text selection globally (app-like UI)
+*,
+*::before,
+*::after {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+// Allow selection in specific areas that need it
+input,
+textarea,
+[contenteditable="true"],
+.xterm,
+.monaco-editor,
+code,
+pre {
+  -webkit-user-select: text;
+  user-select: text;
+}

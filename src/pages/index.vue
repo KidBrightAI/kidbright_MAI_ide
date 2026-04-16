@@ -130,8 +130,8 @@ const serialMonitorCallback = chunk => {
 
 const serialMonitorWrite = data => {
   if (workspaceStore.currentBoard.protocol === "web-adb") {
-    if (adb_shell.value) {
-      adb_shell.value.write(data)
+    if (SingletonShell.hasWriter()) {
+      SingletonShell.write(data)
     }
   } else if (["websocket", "websocket-shell"].includes(workspaceStore.currentBoard.protocol)) {
     if (ws_shell.value) {
@@ -142,7 +142,7 @@ const serialMonitorWrite = data => {
 
 const serialMonitorBridge = async () => {
   // --- Add guard to prevent multiple connections ---
-  if (workspaceStore.currentBoard.protocol === "web-adb" && adb_shell.value && adb_shell.value.hasWriter()) {
+  if (workspaceStore.currentBoard.protocol === "web-adb" && SingletonShell.hasWriter()) {
     console.log("ADB shell already connected.")
     
     return
@@ -164,10 +164,9 @@ const serialMonitorBridge = async () => {
   if (await boardStore.deviceConnect()) {
     if (workspaceStore.currentBoard.protocol === "web-adb") {
       try {
-        const adb = vm.appContext.config.globalProperties.$adb.adb
-        adb_shell.value = SingletonShell.getInstance(adb)
+        adb_shell.value = SingletonShell.getInstance()
         adb_shell.value.setCallback(serialMonitorCallback)
-        await adb_shell.value.waitWriter()
+        await SingletonShell.waitWriter()
       } catch (err) {
         console.error(err)
         serialMonitorCallback(`\r\nError creating adb shell: ${err.message}\r\n`)

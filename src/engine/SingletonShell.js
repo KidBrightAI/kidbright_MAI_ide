@@ -24,8 +24,8 @@ export default class SingletonShell {
       this.socketAbordController.abort()
     }
 
-    this.socketAbordController = new AbortController()    
-    adb.subprocess.shell().then(shell => {
+    this.socketAbordController = new AbortController()
+    this.adb.subprocess.shell().then(shell => {
       this.shell = shell
       this.shell.stdout.pipeTo(
         new WritableStream({

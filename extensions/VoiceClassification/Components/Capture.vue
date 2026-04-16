@@ -11,7 +11,6 @@ const workspaceStore = useWorkspaceStore()
 
 const current = ref([])
 const status = ref("disconnected")
-const isRecording = ref(false)  
 const soundCapture = ref(null)
 const showMFCCDialog = ref(false)
 const targetMFCC = ref(null)
@@ -53,8 +52,8 @@ const onRecordComplete = async data => {
             @recorded="onRecordComplete"
           />
           <p
-            v-if="(current.length == null || current.length <= 0) && !isRecording"
-            class="view-img-desc center-pos"
+            v-if="(current.length == null || current.length <= 0) && ['disconnected', 'ready'].includes(status)"
+            class="view-img-desc center-pos text-white"
           >
             No selected item, please click on the list below to select.
           </p>
@@ -70,7 +69,7 @@ const onRecordComplete = async data => {
           v-model="current"
           :multiple="true"
           :show-info="false"
-          :volume="volume"
+          :volume="soundCapture?.volume ?? 1"
         />
       </div>
       <div
@@ -184,9 +183,6 @@ $primary-color: #007e4e;
     min-width: 50%;
     min-height: 50%;
     object-fit: contain;
-  }
-  .view-img-desc {
-    color: #000000;
   }
 }
 </style>

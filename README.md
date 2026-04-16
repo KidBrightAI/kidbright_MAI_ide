@@ -1,132 +1,545 @@
 # KidBright mAI IDE
 
-Welcome to **KidBright mAI (Micro AI) IDE**, a powerful, web-based integrated development environment tailored for the KidBright mAI and mAI Plus boards.
-
-This IDE empowers users to author logic using **Blockly** visual programming and write corresponding Python code for execution. Most importantly, it features an advanced pipeline for training AI models (Image Classification, Object Detection, Voice Classification) seamlessly using Google Colab integration. 
-
-## 🌟 Key Features
-- **Visual Programming**: Built on Google Blockly, enabling an intuitive drag-and-drop programming interface.
-- **Python Code Generation**: Blocks are converted directly to Python syntax targeting KidBright mAI boards running a Linux/Maix-based runtime.
-- **AI Model Pipelines**: Dedicated extensions allow users to capture datasets, annotate data, upload them to Colab for training, and deploy the resulting custom AI models directly to the board.
-- **Hardware Integrations**: Support for various sensors, modules, and protocols (I2C, MQTT, NETPIE, DHT, SHT, etc.) out-of-the-box.
-- **Dynamic Modular Architecture**: New boards, plugins, and AI extensions can be injected dynamically by simply placing configuration folders into the IDE project.
+**KidBright mAI (Micro AI) IDE** -- web-based integrated development environment for KidBright mAI and mAI Plus boards. Users author logic using **Blockly** visual programming, generate Python code, train AI models via Google Colab, and deploy to hardware -- all from the browser.
 
 ---
 
-## 📁 Project Architecture & Structure
+## Technology Stack
 
-The codebase is built on **Vue 3** (Composition API) + **Vite** and uses **Pinia** for state management. 
+| Layer | Technology |
+|-------|-----------|
+| Framework | Vue 3 (Composition API) + Vite |
+| UI | Vuetify 3 (Material Design) |
+| State Management | Pinia (with localStorage persistence) |
+| Routing | Vue Router 4 (file-based via vite-plugin-pages) |
+| Visual Programming | Blockly 10 |
+| AI Model Designer | BaklavaJS (node-based graph editor) |
+| Terminal | xterm.js |
+| Browser Inference | TensorFlow.js (Web Worker) |
+| Deployment | Firebase Hosting |
+| Device Comms | WebUSB/ADB, WebSocket, WebSocket-Shell |
+
+---
+
+## Project Structure
 
 ```
-KidBright_MAI_IDE/
-├── boards/         # Hardware target definitions.
-│   ├── kidbright-mai/        # MaixII board (NCNN, web-adb protocol)
-│   └── kidbright-mai-plus/   # MaixCAM CV181x board (cvimodel, websocket-shell)
-│       # Each board contains block definitions, examples, python boilerplate (main.py), 
-│       # workspace layouts and specific execution/deployment scripts.
-│       # main.py: kills maixapp/apps processes on start, restarts launcher on exit.
+workspace_ide/
+├── boards/                        # Hardware board definitions
+│   ├── kidbright-mai/             #   MaixII board (NCNN, web-adb protocol)
+│   │   ├── index.js              #     Board metadata, protocol, block list
+│   │   ├── main.py               #     Python code template (##{main}## placeholder)
+│   │   ├── toolbox.js            #     Blockly toolbox categories
+│   │   ├── workspace.json        #     Default Blockly workspace
+│   │   ├── blocks/               #     Block definitions + Python generators
+│   │   │   ├── blocks_basic.js   blocks_camera.js   blocks_display.js
+│   │   │   ├── blocks_image.js   blocks_gpio.js     blocks_pin.js
+│   │   │   ├── blocks_ai.js     blocks_maix_v4.js
+│   │   │   ├── generators_basic.js  generators_camera.js  generators_display.js
+│   │   │   ├── generators_image.js  generators_gpio.js    generators_pin.js
+│   │   │   └── generators_ai.js
+│   │   ├── libs/                 #     Python libraries deployed to board
+│   │   ├── examples/             #     Example projects (workspace.json per example)
+│   │   └── scripts/              #     MJPEG server, RPyC integration
+│   │
+│   └── kidbright-mai-plus/        #   MaixCAM CV181x board (cvimodel, websocket-shell)
+│       ├── (same structure as above)
+│       ├── cert.pem / key.pem    #     TLS certificates for wss:// connection
+│       └── maix_stream.py        #     Camera streaming service
 │
-├── extensions/     # Subsystems for AI or specialized pipelines.
+├── extensions/                    # AI/ML pipeline subsystems
 │   ├── ImageClassification/
+│   │   ├── config.js             #     Extension metadata + instruction pointers
+│   │   ├── model-graph.json      #     Default BaklavaJS graph (MobileNet-100)
+│   │   ├── classify.worker.js    #     TF.js Web Worker for browser inference
+│   │   ├── Components/           #     Capture.vue, Annotate.vue, Train.vue
+│   │   ├── Instructions/         #     Step-by-step Thai instructions per stage
+│   │   └── Blocks/               #     Blockly blocks + toolbox for browser inference
+│   │
 │   ├── ObjectDetection/
+│   │   ├── config.js             #     Extension metadata
+│   │   ├── model-graph.json      #     Default graph (YOLO)
+│   │   ├── detection.worker.js   #     TF.js Web Worker with YOLO post-processing
+│   │   ├── Utils/yolo.js         #     YOLO head decode, box correction, NMS
+│   │   ├── Components/           #     Capture.vue, Annotate.vue (bounding box), Train.vue
+│   │   ├── Instructions/
+│   │   └── Blocks/
+│   │
 │   └── VoiceClassification/
-│       # Each extension integrates instructions (Capture, Annotate, Train) 
-│       # and links to colab pipelines to generate the respective models.
+│       ├── config.js             #     Extension metadata + duration option (default 3s)
+│       ├── model-graph.json      #     Custom CNN for MFCC spectrograms
+│       ├── Components/           #     Capture.vue (audio record), Annotate.vue, Train.vue
+│       ├── Instructions/
+│       └── Blocks/
 │
-├── plugins/        # External hardware or service modules.
-│   ├── DHT11, I2C, MQTT, NETPIE, SHT31, iKB1, etc.
-│       # Plugins contain their own block logic and Python libraries (`libs/`) 
-│       # necessary to run the specific hardware.
+├── plugins/                       # Hardware sensor/service modules
+│   ├── DHT11/                    #     Temperature/humidity sensor
+│   ├── I2C/ I2C_uAiP/           #     I2C communication
+│   ├── MQTT/                     #     MQTT publish/subscribe
+│   ├── NETPIE/                   #     NETPIE IoT platform
+│   ├── SHT31/ SHT31_pylibi2c/   #     Temperature/humidity (I2C)
+│   └── iKB1/ iKB1_uAiP/         #     iKB1 expansion board
+│   # Each plugin contains:
+│   #   index.js        - metadata, compatible boards, toolbox XML
+│   #   blocks/blocks.js     - Blockly block definitions
+│   #   blocks/generators.js - Python code generators
+│   #   libs/*.py        - Python libraries for board
 │
-├── src/            # Main Vue application source code.
-│   ├── App.vue / main.js   # Vue application entry points loading boards and plugins.
-│   ├── components/         # Reusable Vue components (UI elements).
-│   ├── blocks/             # Common IDE built-in block definitions.
-│   ├── engine/             # Core connection (WebSockets, SingletonShell, code deployment).
-│   ├── store/              # Pinia state stores (Workspace, Plugins, device connection state).
-    └── layouts/            # Editor layouts and views.
+├── src/                           # Vue application source
+│   ├── main.js                   #   Entry point: loads boards/plugins/extensions via import.meta.glob
+│   ├── App.vue                   #   Root component -> RouterView
+│   │
+│   ├── pages/                    #   File-based routing (vite-plugin-pages)
+│   │   ├── index.vue             #     Main IDE: Header + Blockly + Footer/Terminal (776 lines)
+│   │   ├── ai.vue                #     AI Training: 4-step pipeline UI
+│   │   └── [...all].vue          #     404 fallback
+│   │
+│   ├── components/
+│   │   ├── Blockly.vue           #     Blockly workspace wrapper (inject, serialize, toolbox)
+│   │   ├── CustomCategory.js     #     Custom toolbox category renderer (SVG icons)
+│   │   ├── CustomTrashcan.js     #     Custom trashcan positioning
+│   │   ├── BlocklyTheme.js       #     Block color theme definition
+│   │   ├── ModelDesigner.vue     #     BaklavaJS graph editor for AI model architecture
+│   │   ├── TrainingToolbar.vue   #     Train/Test/Download buttons + Colab URL input
+│   │   ├── Header.vue            #     Toolbar: Connect, Upload, FileBrowser, WiFi, AI, Plugins, Project
+│   │   ├── Footer.vue            #     Terminal panel (xterm.js) + undo/redo controls
+│   │   ├── MessageLog.vue        #     Training log display
+│   │   ├── ZoomToFit.js          #     Blockly zoom-to-fit utility
+│   │   ├── utils.js              #     updateBlockCategory, getColorIndex, randomId
+│   │   ├── InputConnection/      #     16 components: camera/audio capture, MFCC, streaming
+│   │   ├── MainPanel/            #     SidePanel.vue (AI training sidebar with step navigation)
+│   │   ├── dialog/               #     19 dialog components (project, board, plugin, wifi, etc.)
+│   │   ├── charts/               #     AccuracyMatrixChart, LossMatrixChart
+│   │   ├── Instructions/         #     Instruction display wrapper
+│   │   └── buttons/              #     Reusable button components
+│   │
+│   ├── blocks/                   #   Core Blockly definitions (always loaded)
+│   │   ├── blocks_controls.js    blocks_operators.js    blocks_advanced.js
+│   │   ├── blocks_pin.js         blocks_procedures.js   blocks_variables.js
+│   │   ├── blocks_text_code.js
+│   │   ├── generators_controls.js  generators_operators.js  generators_advanced.js
+│   │   ├── generators_pin.js       generators_procedures.js generators_text_code.js
+│   │   └── (14 files total)
+│   │
+│   ├── engine/                   #   Core execution and communication
+│   │   ├── board.js              #     Board loading, dynamic script execution, block registration
+│   │   ├── storage.js            #     Browser Persistent FileSystem API (800MB quota)
+│   │   ├── helper.js             #     Binary protocol: packMessage/unpackMessage, Command enum
+│   │   ├── struct.js             #     Binary struct utilities
+│   │   ├── SingletonShell.js     #     ADB shell subprocess singleton (stdin/stdout routing)
+│   │   ├── WebSocketShell.js     #     Plain WebSocket shell wrapper
+│   │   ├── protocols/
+│   │   │   ├── web-adb.js        #       WebUSB + @yume-chan/adb: file sync, shell, model upload
+│   │   │   ├── websocket.js      #       Framed binary protocol (Command enum): auth, run, output
+│   │   │   └── websocket-shell.js #      Raw PTY shell: chunked base64 upload, JSON system cmds
+│   │   └── project-strategies/
+│   │       ├── BaseProjectStrategy.js
+│   │       ├── ImageClassificationStrategy.js   # Dataset: class-folder layout
+│   │       ├── ObjectDetectionStrategy.js       # Dataset: Pascal VOC (XML + JPEGImages)
+│   │       └── VoiceClassificationStrategy.js   # Dataset: waveform + sound + MFCC folders
+│   │
+│   ├── services/
+│   │   └── ProjectIOService.js   #     Project save/load: ZIP archive with project.json + dataset
+│   │
+│   ├── store/                    #   Pinia state management
+│   │   ├── workspace.js          #     Project state, labels, trainConfig, model, code/block (PERSISTED)
+│   │   ├── board.js              #     Connection state, protocol handler routing, upload()
+│   │   ├── dataset.js            #     Dataset items, addData, setClass, annotations (PERSISTED)
+│   │   ├── plugin.js             #     Installed plugins list (PERSISTED)
+│   │   ├── project.js            #     Project metadata
+│   │   └── server.js             #     Colab server: trainColab, convertModel, EventSource listener
+│   │
+│   ├── nodes/                    #   BaklavaJS model graph node definitions
+│   │   ├── inputs/               #     default-input.js (epochs, batch_size, learning_rate, train_split)
+│   │   ├── layers/               #     conv2d, dense, dropout, flatten, maxpooling2d
+│   │   ├── models/               #     image_classification, mobilenet, resnet, yolo, voice_classification
+│   │   ├── outputs/              #     classification-output, object-detection-output, default-output
+│   │   └── interfaces/           #     Custom Baklava interface types
+│   │
+│   ├── @core/                    #     Reusable UI components, SCSS mixins, utilities
+│   ├── @iconify/                 #     Custom icon build system (build-icons.js)
+│   ├── @layouts/                 #     Layout components and styles
+│   ├── layouts/                  #     blank.vue, default.vue
+│   ├── styles/                   #     Global SCSS, Vuetify variables, Baklava overrides
+│   ├── plugins/vuetify/          #     Vuetify config: theme, icons, defaults
+│   ├── router/index.js           #     Vue Router setup (auto-generated from pages/)
+│   ├── assets/                   #     Images, icons, logos
+│   └── png/                      #     Generated block icon graphics (87 files)
+│
+├── public/                        # Static assets (loader.css, sounds, cursors, SVGs)
+├── dist/                          # Production build output (Firebase-deployed)
+│
+├── index.html                     # HTML entry: <div id="app"> + /src/main.js
+├── vite.config.js                 # Build config: Vue, Vuetify, auto-import, path aliases
+├── package.json                   # Dependencies + scripts
+├── firebase.json                  # Firebase Hosting: dist/, SPA rewrite
+├── .firebaserc                    # Firebase project: kidbright-mai
+├── Dockerfile                     # node:16.20, npm run dev
+└── Knowledge.md / rule.md         # Domain knowledge + AI agent contribution rules
 ```
 
-## 🧠 AI Training Pipeline (Extensions)
-This IDE significantly simplifies the AI workflow for hardware boards:
-1. **Capture**: Instructions provided to use the board's camera/mic to collect a dataset inside the IDE.
-2. **Annotate**: Built-in interfaces to label images or voice segments.
-3. **Train**: The IDE connects to a Google Colab notebook, uploading the dataset and executing a training job remotely.
-4. **Convert**: Trained model is exported to ONNX, then converted to board-specific format (`.cvimodel` for MaixCAM, NCNN for mAI).
-5. **Deploy**: The converted model and MUD metadata are sent to the board and executed by Python blocks (`maix` vision libraries).
+---
 
-### Supported Object Detection Models
+## Architecture Overview
 
-| Model | Value | Board | FPS | Accuracy | Use Case |
-|-------|-------|-------|-----|----------|----------|
-| YOLO v2 slim | `slim_yolo_v2` | mAI / mAI Plus | ~30 | Low | Legacy |
-| YOLO 11n | `yolo11n` | mAI Plus | ~60 | Medium (mAP 39.5) | Speed mode (default) |
-| YOLO 11s | `yolo11s` | mAI Plus | ~20 | High (mAP 47.0) | Accuracy mode |
+```
+┌────────────────────────────────────────────────────────────┐
+│                    Vue 3 SPA (Browser)                      │
+│                                                            │
+│  ┌────────────┐  ┌────────────┐  ┌───────────────────┐    │
+│  │ index.vue  │  │  ai.vue    │  │  [...all].vue     │    │
+│  │ (Coding)   │  │ (Training) │  │  (404)            │    │
+│  └─────┬──────┘  └─────┬──────┘  └───────────────────┘    │
+│        │               │                                    │
+│  ┌─────┴───────────────┴────────────────────────────┐      │
+│  │              6 Pinia Stores                       │      │
+│  │  workspace | board | dataset | plugin |           │      │
+│  │  project   | server                              │      │
+│  └──────────────────────────────────────────────────┘      │
+│                                                            │
+│  ┌────────────┐  ┌────────────────┐  ┌──────────────┐     │
+│  │  Blockly   │  │  BaklavaJS     │  │   xterm.js   │     │
+│  │  (Blocks)  │  │ (Model Graph)  │  │  (Terminal)  │     │
+│  └────────────┘  └────────────────┘  └──────────────┘     │
+│                                                            │
+│  ┌──────────────────────────────────────────────────┐      │
+│  │              Engine Layer                         │      │
+│  │  board.js | storage.js | helper.js                │      │
+│  │  SingletonShell | WebSocketShell                  │      │
+│  │  ProjectIOService | ProjectStrategies             │      │
+│  └──────────────┬──────────────┬────────────────────┘      │
+└─────────────────┼──────────────┼────────────────────────────┘
+                  │              │
+    ┌─────────────┤              ├─────────────┐
+    ▼             ▼              ▼             ▼
+┌────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐
+│Web-ADB │  │WebSocket │  │WebSocket │  │  Colab   │
+│ (USB)  │  │ (Binary) │  │ (Shell)  │  │ Server   │
+└───┬────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘
+    ▼            ▼              ▼              ▼
+┌────────────────────────┐          ┌──────────────┐
+│   KidBright Board      │          │ GPU Training │
+│   MaixII / MaixCAM     │          │ (Remote)     │
+└────────────────────────┘          └──────────────┘
+```
 
-Model selection is configured in the **YOLO node** (`src/nodes/models/yolo.js`), which outputs `trainConfig.modelType`.
+---
+
+## Dynamic Module Loading
+
+All boards, extensions, and plugins are loaded dynamically at startup via `import.meta.glob()` in `src/main.js`. Adding a new module requires only placing a folder with the correct structure -- no code changes needed.
+
+**Loading chain:**
+```
+main.js
+  ├── import.meta.glob('boards/*/index.js')         → $boards
+  ├── import.meta.glob('extensions/*/config.js')     → $extensions
+  ├── import.meta.glob('plugins/*/index.js')         → $plugins
+  ├── import.meta.glob('boards/*/main.py', as:'raw') → board.codeTemplate
+  ├── import.meta.glob('extensions/*/Components/*.vue')  → extension.components
+  ├── import.meta.glob('extensions/*/Instructions/*.vue') → extension.instructions
+  └── import.meta.glob('extensions/*/model-graph.json')   → extension.graph
+```
+
+---
+
+## Blockly System
+
+### Code Generation Pipeline
+
+```
+User drags blocks
+    ↓
+Blockly Workspace (Blockly.vue)
+    ↓  Blockly.defineBlocksWithJsonArray()
+Block Definitions (blocks_*.js)
+    ↓  python.pythonGenerator.forBlock['block_type']
+Python Generators (generators_*.js)
+    ↓  pythonGenerator.workspaceToCode(workspace)
+Generated Python Code
+    ↓  board.codeTemplate.replace("##{main}##", code)
+Wrapped with board main.py template
+    ↓
+Upload to board via protocol handler
+```
+
+### Block Categories
+
+| Category | Color | Examples |
+|----------|-------|---------|
+| Basic | #5BA58C | display camera, delay, forever loop |
+| AI | #5ba58c | classify image, detect object (YOLO), classify voice |
+| Display/Image | #9fa55b | resize, rotate, flip, crop, draw shapes |
+| Loops | #56A668 | repeat, while, for, forEach, break |
+| Logic | #617E95 | if/else, comparisons, boolean ops |
+| Math | #3A4F8B | arithmetic, trig, random, rounding |
+| GPIO I/O | #a5745b | RGB LED, servo, buzzer, switch, accelerometer |
+| Text | #5ba593 | print, join, length, case change |
+| List | #745ba5 | create, repeat, index, sort, split |
+| Variables | #a55b80 | set/get variable |
+| Functions | #995ba5 | define/call procedures |
+
+Blocks are additive: core blocks (src/blocks/) + board blocks + installed plugin blocks.
+
+---
+
+## AI Training Pipeline
+
+### 4-Step Workflow (ai.vue)
+
+```
+Step 1: CAPTURE                     Step 2: ANNOTATE
+┌─────────────────────────┐        ┌──────────────────────────┐
+│ Camera/Mic input        │        │ Classification: assign   │
+│ → datasetStore.addData()│───────>│   class labels           │
+│ Stored in browser FS    │        │ Detection: draw bounding │
+│ (800MB persistent)      │        │   boxes (VueCrop)        │
+└─────────────────────────┘        │ Voice: label audio clips │
+                                   └────────────┬─────────────┘
+                                                │
+Step 4: DEPLOY                      Step 3: TRAIN
+┌──────────────────────────┐       ┌──────────────────────────┐
+│ GET /convert → board fmt │       │ ModelDesigner → trainConfig│
+│ GET /download → model    │<──────│ ZIP dataset → POST /upload│
+│ importModelFromBlob()    │       │ POST /train → SSE /listen │
+│ Upload to board via      │       │ Real-time: epoch, batch,  │
+│ protocol handler         │       │ loss, accuracy charts     │
+└──────────────────────────┘       └──────────────────────────┘
+```
+
+### Supported AI Models
+
+| Type | Model | Board | FPS | Accuracy | Format |
+|------|-------|-------|-----|----------|--------|
+| Image Classification | MobileNet (100/75/50/25/10%) | mAI / mAI Plus | -- | Variable | NCNN / cvimodel |
+| Image Classification | ResNet-18 | mAI / mAI Plus | -- | Higher | NCNN / cvimodel |
+| Object Detection | YOLO v2 slim | mAI / mAI Plus | ~30 | Low | NCNN / cvimodel |
+| Object Detection | YOLO 11n | mAI Plus | ~60 | Medium (mAP 39.5) | cvimodel |
+| Object Detection | YOLO 11s | mAI Plus | ~20 | High (mAP 47.0) | cvimodel |
+| Voice Classification | Custom CNN (MFCC) | mAI / mAI Plus | -- | Variable | NCNN / cvimodel |
+
+Model selection is configured in the BaklavaJS graph editor. Each model node (e.g., `src/nodes/models/yolo.js`) outputs `trainConfig.modelType`.
 
 ### trainConfig Flow
 
 ```
-Frontend                                         Backend (Colab)
-────────                                         ───────
-YOLO Node (yolo.js)
+Frontend (BaklavaJS Graph)                      Backend (Colab)
+──────────────────────                          ───────────────
+Model Node (yolo.js / mobilenet.js / ...)
   → modelType, objectThreshold, iouThreshold
 Input Node (default-input.js)
   → epochs, batch_size, learning_rate, train_split
-Output Node (object-detection-output.js)
+Output Node (object-detection-output.js / classification-output.js)
   → validateMatrix, saveMethod
-                ↓
+              ↓
 ModelDesigner.computeGraph()
+  → DependencyEngine.runOnce()
   → workspaceStore.trainConfig
-                ↓
-uploadProject() → project.zip
-  containing project.json { trainConfig, labels }
-  and dataset/ (VOC: JPEGImages/, Annotations/)
-                ↓
-POST /train { project_id }
-                                                 training_task():
-                                                   read project.json
-                                                   route by modelType
-                                                   → train_object_detection_yolo11()
-                                                 convert_model():
-                                                   ONNX export → model_transform
-                                                   → calibration → model_deploy
-                                                   → .cvimodel + .mud
-                ↓
-GET /download_model → model.zip
-  → deploy to board via websocket-shell
+              ↓
+ProjectIOService.saveProject('upload')
+  → Strategy pattern:
+    ImageClassification → class-folder layout
+    ObjectDetection → Pascal VOC (Annotations/ + JPEGImages/ + ImageSets/)
+    VoiceClassification → waveform/ + sound/ + mfcc/ folders
+  → project.zip { project.json, dataset.json, dataset/, model/ }
+              ↓
+POST /upload (FormData: zip + project_id)
+POST /train  (JSON: project_id + trainConfig)
+                                                training_task():
+                                                  read project.json
+                                                  route by modelType
+                                                  → train with config
+                                                convert_model():
+                                                  ONNX → model_transform
+                                                  → calibration → model_deploy
+                                                  → .cvimodel + .mud (MaixCAM)
+                                                  → .bin + .param (NCNN/mAI)
+              ↓
+EventSource /listen (SSE: epoch, batch, metrics)
+GET /convert?project_id=X
+GET /projects/{id}/output/{model_file}
+  → workspaceStore.importModelFromBlob()
+  → model stored in browser FS with MD5 hash
+  → uploaded to board during code deploy (hash-based cache check)
 ```
+
+### Colab Server API
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| GET | `/ping` | Server status + training stage (0-5) |
+| EventSource | `/listen` | Real-time SSE: epoch/batch progress, metrics |
+| POST | `/upload` | Upload project ZIP (FormData) |
+| POST | `/train` | Start training with trainConfig |
+| GET | `/convert?project_id=X` | Convert trained model to board format |
+| GET | `/projects/{id}/output/{file}` | Download converted model files |
+| GET | `/terminate?project_id=X` | Stop training |
+
+**Training Stages:** 0=None, 1=Prepare, 2=Training, 3=Trained, 4=Converting, 5=Ready
 
 ### Conversion Details (MaixCAM / mAI Plus)
 
 - **Method B** (2 output nodes): `/model.23/dfl/conv/Conv_output_0` + `/model.23/Sigmoid_output_0`
 - **Input size**: 224x320
 - **Quantization**: INT8 via tpu-mlir (CVITEK TPU)
-- **Tolerance**: yolo11n = `0.9,0.6` / yolo11s = `0.85,0.5` (hardcoded in backend)
-- **MUD file**: `model_type = yolo11`, no `type` field for detection
+- **Tolerance**: yolo11n = `0.9,0.6` / yolo11s = `0.85,0.5`
+- **MUD file**: `model_type = yolo11`
 
 ---
 
-## 🚀 Setup & Development
+## Device Communication
 
-### Recommended IDE Setup
-- [VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.volar).
+### Protocol Comparison
 
-### Project Setup
+| Aspect | web-adb (USB) | websocket (Binary) | websocket-shell (PTY) |
+|--------|--------------|--------------------|-----------------------|
+| Board | kidbright-mai | kidbright-mai-plus | kidbright-mai-plus |
+| Transport | WebUSB API | ws:// | wss:// (TLS) |
+| Library | @yume-chan/adb | Custom binary protocol | Raw PTY |
+| Auth | ADB credential store | packMessage(Auth) | None |
+| Code Upload | ADB sync file transfer | Binary Command.Run packet | Chunked base64 JSON |
+| Model Upload | ADB sync + hash cache | Not implemented | Chunked 256KB + hash cache |
+| Terminal | Shell subprocess stdout | Command.Output packets | Raw PTY output |
+| File Ops | Full FS (list, upload, delete) | Run only | Upload + shell commands |
+
+### Upload Code Flow (All Protocols)
+
+```
+User clicks "Upload Code" (Header)
+    ↓
+1. Open serial panel (if closed) + wait
+2. terminal.reset()
+3. pythonGenerator.workspaceToCode(workspace) → Python code
+4. board.codeTemplate.replace("##{main}##", code) → wrapped code
+5. boardStore.upload(code, writeStartup)
+    ↓
+6. Protocol handler:
+   a. Send Ctrl+C to stop running code
+   b. Upload /root/app/run.py (code)
+   c. Upload board python modules
+   d. Upload installed plugin libs
+   e. Upload AI model if needed (hash-based cache)
+   f. Kill previous python3 process
+   g. Execute: python3 /root/app/run.py
+    ↓
+7. Output streams to xterm terminal in real-time
+```
+
+### Board Python Template
+
+Each board has a `main.py` template with `##{main}##` placeholder:
+- **kidbright-mai**: Initializes camera (224x224), registers signal handlers, runs user code
+- **kidbright-mai-plus**: Kills maixapp system processes on start, registers atexit to restart launcher on exit, runs user code
+
+---
+
+## Browser-Based Inference (TensorFlow.js)
+
+Extensions include Web Workers for running AI models directly in the browser (used by Blockly blocks in the browser-based toolbox):
+
+```
+classify.worker.js (ImageClassification)
+detection.worker.js (ObjectDetection)
+    ↓ Web Worker (off main thread)
+TF.js loaded from CDN
+    ↓
+Model loaded from memory buffers (ArrayBuffer)
+    ↓ Preprocessing
+Image normalized (-1 to 1), resized to input shape
+    ↓ Inference
+model.predict(tensor)
+    ↓ Post-processing
+Classification: argMax → class index + probabilities
+Detection: YOLO decode → box correction → NMS → filtered bboxes
+    ↓
+Results returned via postMessage
+```
+
+---
+
+## State Management
+
+| Store | File | Persisted | Key State |
+|-------|------|-----------|-----------|
+| workspace | `store/workspace.js` | Yes | project name/id, code, block, currentBoard, labels, trainConfig, model, projectType, graph |
+| board | `store/board.js` | No | connected, handler, protocol, wifi status, upload state |
+| dataset | `store/dataset.js` | Yes | data[] (images/audio with annotations), project reference |
+| plugin | `store/plugin.js` | Yes | installed plugins list |
+| project | `store/project.js` | No | project metadata |
+| server | `store/server.js` | No | Colab URL, training state, epoch/batch progress, metrics, EventSource |
+
+---
+
+## UI Layout
+
+### Main IDE (index.vue)
+
+```
+┌──────────────────────────────────────────────┐
+│ Header: [Connect][Upload][Files][WiFi][AI]   │
+│         [Plugins] | [New][Open][Save]        │
+├──────────────────────────────────────────────┤
+│                                              │
+│              Blockly Workspace               │
+│         (drag-and-drop block editor)         │
+│                                              │
+├───────────────────────── ↕ resizable ────────┤
+│ Footer: xterm.js Terminal (serial monitor)   │
+│         [Undo] [Redo]                        │
+└──────────────────────────────────────────────┘
+```
+
+### AI Training (ai.vue)
+
+```
+┌────────────┬─────────────────────────────────┐
+│ SidePanel  │                                 │
+│            │  Step 1-2: Capture / Annotate   │
+│ Step 1:    │    (Extension components)       │
+│  Capture   │                                 │
+│ Step 2:    │  Step 3: Train                  │
+│  Annotate  │    ModelDesigner (BaklavaJS)    │
+│ Step 3:    │    TrainingToolbar              │
+│  Train     │    MessageLog / Charts          │
+│ Step 4:    │                                 │
+│  Ready     │  Step 4: Model Ready            │
+│            │    Deploy to board button       │
+└────────────┴─────────────────────────────────┘
+```
+
+---
+
+## Setup & Development
+
+### Prerequisites
+- Node.js 16.20+
+- Yarn 1.22+ or npm
+
+### Development
 ```sh
 npm install
+npm run dev        # Builds icons + starts Vite dev server (--host)
 ```
 
-### Compile and Hot-Reload for Development
+### Production Build
 ```sh
-npm run dev
+npm run build      # Builds icons + Vite build + copies boards/plugins/extensions to dist/
+npm run preview    # Preview build on port 5050
 ```
 
-### Type-Check, Compile and Minify for Production
+### Firebase Deploy
 ```sh
-npm run build
+firebase deploy    # Deploys dist/ to Firebase Hosting (project: kidbright-mai)
 ```
 
-## 📜 Contributing & Rules for AI Agents
-If you are an AI assistant helping to maintain this project, please explicitly read and reference the `rule.md` file located in the root of this repository before generating any code.
+### Docker
+```sh
+docker build -t kidbright-mai-ide .
+docker run -p 5173:5173 kidbright-mai-ide
+```
+
+---
+
+## Contributing
+
+If you are an AI assistant helping to maintain this project, please read `rule.md` in the project root before generating any code.

@@ -1,5 +1,6 @@
 import { sleep } from "@/engine/helper"
 import { defineStore } from "pinia"
+import { markRaw } from "vue"
 import { toast } from "vue3-toastify"
 import { useWorkspaceStore } from "./workspace"
 import { WebAdbHandler } from "@/engine/protocols/web-adb.js"
@@ -46,7 +47,7 @@ export const useBoardStore = defineStore({
       return "10.155.55.1" // Fallback
     },
     isBoardConnected() {
-      return this.handler?.isConnected() ?? false
+      return this.connected
     },
   },
   actions: {
@@ -64,13 +65,13 @@ export const useBoardStore = defineStore({
 
       switch (currentBoard.protocol) {
         case "web-adb":
-          this.handler = new WebAdbHandler()
+          this.handler = markRaw(new WebAdbHandler())
           break
         case "websocket":
-          this.handler = new WebSocketHandler()
+          this.handler = markRaw(new WebSocketHandler())
           break
         case "websocket-shell":
-          this.handler = new WebSocketShellHandler()
+          this.handler = markRaw(new WebSocketShellHandler())
           break
         default:
           toast.error(`ไม่รองรับโปรโตคอล: ${currentBoard.protocol}`)

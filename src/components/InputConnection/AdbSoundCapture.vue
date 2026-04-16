@@ -295,6 +295,7 @@ defineExpose({
   init,
   listen,
   stop,
+  volume,
 })
 </script>
 
@@ -319,7 +320,7 @@ defineExpose({
       />
     </div>
     <div
-      v-show="props.id == null"
+      v-show="props.id == null || ['listening', 'recording', 'processing', 'finishing'].includes(status)"
       class="full"
     >
       <canvas
@@ -334,7 +335,7 @@ defineExpose({
       />
     </div>
     <div
-      v-show="props.id != null"
+      v-if="props.id != null && !['listening', 'recording', 'processing', 'finishing'].includes(status)"
       class="full"
     >
       <WaveFormPlayer 
