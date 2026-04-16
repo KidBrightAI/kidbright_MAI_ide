@@ -242,10 +242,19 @@ if (!currentBoard) {
   console.log("reinit current board")
   workspaceStore.currentBoard = boards.find(el => el.id == currentBoard.id)
 
-  // assign extension to workspace
-  console.log("assing extension to workspace")
-  console.log(extensionList.find(el => el.id == workspaceStore.projectType))
-  workspaceStore.extension = extensionList.find(el => el.id == workspaceStore.projectType)
+  // assign extension to workspace (preserve user options from persist)
+  const freshExtension = extensionList.find(el => el.id == workspaceStore.projectType)
+  if (freshExtension) {
+    const savedOptions = workspaceStore.extension?.options
+    workspaceStore.extension = freshExtension
+    if (savedOptions) {
+      for (const key in savedOptions) {
+        if (workspaceStore.extension.options?.[key]) {
+          workspaceStore.extension.options[key].value = savedOptions[key].value
+        }
+      }
+    }
+  }
 }
 console.log("current board ")
 console.log(currentBoard)
