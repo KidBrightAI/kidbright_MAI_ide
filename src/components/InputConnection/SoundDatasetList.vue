@@ -147,10 +147,8 @@ const removeItem = async (e, item) => {
       }
     } else {
       await datasetStore.deleteDatasetItem(item)
-      if (selected.value.includes(item.id)) {
-        selected.value = selected.value.filter(v => v !== item.id) || []
-        value.value = selected.value
-      }
+      selected.value = selected.value.filter(v => v !== item.id)
+      value.value = value.value.filter(v => v !== item.id)
     }
   } else {
     await datasetStore.deleteDatasetItem(item)

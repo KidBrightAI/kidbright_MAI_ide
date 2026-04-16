@@ -195,6 +195,7 @@ const onFinish = async()=>{
     preview: wavform,
     duration: workspaceStore.extension.options.durations.value || 3,
   }
+  clearCanvas()
   emits("recorded", data)
   status.value = "ready"
 }
@@ -283,6 +284,7 @@ defineExpose({
   init,
   listen,
   stop,
+  clearCanvas,
 })
 </script>
 
