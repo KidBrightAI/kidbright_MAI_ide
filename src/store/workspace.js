@@ -54,6 +54,7 @@ export const useWorkspaceStore = defineStore({
       'model',
       'labels',
       'colabUrl',
+      'extension',
       'trainConfig',
       'graph',
       'defaultGraph',
