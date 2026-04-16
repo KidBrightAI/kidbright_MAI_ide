@@ -22,6 +22,11 @@ const ACTIVE_STATES = ['listening', 'recording', 'processing', 'finishing']
 const isRecorderActive = computed(() => ACTIVE_STATES.includes(status.value))
 const selectedId = computed(() => current.value.slice(-1).pop() ?? null)
 const duration = computed(() => workspaceStore.extension.options.durations.value || 3)
+const selectedItemDuration = computed(() => {
+  if (!selectedId.value) return duration.value
+  const item = datasetStore.data.find(d => d.id === selectedId.value)
+  return item?.duration || duration.value
+})
 
 const connectBoard = async () => {
   connecting.value = true
@@ -94,7 +99,7 @@ onMounted(async () => {
               :id="selectedId"
               sound_ext="wav"
               img_ext="png"
-              :delay="duration"
+              :delay="selectedItemDuration"
               :volume="playbackVolume"
             />
           </div>

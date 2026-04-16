@@ -221,7 +221,7 @@ const playHandler = id => {
               :ref="el => player.includes(el) || player.push(el)" 
               :sound_ext="item.sound_ext" 
               :img_ext="item.ext" 
-              :delay="duration"
+              :delay="item.duration || duration"
               :volume="volume"
               @onPlay="onPlay"
               @onEnd="onEnd"
