@@ -107,6 +107,7 @@ python.pythonGenerator.forBlock['maix3_nn_voice_classify'] = function (block, ge
   var number_duration = block.getFieldValue('duration')
   var code = `voice_mfcc.audio_record(_stream, _p, record_sec=${number_duration})\n`
   code += `mfcc_image = image.open('/root/app/mfcc_run.png')\n`
+  code += `mfcc_image = mfcc_image.resize(147, 13)\n`
   code += `_model_result = _model.model.forward(mfcc_image, quantize=True)\n`
 
   //code += `print(_model_result)\n`;
