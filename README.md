@@ -461,7 +461,7 @@ Results returned via postMessage
 
 | Store | File | Persisted | Key State |
 |-------|------|-----------|-----------|
-| workspace | `store/workspace.js` | Yes | project name/id, code, block, currentBoard, labels, trainConfig, model, projectType, graph |
+| workspace | `store/workspace.js` | Yes | project name/id, code, block, currentBoard, labels, trainConfig, model, projectType, extension, graph |
 | board | `store/board.js` | No | connected, handler, protocol, wifi status, upload state |
 | dataset | `store/dataset.js` | Yes | data[] (images/audio with annotations), project reference |
 | plugin | `store/plugin.js` | Yes | installed plugins list |
@@ -539,6 +539,32 @@ docker run -p 5173:5173 kidbright-mai-ide
 ```
 
 ---
+
+## Recent Changes (2026-04-16~17)
+
+### Web-ADB Connection Fix
+- `board.js`: `markRaw()` on all protocol handlers to prevent Vue Proxy wrapping ES2022 private fields in `@yume-chan/adb`
+- `SingletonShell.js`: use `this.adb` instead of parameter `adb` for subprocess.shell()
+- `board.js`: `isBoardConnected` getter reads reactive `this.connected` instead of non-reactive handler
+
+### Voice Classification
+- **Capture UI refactored**: separated recorder (AdbSoundCapture) from playback (WaveFormPlayer), display switching in Capture.vue
+- **VoiceCNN model**: IPU-safe 2D CNN (Conv2d + ReLU + MaxPool2d + Flatten + Linear only, no BatchNorm/AdaptiveAvgPool/Dropout)
+- **Pre-built model node**: BaklavaJS "Voice CNN (Recommended)" dropdown instead of manual layer wiring
+- **MFCC input shape**: fixed from (3,147,13) to (3,13,147) matching actual ImageFolder output
+- **MFCC resize**: `transforms.Resize((13,147))` in training + `mfcc_image.resize(147,13)` on board for variable duration support
+- **Duration persist**: added `extension` to Pinia persist paths + fixed ComputedRef unwrap in NewModelDialog
+- **Per-item duration**: WaveFormPlayer uses each recording's stored duration, not global config
+- **Board connection UX**: auto-connect on AI page mount, Connect Board button + status in side panel
+
+### Object Detection
+- **YOLO v2 input size**: changed from 416×416 to 224×224 for V831 AWNN compatibility (matching Sipeed official maix_train)
+- **convert_model**: added `voice-cnn` to all 3 switch blocks (best_file, model loading, conversion path)
+
+### UI/UX
+- Disabled text selection globally (app-like UI)
+- Fixed `null.png` error from WaveFormPlayer when no item selected
+- Fixed SoundDatasetList delete not clearing v-model selection
 
 ## Contributing
 
