@@ -16,8 +16,8 @@ class _Resnet:
       "output0": (1, 1, ${workspaceStore.labels.map(lb => lb.label).length})
     },
     "first_layer_conv_no_pad": False,
-    "mean": [123.675, 116.28, 103.53],
-    "norm": [0.01712475, 0.01750700, 0.01742919],
+    "mean": [127.5, 127.5, 127.5],
+    "norm": [0.0078125, 0.0078125, 0.0078125],
   }
 
   def __init__(self):
@@ -94,8 +94,8 @@ class _Resnet:
       "output0": (1, 1, ${workspaceStore.labels.map(lb => lb.label).length})
     },
     "first_layer_conv_no_pad": True,
-    "mean": [123.675, 116.28, 103.53],
-    "norm": [0.01712475, 0.01750700, 0.01742919],
+    "mean": [127.5, 127.5, 127.5],
+    "norm": [0.0078125, 0.0078125, 0.0078125],
   }
 
   def __init__(self):
