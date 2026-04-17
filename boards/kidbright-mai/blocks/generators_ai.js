@@ -16,8 +16,8 @@ class _Resnet:
       "output0": (1, 1, ${workspaceStore.labels.map(lb => lb.label).length})
     },
     "first_layer_conv_no_pad": False,
-    "mean": [127.5, 127.5, 127.5],
-    "norm": [0.00784313725490196, 0.00784313725490196, 0.00784313725490196],
+    "mean": [123.675, 116.28, 103.53],
+    "norm": [0.01712475, 0.01750700, 0.01742919],
   }
 
   def __init__(self):
@@ -29,7 +29,7 @@ class _Resnet:
 
 _model = _Resnet()
 _labels = [${ workspaceStore.labels.map(label => `"${label.label}"`).sort().join(', ') }]
-`    
+`
 
   // var functionName = generator.provideFunction_(
   //     '_isKeyPressed',
@@ -94,8 +94,8 @@ class _Resnet:
       "output0": (1, 1, ${workspaceStore.labels.map(lb => lb.label).length})
     },
     "first_layer_conv_no_pad": True,
-    "mean": [127.5, 127.5, 127.5],
-    "norm": [0.00784313725490196, 0.00784313725490196, 0.00784313725490196],
+    "mean": [123.675, 116.28, 103.53],
+    "norm": [0.01712475, 0.01750700, 0.01742919],
   }
 
   def __init__(self):
