@@ -1,13 +1,12 @@
-import JSZip from "jszip"
 import { defineStore } from "pinia"
 import { loadBoard, loadPlugin } from "../engine/board"
 import { usePluginStore } from "./plugin"
 import { useDatasetStore } from "./dataset"
 import { useServerStore } from "./server"
 
-import { sleep } from "@/engine/helper"
-import { md5 } from 'hash-wasm'
 import ProjectIOService from "@/services/ProjectIOService"
+import { applyBoardDefaults } from "@/engine/graph-merge"
+import { setBoardContext } from "@/engine/board-node-options"
 
 
 export const useWorkspaceStore = defineStore({
@@ -184,8 +183,15 @@ export const useWorkspaceStore = defineStore({
         baseURL: "",
       }
 
-      //set graph
-      this.defaultGraph = this.extension.graph
+      // Apply board-specific overrides before the designer mounts so the
+      // dropdowns and defaults reflect the target hardware. Node factories
+      // read setBoardContext via @/engine/board-node-options.
+      setBoardContext(this.currentBoard, this.extension.id)
+      this.defaultGraph = applyBoardDefaults(
+        this.extension.graph,
+        this.extension.id,
+        this.currentBoard,
+      )
       await datasetStore.createDataset(dataset)
 
       return true
@@ -328,130 +334,6 @@ export const useWorkspaceStore = defineStore({
         return false
       }
     },
-
-    async importModelFromZip() {
-      try {
-        let data = await this.selectAndReadFile()
-        let zip = new JSZip()
-        await zip.loadAsync(data)
-        let modelBinaries = await zip.file("classifier_awnn.bin").async("arraybuffer")
-        let modelParams = await zip.file("classifier_awnn.param").async("arraybuffer")
-
-        //remove old model
-        try {
-          await this.$fs.removeFile(`${this.id}/model.bin`)
-        } catch (e) {
-          console.log(e)
-        }
-        try {
-          await this.$fs.removeFile(`${this.id}/model.param`)
-        } catch (e) {
-          console.log(e)
-        }
-        await this.$fs.writeFile(`${this.id}/model.bin`, new Blob([modelBinaries]))
-        await this.$fs.writeFile(`${this.id}/model.param`, new Blob([modelParams]))
-
-        // read labels.txt
-        //check is labels.txt exist
-
-        // if(zip.file("labels.txt")){
-        //   let labels = await zip.file("labels.txt").async("string");
-        //   labels = labels.split("\n");
-        //   //trim empty line and \r
-        //   labels = labels.filter(el => el.trim() != "");
-        //   labels = labels.map(el => el.trim());
-        //   this.modelLabel = labels;
-        //   console.log("model label : ", this.modelLabel);
-        // }else {
-        //   this.modelLabel = [];
-        // }
-
-        let hash = await md5(new Uint8Array(modelBinaries))
-        this.model = {
-          name: 'model',
-          type: 'bin',
-          hash: hash,
-        }
-        console.log("model data", this.model)
-
-        return true
-      } catch (e) {
-        if (e == "NOFILE") {
-          console.log('no file selected')
-        } else {
-          console.log(e)
-
-          return false
-        }
-      }
-    },
-    async importObjectDetectionModelFromZip() {
-      try {
-        let data = await this.selectAndReadFile()
-        let zip = new JSZip()
-        await zip.loadAsync(data)
-        let modelBinaries = await zip.file("classifier_awnn.bin").async("arraybuffer")
-        let modelParams = await zip.file("classifier_awnn.param").async("arraybuffer")
-
-        //remove old model
-        try {
-          await this.$fs.removeFile(`${this.id}/model.bin`)
-        } catch (e) {
-          console.log(e)
-        }
-        try {
-          await this.$fs.removeFile(`${this.id}/model.param`)
-        } catch (e) {
-          console.log(e)
-        }
-
-        await this.$fs.writeFile(`${this.id}/model.bin`, new Blob([modelBinaries]))
-        await this.$fs.writeFile(`${this.id}/model.param`, new Blob([modelParams]))
-        let hash = await md5(new Uint8Array(modelBinaries))
-        let paramHash = await md5(new Uint8Array(modelParams))
-        console.log("params hash : ", paramHash)
-        console.log("model hash : ", hash)
-
-        // check again
-        let modelBinariesFile = await this.$fs.readAsFile(`${this.id}/model.bin`)
-        let modelParamsFile = await this.$fs.readAsFile(`${this.id}/model.param`)
-        let paramHashFile = await md5(new Uint8Array(await modelParamsFile.arrayBuffer()))
-        let modelHashFile = await md5(new Uint8Array(await modelBinariesFile.arrayBuffer()))
-        console.log("storeage param hash : ", paramHashFile)
-        console.log("storage model hash : ", modelHashFile)
-
-        // if(zip.file("labels.txt")){
-        //   let labels = await zip.file("labels.txt").async("string");
-        //   labels = labels.split("\n");
-        //   //trim empty line and \r
-        //   labels = labels.filter(el => el.trim() != "");
-        //   labels = labels.map(el => el.trim());
-        //   this.modelLabel = labels;
-        //   console.log("model label : ", this.modelLabel);
-        // }else {
-        //   this.modelLabel = [];
-        // }
-
-        this.model = {
-          name: 'model',
-          type: 'bin',
-          hash: hash,
-        }
-        console.log("model data", this.model)
-
-        return true
-      } catch (e) {
-        if (e == "NOFILE") {
-          console.log('no file selected')
-        } else {
-          console.log(e)
-
-          return false
-        }
-      }
-    },
-
-
 
     saveAs(content, filename) {
       const link = document.createElement('a')

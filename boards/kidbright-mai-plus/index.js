@@ -34,4 +34,35 @@ export default {
     "blocks/generators_ai.js",
   ],
   autoCompletion: {},
+
+  // MaixCAM support matrix (what this board has been tested with):
+  //   Image   — all MobileNet alphas + ResNet-18 run through the CV181x
+  //             MLIR→cvimodel pipeline; default = mobilenet-100.
+  //   YOLO    — yolo11n / yolo11s (slim_yolo_v2 uses AWNN which CV181x
+  //             doesn't run).
+  //   Voice   — voice-cnn only (resnet18 path not validated here).
+  modelDefaults: {
+    IMAGE_CLASSIFICATION: {
+      ImageClassification: { modelType: "mobilenet-100" },
+    },
+    OBJECT_DETECTION: {
+      YOLO: { modelType: "yolo11n" },
+    },
+    VOICE_CLASSIFICATION: {
+      CNNVoice: { modelType: "voice-cnn" },
+    },
+  },
+  modelOptions: {
+    IMAGE_CLASSIFICATION: {
+      ImageClassification: {
+        modelType: ["mobilenet-100", "mobilenet-75", "mobilenet-50", "mobilenet-25", "mobilenet-10", "resnet18"],
+      },
+    },
+    OBJECT_DETECTION: {
+      YOLO: { modelType: ["yolo11n", "yolo11s"] },
+    },
+    VOICE_CLASSIFICATION: {
+      CNNVoice: { modelType: ["voice-cnn"] },
+    },
+  },
 }

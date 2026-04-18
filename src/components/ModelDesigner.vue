@@ -148,7 +148,7 @@ const testCompute = async()=>{
   console.log(res)
 }
 
-onMounted(() => {
+onMounted(async () => {
   //check if workspaceStore is empty then load default graph or if emty then load graph or do nothing
   if (Object.keys(workspaceStore.graph).length === 0) {
     if(Object.keys(workspaceStore.defaultGraph).length !== 0){
@@ -157,6 +157,13 @@ onMounted(() => {
   } else {
     editor.load(workspaceStore.graph)
   }
+
+  // Re-derive trainConfig from the just-loaded graph. Covers the case
+  // where a persisted project was reconciled in main.js: the stored
+  // trainConfig may predate the current board filter, and we want the
+  // value that eventually ships to the training server to match what
+  // the student sees in the designer.
+  await saveGraph()
 
   //listen to graph change
   editor.nodeEvents.update.subscribe(token, async (data, node) => {

@@ -29,6 +29,8 @@ import { useWorkspaceStore } from './store/workspace'
 import { loadBoard, loadPlugin, parseExamples } from './engine/board'
 import StorageService from './engine/storage'
 import { randomId } from './engine/helper'
+import { setBoardContext } from './engine/board-node-options'
+import { reconcileWithBoard, reconcileTrainConfig } from './engine/graph-merge'
 
 loadFonts()
 Blockly.Python = Blockly.Python || {}
@@ -238,7 +240,7 @@ if (!currentBoard) {
   })
   workspaceStore.currentBoard = boards.find(el => el.id == "kidbright-mai")
 } else {
-  // reinit current board 
+  // reinit current board
   console.log("reinit current board")
   workspaceStore.currentBoard = boards.find(el => el.id == currentBoard.id)
 
@@ -253,6 +255,28 @@ if (!currentBoard) {
           workspaceStore.extension.options[key].value = savedOptions[key].value
         }
       }
+    }
+    // Restore board-scoped node overrides so the designer renders
+    // board-filtered dropdowns / defaults when the user navigates to /ai.
+    setBoardContext(workspaceStore.currentBoard, freshExtension.id)
+
+    // Migrate projects saved before the board declared modelDefaults/Options:
+    // any persisted value that falls outside the board's current filter gets
+    // snapped to the board default so dropdowns always show a valid choice.
+    if (workspaceStore.graph && Object.keys(workspaceStore.graph).length > 0) {
+      workspaceStore.graph = reconcileWithBoard(
+        workspaceStore.graph, freshExtension.id, workspaceStore.currentBoard,
+      )
+    }
+    if (workspaceStore.defaultGraph && Object.keys(workspaceStore.defaultGraph).length > 0) {
+      workspaceStore.defaultGraph = reconcileWithBoard(
+        workspaceStore.defaultGraph, freshExtension.id, workspaceStore.currentBoard,
+      )
+    }
+    if (workspaceStore.trainConfig && Object.keys(workspaceStore.trainConfig).length > 0) {
+      workspaceStore.trainConfig = reconcileTrainConfig(
+        workspaceStore.trainConfig, freshExtension.id, workspaceStore.currentBoard,
+      )
     }
   }
 }

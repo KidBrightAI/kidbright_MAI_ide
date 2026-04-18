@@ -5,6 +5,7 @@ import { useWorkspaceStore } from "@/store/workspace"
 import { usePluginStore } from "@/store/plugin"
 import { md5 } from 'hash-wasm'
 import { pickByType } from "@/engine/model-formats"
+import { appPath, BOARD_APP_DIR } from "@/engine/board-paths"
 import {
   WrapConsumableStream,
   WrapReadableStream,
@@ -248,7 +249,7 @@ export class WebAdbHandler {
         
         return
       }
-      if (path == "/" || path == "/root" || path == "/root/app") {
+      if (path == "/" || path == "/root" || path == BOARD_APP_DIR) {
         toast.error("ไม่สามารถลบไฟล์หรือโฟลเดอร์หลักได้")
         
         return
@@ -434,14 +435,14 @@ export class WebAdbHandler {
     code = currentBoard.codeTemplate.replace("##{main}##", code)
 
     filesUpload.push({
-      file: "/root/app/run.py",
+      file: appPath("run.py"),
       content: code,
     })
 
     if (writeStartup) {
       console.log("write startup script")
       filesUpload.push({
-        file: "/root/app/startup.py",
+        file: appPath("startup.py"),
         content: code,
       })
 
@@ -457,7 +458,7 @@ export class WebAdbHandler {
       if (scriptResponse.ok) {
         let scriptData = await scriptResponse.text()
         filesUpload.push({
-          file: "/root/app/" + module.replace(currentBoard.path + "libs/", ""),
+          file: appPath(module.replace(currentBoard.path + "libs/", "")),
           content: scriptData,
         })
       }
@@ -469,7 +470,7 @@ export class WebAdbHandler {
         if (scriptResponse.ok) {
           let scriptData = await scriptResponse.text()
           filesUpload.push({
-            file: "/root/app/" + codeFile.replace(plugin.path + "libs/", ""),
+            file: appPath(codeFile.replace(plugin.path + "libs/", "")),
             content: scriptData,
           })
         }
@@ -499,7 +500,7 @@ export class WebAdbHandler {
       }
       SingletonShell.write("sync\n")
       SingletonShell.write("killall python3\n")
-      SingletonShell.write("python3 /root/app/run.py\n")
+      SingletonShell.write(`python3 ${appPath("run.py")}\n`)
       
       return true
     } catch (e) {

@@ -4,6 +4,7 @@ import { useWorkspaceStore } from "@/store/workspace"
 import { usePluginStore } from "@/store/plugin"
 import storage from "@/engine/storage"
 import { pickByType } from "@/engine/model-formats"
+import { appPath } from "@/engine/board-paths"
 
 
 export class WebSocketShellHandler {
@@ -245,7 +246,7 @@ export class WebSocketShellHandler {
       let filesUpload = []
 
       filesUpload.push({
-        file: "/root/app/run.py",
+        file: appPath("run.py"),
         content: code,
       })
 
@@ -255,7 +256,7 @@ export class WebSocketShellHandler {
         if (scriptResponse.ok) {
           let scriptData = await scriptResponse.text()
           filesUpload.push({
-            file: "/root/app/" + module.replace(currentBoard.path + "libs/", ""),
+            file: appPath(module.replace(currentBoard.path + "libs/", "")),
             content: scriptData,
           })
         }
@@ -268,7 +269,7 @@ export class WebSocketShellHandler {
           if (scriptResponse.ok) {
             let scriptData = await scriptResponse.text()
             filesUpload.push({
-              file: "/root/app/" + codeFile.replace(plugin.path + "libs/", ""),
+              file: appPath(codeFile.replace(plugin.path + "libs/", "")),
               content: scriptData,
             })
           }
@@ -285,12 +286,13 @@ export class WebSocketShellHandler {
       }
 
       // Kill previous python script
-      const killCmd = `ps | grep "/root/app/run.py" | grep -v grep | awk '{print $1}' | xargs kill -9\r`
+      const runPy = appPath("run.py")
+      const killCmd = `ps | grep "${runPy}" | grep -v grep | awk '{print $1}' | xargs kill -9\r`
       this.socket.send(killCmd)
       await new Promise(r => setTimeout(r, 500))
 
       // Run python
-      const runCmd = `python3 /root/app/run.py\r`
+      const runCmd = `python3 ${runPy}\r`
       this.socket.send(runCmd)
 
       toast.success("Code uploaded & running...")

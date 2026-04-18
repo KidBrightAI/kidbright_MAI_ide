@@ -1,4 +1,5 @@
 import { md5 } from "hash-wasm"
+import { BOARD_MODEL_DIR } from "@/engine/board-paths"
 
 /**
  * Base class for a model "file format" — i.e. the concrete set of files
@@ -19,8 +20,8 @@ export default class ModelFormat {
   /** stable identifier used in logs / internals. */
   static id = "base"
 
-  /** remote directory on the board — everyone uses /root/model today. */
-  static remoteDir = "/root/model"
+  /** remote directory on the board — shared via @/engine/board-paths. */
+  static remoteDir = BOARD_MODEL_DIR
 
   /**
    * static list of files making up this format. Subclasses must override.
