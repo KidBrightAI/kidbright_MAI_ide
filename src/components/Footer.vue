@@ -15,9 +15,12 @@ const terminalDiv = shallowRef()
 <template>
   <div class="footer-layout">
     <div
+      v-if="workspaceStore.currentBoard"
       class="terminal-floating"
-      @click="$emit('terminal')"
-    >        
+      :class="{ disabled: !boardStore.isBoardConnected }"
+      :title="boardStore.isBoardConnected ? 'Open terminal' : 'Connect a board first'"
+      @click="boardStore.isBoardConnected && $emit('terminal')"
+    >
       <span class="text-h5 text-white px-3">>_ Terminal</span>
     </div>
 
@@ -36,7 +39,10 @@ const terminalDiv = shallowRef()
       <span class="text-h6 text-white">{{ workspaceStore.currentBoard.name }}</span>
     </div>
 
-    <div class="footer-control-btn-container">
+    <div
+      v-if="workspaceStore.currentBoard"
+      class="footer-control-btn-container"
+    >
       <VBtn
         icon
         density="comfortable"
@@ -156,12 +162,17 @@ const terminalDiv = shallowRef()
   position: absolute;
   height: 60px;
   margin-top: -60px;
-  border-radius: 10px 10px 0 0;  
+  border-radius: 10px 10px 0 0;
   right: 0;
   padding: 15px 5px 5px 5px;
   background-color: #333333;
   z-index: 9999;
   cursor: pointer;
+  transition: opacity 0.2s;
+}
+.terminal-floating.disabled{
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 .board-info-floating {
   position: absolute;

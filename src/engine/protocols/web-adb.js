@@ -1,17 +1,14 @@
 import { sleep } from "@/engine/helper"
-import { defineStore } from "pinia"
 import { toast } from "vue3-toastify"
 import { useWorkspaceStore } from "@/store/workspace"
-import { usePluginStore } from "@/store/plugin"
-import { md5 } from 'hash-wasm'
-import { pickByType } from "@/engine/model-formats"
-import { appPath, BOARD_APP_DIR } from "@/engine/board-paths"
+import { BOARD_APP_DIR, appPath } from "@/engine/board-paths"
+import BoardProtocol from "./base"
 import {
   WrapConsumableStream,
   WrapReadableStream,
 } from "@yume-chan/stream-extra"
 
-import { Adb, AdbDaemonTransport, LinuxFileType, encodeUtf8  } from "@yume-chan/adb"
+import { Adb, AdbDaemonTransport, LinuxFileType, encodeUtf8 } from "@yume-chan/adb"
 import AdbWebCredentialStore from "@yume-chan/adb-credential-web"
 import { AdbDaemonWebUsbDeviceManager } from "@yume-chan/adb-daemon-webusb"
 import { isProxy, toRaw } from "vue"
@@ -67,11 +64,27 @@ esac
 
 `
 
-export class WebAdbHandler {
+/**
+ * V831 / MaixII transport via WebUSB + ADB.
+ *
+ * Uses @yume-chan/adb for the sync channel (bulk file writes) and
+ * @/engine/SingletonShell for the interactive shell side (cmd output
+ * parsing for wifi scan etc). A single `adb.sync()` session is held
+ * open for the duration of each `upload()` via the bulk-write hook.
+ */
+export class WebAdbHandler extends BoardProtocol {
   constructor() {
+    super()
     this.adb = null
     this.transport = null
+    this._sync = null
   }
+
+  get capabilities() {
+    return { wifi: true, fileExplorer: true, startupScript: true }
+  }
+
+  // =================================================== lifecycle
 
   isConnected() {
     return this.transport != null
@@ -82,55 +95,52 @@ export class WebAdbHandler {
     const Manager = AdbDaemonWebUsbDeviceManager.BROWSER
     if (!Manager) {
       toast.error("Your browser doesn't support WebUSB")
-      
       return false
     }
-    let device = null
-    if (!this.transport) {
-      const devices = await Manager.getDevices()
-      if (devices.length > 0) {
-        for (let port of devices) {
-          if (port.raw.productId == board.usb[0].productId &&
-                        port.raw.vendorId == board.usb[0].vendorId) {
-            device = port
-            break
-          }
-        }
-      }
-      if (!device) {
-        if (devices.length === 0) {
-          toast.warning("ยังไม่เคยขอสิทธิ์ใช้งาน USB หรือไม่ได้เสียบบอร์ดเข้ากับคอมพิวเตอร์มาก่อน")
-          toast.warning("กรุณาเลือกอุปกรณ์ USB ที่ต้องการเชื่อมต่อ")
-        }
-        device = await Manager.requestDevice()
-        if (!device) {
-          toast.error("คุณไม่ได้เลือกอุปกรณ์")
-          
-          return false
-        }
-      }
-      const connection = await device.connect()
-      this.transport = await AdbDaemonTransport.authenticate({
-        serial: device.serial,
-        connection,
-        credentialStore: new AdbWebCredentialStore(),
-      })
-      let adb = new Adb(this.transport)
-      if (isProxy(adb)) {
-        adb = toRaw(adb)
-      }
-      this.adb = adb
-      SingletonShell.getInstance(this.adb, null)
+    // Idempotent: the boardStore treats the return value as
+    // "is the board connected now?", not "did we open a new link".
+    if (this.transport) return true
 
-      let sync = await this.adb.sync()
-      await this.uploadBoardScript(sync)
-      sync.dispose()
-      toast.success("เชื่อมต่อบอร์ดสำเร็จ")
-      
-      return true
+    let device = null
+    const devices = await Manager.getDevices()
+    for (const port of devices) {
+      if (port.raw.productId == board.usb[0].productId &&
+          port.raw.vendorId  == board.usb[0].vendorId) {
+        device = port
+        break
+      }
     }
-    
-    return false
+    if (!device) {
+      if (devices.length === 0) {
+        toast.warning("ยังไม่เคยขอสิทธิ์ใช้งาน USB หรือไม่ได้เสียบบอร์ดเข้ากับคอมพิวเตอร์มาก่อน")
+        toast.warning("กรุณาเลือกอุปกรณ์ USB ที่ต้องการเชื่อมต่อ")
+      }
+      device = await Manager.requestDevice()
+      if (!device) {
+        toast.error("คุณไม่ได้เลือกอุปกรณ์")
+        return false
+      }
+    }
+
+    const connection = await device.connect()
+    this.transport = await AdbDaemonTransport.authenticate({
+      serial: device.serial,
+      connection,
+      credentialStore: new AdbWebCredentialStore(),
+    })
+    let adb = new Adb(this.transport)
+    if (isProxy(adb)) adb = toRaw(adb)
+    this.adb = adb
+    SingletonShell.getInstance(this.adb)
+
+    await this.beginBulkWrite()
+    try {
+      await this._uploadBoardScripts()
+    } finally {
+      await this.endBulkWrite()
+    }
+    toast.success("เชื่อมต่อบอร์ดสำเร็จ")
+    return true
   }
 
   async disconnect() {
@@ -143,45 +153,177 @@ export class WebAdbHandler {
     }
   }
 
-  checkWifi() {
-    return new Promise(async (resolve, reject) => {
-      this.wifiListing = true
-      SingletonShell.addCallback(data => {
-        let dataString = new TextDecoder().decode(data)
-        console.log("wifi check : ", dataString)
-        let lines = dataString.split("\n")
-        let wifiInfo = {}
-        for (let line of lines) {
-          let parts = line.split(":")
-          if (parts.length == 2) {
-            wifiInfo[parts[0].trim()] = parts[1].trim()
-          }
-        }
-        console.log("--- wifi info ---")
-        console.log(wifiInfo)
-        if (dataString.match(/wifi_get_connection_info_test: get connection infomation complete!/)) {
-          SingletonShell.removeLastCallback()
-          resolve({ connected: true, info: wifiInfo })
-        }
-        if (dataString.match(/wifi_get_connection_info_test: WIFI disconnected/)) {
-          SingletonShell.removeLastCallback()
-          resolve({ connected: false })
-        }
-      })
-      await SingletonShell.write("wifi_get_connection_info_test 1\n")
-    })
+  async rebootBoard() {
+    SingletonShell.write("reboot\n")
+    this.transport = null
+    this.adb = null
   }
 
+  // =================================================== transport primitives
+
+  async beginBulkWrite() {
+    this._sync = await this.adb.sync()
+  }
+
+  async endBulkWrite() {
+    if (this._sync) {
+      this._sync.dispose()
+      this._sync = null
+    }
+  }
+
+  async writeFile(path, content, { permission = 0o666 } = {}) {
+    const blob = content instanceof Blob ? content : new Blob([content])
+    const sync = this._sync || await this.adb.sync()
+    try {
+      const fileStream = new WrapReadableStream(blob.stream())
+      await sync.write({
+        filename: path,
+        file: fileStream.pipeThrough(new WrapConsumableStream()),
+        type: LinuxFileType.File,
+        permission,
+        mtime: Date.now() / 1000,
+      })
+    } finally {
+      if (!this._sync) sync.dispose()
+    }
+  }
+
+  async statFile(path) {
+    const sync = this._sync || await this.adb.sync()
+    try {
+      const s = await sync.lstat(path)
+      return { exists: true, size: s.size }
+    } catch (e) {
+      return { exists: false, size: 0 }
+    } finally {
+      if (!this._sync) sync.dispose()
+    }
+  }
+
+  async execShell(cmd) {
+    SingletonShell.write(cmd + "\n")
+  }
+
+  async interrupt() {
+    SingletonShell.write("\x03")
+    SingletonShell.write("\x03")
+  }
+
+  writeInput(data) {
+    if (SingletonShell.hasWriter()) SingletonShell.write(data)
+  }
+
+  async attachOutput(callback) {
+    const unsub = SingletonShell.getInstance().onOutput(callback)
+    await SingletonShell.waitWriter()
+    return unsub
+  }
+
+  // =================================================== upload hooks
+
+  _buildStartupFiles(code) {
+    return [
+      { file: appPath("startup.py"), content: code },
+      { file: "/etc/init.d/S02app", content: startupScript, permission: 0o777 },
+    ]
+  }
+
+  async _afterUpload(writeStartup) {
+    if (writeStartup && this.capabilities.startupScript) {
+      await this.execShell("chmod +x /etc/init.d/S02app")
+    }
+    await this.execShell("sync")
+    await this.execShell("killall python3")
+    await this.execShell(`python3 ${appPath("run.py")}`)
+  }
+
+  /**
+   * Upload any board-shipped one-time scripts (e.g. boot scripts under
+   * boards/*\/scripts/) into /root/scripts/ on first connect. Reuses the
+   * active bulk tx opened by `connect()`.
+   */
+  async _uploadBoardScripts() {
+    const workspaceStore = useWorkspaceStore()
+    const currentBoard = workspaceStore.currentBoard
+    const scripts = currentBoard?.scripts || []
+    for (const script of scripts) {
+      const response = await fetch(script)
+      if (response.ok) {
+        const relPath = script.replace(currentBoard.path + "scripts/", "")
+        await this.writeFile(`/root/scripts/${relPath}`, await response.text())
+      }
+    }
+  }
+
+  // =================================================== file explorer
+
+  async listDir(path) {
+    const sync = await this.adb.sync()
+    try {
+      return await sync.readdir(path)
+    } finally {
+      sync.dispose()
+    }
+  }
+
+  async downloadFile(path) {
+    const sync = await this.adb.sync()
+    try {
+      const file = await sync.read(path)
+      const arrayBuffer = await new Response(file).arrayBuffer()
+      const blob = new Blob([arrayBuffer])
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = path.split("/").pop()
+      a.click()
+      URL.revokeObjectURL(url)
+      return true
+    } finally {
+      sync.dispose()
+    }
+  }
+
+  async deleteFileOrFolder(path) {
+    SingletonShell.write("\x03")
+    SingletonShell.write("\x03")
+    await sleep(300)
+    if (path == "") {
+      toast.error("ไม่สามารถลบไฟล์หรือโฟลเดอร์ที่ว่างเปล่าได้")
+      return
+    }
+    if (path == "/" || path == "/root" || path == BOARD_APP_DIR) {
+      toast.error("ไม่สามารถลบไฟล์หรือโฟลเดอร์หลักได้")
+      return
+    }
+    SingletonShell.write(`rm -rf "${path}"\n`)
+    return true
+  }
+
+  async createNewFolder(path) {
+    SingletonShell.write("\x03")
+    SingletonShell.write("\x03")
+    await sleep(300)
+    if (path == "") {
+      toast.error("ไม่สามารถสร้างโฟลเดอร์ที่ว่างเปล่าได้")
+      return
+    }
+    SingletonShell.write(`mkdir -p "${path}"\n`)
+    return true
+  }
+
+  // =================================================== wifi
+
   listWifi() {
-    return new Promise(async (resolve, reject) => {
+    return new Promise(async resolve => {
       let wifiList = []
-      SingletonShell.addCallback(data => {
-        let dataString = new TextDecoder().decode(data)
-        console.log("wifi list : ", dataString)
-        let lines = dataString.split("\n")
-        for (let line of lines) {
+      const unsub = SingletonShell.getInstance().onOutput(data => {
+        const dataString = new TextDecoder().decode(data)
+        console.log("wifi list:", dataString)
+        for (const line of dataString.split("\n")) {
           if (line.match(/([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})/)) {
-            let wifi = line.split("\t")
+            const wifi = line.split("\t")
             if (wifi.length == 5) {
               wifiList.push({
                 ssid: wifi[4].trim(),
@@ -194,9 +336,9 @@ export class WebAdbHandler {
           }
         }
         if (dataString.match(/root@sipeed:/)) {
-          SingletonShell.removeLastCallback()
-          wifiList = wifiList.filter(wifi => wifi.ssid != "")
-          wifiList.sort((a, b) => (parseInt(a.signal) > parseInt(b.signal)) ? -1 : 1)
+          unsub()
+          wifiList = wifiList.filter(w => w.ssid !== "")
+          wifiList.sort((a, b) => parseInt(a.signal) > parseInt(b.signal) ? -1 : 1)
           resolve(wifiList)
         }
       })
@@ -205,114 +347,41 @@ export class WebAdbHandler {
     })
   }
 
-  async listDir(path) {
-    try {
-      let adb = this.adb
-      const sync = await adb.sync()
-      const entries = await sync.readdir(path)
-      sync.dispose()
-      
-      return entries
-    } catch (e) {
-      throw e
-    }
-  }
-
-  async downloadFile(path) {
-    try {
-      let adb = this.adb
-      const sync = await adb.sync()
-      const file = await sync.read(path)
-      let arrayBuffer = await new Response(file).arrayBuffer()
-      sync.dispose()
-      let blob = new Blob([arrayBuffer])
-      let url = URL.createObjectURL(blob)
-      let a = document.createElement("a")
-      a.href = url
-      a.download = path.split("/").pop()
-      a.click()
-      URL.revokeObjectURL(url)
-      
-      return true
-    } catch (e) {
-      throw e
-    }
-  }
-
-  async deleteFileOrFolder(path) {
-    try {
-      SingletonShell.write("\x03")
-      SingletonShell.write("\x03")
-      await sleep(300)
-      if (path == "") {
-        toast.error("ไม่สามารถลบไฟล์หรือโฟลเดอร์ที่ว่างเปล่าได้")
-        
-        return
-      }
-      if (path == "/" || path == "/root" || path == BOARD_APP_DIR) {
-        toast.error("ไม่สามารถลบไฟล์หรือโฟลเดอร์หลักได้")
-        
-        return
-      }
-      SingletonShell.write(`rm -rf "${path}"\n`)
-      
-      return true
-    } catch (e) {
-      throw e
-    }
-  }
-
-  async createNewFolder(path) {
-    try {
-      SingletonShell.write("\x03")
-      SingletonShell.write("\x03")
-      await sleep(300)
-      if (path == "") {
-        toast.error("ไม่สามารถสร้างโฟลเดอร์ที่ว่างเปล่าได้")
-        
-        return
-      }
-      SingletonShell.write(`mkdir -p "${path}"\n`)
-      
-      return true
-    } catch (e) {
-      throw e
-    }
-  }
-
-  async uploadFile(path, file) {
-    try {
-      let adb = this.adb
-      const sync = await adb.sync()
-      let fileStream = new WrapReadableStream(file.stream())
-      await sync.write({
-        filename: path,
-        file: fileStream
-          .pipeThrough(new WrapConsumableStream()),
-        type: LinuxFileType.File,
-        permission: 0o666,
-        mtime: Date.now() / 1000,
+  checkWifi() {
+    return new Promise(async resolve => {
+      const unsub = SingletonShell.getInstance().onOutput(data => {
+        const dataString = new TextDecoder().decode(data)
+        console.log("wifi check:", dataString)
+        const wifiInfo = {}
+        for (const line of dataString.split("\n")) {
+          const parts = line.split(":")
+          if (parts.length == 2) wifiInfo[parts[0].trim()] = parts[1].trim()
+        }
+        if (dataString.match(/wifi_get_connection_info_test: get connection infomation complete!/)) {
+          unsub()
+          resolve({ connected: true, info: wifiInfo })
+        }
+        if (dataString.match(/wifi_get_connection_info_test: WIFI disconnected/)) {
+          unsub()
+          resolve({ connected: false })
+        }
       })
-      sync.dispose()
-      
-      return true
-    } catch (e) {
-      throw e
-    }
+      await SingletonShell.write("wifi_get_connection_info_test 1\n")
+    })
   }
 
   connectWifi(ssid, password) {
-    return new Promise(async (resolve, reject) => {
-      SingletonShell.addCallback(async data => {
-        let dataString = new TextDecoder().decode(data)
-        console.log("wifi connect : ", dataString)
+    return new Promise(async resolve => {
+      const unsub = SingletonShell.getInstance().onOutput(async data => {
+        const dataString = new TextDecoder().decode(data)
+        console.log("wifi connect:", dataString)
         if (dataString.match(/Wifi connect ap : Success!/)) {
-          SingletonShell.removeLastCallback()
-          await this.writeWifiConfig(ssid, password)
+          unsub()
+          await this._writeWifiConfig(ssid, password)
           resolve(true)
         }
         if (dataString.match(/Wifi connect ap : Failure!/)) {
-          SingletonShell.removeLastCallback()
+          unsub()
           resolve(false)
         }
       })
@@ -320,191 +389,19 @@ export class WebAdbHandler {
     })
   }
 
-  async writeWifiConfig(ssid, password) {
-    let wpaConfig = `network={\n\tssid="${ssid}"\n\tpsk="${password}"\n}\n`
-    let buffer = encodeUtf8(wpaConfig)
-    let file = new File([buffer], "wpa_supplicant.conf")
-    let fileStream = new WrapReadableStream(file.stream())
-    try {
-      const sync = await this.adb.sync()
-      await sync.write({
-        filename: "/root/wpa_supplicant.conf",
-        file: fileStream
-          .pipeThrough(new WrapConsumableStream()),
-        type: LinuxFileType.File,
-        permission: 0o666,
-        mtime: Date.now() / 1000,
-      })
-      sync.dispose()
-      await sleep(300)
-      SingletonShell.write("cp /root/wpa_supplicant.conf /etc/wifi/wpa_supplicant.conf\n")
-      await sleep(300)
-      SingletonShell.write("sync\n")
-      await sleep(300)
-      
-      return true
-    } catch (e) {
-      throw e
-    }
-  }
-
-  rebootBoard() {
-    SingletonShell.write("reboot\n")
-    this.transport = null
-    this.adb = null
-  }
-
-  async uploadBoardScript(sync) {
-    const workspaceStore = useWorkspaceStore()
-    const currentBoard = workspaceStore.currentBoard
-    const scripts = currentBoard.scripts
-    let filesUpload = []
-    if (scripts) {
-      for (let script of scripts) {
-        let scriptResponse = await fetch(script)
-        if (scriptResponse.ok) {
-          let scriptData = await scriptResponse.text()
-          filesUpload.push({
-            file: "/root/scripts/" + script.replace(currentBoard.path + "scripts/", ""),
-            content: scriptData,
-          })
-        }
-      }
-    }
-    console.log(filesUpload)
-    for (let file of filesUpload) {
-      let fileT = new File([file.content], file.file)
-      console.log("upload file : ", file.file)
-      let fileStream = new WrapReadableStream(fileT.stream())
-      await sync.write({
-        filename: file.file,
-        file: fileStream
-          .pipeThrough(new WrapConsumableStream()),
-        type: LinuxFileType.File,
-        permission: file.permission | 0o666,
-        mtime: Date.now() / 1000,
-      })
-    }
-  }
-
-  async uploadModelIfNeeded(sync, fs) {
-    const workspaceStore = useWorkspaceStore()
-    const model = workspaceStore.model
-    if (!model) return
-
-    const Format = pickByType(model.type)
-    const blobs = await Format.readFromFS(fs, workspaceStore.id)
-
-    const writeFile = async (remotePath, blob) => {
-      await sync.write({
-        filename: remotePath,
-        file: new WrapReadableStream(blob.stream())
-          .pipeThrough(new WrapConsumableStream()),
-        type: LinuxFileType.File,
-        permission: 0o666,
-        mtime: Date.now() / 1000,
-      })
-    }
-    const statFile = async (remotePath) => {
-      try {
-        const s = await sync.lstat(remotePath)
-        return { exists: true, size: s.size }
-      } catch (e) {
-        return { exists: false, size: 0 }
-      }
-    }
-
-    try {
-      await Format.uploadToBoard({ writeFile, statFile }, model.hash, blobs)
-      toast.success("อัพโหลดโมเดลสำเร็จ")
-    } catch (e) {
-      console.log(e)
-      toast.error("อัพโหลดโมเดลไม่สำเร็จ")
-    }
-  }
-
-  async upload(code, writeStartup = false, fs) {
-    SingletonShell.write("\x03")
-    SingletonShell.write("\x03")
-
-    let filesUpload = []
-    const workspaceStore = useWorkspaceStore()
-    const currentBoard = workspaceStore.currentBoard
-    const pluginStore = usePluginStore()
-
-    code = currentBoard.codeTemplate.replace("##{main}##", code)
-
-    filesUpload.push({
-      file: appPath("run.py"),
-      content: code,
-    })
-
-    if (writeStartup) {
-      console.log("write startup script")
-      filesUpload.push({
-        file: appPath("startup.py"),
-        content: code,
-      })
-
-      filesUpload.push({
-        file: "/etc/init.d/S02app",
-        content: startupScript,
-        permission: 0o777,
-      })
-    }
-
-    for (let module of currentBoard.pythonModules) {
-      let scriptResponse = await fetch(module)
-      if (scriptResponse.ok) {
-        let scriptData = await scriptResponse.text()
-        filesUpload.push({
-          file: appPath(module.replace(currentBoard.path + "libs/", "")),
-          content: scriptData,
-        })
-      }
-    }
-
-    for (let plugin of pluginStore.installed) {
-      for (let codeFile of plugin.codeFiles) {
-        let scriptResponse = await fetch(codeFile)
-        if (scriptResponse.ok) {
-          let scriptData = await scriptResponse.text()
-          filesUpload.push({
-            file: appPath(codeFile.replace(plugin.path + "libs/", "")),
-            content: scriptData,
-          })
-        }
-      }
-    }
-
-    try {
-      const sync = await this.adb.sync()
-      await this.uploadModelIfNeeded(sync, fs)
-
-      for (let file of filesUpload) {
-        let fileT = new File([file.content], file.file)
-        console.log("upload file : ", file.file)
-        let fileStream = new WrapReadableStream(fileT.stream())
-        await sync.write({
-          filename: file.file,
-          file: fileStream
-            .pipeThrough(new WrapConsumableStream()),
-          type: LinuxFileType.File,
-          permission: file.permission | 0o666,
-          mtime: Date.now() / 1000,
-        })
-      }
-      sync.dispose()
-      if (writeStartup) {
-        SingletonShell.write("chmod +x /etc/init.d/S02app\n")
-      }
-      SingletonShell.write("sync\n")
-      SingletonShell.write("killall python3\n")
-      SingletonShell.write(`python3 ${appPath("run.py")}\n`)
-      
-      return true
-    } catch (e) {
-      throw e
-    }
+  /**
+   * Persist wpa_supplicant.conf so WiFi auto-reconnects on reboot.
+   * Private — called after `connectWifi` succeeds.
+   */
+  async _writeWifiConfig(ssid, password) {
+    const wpaConfig = `network={\n\tssid="${ssid}"\n\tpsk="${password}"\n}\n`
+    const buffer = encodeUtf8(wpaConfig)
+    const file = new File([buffer], "wpa_supplicant.conf")
+    await this.writeFile("/root/wpa_supplicant.conf", file)
+    await sleep(300)
+    await this.execShell("cp /root/wpa_supplicant.conf /etc/wifi/wpa_supplicant.conf")
+    await sleep(300)
+    await this.execShell("sync")
+    await sleep(300)
   }
 }

@@ -137,8 +137,8 @@ const openSelectBoardDialog = () => {
 //========================= Blockly Actions =========================//
 //=====================================================================//
 
-const undo = () => blocklyComp.value.undo()
-const redo = () => blocklyComp.value.redo()
+const undo = () => blocklyComp.value?.undo()
+const redo = () => blocklyComp.value?.redo()
 
 const download = async event => {
   if (!isSerialPanelOpen.value) {
@@ -250,6 +250,7 @@ watch(selectedMenu, val => {
               @saveProject="dialogs.saveProject = true"
               @deleteProject="deleteProject"
               @connectBoard="serialMonitorBridge"
+              @disconnectBoard="boardStore.deviceDisconnect"
               @connectWifi="dialogs.connectWifi = true"
               @fileBrowser="dialogs.fileExplorer = true"
               @terminal="onSerial"

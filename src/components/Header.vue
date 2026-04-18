@@ -29,7 +29,7 @@ import { useWorkspaceStore } from "@/store/workspace"
 import { useBoardStore } from "@/store/board"
 import {toast} from "vue3-toastify"
 
-const emit = defineEmits(["serial","example", "help", "firmware", "extraSave","plugin","download","newProject","openProject","saveProject","connectBoard","fileBrowser","connectWifi","newModel"])
+const emit = defineEmits(["serial","example", "help", "firmware", "extraSave","plugin","download","newProject","openProject","saveProject","connectBoard","disconnectBoard","fileBrowser","connectWifi","newModel"])
 console.log("Header setup running")
 const workspaceStore = useWorkspaceStore()
 const boardStore = useBoardStore()
@@ -71,17 +71,17 @@ watch(() => workspaceStore.name, val => {
       />
     </div>
     <VSpacer />
-    <VTooltip text="Connect Board">
+    <VTooltip :text="boardStore.isBoardConnected ? 'Disconnect Board' : 'Connect Board'">
       <template #activator="{ props }">
-        <Kbbtn 
-          class="mx-1" 
-          :icon="connectIcon" 
-          :disabled-icon="connectedIcon" 
-          :status-icon="connectedIcon" 
-          :disabled="false" 
-          :status="boardStore.isBoardConnected" 
-          v-bind="props" 
-          @click="$emit('connectBoard')"
+        <Kbbtn
+          class="mx-1"
+          :icon="connectIcon"
+          :disabled-icon="connectedIcon"
+          :status-icon="connectedIcon"
+          :disabled="false"
+          :status="boardStore.isBoardConnected"
+          v-bind="props"
+          @click="boardStore.isBoardConnected ? $emit('disconnectBoard') : $emit('connectBoard')"
         />
       </template>
     </VTooltip>
@@ -101,12 +101,12 @@ watch(() => workspaceStore.name, val => {
 
     <VTooltip text="File Browser">
       <template #activator="{ props }">
-        <Kbbtn 
-          class="mx-1" 
-          :icon="fileIcon" 
-          :disabled-icon="fileOffIcon" 
-          :disabled="!boardStore.isBoardConnected" 
-          v-bind="props" 
+        <Kbbtn
+          class="mx-1"
+          :icon="fileIcon"
+          :disabled-icon="fileOffIcon"
+          :disabled="!boardStore.isBoardConnected || !boardStore.capabilities.fileExplorer"
+          v-bind="props"
           @click="$emit('fileBrowser')"
         />
       </template>
@@ -114,14 +114,14 @@ watch(() => workspaceStore.name, val => {
 
     <VTooltip text="WiFi Connect">
       <template #activator="{ props }">
-        <Kbbtn 
-          class="mx-1" 
-          :icon="wifiIcon" 
-          :status="!boardStore.wifiConnected" 
-          :status-icon="wifiOffIcon" 
-          :disabled-icon="wifiOffIcon" 
-          :disabled="!boardStore.isBoardConnected" 
-          v-bind="props" 
+        <Kbbtn
+          class="mx-1"
+          :icon="wifiIcon"
+          :status="!boardStore.wifiConnected"
+          :status-icon="wifiOffIcon"
+          :disabled-icon="wifiOffIcon"
+          :disabled="!boardStore.isBoardConnected || !boardStore.capabilities.wifi"
+          v-bind="props"
           @click="$emit('connectWifi')"
         />
       </template>

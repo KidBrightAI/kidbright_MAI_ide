@@ -1,16 +1,11 @@
-import { ref, nextTick } from 'vue'
+import { ref, nextTick, onBeforeUnmount } from 'vue'
 import { Terminal } from 'xterm'
 import { FitAddon } from 'xterm-addon-fit'
 import { CanvasAddon } from 'xterm-addon-canvas'
-import SingletonShell from '@/engine/SingletonShell'
-import WebSocketShell from '@/engine/WebSocketShell'
 
 const DEFAULT_FOOTER_HEIGHT = 18
-const WS_PROTOCOLS = ['websocket', 'websocket-shell']
 
 export function useBottomPane({ workspaceStore, boardStore, splitpanesRef, blocklyComp, footer, selectedMenu }) {
-  const adb_shell = ref(null)
-  const ws_shell = ref(null)
   const bottomPaneSize = ref(5)
   const bottomMinPaneSize = ref(5)
   const bottomMaxPaneSize = ref(80)
@@ -19,6 +14,13 @@ export function useBottomPane({ workspaceStore, boardStore, splitpanesRef, block
   let terminal = null
   let fitAddon = null
 
+  // Track the unsubscribe fn returned by the handler's attachOutput so
+  // we can tear down cleanly on unmount and re-attach if the user moves
+  // to another page and comes back (see SingletonShell docstring for the
+  // broadcast-subscriber model).
+  let unsubOutput = null
+  let bridgedHandler = null
+
   const serialMonitorCallback = chunk => {
     if (terminal) {
       terminal.write(typeof chunk === 'string' ? chunk : new TextDecoder().decode(chunk))
@@ -26,60 +28,28 @@ export function useBottomPane({ workspaceStore, boardStore, splitpanesRef, block
   }
 
   const serialMonitorWrite = data => {
-    const proto = workspaceStore.currentBoard.protocol
-    if (proto === 'web-adb') {
-      if (SingletonShell.hasWriter()) SingletonShell.write(data)
-    } else if (WS_PROTOCOLS.includes(proto)) {
-      if (ws_shell.value) ws_shell.value.exec(data)
-    }
+    boardStore.handler?.writeInput(data)
   }
 
   const serialMonitorBridge = async () => {
-    const proto = workspaceStore.currentBoard.protocol
-    if (proto === 'web-adb' && SingletonShell.hasWriter()) {
-      console.log('ADB shell already connected.')
-      return
-    }
-    const isWsShellConnected = ws_shell.value && (
-      (typeof ws_shell.value.isConnected === 'function' && ws_shell.value.isConnected()) ||
-      (typeof ws_shell.value.isConnected === 'boolean' && ws_shell.value.isConnected)
-    )
-    if (WS_PROTOCOLS.includes(proto) && isWsShellConnected) {
-      console.log('WebSocket shell already connected.')
-      return
-    }
-
     if (!(await boardStore.deviceConnect())) return
-
-    if (proto === 'web-adb') {
-      try {
-        adb_shell.value = SingletonShell.getInstance()
-        adb_shell.value.setCallback(serialMonitorCallback)
-        await SingletonShell.waitWriter()
-      } catch (err) {
-        console.error(err)
-        serialMonitorCallback(`\r\nError creating adb shell: ${err.message}\r\n`)
-      }
-    } else if (WS_PROTOCOLS.includes(proto)) {
-      try {
-        if (proto === 'websocket-shell') {
-          if (boardStore.handler) {
-            ws_shell.value = boardStore.handler
-            ws_shell.value.on('log', serialMonitorCallback)
-            serialMonitorCallback('\r\nBridged to Board Shell ...\r\n')
-          }
-        } else {
-          const ws_url = workspaceStore.currentBoard.wsShell || 'ws://10.150.36.1:5555'
-          ws_shell.value = new WebSocketShell(ws_url, serialMonitorCallback)
-          await ws_shell.value.connect()
-          serialMonitorCallback(`\r\nWebSocket shell connected to ${ws_url}\r\n`)
-        }
-      } catch (err) {
-        console.error(err)
-        serialMonitorCallback(`\r\nError creating websocket shell: ${err.message}\r\n`)
-      }
+    const handler = boardStore.handler
+    if (!handler || handler === bridgedHandler) return
+    try {
+      if (unsubOutput) { unsubOutput(); unsubOutput = null }
+      unsubOutput = await handler.attachOutput(serialMonitorCallback)
+      bridgedHandler = handler
+    } catch (err) {
+      console.error(err)
+      serialMonitorCallback(`\r\nError bridging terminal: ${err.message}\r\n`)
     }
   }
+
+  onBeforeUnmount(() => {
+    if (unsubOutput) { unsubOutput(); unsubOutput = null }
+    bridgedHandler = null
+    try { terminal?.dispose() } catch (e) { /* noop */ }
+  })
 
   const calculateMinBottomPlaneSize = () => {
     if (!splitpanesRef.value || !splitpanesRef.value.$el) return
@@ -120,12 +90,9 @@ export function useBottomPane({ workspaceStore, boardStore, splitpanesRef, block
     bottomPaneSize.value = isSerialPanelOpen.value ? 30 : bottomMinPaneSize.value
     if (isSerialPanelOpen.value) {
       await serialMonitorBridge()
-    } else if (workspaceStore.currentBoard.protocol === 'websocket') {
-      if (ws_shell.value) {
-        ws_shell.value.disconnect()
-        ws_shell.value = null
-      }
     }
+    // Closing the pane just hides UI — shell lifecycle belongs to the
+    // handler (adb SingletonShell / ws socket), not to the pane.
     onResized()
   }
 

@@ -63,11 +63,6 @@ const init = async()=>{
     await sleep(1000)
     SingletonShell.write("python3 scripts/voice_stream.py &\n")
     await sleep(1000)
-    shell.setCallback(data=>{
-      //unit8array to string
-      const text = new TextDecoder().decode(data)
-      console.log(text)
-    })
     console.log("create socket")
     sock = null
     let retry = 10

@@ -49,6 +49,19 @@ export const useBoardStore = defineStore({
     isBoardConnected() {
       return this.connected
     },
+    /**
+     * What the active protocol supports. Dialogs read this to disable
+     * wifi / file-explorer menus on boards that don't implement them.
+     * Falls back to an all-false shape when no handler exists yet, so
+     * templates can access `.wifi` etc. unconditionally.
+     */
+    capabilities() {
+      return this.handler?.capabilities ?? {
+        wifi: false,
+        fileExplorer: false,
+        startupScript: false,
+      }
+    },
   },
   actions: {
     async getHandler() {

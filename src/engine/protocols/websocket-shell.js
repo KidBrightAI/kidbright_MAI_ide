@@ -1,35 +1,69 @@
 import { toast } from "vue3-toastify"
 import { useBoardStore } from "@/store/board"
-import { useWorkspaceStore } from "@/store/workspace"
-import { usePluginStore } from "@/store/plugin"
-import storage from "@/engine/storage"
-import { pickByType } from "@/engine/model-formats"
 import { appPath } from "@/engine/board-paths"
+import BoardProtocol from "./base"
 
+const LARGE_FILE_THRESHOLD = 256 * 1024
 
-export class WebSocketShellHandler {
+/**
+ * MaixCAM / CV181x transport over WebSocket to an on-device PTY shell.
+ *
+ * The board runs a shell server (boards/kidbright-mai-plus/scripts/
+ * ws_shell.py) that exposes file write / stat as JSON commands tunneled
+ * alongside the interactive PTY. All log output comes back on the same
+ * socket, so primitives that "wait for a specific reply" (upload ack,
+ * stat result) parse incoming log lines. That makes the pattern
+ * fundamentally different from web-adb's binary sync channel, hence
+ * the chunked base64 upload + log-parse stat.
+ */
+export class WebSocketShellHandler extends BoardProtocol {
   constructor() {
+    super()
     this.socket = null
     this.boardStore = useBoardStore()
     this.eventListeners = new Map()
     this.connected = false
   }
 
-  isConnected() {
-    return this.connected && this.socket?.readyState === WebSocket.OPEN
+  get capabilities() {
+    // Parity roadmap: once ws_shell.py gets listDir / wifi handlers,
+    // flip these flags and the UI menus unlock automatically.
+    return { wifi: false, fileExplorer: false, startupScript: false }
   }
 
+  // =================================================== event system (internal)
+
   on(event, listener) {
-    if (!this.eventListeners.has(event)) {
-      this.eventListeners.set(event, [])
-    }
+    if (!this.eventListeners.has(event)) this.eventListeners.set(event, [])
     this.eventListeners.get(event).push(listener)
   }
 
+  off(event, listener) {
+    const listeners = this.eventListeners.get(event)
+    if (!listeners) return
+    const i = listeners.indexOf(listener)
+    if (i > -1) listeners.splice(i, 1)
+  }
+
   emit(event, ...args) {
-    if (this.eventListeners.has(event)) {
-      this.eventListeners.get(event).forEach(listener => listener(...args))
+    this.eventListeners.get(event)?.forEach(l => l(...args))
+  }
+
+  send(data) {
+    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+      this.socket.send(data)
     }
+  }
+
+  /** Pass-through used by the terminal bridge to forward keystrokes. */
+  exec(data) {
+    this.send(data)
+  }
+
+  // =================================================== lifecycle
+
+  isConnected() {
+    return this.connected && this.socket?.readyState === WebSocket.OPEN
   }
 
   async connect(board) {
@@ -37,10 +71,7 @@ export class WebSocketShellHandler {
       toast.error("WebSocket Shell URL (wsShell) is not configured for this board.")
       return false
     }
-
-    if (this.connected && this.socket?.readyState === WebSocket.OPEN) {
-      return true
-    }
+    if (this.isConnected()) return true
 
     return new Promise(resolve => {
       this.socket = new WebSocket(board.wsShell)
@@ -49,283 +80,198 @@ export class WebSocketShellHandler {
       this.socket.onopen = () => {
         console.log("WebSocket Shell connected")
         this.connected = true
-        this.boardStore.connected = true // Sync with store
+        this.boardStore.connected = true
         toast.success("Connected to Shell")
-        this.socket.send('\r') // trigger prompt
+        this.socket.send('\r')
         resolve(true)
       }
 
       this.socket.onerror = error => {
         console.error("WebSocket Shell error:", error)
-        // toast.error("Shell connection failed") // Suppress generic toast, show dialog instead
         this.boardStore.showSecureConnectDialog = true
         this.connected = false
-        this.boardStore.connected = false // Sync with store
-        this.cleanup()
+        this.boardStore.connected = false
+        this._cleanup()
         resolve(false)
       }
 
       this.socket.onclose = () => {
         console.log("WebSocket Shell disconnected")
         this.connected = false
-        this.boardStore.connected = false // Sync with store
-        this.cleanup()
-        // this.boardStore.deviceDisconnect() // Optional: might strictly not want to disconnect global state if shell drops
+        this.boardStore.connected = false
+        this._cleanup()
       }
 
       this.socket.onmessage = event => {
-        // Raw PTY output
-        // We might need to filter out System acks if we want to hide them, 
-        // but for now let's show everything or filter if needed.
-        const data = event.data
-        this.emit('log', data)
+        this.emit('log', event.data)
       }
     })
   }
 
-  cleanup() {
+  _cleanup() {
     this.connected = false
     this.socket = null
   }
 
   async disconnect() {
-    if (this.socket) {
-      this.socket.close()
-    }
-    this.cleanup()
+    if (this.socket) this.socket.close()
+    this._cleanup()
   }
 
-  async uploadFileChunked(path, contentArrayBuffer) {
-    const CHUNK_SIZE = 256 * 1024; // 256KB
-    const uint8Array = new Uint8Array(contentArrayBuffer);
-    let offset = 0;
+  async rebootBoard() {
+    this.send("reboot\r")
+  }
 
-    return new Promise(async (resolve, reject) => {
-      const wailForAck = () => new Promise(r => {
-        const handler = (data) => {
-          if (typeof data === 'string' && data.includes(`Uploaded ${path} success`)) {
-            const logListeners = this.eventListeners.get('log');
-            if (logListeners) logListeners.splice(logListeners.indexOf(handler), 1);
-            r(true);
-          } else if (typeof data === 'string' && data.includes(`Upload error`)) {
-            const logListeners = this.eventListeners.get('log');
-            if (logListeners) logListeners.splice(logListeners.indexOf(handler), 1);
-            r(false);
-          }
-        };
-        this.on('log', handler);
-        setTimeout(() => {
-          const logListeners = this.eventListeners.get('log');
-          if (logListeners) {
-            const idx = logListeners.indexOf(handler);
-            if (idx > -1) logListeners.splice(idx, 1);
-          }
-          r(true);
-        }, 15000);
-      });
+  // =================================================== file explorer stubs
+  //
+  // capabilities.fileExplorer is false above — UIs that check the flag
+  // won't call these. Keep no-op bodies so legacy callers (dialog
+  // already opens) don't crash, matching the pre-refactor behavior.
+  // Remove once ws_shell.py gains listdir / rm / mkdir handlers.
 
-      while (offset < uint8Array.length) {
-        const mode = (offset === 0) ? "wb" : "ab";
-        const chunk = uint8Array.subarray(offset, offset + CHUNK_SIZE);
+  async listDir(_path) { return [] }
+  async deleteFileOrFolder(_path) { /* not implemented on MaixCAM yet */ }
 
-        let binaryString = "";
-        for (let i = 0; i < chunk.length; i += 8192) {
-          binaryString += String.fromCharCode.apply(null, chunk.subarray(i, i + 8192));
-        }
-        const codeB64 = btoa(binaryString);
+  // =================================================== transport primitives
 
-        const payload = JSON.stringify({
-          cmd: "upload",
-          path: path,
-          mode: mode,
-          data: codeB64
-        });
-
-        this.socket.send(`__SYSTEM__:${payload}`);
-        const success = await wailForAck();
-        if (!success) {
-          reject(new Error("Upload chunk failed"));
-          return;
-        }
-        offset += CHUNK_SIZE;
-      }
-      resolve();
-    });
+  async writeFile(path, content, { permission = 0o666 } = {}) {
+    const buf = await this._toArrayBuffer(content)
+    if (buf.byteLength > LARGE_FILE_THRESHOLD) {
+      // Give the student feedback on slow uploads (model files can be
+      // multi-MB and chunked base64 over PTY is not fast).
+      toast.info(`Uploading ${path.split("/").pop()} (${(buf.byteLength / 1024 / 1024).toFixed(2)} MB)...`)
+    }
+    await this._uploadFileChunked(path, buf)
   }
 
   async statFile(path) {
-    return new Promise((resolve) => {
-      const wailForStat = () => new Promise(r => {
-        const handler = (data) => {
-          if (typeof data === 'string') {
-            if (data.includes(`Stat ${path} exists`)) {
-              const parts = data.split(' ');
-              const size = parseInt(parts[parts.length - 1]);
-              const logListeners = this.eventListeners.get('log');
-              if (logListeners) logListeners.splice(logListeners.indexOf(handler), 1);
-              r({ exists: true, size: isNaN(size) ? 0 : size });
-            } else if (data.includes(`Stat ${path} notfound`)) {
-              const logListeners = this.eventListeners.get('log');
-              if (logListeners) logListeners.splice(logListeners.indexOf(handler), 1);
-              r({ exists: false, size: 0 });
-            } else if (data.includes(`Command error`)) {
-              const logListeners = this.eventListeners.get('log');
-              if (logListeners) logListeners.splice(logListeners.indexOf(handler), 1);
-              r({ exists: false, size: 0, error: true });
-            }
-          }
-        };
-        this.on('log', handler);
-        setTimeout(() => {
-          const logListeners = this.eventListeners.get('log');
-          if (logListeners) {
-            const idx = logListeners.indexOf(handler);
-            if (idx > -1) logListeners.splice(idx, 1);
-          }
-          r({ exists: false, size: 0, timeout: true });
-        }, 3000);
-      });
-
-      const payload = JSON.stringify({
-        cmd: "stat",
-        path: path
-      });
-      this.socket.send(`__SYSTEM__:${payload}`);
-      wailForStat().then(resolve);
-    });
-  }
-
-  async uploadModelIfNeeded(fs) {
-    const workspaceStore = useWorkspaceStore()
-    const model = workspaceStore.model
-    if (!model) return
-
-    const Format = pickByType(model.type)
-    const blobs = await Format.readFromFS(fs, workspaceStore.id)
-
-    const writeFile = async (remotePath, blob) => {
-      const buf = await blob.arrayBuffer()
-      toast.info(`Uploading ${remotePath.split("/").pop()} (${(blob.size / 1024 / 1024).toFixed(2)} MB)...`)
-      await this.uploadFileChunked(remotePath, buf)
-    }
-    const statFile = async (remotePath) => {
-      try {
-        return await this.statFile(remotePath)
-      } catch (e) {
-        return { exists: false, size: 0 }
+    return new Promise(resolve => {
+      let handler
+      let settled = false
+      const finish = result => {
+        if (settled) return
+        settled = true
+        const listeners = this.eventListeners.get('log')
+        if (listeners && handler) {
+          const i = listeners.indexOf(handler)
+          if (i > -1) listeners.splice(i, 1)
+        }
+        resolve(result)
       }
-    }
-
-    try {
-      await Format.uploadToBoard({ writeFile, statFile }, model.hash, blobs)
-      toast.success("อัพโหลดโมเดลสำเร็จ")
-    } catch (e) {
-      console.error("Model upload error:", e)
-      toast.error("อัพโหลดโมเดลไม่สำเร็จ")
-    }
-  }
-
-  async upload(code, writeStartup = false, fs) {
-    if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
-      toast.error("Shell not connected")
-      return
-    }
-
-    try {
-      this.socket.send("\x03") // Ctrl+C
-      await new Promise(r => setTimeout(r, 300))
-
-      const workspaceStore = useWorkspaceStore()
-      const currentBoard = workspaceStore.currentBoard
-      const pluginStore = usePluginStore()
-
-      if (currentBoard?.codeTemplate) {
-        code = currentBoard.codeTemplate.replace("##{main}##", code)
-      }
-
-      let filesUpload = []
-
-      filesUpload.push({
-        file: appPath("run.py"),
-        content: code,
-      })
-
-      // Upload board python modules
-      for (let module of currentBoard.pythonModules || []) {
-        let scriptResponse = await fetch(module)
-        if (scriptResponse.ok) {
-          let scriptData = await scriptResponse.text()
-          filesUpload.push({
-            file: appPath(module.replace(currentBoard.path + "libs/", "")),
-            content: scriptData,
-          })
+      handler = data => {
+        if (typeof data !== 'string') return
+        if (data.includes(`Stat ${path} exists`)) {
+          const size = parseInt(data.split(' ').pop())
+          finish({ exists: true, size: isNaN(size) ? 0 : size })
+        } else if (data.includes(`Stat ${path} notfound`)) {
+          finish({ exists: false, size: 0 })
+        } else if (data.includes(`Command error`)) {
+          finish({ exists: false, size: 0, error: true })
         }
       }
+      this.on('log', handler)
+      setTimeout(() => finish({ exists: false, size: 0, timeout: true }), 3000)
 
-      // Upload plugin files
-      for (let plugin of pluginStore.installed || []) {
-        for (let codeFile of plugin.codeFiles || []) {
-          let scriptResponse = await fetch(codeFile)
-          if (scriptResponse.ok) {
-            let scriptData = await scriptResponse.text()
-            filesUpload.push({
-              file: appPath(codeFile.replace(plugin.path + "libs/", "")),
-              content: scriptData,
-            })
-          }
-        }
-      }
-
-      // Upload models if any
-      await this.uploadModelIfNeeded(fs);
-
-      for (let file of filesUpload) {
-        console.log("upload file : ", file.file)
-        let buffer = new TextEncoder().encode(file.content).buffer;
-        await this.uploadFileChunked(file.file, buffer);
-      }
-
-      // Kill previous python script
-      const runPy = appPath("run.py")
-      const killCmd = `ps | grep "${runPy}" | grep -v grep | awk '{print $1}' | xargs kill -9\r`
-      this.socket.send(killCmd)
-      await new Promise(r => setTimeout(r, 500))
-
-      // Run python
-      const runCmd = `python3 ${runPy}\r`
-      this.socket.send(runCmd)
-
-      toast.success("Code uploaded & running...")
-      return true
-    } catch (e) {
-      console.error(e)
-      toast.error("Upload failed: " + e.message)
-      throw e
-    }
+      const payload = JSON.stringify({ cmd: "stat", path })
+      this.socket.send(`__SYSTEM__:${payload}`)
+    })
   }
 
-  // Pass-through for terminal input
-  send(data) {
-    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-      this.socket.send(data)
-    }
+  async execShell(cmd) {
+    this.send(cmd + "\r")
   }
 
-  exec(data) {
+  async interrupt() {
+    this.send("\x03")
+    await new Promise(r => setTimeout(r, 300))
+  }
+
+  writeInput(data) {
     this.send(data)
   }
 
-  async stop() {
-    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-      this.socket.send("\x03") // Ctrl+C
-    }
+  async attachOutput(callback) {
+    this.on('log', callback)
+    return () => this.off('log', callback)
   }
 
-  async listDir(path) { return [] }
-  async deleteFileOrFolder(path) { }
-  async rebootBoard() {
-    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-      this.socket.send("reboot\r")
+  // =================================================== upload hook
+
+  async _afterUpload(_writeStartup) {
+    // The ws_shell.py server doesn't kill children cleanly on Ctrl-C,
+    // so surgically kill the previous run.py (if any) before launching
+    // a fresh one. `killall python3` would nuke the shell server too.
+    const runPy = appPath("run.py")
+    const kill = `ps | grep "${runPy}" | grep -v grep | awk '{print $1}' | xargs kill -9`
+    await this.execShell(kill)
+    await new Promise(r => setTimeout(r, 500))
+    await this.execShell(`python3 ${runPy}`)
+    toast.success("Code uploaded & running...")
+  }
+
+  // =================================================== internal helpers
+
+  async _toArrayBuffer(content) {
+    if (content instanceof ArrayBuffer) return content
+    if (content instanceof Blob) return content.arrayBuffer()
+    if (typeof content === 'string') return new TextEncoder().encode(content).buffer
+    if (ArrayBuffer.isView(content)) return content.buffer
+    throw new Error(`writeFile: unsupported content type (${typeof content})`)
+  }
+
+  /**
+   * Chunked base64 upload over the PTY side-channel. The board's
+   * ws_shell.py decodes each chunk and appends to the target file,
+   * then echoes `Uploaded <path> success` per chunk. We await each ack
+   * (with a 15s timeout) before sending the next.
+   */
+  async _uploadFileChunked(path, contentArrayBuffer) {
+    const CHUNK_SIZE = 256 * 1024
+    const bytes = new Uint8Array(contentArrayBuffer)
+    let offset = 0
+
+    const waitForAck = () => new Promise(resolve => {
+      let handler, settled = false
+      const finish = ok => {
+        if (settled) return
+        settled = true
+        const listeners = this.eventListeners.get('log')
+        if (listeners && handler) {
+          const i = listeners.indexOf(handler)
+          if (i > -1) listeners.splice(i, 1)
+        }
+        resolve(ok)
+      }
+      handler = data => {
+        if (typeof data !== 'string') return
+        if (data.includes(`Uploaded ${path} success`)) finish(true)
+        else if (data.includes(`Upload error`))       finish(false)
+      }
+      this.on('log', handler)
+      setTimeout(() => finish(true), 15000)
+    })
+
+    while (offset < bytes.length) {
+      const mode = offset === 0 ? "wb" : "ab"
+      const chunk = bytes.subarray(offset, offset + CHUNK_SIZE)
+
+      // btoa needs a string; build it 8KB at a time to avoid stack overflow
+      // on large apply(null, ...) spreads.
+      let binary = ""
+      for (let i = 0; i < chunk.length; i += 8192) {
+        binary += String.fromCharCode.apply(null, chunk.subarray(i, i + 8192))
+      }
+      const payload = JSON.stringify({
+        cmd: "upload",
+        path,
+        mode,
+        data: btoa(binary),
+      })
+      this.socket.send(`__SYSTEM__:${payload}`)
+      if (!(await waitForAck())) {
+        throw new Error("Upload chunk failed")
+      }
+      offset += CHUNK_SIZE
     }
   }
 }
