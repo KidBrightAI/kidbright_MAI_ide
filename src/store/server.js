@@ -245,48 +245,68 @@ export const useServerStore = defineStore({
           this.isConvertingSuccess = true
           this.isConverting = false
 
-          // download model 
+          // download model
           this.isDownloading = true
           this.isDownloadingSuccess = false
           this.downloadingFiles = 1
 
-          let ext1 = "bin"
-          let ext2 = "param"
-          let file1 = "model_int8.bin"
-          let file2 = "model_int8.param"
+          // Voice on V831 (kidbright-mai) bypasses AWNN int8 entirely and
+          // ships a single fp32 numpy bundle that is loaded by
+          // voice_cpu_infer.py on the board. Single-file download.
+          const isVoiceCpu = workspaceStore.projectType === "VOICE_CLASSIFICATION"
+            && workspaceStore.currentBoard.id === "kidbright-mai"
 
-          if (workspaceStore.currentBoard.id === "kidbright-mai-plus") {
-            ext1 = "cvimodel"
-            ext2 = "mud"
-            file1 = "model.cvimodel"
-            file2 = "model.mud"
-          }
+          if (isVoiceCpu) {
+            let npzResponse = await axios.get(
+              this.serverUrl + "/projects/" + workspaceStore.id + "/output/model_cpu.npz",
+              {
+                responseType: 'blob',
+                onDownloadProgress: progressEvent => {
+                  this.downloadProgress = Math.round((progressEvent.loaded / progressEvent.total) * 100)
+                },
+              })
+            this.downloadingFiles = 1
+            this.totalDownloadingFiles = 1
+            this.isDownloading = false
+            this.isDownloadingSuccess = true
+            this.downloadingFiles = 0
 
-          let modelInt8Response = await axios.get(this.serverUrl + "/projects/" + workspaceStore.id + "/output/" + file1,
+            await workspaceStore.importModelFromBlob(npzResponse.data, null, "npz", null)
+            toast.success("Model Downloaded")
+          } else {
+            let ext1 = "bin"
+            let ext2 = "param"
+            let file1 = "model_int8.bin"
+            let file2 = "model_int8.param"
 
-            //download progress
-            {
+            if (workspaceStore.currentBoard.id === "kidbright-mai-plus") {
+              ext1 = "cvimodel"
+              ext2 = "mud"
+              file1 = "model.cvimodel"
+              file2 = "model.mud"
+            }
+
+            let modelInt8Response = await axios.get(this.serverUrl + "/projects/" + workspaceStore.id + "/output/" + file1,
+              {
+                responseType: 'blob',
+                onDownloadProgress: progressEvent => {
+                  this.downloadProgress = Math.round((progressEvent.loaded / progressEvent.total) * 100)
+                },
+              })
+            this.downloadingFiles = 2
+            let modelParamResponse = await axios.get(this.serverUrl + "/projects/" + workspaceStore.id + "/output/" + file2, {
               responseType: 'blob',
               onDownloadProgress: progressEvent => {
                 this.downloadProgress = Math.round((progressEvent.loaded / progressEvent.total) * 100)
               },
             })
-          this.downloadingFiles = 2
-          let modelParamResponse = await axios.get(this.serverUrl + "/projects/" + workspaceStore.id + "/output/" + file2, {
-            responseType: 'blob',
-            onDownloadProgress: progressEvent => {
-              this.downloadProgress = Math.round((progressEvent.loaded / progressEvent.total) * 100)
-            },
-          })
-          this.isDownloading = false
-          this.isDownloadingSuccess = true
-          this.downloadingFiles = 0
+            this.isDownloading = false
+            this.isDownloadingSuccess = true
+            this.downloadingFiles = 0
 
-          //import model
-          await workspaceStore.importModelFromBlob(modelInt8Response.data, modelParamResponse.data, ext1, ext2)
-
-          //read model to calculate hash
-          toast.success("Model Downloaded")
+            await workspaceStore.importModelFromBlob(modelInt8Response.data, modelParamResponse.data, ext1, ext2)
+            toast.success("Model Downloaded")
+          }
         } else {
           console.log("model convert failed")
           toast.error("Model Convert Failed")

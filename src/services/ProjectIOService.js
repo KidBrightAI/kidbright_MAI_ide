@@ -64,14 +64,17 @@ export default class ProjectIOService {
       let modelFolder = zip.folder("model")
       try {
         let type = workspaceState.model.type || 'bin'
-        let ext2 = (type === 'cvimodel') ? 'mud' : 'param'
+        // Single-file formats (npz for voice CPU path) have no companion param.
+        let ext2 = (type === 'cvimodel') ? 'mud'
+                 : (type === 'npz') ? null
+                 : 'param'
 
-        // Note: workspace.js used storage.readAsFile(this.$fs, ...)
-        // Helper:
         let modelBinaries = await this.fs.readAsFile(`${workspaceState.id}/model.${type}`)
-        let modelParams = await this.fs.readAsFile(`${workspaceState.id}/model.${ext2}`)
         modelFolder.file(`model.${type}`, modelBinaries)
-        modelFolder.file(`model.${ext2}`, modelParams)
+        if (ext2) {
+          let modelParams = await this.fs.readAsFile(`${workspaceState.id}/model.${ext2}`)
+          modelFolder.file(`model.${ext2}`, modelParams)
+        }
       } catch (e) {
         console.warn("Model files not found for saving", e)
       }
@@ -124,12 +127,16 @@ export default class ProjectIOService {
       let model = await zip.folder("model")
       if (model) {
         let type = projectData.model.type || 'bin'
-        let ext2 = (type === 'cvimodel') ? 'mud' : 'param'
+        let ext2 = (type === 'cvimodel') ? 'mud'
+                 : (type === 'npz') ? null
+                 : 'param'
 
         let modelBinaries = await model.file(`model.${type}`).async("blob")
-        let modelParams = await model.file(`model.${ext2}`).async("blob")
         await this.fs.writeFile(`${projectData.id}/model.${type}`, modelBinaries)
-        await this.fs.writeFile(`${projectData.id}/model.${ext2}`, modelParams)
+        if (ext2) {
+          let modelParams = await model.file(`model.${ext2}`).async("blob")
+          await this.fs.writeFile(`${projectData.id}/model.${ext2}`, modelParams)
+        }
       }
     }
 

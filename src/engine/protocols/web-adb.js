@@ -389,44 +389,50 @@ export class WebAdbHandler {
     const workspaceStore = useWorkspaceStore()
     let model = workspaceStore.model
     console.log(model)
-    if (model != null) {
-      try {
-        let stat = await sync.lstat("/root/model/" + model.hash + ".bin")
-        console.log(stat)
-      } catch (e) {
-        toast.warn("ไม่พบไฟล์โมเดลบนบอร์ด กำลังอัพโหลดโมเดลใหม่")
-        let modelBinaries = await fs.readAsFile(`${workspaceStore.id}/model.bin`)
-        let modelParams = await fs.readAsFile(`${workspaceStore.id}/model.param`)
-        let paramHash = await md5(new Uint8Array(await modelParams.arrayBuffer()))
-        let modelHash = await md5(new Uint8Array(await modelBinaries.arrayBuffer()))
-        console.log("model hash : ", model.hash)
-        console.log("param hash : ", paramHash)
-        console.log("model hash : ", modelHash)
-        try {
-          await sync.write({
-            filename: "/root/model/" + model.hash + ".param",
-            file: new WrapReadableStream(modelParams.stream())
-              .pipeThrough(new WrapConsumableStream()),
-            type: LinuxFileType.File,
-            permission: 0o666,
-            mtime: Date.now() / 1000,
-          })
-          await sync.write({
-            filename: "/root/model/" + model.hash + ".bin",
-            file: new WrapReadableStream(modelBinaries.stream())
-              .pipeThrough(new WrapConsumableStream()),
-            type: LinuxFileType.File,
-            permission: 0o666,
-            mtime: Date.now() / 1000,
-          })
-          toast.success("อัพโหลดโมเดลสำเร็จ")
-        } catch (e) {
-          console.log(e)
-          toast.error("อัพโหลดโมเดลไม่สำเร็จ")
-          
-          return
-        }
+    if (model == null) return
+
+    // The board-side filename is /root/model/<hash>.<type>, where type comes
+    // from the imported model (bin for NCNN int8, npz for voice CPU fp32).
+    const type = model.type || "bin"
+    const primaryFile = `/root/model/${model.hash}.${type}`
+
+    try {
+      let stat = await sync.lstat(primaryFile)
+      console.log("model already on board", stat)
+      return
+    } catch (e) {
+      toast.warn("ไม่พบไฟล์โมเดลบนบอร์ด กำลังอัพโหลดโมเดลใหม่")
+    }
+
+    try {
+      // Single-file bundles (e.g. voice .npz) don't have a separate param.
+      let modelBinaries = await fs.readAsFile(`${workspaceStore.id}/model.${type}`)
+      let hasParam = (type === "bin" || type === "cvimodel")
+
+      if (hasParam) {
+        let paramExt = (type === "cvimodel") ? "mud" : "param"
+        let modelParams = await fs.readAsFile(`${workspaceStore.id}/model.${paramExt}`)
+        await sync.write({
+          filename: `/root/model/${model.hash}.${paramExt}`,
+          file: new WrapReadableStream(modelParams.stream())
+            .pipeThrough(new WrapConsumableStream()),
+          type: LinuxFileType.File,
+          permission: 0o666,
+          mtime: Date.now() / 1000,
+        })
       }
+      await sync.write({
+        filename: primaryFile,
+        file: new WrapReadableStream(modelBinaries.stream())
+          .pipeThrough(new WrapConsumableStream()),
+        type: LinuxFileType.File,
+        permission: 0o666,
+        mtime: Date.now() / 1000,
+      })
+      toast.success("อัพโหลดโมเดลสำเร็จ")
+    } catch (e) {
+      console.log(e)
+      toast.error("อัพโหลดโมเดลไม่สำเร็จ")
     }
   }
 

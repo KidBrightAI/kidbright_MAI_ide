@@ -309,24 +309,20 @@ export const useWorkspaceStore = defineStore({
     async importModelFromBlob(modelBin, modelParam, ext1 = "bin", ext2 = "param") {
       try {
         let modelBinaries = new Blob([modelBin], { type: 'application/octet-stream' })
-        let modelParams = new Blob([modelParam], { type: 'application/octet-stream' })
 
-        //remove old model
-        try {
-          await this.$fs.removeFile(`${this.id}/model.bin`)
-        } catch (e) { }
-        try {
-          await this.$fs.removeFile(`${this.id}/model.param`)
-        } catch (e) { }
-        try {
-          await this.$fs.removeFile(`${this.id}/model.cvimodel`)
-        } catch (e) { }
-        try {
-          await this.$fs.removeFile(`${this.id}/model.mud`)
-        } catch (e) { }
+        // Clear any previously imported model of any format
+        for (const stale of ["model.bin", "model.param", "model.cvimodel", "model.mud", "model.npz"]) {
+          try {
+            await this.$fs.removeFile(`${this.id}/${stale}`)
+          } catch (e) { /* ignore missing */ }
+        }
 
         await this.$fs.writeFile(`${this.id}/model.${ext1}`, modelBinaries)
-        await this.$fs.writeFile(`${this.id}/model.${ext2}`, modelParams)
+        // Single-file formats (e.g. .npz for voice CPU path) pass modelParam=null.
+        if (modelParam != null && ext2 != null) {
+          let modelParams = new Blob([modelParam], { type: 'application/octet-stream' })
+          await this.$fs.writeFile(`${this.id}/model.${ext2}`, modelParams)
+        }
         let hash = await md5(new Uint8Array(await modelBin.arrayBuffer()))
         this.model = {
           name: 'model',

@@ -74,102 +74,53 @@ python.pythonGenerator.forBlock['maix3_nn_classify_get_result'] = function(block
 
 // voice 
 python.pythonGenerator.forBlock['maix3_nn_voice_load'] = function(block, generator) {
-  generator.definitions_['from_maix_import_nn'] = 'from maix import nn'
-  generator.definitions_['import_voice_mfcc'] = 'import voice_mfcc'
-  generator.definitions_['from_maix_import_image'] = 'from maix import image'
+  // V831 voice runs on the A7 CPU via numpy fp32 — AWNN int8 collapses
+  // small-vocab voice models regardless of preprocessing. Loads
+  // /root/model/<hash>.npz (weights + labels) via voice_cpu_infer.Model,
+  // which also owns the pyaudio input stream.
+  generator.definitions_['import_voice_cpu_infer'] = 'import voice_cpu_infer'
 
-  generator.definitions_['class_Resnet'] = `
-class _Resnet:
-  m = {
-    "bin": "/root/model/${workspaceStore.model.hash}.bin",
-    "param": "/root/model/${workspaceStore.model.hash}.param"
-  }
-
-  options = {
-    "model_type": "awnn",
-    "inputs": {
-      "input0": (147, 13, 3)
-    },
-    "outputs": {
-      "output0": (1, 1, ${workspaceStore.labels.map(lb => lb.label).length})
-    },
-    "first_layer_conv_no_pad": True,
-    "mean": [127.5, 127.5, 127.5],
-    "norm": [0.0078125, 0.0078125, 0.0078125],
-  }
-
-  def __init__(self):
-    from maix import nn
-    self.model = nn.load(self.m, opt=self.options)
-
-  def __del__(self):
-    del self.model
-
-_p, _stream = voice_mfcc.start_stream()
-if _stream is None:
-  print("Error: _stream is None")
-  exit()
-else:
-  print("Success: _stream is not None")
-_model = _Resnet()
-_labels = [${ workspaceStore.labels.map(label => `"${label.label}"`).sort().join(', ') }]
-
+  generator.definitions_['class_VoiceModel'] = `
+_model = voice_cpu_infer.Model("/root/model/${workspaceStore.model.hash}.npz")
+_labels = _model.labels
+_result = None
 `
-  
-  return 'print(_model.model)\n'
+  return 'print("voice model loaded:", _labels)\n'
 }
 
 
-//maix3_nn_voice_get_rms
+//maix3_nn_voice_get_rms — kept for backward compat with block toolbox (no-op in CPU path)
 python.pythonGenerator.forBlock['maix3_nn_voice_get_rms'] = function(block, generator) {
-  var code = 'voice_mfcc.get_rms(_stream)\n'
-  
-  return [code, python.Order.NONE]
+  // Old API exposed an RMS reading from an always-open mic stream. In the CPU
+  // path the stream only opens when classify() is called, so return 0 until
+  // we decide to reintroduce continuous monitoring.
+  return ['0', python.Order.ATOMIC]
 }
 
 //maix3_nn_voice_classify
 python.pythonGenerator.forBlock['maix3_nn_voice_classify'] = function(block, generator) {
   var number_duration = block.getFieldValue('duration')
-  var code = `voice_mfcc.audio_record(_stream, _p, record_sec=${number_duration})\n`
-  code += `mfcc_image = image.open('/root/app/mfcc_run.png')\n`
-  code += `mfcc_image = mfcc_image.resize(147, 13)\n`
-  code += `_model_result = _model.model.forward(mfcc_image, quantize=True)\n`
-
-  //code += `print(_model_result)\n`;
-  return code
+  return `_result = _model.classify(duration=${number_duration})\n`
 }
-
-// python.pythonGenerator.forBlock['maix3_nn_voice_classify'] = function(block, generator) {
-//   var number_threshold = block.getFieldValue('threshold');
-//   var number_duration = block.getFieldValue('duration');
-    
-//   var code = `res_listen = voice_mfcc.audio_listener(_stream, _p, threshold=${number_threshold}, record_sec=${number_duration})\n`;
-//   code += `if res_listen is not None:\n`;
-//   code += `  mfcc_image = image.open('/root/app/mfcc_run.png')\n`;
-//   code += `  mfcc_image = mfcc_image.resize(224, 224)\n`;
-//   code += `  _model_result = _model.model.forward(mfcc_image, quantize=True)\n`;
-//   code += `else:\n`;
-//   code += `  _model_result = None\n`;
-//   return code;
-// };
 
 python.pythonGenerator.forBlock['maix3_nn_voice_get_result'] = function(block, generator) {
   var dropdown_data = block.getFieldValue('data')
   let code = ''
   let order = python.Order.NONE
   if(dropdown_data == 'label'){
-    code = '_labels[_model_result.argmax()]\n'
+    code = '_result["label"]'
     block.setOutput(true, 'String')
+    order = python.Order.ATOMIC
   }else if(dropdown_data == 'class_id'){
-    code = '_model_result.argmax()'
+    code = '_result["index"]'
     block.setOutput(true, 'Number')
     order = python.Order.ATOMIC
   }else if(dropdown_data == 'probability'){
-    code = '_model_result.max()'
+    code = '_result["prob"]'
     block.setOutput(true, 'Number')
     order = python.Order.ATOMIC
   }
-  
+
   return [code, order]
 }
 
