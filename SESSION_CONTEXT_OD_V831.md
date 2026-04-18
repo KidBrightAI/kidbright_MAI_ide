@@ -243,12 +243,54 @@ convert_model()
 
 ---
 
+## 2026-04-18 — ReLU6 คือ INT8 Breakthrough (และ Experiments ที่ ruled out)
+
+End-to-end pipeline ทำงานได้แล้ว (train → diag → convert → adb push → on-board detect). ปัญหาหลักที่เหลือคือ **INT8 confidence gap**: fp32 `sigmoid(obj)@POS` ขึ้นไปที่ 0.65 หลัง BCE fix แต่พอ quantize เหลือ ~0.40 บนบอร์ด ต้องลด default threshold จาก 0.5 → 0.3 ถึงจะ detect ได้.
+
+### 6-way experiment บน 10 test images (dog/phone, 40 ภาพ training set)
+
+| Model | Training | Calib | hit@0.5 | dog mean | phone mean | สถานะ |
+|---|---|---|---|---|---|---|
+| v1 baseline | 100ep, LeakyReLU | raw 40 | 5/10 | 0.391 | 0.560 | — |
+| v2 (A+C) | 200ep, LeakyReLU | aug 400 | 2/10 | 0.504 | 0.308 | 🔴 แย่กว่า |
+| v3 (A only) | 100ep, LeakyReLU | aug 400 | 4/10 | 0.337 | 0.551 | 🟡 marginal |
+| v4 (C only) | 200ep, LeakyReLU | raw 40 | 2/10 | 0.476 | 0.266 | 🔴 overfit |
+| QAT | 100ep, LeakyReLU + fake-quant | raw 40 | 3/10 | 0.292 | 0.509 | 🔴 แย่กว่า |
+| **ReLU6** | **100ep, ReLU6** | **raw 40** | **9/10** ✨ | **0.487** | **0.701** | ✅ **win** |
+
+### ทำไม ReLU6 ชนะ
+- LeakyReLU(0.1) มี negative tail ที่ unbounded → spnntools ต้องขยาย INT8 range ครอบ activation extremes → bin หยาบ
+- ReLU6 clamp output ที่ [0, 6] → dynamic range packed แน่น → bin ละเอียด
+- วัดได้: fp32→int8 confidence drop **ลดจาก 27% → 11%** (กับ threshold 0.5 default ใช้งานได้)
+
+### ที่ ruled out พร้อมเหตุผล (สำหรับ session ถัดไปจะได้ไม่เสียเวลา)
+- **Normalize mismatch** — verified ตรงกันทุก stage (train BaseTransform / val / calibration spnntools / runtime detector_runtime ใช้ `(x-127.5)/128` เหมือนกันหมด) **ไม่ใช่ปัญหา**
+- **BGR/RGB mismatch** — verified `data/custom.py:131-132` swap BGR→RGB หลัง augmentation, board `maix.image` ก็ส่ง RGB → channel order ตรงกัน **ไม่ใช่ปัญหา**
+- **200 epochs** — overfit บน 40 ภาพ, phone confidence ตก 53% เพราะ model memorize dog features
+- **Augmented calibration (10×)** — เพิ่ม 40→400 ภาพ ไม่ช่วย INT8 range coverage อย่างมีนัยสำคัญ
+- **QAT symmetric per-tensor** — spnntools scheme ไม่เปิดเผย exact, simulation ไม่ match → weights compensate ผิดทิศ → worse than plain
+- **YOLOv5/8/11** — V831 AWNN ไม่รองรับ SiLU/SPPF/complex reshape/transpose (confirmed จาก Sipeed wiki, MaixPy3 archived Jan 2024) — MaixCAM only
+
+### ยังไม่ได้ลอง (ถ้า ReLU6 ยังไม่พอ)
+1. **MobileNetV1 (α=0.5) backbone แทน DarkNet_Tiny** — maix_train canonical path, built-in ReLU6
+2. **FOMO** (Edge Impulse) — centroid-only output, ไม่มี bbox — ใช้เมื่อไม่ต้องการ size/position precise
+3. **เก็บ dataset เพิ่ม 100+ ภาพต่อ class** — root cause จริงคือ data scarcity
+
+### Key V831 quantization lessons (จาก research)
+- **AWNN ไม่รองรับ**: Upsample, Interpolate, Resize (kills FPN/PAN), Transpose, permute, SiLU, Swish, Mish, Hardswish, PReLU (unreliable)
+- **Bounded activations** (ReLU/ReLU6) เป็น INT8-friendly ที่สุดสำหรับ per-tensor scheme
+- **BN fold** เกิดใน `spnntools optimize` (หลัง train) ไม่ต้อง fold เองใน training
+- **Input size** non-standard (416) break AWNN online converter → stick to 224x224
+
+---
+
 ## Commits / Rollback Points
 
 ### IDE (`workspace_kidbright_mai_vue3`)
 | Commit | Description |
 |---|---|
-| `fa113f0` | **HEAD** — BoardProtocol abstract + SingletonShell subscriber model + UI gating + disconnect flow |
+| `55fd410` | **HEAD** — docs: session context for object detection on V831 |
+| `fa113f0` | BoardProtocol abstract + SingletonShell subscriber model + UI gating + disconnect flow |
 | `906021d` | Board-owned modelDefaults + path constants + dead-code purge (-3470 LOC) |
 | `78a087f` | Move inference code into board runtime libraries |
 | `b0dca1c` | Centralize model file handling behind ModelFormat abstraction |
@@ -257,7 +299,9 @@ convert_model()
 ### Server (`kidbright_MAI_server`)
 | Commit | Description |
 |---|---|
-| `992dfbe` | **HEAD** — wire voice CPU path into Colab /train + /convert |
+| `c30b861` | **HEAD** — QAT scaffold + calib-dir override (experimental env-gated) |
+| `85641c6` | **ReLU6 fix** — close V831 INT8 confidence gap (hit@0.5: 5/10 → 9/10) |
+| `992dfbe` | wire voice CPU path into Colab /train + /convert |
 | `e7f7fb3` | YOLO BCE objectness loss fix |
 | `3bf9a32` | ImageNet mean/norm for V831 calibration classify/voice |
 
@@ -267,9 +311,13 @@ convert_model()
 
 1. ✅ อ่านไฟล์นี้ + `SESSION_CONTEXT.md` (เก่า มี YOLO BCE diag script)
 2. ✅ Verify รัน `npm run dev` ได้ (IDE), server รัน Flask ได้
-3. ▢ เปิด project `object_detection_face/` ใน IDE → ดูว่า dropdown default = `slim_yolo_v2`
-4. ▢ Annotate + Train → เช็ค server log ว่า training path ใช้ BCE loss หรือไม่
-5. ▢ รัน diagnostic script ใน Colab/local: `sigmoid(obj)@POS` ควรสูงขึ้น
-6. ▢ Convert → check `classifier_awnn.bin/param` output
-7. ▢ Deploy ไป V831 + รัน detect — วัด default threshold 0.5 ทำงานหรือไม่
-8. ▢ ถ้า confidence ยังต่ำ → เพิ่ม `obj_weight` ใน BCE branch หรือ normalize per-count
+3. ✅ End-to-end pipeline ทำงาน (commit `85641c6` ReLU6 + `e7f7fb3` BCE)
+4. ✅ Default threshold 0.5 ใช้งานได้ (hit 9/10 บน test set)
+5. ▢ ถ้า user รายงาน miss บางภาพ → analyze image feature (อาจต้องเก็บ data เพิ่ม)
+6. ▢ ถ้าต้องการ push accuracy สูงขึ้นอีก → ลอง MobileNetV1 backbone swap (item #1 ในลิสต์ "ยังไม่ได้ลอง" ข้างบน)
+
+### Source of truth (ตรวจก่อนลงมือทุก session)
+- **Backend**: `/home/comdet/kidbright_MAI_server/` (up-to-date = origin/main, clean)
+- **Frontend**: origin/main — `/mnt/f/workspace_kidbright_mai_vue3/` (Windows dev, CRLF via `core.autocrlf=true`)
+- ❌ `/mnt/f/kidbright_MAI_server/` ถูกลบทิ้งแล้ว (session 2026-04-18 เก่า 59 commits)
+- `/home/comdet/kidbright_MAI_ide/` = mirror ของ /mnt/f เพื่อรันบน WSL สะดวก, pull ให้ทันก่อนใช้
