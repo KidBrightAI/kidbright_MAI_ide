@@ -301,7 +301,9 @@ ReLU6 ชนะ confidence แต่ทำ forward ช้า 9× → **ไม่
 ### IDE (`workspace_kidbright_mai_vue3`)
 | Commit | Description |
 |---|---|
-| `55fd410` | **HEAD** — docs: session context for object detection on V831 |
+| `ced0712` | **HEAD** — docs: ReLU activation fix + NPU op set lesson |
+| `78abafb` | docs: record ReLU6 INT8 breakthrough + 6-way experiment findings |
+| `55fd410` | docs: session context for object detection on V831 |
 | `fa113f0` | BoardProtocol abstract + SingletonShell subscriber model + UI gating + disconnect flow |
 | `906021d` | Board-owned modelDefaults + path constants + dead-code purge (-3470 LOC) |
 | `78a087f` | Move inference code into board runtime libraries |
@@ -324,10 +326,16 @@ ReLU6 ชนะ confidence แต่ทำ forward ช้า 9× → **ไม่
 
 1. ✅ อ่านไฟล์นี้ + `SESSION_CONTEXT.md` (เก่า มี YOLO BCE diag script)
 2. ✅ Verify รัน `npm run dev` ได้ (IDE), server รัน Flask ได้
-3. ✅ End-to-end pipeline ทำงาน (commit `85641c6` ReLU6 + `e7f7fb3` BCE)
-4. ✅ Default threshold 0.5 ใช้งานได้ (hit 9/10 บน test set)
+3. ✅ End-to-end pipeline ทำงาน (commit `9efe26f` ReLU + `e7f7fb3` BCE)
+4. ✅ Default threshold 0.5 ใช้งานได้ (hit 8/10 บน test set, live ~12 fps บนบอร์ด)
 5. ▢ ถ้า user รายงาน miss บางภาพ → analyze image feature (อาจต้องเก็บ data เพิ่ม)
 6. ▢ ถ้าต้องการ push accuracy สูงขึ้นอีก → ลอง MobileNetV1 backbone swap (item #1 ในลิสต์ "ยังไม่ได้ลอง" ข้างบน)
+
+### Live camera demo script (known-good @ 2026-04-19)
+- Reference pipeline: `detector_runtime.Detector(hash, labels).detect(img, conf=0.5, iou=0.45)` → bbox + label บน LCD
+- Measured: 11.9 fps, 228/713 hits ที่ default threshold 0.5 (60s live with plain ReLU build `9efe26f`)
+- Per-frame breakdown: forward ~60ms, capture ~7ms, display ~15ms, decode + draw < 1ms
+- Bottleneck = NPU forward (intrinsic); ทุกอย่างอื่นเร็วพอแล้ว
 
 ### Source of truth (ตรวจก่อนลงมือทุก session)
 - **Backend**: `/home/comdet/kidbright_MAI_server/` (up-to-date = origin/main, clean)
