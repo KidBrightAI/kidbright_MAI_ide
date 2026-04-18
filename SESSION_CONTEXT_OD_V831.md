@@ -247,21 +247,31 @@ convert_model()
 
 End-to-end pipeline ทำงานได้แล้ว (train → diag → convert → adb push → on-board detect). ปัญหาหลักที่เหลือคือ **INT8 confidence gap**: fp32 `sigmoid(obj)@POS` ขึ้นไปที่ 0.65 หลัง BCE fix แต่พอ quantize เหลือ ~0.40 บนบอร์ด ต้องลด default threshold จาก 0.5 → 0.3 ถึงจะ detect ได้.
 
-### 6-way experiment บน 10 test images (dog/phone, 40 ภาพ training set)
+### 7-way experiment บน 10 test images + on-device forward profiling (dog/phone, 40 ภาพ training set)
 
-| Model | Training | Calib | hit@0.5 | dog mean | phone mean | สถานะ |
-|---|---|---|---|---|---|---|
-| v1 baseline | 100ep, LeakyReLU | raw 40 | 5/10 | 0.391 | 0.560 | — |
-| v2 (A+C) | 200ep, LeakyReLU | aug 400 | 2/10 | 0.504 | 0.308 | 🔴 แย่กว่า |
-| v3 (A only) | 100ep, LeakyReLU | aug 400 | 4/10 | 0.337 | 0.551 | 🟡 marginal |
-| v4 (C only) | 200ep, LeakyReLU | raw 40 | 2/10 | 0.476 | 0.266 | 🔴 overfit |
-| QAT | 100ep, LeakyReLU + fake-quant | raw 40 | 3/10 | 0.292 | 0.509 | 🔴 แย่กว่า |
-| **ReLU6** | **100ep, ReLU6** | **raw 40** | **9/10** ✨ | **0.487** | **0.701** | ✅ **win** |
+| Model | Training | forward ms | fps | hit@0.5 | dog mean | phone mean | สถานะ |
+|---|---|---|---|---|---|---|---|
+| v1 baseline | 100ep, LeakyReLU | 60 | 16.6 | 5/10 | 0.391 | 0.560 | — |
+| v2 (A+C) | 200ep, LeakyReLU + aug calib | 60 | 16.6 | 2/10 | 0.504 | 0.308 | 🔴 overfit |
+| v3 (A only) | 100ep, LeakyReLU + aug calib | 60 | 16.6 | 4/10 | 0.337 | 0.551 | 🟡 marginal |
+| v4 (C only) | 200ep, LeakyReLU | 60 | 16.6 | 2/10 | 0.476 | 0.266 | 🔴 overfit |
+| QAT | 100ep, LeakyReLU + fake-quant | 60 | 16.6 | 3/10 | 0.292 | 0.509 | 🔴 worse |
+| ReLU6 | 100ep, ReLU6 | **523** | **1.9** | 9/10 | 0.487 | 0.701 | 🔴 **CPU fallback!** |
+| **ReLU** ✨ | **100ep, plain ReLU** | **61** | **16.5** | **8/10** | **0.536** | **0.668** | ✅ **sweet spot** |
 
-### ทำไม ReLU6 ชนะ
-- LeakyReLU(0.1) มี negative tail ที่ unbounded → spnntools ต้องขยาย INT8 range ครอบ activation extremes → bin หยาบ
-- ReLU6 clamp output ที่ [0, 6] → dynamic range packed แน่น → bin ละเอียด
-- วัดได้: fp32→int8 confidence drop **ลดจาก 27% → 11%** (กับ threshold 0.5 default ใช้งานได้)
+### สาเหตุที่ต้องเทียบให้ละเอียด — ReLU6 trap
+
+ReLU6 ชนะ confidence แต่ทำ forward ช้า 9× → **ไม่ใช่เรื่อง INT8 quantization อย่างเดียว** ที่สำคัญคือ **NPU op set**:
+- AWNN (V831) รัน ReLU, LeakyReLU บน NPU → ~60ms forward
+- AWNN ไม่รองรับ ReLU6 → fallback CPU → ~520ms forward
+- Evidence: Sipeed reference `yolo2_20class_awnn.bin` (LeakyReLU) ได้ 60ms; ReLU6 model architecture + size เหมือนกันเป๊ะ แต่ 9× ช้า
+
+### ทำไม plain ReLU ชนะ
+- Activation ∈ [0, ∞) — negative tail ถูก clip ไปที่ 0 (vs LeakyReLU 0.1x)
+- Upstream BatchNorm ทำให้ activation distribution stable → INT8 dynamic range ยังใช้งานได้ดีแม้ไม่ bounded upper
+- NPU-accelerated → 61ms forward ≈ LeakyReLU
+- int8 confidence: 8/10 hit@0.5 (ใกล้ ReLU6 9/10, ดีกว่า LeakyReLU 5/10 เยอะ)
+- **Live camera loop: 1.7 fps → 11.5 fps** (6.8×)
 
 ### ที่ ruled out พร้อมเหตุผล (สำหรับ session ถัดไปจะได้ไม่เสียเวลา)
 - **Normalize mismatch** — verified ตรงกันทุก stage (train BaseTransform / val / calibration spnntools / runtime detector_runtime ใช้ `(x-127.5)/128` เหมือนกันหมด) **ไม่ใช่ปัญหา**
@@ -276,11 +286,13 @@ End-to-end pipeline ทำงานได้แล้ว (train → diag → con
 2. **FOMO** (Edge Impulse) — centroid-only output, ไม่มี bbox — ใช้เมื่อไม่ต้องการ size/position precise
 3. **เก็บ dataset เพิ่ม 100+ ภาพต่อ class** — root cause จริงคือ data scarcity
 
-### Key V831 quantization lessons (จาก research)
+### Key V831 quantization lessons (จาก research + measurements)
+- **AWNN NPU op set** (verified บนบอร์ด): ReLU, LeakyReLU ทำงาน NPU ~60ms. **ReLU6 fallback CPU 520ms** — ใช้ ReLU แทน
 - **AWNN ไม่รองรับ**: Upsample, Interpolate, Resize (kills FPN/PAN), Transpose, permute, SiLU, Swish, Mish, Hardswish, PReLU (unreliable)
-- **Bounded activations** (ReLU/ReLU6) เป็น INT8-friendly ที่สุดสำหรับ per-tensor scheme
+- **Bounded activations** ดีสำหรับ INT8 ทฤษฎี แต่ต้องเช็คว่าอยู่ใน NPU op set ก่อน — ReLU6 trap เคยเจอมาแล้ว
 - **BN fold** เกิดใน `spnntools optimize` (หลัง train) ไม่ต้อง fold เองใน training
 - **Input size** non-standard (416) break AWNN online converter → stick to 224x224
+- **Forward time reference** (slim_yolo_v2, 224x224, V831 NPU): ~60ms = 16 fps theoretical ceiling
 
 ---
 
@@ -299,8 +311,9 @@ End-to-end pipeline ทำงานได้แล้ว (train → diag → con
 ### Server (`kidbright_MAI_server`)
 | Commit | Description |
 |---|---|
-| `c30b861` | **HEAD** — QAT scaffold + calib-dir override (experimental env-gated) |
-| `85641c6` | **ReLU6 fix** — close V831 INT8 confidence gap (hit@0.5: 5/10 → 9/10) |
+| `9efe26f` | **HEAD — ReLU activation** (NPU-accel, 11.5 fps, hit@0.5 8/10) |
+| `c30b861` | QAT scaffold + calib-dir override (experimental env-gated) |
+| `85641c6` | ReLU6 (superseded by 9efe26f — confidence ok แต่ CPU fallback 9× slow) |
 | `992dfbe` | wire voice CPU path into Colab /train + /convert |
 | `e7f7fb3` | YOLO BCE objectness loss fix |
 | `3bf9a32` | ImageNet mean/norm for V831 calibration classify/voice |
