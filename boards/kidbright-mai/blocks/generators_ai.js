@@ -1,85 +1,51 @@
-python.pythonGenerator.forBlock['maix3_nn_classify_load'] = function(block, generator) {
-  generator.definitions_['from_maix_import_nn'] = 'from maix import nn'
-  generator.definitions_['class_Resnet'] = `
-class _Resnet:
-  m = {
-    "bin": "/root/model/${workspaceStore.model.hash}.bin",
-    "param": "/root/model/${workspaceStore.model.hash}.param"
-  }
+// All inference for V831 goes through the runtime libraries in
+// boards/kidbright-mai/libs/ — classifier_runtime.py, detector_runtime.py,
+// voice_cpu_infer.py. The generator's job is just to wire the student's
+// Blockly blocks to those libraries; it does NOT know about file paths,
+// NCNN options, or AWNN quirks.
+//
+// Adding a new inference path = writing a new library module, NOT editing
+// hardcoded Python strings in here. The classify/yolo result shape is the
+// same as on kidbright-mai-plus so block-side code is portable across boards.
 
-  options = {
-    "model_type": "awnn",
-    "inputs": {
-      "input0": (224, 224, 3)
-    },
-    "outputs": {
-      "output0": (1, 1, ${workspaceStore.labels.map(lb => lb.label).length})
-    },
-    "first_layer_conv_no_pad": False,
-    "mean": [127.5, 127.5, 127.5],
-    "norm": [0.0078125, 0.0078125, 0.0078125],
-  }
+const _labelsList = () =>
+  workspaceStore.labels.map(lb => `"${lb.label}"`).sort().join(", ")
 
-  def __init__(self):
-    from maix import nn
-    self.model = nn.load(self.m, opt=self.options)
 
-  def __del__(self):
-    del self.model
+// ------------------------------------------------------------- image classify
 
-_model = _Resnet()
-_labels = [${ workspaceStore.labels.map(label => `"${label.label}"`).sort().join(', ') }]
+python.pythonGenerator.forBlock['maix3_nn_classify_load'] = function (block, generator) {
+  generator.definitions_['classifier_import'] = 'from classifier_runtime import Classifier'
+  generator.definitions_['classifier_init'] = `
+_labels = [${_labelsList()}]
+_model = Classifier("${workspaceStore.model.hash}", _labels)
+_result = None
 `
-
-  // var functionName = generator.provideFunction_(
-  //     '_isKeyPressed',
-  //     ['def ' + "_isKeyPressed" + '(key):',
-  //     '  event = keys_device.read_one()',      
-  //     '  if event is None:',
-  //     '    return False',
-  //     '  if event.value == 1 and event.code == 0x02 and key == "S1":',
-  //     '    return True',
-  //     '  if event.value == 1 and event.code == 0x03 and key == "S2":',
-  //     '    return True',
-  //     '  return False']);      
-
-  return 'print(_model.model)\n'
-}
-  
-python.pythonGenerator.forBlock['maix3_nn_classify_classify'] = function(block, generator) {
-  var value_image = generator.valueToCode(block, 'image', python.Order.ATOMIC)    
-  
-  return `_model_result = _model.model.forward(${value_image}, quantize=True)\n`
-}
-  
-python.pythonGenerator.forBlock['maix3_nn_classify_get_result'] = function(block, generator) {
-  var dropdown_data = block.getFieldValue('data')
-  let code = ''
-  let order = python.Order.NONE
-  if(dropdown_data == 'label'){
-    code = '_labels[_model_result.argmax()]\n'
-    block.setOutput(true, 'String')
-  }else if(dropdown_data == 'class_id'){
-    code = '_model_result.argmax()'      
-    block.setOutput(true, 'Number')
-    order = python.Order.ATOMIC
-  }else if(dropdown_data == 'probability'){
-    code = '_model_result.max()'      
-    block.setOutput(true, 'Number')
-    order = python.Order.ATOMIC
-  }
-  
-  return [code, order]
+  return 'print("classifier loaded")\n'
 }
 
-// voice 
-python.pythonGenerator.forBlock['maix3_nn_voice_load'] = function(block, generator) {
+python.pythonGenerator.forBlock['maix3_nn_classify_classify'] = function (block, generator) {
+  const value_image = generator.valueToCode(block, 'image', python.Order.ATOMIC)
+  return `_result = _model.classify(${value_image})\n`
+}
+
+python.pythonGenerator.forBlock['maix3_nn_classify_get_result'] = function (block, generator) {
+  const data = block.getFieldValue('data')
+  const key = (data === 'class_id') ? 'class_id'
+    : (data === 'probability') ? 'probability'
+    : 'label'
+  block.setOutput(true, key === 'label' ? 'String' : 'Number')
+  return [`_result["${key}"] if _result else ${key === 'label' ? '"None"' : (key === 'class_id' ? '-1' : '0.0')}`, python.Order.ATOMIC]
+}
+
+
+// ---------------------------------------------------------------------- voice
+
+python.pythonGenerator.forBlock['maix3_nn_voice_load'] = function (block, generator) {
   // V831 voice runs on the A7 CPU via numpy fp32 — AWNN int8 collapses
-  // small-vocab voice models regardless of preprocessing. Loads
-  // /root/model/<hash>.npz (weights + labels) via voice_cpu_infer.Model,
-  // which also owns the pyaudio input stream.
+  // small-vocab voice models regardless of preprocessing. See
+  // boards/kidbright-mai/libs/voice_cpu_infer.py.
   generator.definitions_['import_voice_cpu_infer'] = 'import voice_cpu_infer'
-
   generator.definitions_['class_VoiceModel'] = `
 _model = voice_cpu_infer.Model("/root/model/${workspaceStore.model.hash}.npz")
 _labels = _model.labels
@@ -88,152 +54,80 @@ _result = None
   return 'print("voice model loaded:", _labels)\n'
 }
 
-
-//maix3_nn_voice_get_rms — kept for backward compat with block toolbox (no-op in CPU path)
-python.pythonGenerator.forBlock['maix3_nn_voice_get_rms'] = function(block, generator) {
+python.pythonGenerator.forBlock['maix3_nn_voice_get_rms'] = function (block, generator) {
   // Old API exposed an RMS reading from an always-open mic stream. In the CPU
   // path the stream only opens when classify() is called, so return 0 until
   // we decide to reintroduce continuous monitoring.
   return ['0', python.Order.ATOMIC]
 }
 
-//maix3_nn_voice_classify
-python.pythonGenerator.forBlock['maix3_nn_voice_classify'] = function(block, generator) {
-  var number_duration = block.getFieldValue('duration')
+python.pythonGenerator.forBlock['maix3_nn_voice_classify'] = function (block, generator) {
+  const number_duration = block.getFieldValue('duration')
   return `_result = _model.classify(duration=${number_duration})\n`
 }
 
-python.pythonGenerator.forBlock['maix3_nn_voice_get_result'] = function(block, generator) {
-  var dropdown_data = block.getFieldValue('data')
-  let code = ''
-  let order = python.Order.NONE
-  if(dropdown_data == 'label'){
-    code = '_result["label"]'
-    block.setOutput(true, 'String')
-    order = python.Order.ATOMIC
-  }else if(dropdown_data == 'class_id'){
-    code = '_result["index"]'
-    block.setOutput(true, 'Number')
-    order = python.Order.ATOMIC
-  }else if(dropdown_data == 'probability'){
-    code = '_result["prob"]'
-    block.setOutput(true, 'Number')
-    order = python.Order.ATOMIC
-  }
-
-  return [code, order]
+python.pythonGenerator.forBlock['maix3_nn_voice_get_result'] = function (block, generator) {
+  const data = block.getFieldValue('data')
+  // voice_cpu_infer.Model.classify() returns dict with "label" / "index" / "prob"
+  // — translate the block dropdown to that schema.
+  const key = (data === 'class_id') ? 'index'
+    : (data === 'probability') ? 'prob'
+    : 'label'
+  block.setOutput(true, key === 'label' ? 'String' : 'Number')
+  return [`_result["${key}"]`, python.Order.ATOMIC]
 }
 
-// yolo
-python.pythonGenerator.forBlock['maix3_nn_yolo_load'] = function(block, generator) {
-  generator.definitions_['from_maix_import_nn'] = 'from maix import nn'
-  generator.definitions_['class_Resnet'] = `
-class Yolo:
-  labels = [${ workspaceStore.labels.map(label => `"${label.label}"`).sort().join(', ') }]
-  anchors = [1.19,1.98, 2.79,4.59, 4.53,8.92, 8.06,5.29, 10.32,10.65]
-  #anchors = [5.4, 5.38, 1.65, 2.09, 0.8, 1.83, 2.45, 4.14, 0.46, 0.8]
-  m = {
-    "bin": "/root/model/${workspaceStore.model.hash}.bin",
-    "param": "/root/model/${workspaceStore.model.hash}.param"
-  }
-  options = {
-    "model_type":  "awnn",
-    "inputs": {
-      "input0": (224, 224, 3)
-    },
-    "outputs": {
-      "output0": (7, 7, (1+4+len(labels))*5)
-    },
-    "mean": [127.5, 127.5, 127.5],
-    "norm": [0.0078125, 0.0078125, 0.0078125],
-  }
-  def __init__(self):    
-    from maix.nn import decoder
-    self.model = nn.load(self.m, opt=self.options)
-    self.decoder = decoder.Yolo2(len(self.labels), self.anchors, net_in_size=(224, 224), net_out_size=(7, 7))
-  def __del__(self):
-    del self.model
-    del self.decoder
+
+// --------------------------------------------------------------- object detect
+
+python.pythonGenerator.forBlock['maix3_nn_yolo_load'] = function (block, generator) {
+  generator.definitions_['detector_import'] = 'from detector_runtime import Detector'
+  generator.definitions_['detector_init'] = `
+_yolo_labels = [${_labelsList()}]
+_yolo = Detector("${workspaceStore.model.hash}", _yolo_labels)
+_boxes = []
 `
-  
-  return '_yolo = Yolo()\n'
-}
-  
-python.pythonGenerator.forBlock['maix3_nn_yolo_detect'] = function(block, generator) {
-  var value_image = generator.valueToCode(block, 'image', python.Order.ATOMIC)
-  var number_nms = block.getFieldValue('nms')
-  var number_threshold = block.getFieldValue('threshold')
-
-  // TODO: Assemble python into code variable.
-  // restruct two array to one array with properties in python code of _boxes and _probs 
-  return `_out = _yolo.model.forward(${value_image}.tobytes(), quantize=True, layout="hwc")
-_boxes, _probs = _yolo.decoder.run(_out, nms=${number_nms}, threshold=${number_threshold}, img_size=(224, 224))\n`
-}
-  
-python.pythonGenerator.forBlock['maix3_nn_yolo_get_result_array'] = function(block, generator) {
-  var code = 'zip(_boxes, _probs)'
-  
-  return [code, python.Order.NONE]
+  return 'print("yolo loaded")\n'
 }
 
-//maix3_nn_yolo_get_count
-python.pythonGenerator.forBlock['maix3_nn_yolo_get_count'] = function(block, generator) {
-  var code = 'len(_boxes)'
-  
-  return [code, python.Order.ATOMIC]
+python.pythonGenerator.forBlock['maix3_nn_yolo_detect'] = function (block, generator) {
+  const value_image = generator.valueToCode(block, 'image', python.Order.ATOMIC)
+  const number_nms = block.getFieldValue('nms')
+  const number_threshold = block.getFieldValue('threshold')
+  return `_boxes = _yolo.detect(${value_image}, conf=${number_threshold}, iou=${number_nms})\n`
 }
-python.pythonGenerator.forBlock['maix3_nn_yolo_get'] = function(block, generator) {
-  var dropdown_data = block.getFieldValue('data')
-  var value_obj = generator.valueToCode(block, 'obj', python.Order.ATOMIC)
-    
-  if(dropdown_data == "x1"){    
-    var code = `${value_obj}[0][0]`
-    var order = python.Order.ATOMIC
-    block.setOutput(true, 'Number')
 
-  } else if(dropdown_data == "y1"){
-    var code = `${value_obj}[0][1]`
-    var order = python.Order.ATOMIC
-    block.setOutput(true, 'Number')      
+python.pythonGenerator.forBlock['maix3_nn_yolo_get_result_array'] = function (block, generator) {
+  return ['_boxes', python.Order.NONE]
+}
 
-  } else if(dropdown_data == "x2"){
-    var code = `(${value_obj}[0][0]+${value_obj}[0][2])`
-    var order = python.Order.ATOMIC
-    block.setOutput(true, 'Number')
+python.pythonGenerator.forBlock['maix3_nn_yolo_get_count'] = function (block, generator) {
+  return ['len(_boxes)', python.Order.ATOMIC]
+}
 
-  } else if(dropdown_data == "y2"){
-    var code = `(${value_obj}[0][1]+${value_obj}[0][3])`
-    var order = python.Order.ATOMIC
-    block.setOutput(true, 'Number')    
+python.pythonGenerator.forBlock['maix3_nn_yolo_get'] = function (block, generator) {
+  const data = block.getFieldValue('data')
+  const value_obj = generator.valueToCode(block, 'obj', python.Order.ATOMIC)
 
-  } else if(dropdown_data == "width"){
-    var code = `${value_obj}[0][2]`
-    var order = python.Order.ATOMIC
-    block.setOutput(true, 'Number')
+  const stringKeys = { label: `${value_obj}.label` }
+  const numberExprs = {
+    x1: `${value_obj}.x`,
+    y1: `${value_obj}.y`,
+    x2: `(${value_obj}.x + ${value_obj}.w)`,
+    y2: `(${value_obj}.y + ${value_obj}.h)`,
+    width: `${value_obj}.w`,
+    height: `${value_obj}.h`,
+    class_id: `${value_obj}.class_id`,
+    probability: `${value_obj}.score`,
+  }
 
-  } else if(dropdown_data == "height"){
-    var code = `${value_obj}[0][3]`
-    var order = python.Order.ATOMIC
-    block.setOutput(true, 'Number')    
-
-  } else if(dropdown_data == "label"){
-    var code = `_yolo.labels[${value_obj}[1][0]]`
-    var order = python.Order.NONE
+  if (data in stringKeys) {
     block.setOutput(true, 'String')
-
-  } else if(dropdown_data == "class_id"){
-    var code = `${value_obj}[1][0]`
-    var order = python.Order.ATOMIC
+    return [stringKeys[data], python.Order.ATOMIC]
+  }
+  if (data in numberExprs) {
     block.setOutput(true, 'Number')
-
-  } else if(dropdown_data == "probability"){
-    var code = `${value_obj}[1][1][${value_obj}[1][0]]`
-    var order = python.Order.ATOMIC
-    block.setOutput(true, 'Number')
-
-  }    
-  
-  return [code, order]
+    return [numberExprs[data], python.Order.ATOMIC]
+  }
+  return ['0', python.Order.ATOMIC]
 }
-  
-  
