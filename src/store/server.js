@@ -3,10 +3,11 @@ import { defineStore } from "pinia"
 // other store
 import { useWorkspaceStore } from "./workspace"
 
-//axios 
+//axios
 import axios from 'axios'
 import { toast } from "vue3-toastify"
 import { md5 } from 'hash-wasm'
+import { pickFor } from "@/engine/model-formats"
 
 export const useServerStore = defineStore({
   id: "server",
@@ -245,68 +246,32 @@ export const useServerStore = defineStore({
           this.isConvertingSuccess = true
           this.isConverting = false
 
-          // download model
+          // One ModelFormat owns the knowledge of which files make up this
+          // project's model, where to GET them, and how to hand them to
+          // workspaceStore. Adding a new format = one new file in
+          // src/engine/model-formats/, not an else-if here.
+          const Format = pickFor({
+            projectType: workspaceStore.projectType,
+            boardId: workspaceStore.currentBoard.id,
+            modelType: workspaceStore.trainConfig?.modelType,
+          })
+
           this.isDownloading = true
           this.isDownloadingSuccess = false
-          this.downloadingFiles = 1
-
-          // Voice on V831 (kidbright-mai) bypasses AWNN int8 entirely and
-          // ships a single fp32 numpy bundle that is loaded by
-          // voice_cpu_infer.py on the board. Single-file download.
-          const isVoiceCpu = workspaceStore.projectType === "VOICE_CLASSIFICATION"
-            && workspaceStore.currentBoard.id === "kidbright-mai"
-
-          if (isVoiceCpu) {
-            let npzResponse = await axios.get(
-              this.serverUrl + "/projects/" + workspaceStore.id + "/output/model_cpu.npz",
-              {
-                responseType: 'blob',
-                onDownloadProgress: progressEvent => {
-                  this.downloadProgress = Math.round((progressEvent.loaded / progressEvent.total) * 100)
-                },
-              })
-            this.downloadingFiles = 1
-            this.totalDownloadingFiles = 1
-            this.isDownloading = false
-            this.isDownloadingSuccess = true
-            this.downloadingFiles = 0
-
-            await workspaceStore.importModelFromBlob(npzResponse.data, null, "npz", null)
-            toast.success("Model Downloaded")
-          } else {
-            let ext1 = "bin"
-            let ext2 = "param"
-            let file1 = "model_int8.bin"
-            let file2 = "model_int8.param"
-
-            if (workspaceStore.currentBoard.id === "kidbright-mai-plus") {
-              ext1 = "cvimodel"
-              ext2 = "mud"
-              file1 = "model.cvimodel"
-              file2 = "model.mud"
-            }
-
-            let modelInt8Response = await axios.get(this.serverUrl + "/projects/" + workspaceStore.id + "/output/" + file1,
-              {
-                responseType: 'blob',
-                onDownloadProgress: progressEvent => {
-                  this.downloadProgress = Math.round((progressEvent.loaded / progressEvent.total) * 100)
-                },
-              })
-            this.downloadingFiles = 2
-            let modelParamResponse = await axios.get(this.serverUrl + "/projects/" + workspaceStore.id + "/output/" + file2, {
-              responseType: 'blob',
-              onDownloadProgress: progressEvent => {
-                this.downloadProgress = Math.round((progressEvent.loaded / progressEvent.total) * 100)
-              },
-            })
-            this.isDownloading = false
-            this.isDownloadingSuccess = true
-            this.downloadingFiles = 0
-
-            await workspaceStore.importModelFromBlob(modelInt8Response.data, modelParamResponse.data, ext1, ext2)
-            toast.success("Model Downloaded")
+          this.downloadingFiles = 0
+          this.totalDownloadingFiles = Format.files.length
+          const onProgress = e => {
+            this.downloadProgress = Math.round((e.loaded / e.total) * 100)
           }
+          const blobs = await Format.download(
+            axios, this.serverUrl, workspaceStore.id, onProgress,
+          )
+          this.downloadingFiles = Format.files.length
+          this.isDownloading = false
+          this.isDownloadingSuccess = true
+
+          await workspaceStore.importModelFromBlob(Format, blobs)
+          toast.success("Model Downloaded")
         } else {
           console.log("model convert failed")
           toast.error("Model Convert Failed")

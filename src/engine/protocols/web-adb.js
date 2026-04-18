@@ -4,6 +4,7 @@ import { toast } from "vue3-toastify"
 import { useWorkspaceStore } from "@/store/workspace"
 import { usePluginStore } from "@/store/plugin"
 import { md5 } from 'hash-wasm'
+import { pickByType } from "@/engine/model-formats"
 import {
   WrapConsumableStream,
   WrapReadableStream,
@@ -387,48 +388,33 @@ export class WebAdbHandler {
 
   async uploadModelIfNeeded(sync, fs) {
     const workspaceStore = useWorkspaceStore()
-    let model = workspaceStore.model
-    console.log(model)
-    if (model == null) return
+    const model = workspaceStore.model
+    if (!model) return
 
-    // The board-side filename is /root/model/<hash>.<type>, where type comes
-    // from the imported model (bin for NCNN int8, npz for voice CPU fp32).
-    const type = model.type || "bin"
-    const primaryFile = `/root/model/${model.hash}.${type}`
+    const Format = pickByType(model.type)
+    const blobs = await Format.readFromFS(fs, workspaceStore.id)
 
-    try {
-      let stat = await sync.lstat(primaryFile)
-      console.log("model already on board", stat)
-      return
-    } catch (e) {
-      toast.warn("ไม่พบไฟล์โมเดลบนบอร์ด กำลังอัพโหลดโมเดลใหม่")
-    }
-
-    try {
-      // Single-file bundles (e.g. voice .npz) don't have a separate param.
-      let modelBinaries = await fs.readAsFile(`${workspaceStore.id}/model.${type}`)
-      let hasParam = (type === "bin" || type === "cvimodel")
-
-      if (hasParam) {
-        let paramExt = (type === "cvimodel") ? "mud" : "param"
-        let modelParams = await fs.readAsFile(`${workspaceStore.id}/model.${paramExt}`)
-        await sync.write({
-          filename: `/root/model/${model.hash}.${paramExt}`,
-          file: new WrapReadableStream(modelParams.stream())
-            .pipeThrough(new WrapConsumableStream()),
-          type: LinuxFileType.File,
-          permission: 0o666,
-          mtime: Date.now() / 1000,
-        })
-      }
+    const writeFile = async (remotePath, blob) => {
       await sync.write({
-        filename: primaryFile,
-        file: new WrapReadableStream(modelBinaries.stream())
+        filename: remotePath,
+        file: new WrapReadableStream(blob.stream())
           .pipeThrough(new WrapConsumableStream()),
         type: LinuxFileType.File,
         permission: 0o666,
         mtime: Date.now() / 1000,
       })
+    }
+    const statFile = async (remotePath) => {
+      try {
+        const s = await sync.lstat(remotePath)
+        return { exists: true, size: s.size }
+      } catch (e) {
+        return { exists: false, size: 0 }
+      }
+    }
+
+    try {
+      await Format.uploadToBoard({ writeFile, statFile }, model.hash, blobs)
       toast.success("อัพโหลดโมเดลสำเร็จ")
     } catch (e) {
       console.log(e)

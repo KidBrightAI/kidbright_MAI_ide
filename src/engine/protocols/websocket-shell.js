@@ -3,6 +3,7 @@ import { useBoardStore } from "@/store/board"
 import { useWorkspaceStore } from "@/store/workspace"
 import { usePluginStore } from "@/store/plugin"
 import storage from "@/engine/storage"
+import { pickByType } from "@/engine/model-formats"
 
 
 export class WebSocketShellHandler {
@@ -196,64 +197,30 @@ export class WebSocketShellHandler {
   async uploadModelIfNeeded(fs) {
     const workspaceStore = useWorkspaceStore()
     const model = workspaceStore.model
-    if (model != null) {
+    if (!model) return
+
+    const Format = pickByType(model.type)
+    const blobs = await Format.readFromFS(fs, workspaceStore.id)
+
+    const writeFile = async (remotePath, blob) => {
+      const buf = await blob.arrayBuffer()
+      toast.info(`Uploading ${remotePath.split("/").pop()} (${(blob.size / 1024 / 1024).toFixed(2)} MB)...`)
+      await this.uploadFileChunked(remotePath, buf)
+    }
+    const statFile = async (remotePath) => {
       try {
-        let ext2 = (model.type === 'cvimodel') ? 'mud' : 'param';
-
-        let modelBinaries = await fs.readAsFile(`${workspaceStore.id}/model.${model.type}`)
-        let modelParams = await fs.readAsFile(`${workspaceStore.id}/model.${ext2}`)
-
-        // Check if models exist and size matches
-        const binStat = await this.statFile(`/root/model/${model.hash}.${model.type}`);
-        const paramStat = await this.statFile(`/root/model/${model.hash}.${ext2}`);
-
-        let uploadBin = true;
-        let uploadParam = true;
-
-        if (modelBinaries && binStat.exists && binStat.size === modelBinaries.size) {
-          console.log(`Model binary ${model.type} already exists with same size. Skipping.`);
-          uploadBin = false;
-        }
-
-        if (modelParams && paramStat.exists && paramStat.size === modelParams.size) {
-          console.log(`Model param ${ext2} already exists with same size. Skipping.`);
-          // Note: if it's .mud, the exact size might differ due to our internal replacement,
-          // but it's safe enough to skip if it exists and has length > 0.
-          if (ext2 !== 'mud' || paramStat.size > 0) {
-            uploadParam = false;
-          }
-        }
-
-        if (uploadBin || uploadParam) {
-          toast.info(`Checking model status... uploading new models if not found`);
-        } else {
-          toast.success("พบโมเดลแล้ว ไม่ต้องอัพโหลดใหม่");
-          return;
-        }
-
-        if (modelBinaries && uploadBin) {
-          toast.info(`Uploading ${model.type} (${(modelBinaries.size / 1024 / 1024).toFixed(2)}MB)...`);
-          let buffer = await modelBinaries.arrayBuffer();
-          await this.uploadFileChunked(`/root/model/${model.hash}.${model.type}`, buffer);
-        }
-        if (modelParams && uploadParam) {
-          let buffer = await modelParams.arrayBuffer();
-          if (ext2 === 'mud') {
-            const dec = new TextDecoder('utf-8');
-            let mudStr = dec.decode(buffer);
-            mudStr = mudStr.replace(/model\s*=\s*[^\r\n]+/g, `model = ${model.hash}.cvimodel`);
-            const enc = new TextEncoder();
-            buffer = enc.encode(mudStr).buffer;
-          }
-          await this.uploadFileChunked(`/root/model/${model.hash}.${ext2}`, buffer);
-        }
-        if (uploadBin || uploadParam) {
-          toast.success("อัพโหลดโมเดลสำเร็จ")
-        }
+        return await this.statFile(remotePath)
       } catch (e) {
-        console.error("Model upload error:", e);
-        toast.error("อัพโหลดโมเดลไม่สำเร็จ");
+        return { exists: false, size: 0 }
       }
+    }
+
+    try {
+      await Format.uploadToBoard({ writeFile, statFile }, model.hash, blobs)
+      toast.success("อัพโหลดโมเดลสำเร็จ")
+    } catch (e) {
+      console.error("Model upload error:", e)
+      toast.error("อัพโหลดโมเดลไม่สำเร็จ")
     }
   }
 

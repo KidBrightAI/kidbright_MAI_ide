@@ -306,28 +306,18 @@ export const useWorkspaceStore = defineStore({
         this.opening = false
       }
     },
-    async importModelFromBlob(modelBin, modelParam, ext1 = "bin", ext2 = "param") {
+    async importModelFromBlob(Format, blobs) {
+      // Format is a class from src/engine/model-formats/. Blobs is a
+      // {role: Blob} dict produced by Format.download(). The format class
+      // decides which files to save, how to clean up stale formats, and
+      // what primary file to hash.
       try {
-        let modelBinaries = new Blob([modelBin], { type: 'application/octet-stream' })
-
-        // Clear any previously imported model of any format
-        for (const stale of ["model.bin", "model.param", "model.cvimodel", "model.mud", "model.npz"]) {
-          try {
-            await this.$fs.removeFile(`${this.id}/${stale}`)
-          } catch (e) { /* ignore missing */ }
-        }
-
-        await this.$fs.writeFile(`${this.id}/model.${ext1}`, modelBinaries)
-        // Single-file formats (e.g. .npz for voice CPU path) pass modelParam=null.
-        if (modelParam != null && ext2 != null) {
-          let modelParams = new Blob([modelParam], { type: 'application/octet-stream' })
-          await this.$fs.writeFile(`${this.id}/model.${ext2}`, modelParams)
-        }
-        let hash = await md5(new Uint8Array(await modelBin.arrayBuffer()))
+        await Format.saveToFS(this.$fs, this.id, blobs)
+        const hash = await Format.computeHash(blobs)
         this.model = {
           name: 'model',
-          type: ext1,
-          hash: hash,
+          type: Format.typeTag,
+          hash,
         }
         console.log("model data", this.model)
 

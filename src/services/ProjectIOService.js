@@ -2,6 +2,7 @@ import JSZip from "jszip"
 import ObjectDetectionStrategy from "@/engine/project-strategies/ObjectDetectionStrategy"
 import ImageClassificationStrategy from "@/engine/project-strategies/ImageClassificationStrategy"
 import VoiceClassificationStrategy from "@/engine/project-strategies/VoiceClassificationStrategy"
+import { pickByType } from "@/engine/model-formats"
 
 export default class ProjectIOService {
   constructor(fs) {
@@ -61,20 +62,9 @@ export default class ProjectIOService {
     }
 
     if (workspaceState.model) {
-      let modelFolder = zip.folder("model")
       try {
-        let type = workspaceState.model.type || 'bin'
-        // Single-file formats (npz for voice CPU path) have no companion param.
-        let ext2 = (type === 'cvimodel') ? 'mud'
-                 : (type === 'npz') ? null
-                 : 'param'
-
-        let modelBinaries = await this.fs.readAsFile(`${workspaceState.id}/model.${type}`)
-        modelFolder.file(`model.${type}`, modelBinaries)
-        if (ext2) {
-          let modelParams = await this.fs.readAsFile(`${workspaceState.id}/model.${ext2}`)
-          modelFolder.file(`model.${ext2}`, modelParams)
-        }
+        const Format = pickByType(workspaceState.model.type)
+        await Format.packInZip(zip, this.fs, workspaceState.id)
       } catch (e) {
         console.warn("Model files not found for saving", e)
       }
@@ -124,19 +114,11 @@ export default class ProjectIOService {
 
     // Load Model
     if (projectData.model) {
-      let model = await zip.folder("model")
-      if (model) {
-        let type = projectData.model.type || 'bin'
-        let ext2 = (type === 'cvimodel') ? 'mud'
-                 : (type === 'npz') ? null
-                 : 'param'
-
-        let modelBinaries = await model.file(`model.${type}`).async("blob")
-        await this.fs.writeFile(`${projectData.id}/model.${type}`, modelBinaries)
-        if (ext2) {
-          let modelParams = await model.file(`model.${ext2}`).async("blob")
-          await this.fs.writeFile(`${projectData.id}/model.${ext2}`, modelParams)
-        }
+      try {
+        const Format = pickByType(projectData.model.type)
+        await Format.loadFromZip(zip, projectData.id, this.fs)
+      } catch (e) {
+        console.warn("Model load from zip failed", e)
       }
     }
 
