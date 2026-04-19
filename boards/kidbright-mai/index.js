@@ -30,13 +30,17 @@ export default {
   autoCompletion: {},
 
   // V831 support matrix (what this board has been tested with):
-  //   Image   — all MobileNet alphas + ResNet-18 run through the AWNN
-  //             int8 pipeline; default = mobilenet-75 as a balance.
+  //   Image   — ResNet-18 (default) runs end-to-end at ~16.5 fps on the AWNN
+  //             NPU: all regular Conv + ReLU, zero DepthwiseConv, so every
+  //             layer stays on NPU. MobileNet variants are available but
+  //             slow (~1.8 fps) because V831 AWNN falls back to CPU for
+  //             ConvolutionDepthWise regardless of activation type —
+  //             measured 2026-04-19 with dog_cat_classify, 224×224 input.
   //   YOLO    — only slim_yolo_v2 (YOLO11 needs CV181x MLIR, not AWNN).
   //   Voice   — only voice-cnn (runs CPU numpy fp32; int8 collapses).
   modelDefaults: {
     IMAGE_CLASSIFICATION: {
-      ImageClassification: { modelType: "mobilenet-75" },
+      ImageClassification: { modelType: "resnet18" },
     },
     OBJECT_DETECTION: {
       YOLO: { modelType: "slim_yolo_v2" },
@@ -48,7 +52,9 @@ export default {
   modelOptions: {
     IMAGE_CLASSIFICATION: {
       ImageClassification: {
-        modelType: ["mobilenet-100", "mobilenet-75", "mobilenet-50", "mobilenet-25", "mobilenet-10", "resnet18"],
+        // resnet18 first — it's the default and the only one that hits NPU speed.
+        // mobilenet-* are kept for the size/accuracy tradeoff but run ~1.8 fps.
+        modelType: ["resnet18", "mobilenet-100", "mobilenet-75", "mobilenet-50", "mobilenet-25", "mobilenet-10"],
       },
     },
     OBJECT_DETECTION: {
