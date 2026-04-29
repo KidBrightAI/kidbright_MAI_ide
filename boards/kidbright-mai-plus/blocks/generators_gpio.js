@@ -14,7 +14,7 @@ python.pythonGenerator.forBlock['maixpy3_gpio_when_switch'] = function(block, ge
 }
 
 python.pythonGenerator.forBlock['maixpy3_gpio_switch'] = function(block, generator) {
-  generator.definitions_['from_maix_import_gpio'] = 'from maix import adc'
+  generator.definitions_['from_maix_import_adc'] = 'from maix import adc'
   generator.definitions_['__adc_key'] = '__adc_key = adc.ADC(0, adc.RES_BIT_12)'
 
   //generator.definitions_['from_evdev_import_InputDevice'] = 'from evdev import InputDevice';
