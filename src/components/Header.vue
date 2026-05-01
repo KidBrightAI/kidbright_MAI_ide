@@ -22,6 +22,8 @@ import openIcon from "@/assets/images/icons/btn_open.png"
 import uploadIcon from "@/assets/images/icons/btn_upload_02.png"
 const uploadDisabledIcon = uploadIcon
 
+import stopIcon from "@/assets/images/icons/btn_stop.png"
+
 import kbhead from "@/assets/KidBrightHead.png"
 import kblogo from "@/assets/kblogo_white.png"
 
@@ -29,7 +31,7 @@ import { useWorkspaceStore } from "@/store/workspace"
 import { useBoardStore } from "@/store/board"
 import {toast} from "vue3-toastify"
 
-const emit = defineEmits(["serial","example", "help", "firmware", "extraSave","plugin","download","newProject","openProject","saveProject","connectBoard","disconnectBoard","fileBrowser","connectWifi","newModel"])
+const emit = defineEmits(["serial","example", "help", "firmware", "extraSave","plugin","download","stop","newProject","openProject","saveProject","connectBoard","disconnectBoard","fileBrowser","connectWifi","newModel"])
 console.log("Header setup running")
 const workspaceStore = useWorkspaceStore()
 const boardStore = useBoardStore()
@@ -86,25 +88,30 @@ watch(() => workspaceStore.name, val => {
       </template>
     </VTooltip>
 
+    <!-- Upload toggles to Stop while a program is running on the board.
+         Plain click: idle → upload+run, running → interrupt the script.
+         Ctrl+click on plain-idle (and only when the board supports
+         packaged apps): open Deploy-as-App. We deliberately don't
+         hijack Ctrl+click while running — student would have to stop
+         first, which matches the natural mental model. -->
     <VTooltip>
       <template #activator="{ props }">
         <Kbbtn
           class="mx-1"
-          :icon="uploadIcon"
+          :icon="boardStore.running ? stopIcon : uploadIcon"
           :disabled-icon="uploadDisabledIcon"
           :disabled="!boardStore.isBoardConnected"
           v-bind="props"
-          @click="(ev)=>$emit('download',ev)"
+          @click="(ev) => boardStore.running ? $emit('stop') : $emit('download', ev)"
         />
       </template>
-      <!-- Plain click runs the project on the board. On boards that
-           support packaged apps (currently MaixCAM), Ctrl+click opens
-           the Deploy-as-App dialog so the same student gesture stays
-           "send my code to the board" regardless of mode. -->
-      <div>อัปโหลดโค้ดและรันบนบอร์ด</div>
-      <div v-if="workspaceStore.currentBoard?.appTemplate" class="text-caption mt-1">
-        กด Ctrl ค้างขณะคลิกเพื่อติดตั้งเป็นแอปพลิเคชัน
-      </div>
+      <div v-if="boardStore.running">หยุดโปรแกรมที่กำลังทำงาน</div>
+      <template v-else>
+        <div>อัปโหลดโค้ดและรันบนบอร์ด</div>
+        <div v-if="workspaceStore.currentBoard?.appTemplate" class="text-caption mt-1">
+          กด Ctrl ค้างขณะคลิกเพื่อติดตั้งเป็นแอปพลิเคชัน
+        </div>
+      </template>
     </VTooltip>
 
     <VTooltip text="File Browser">

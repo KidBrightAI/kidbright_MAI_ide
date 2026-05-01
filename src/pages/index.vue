@@ -159,14 +159,23 @@ const download = async event => {
   resetTerminal()
 
   const code = pythonGenerator.workspaceToCode(blocklyComp.value.workspace)
-  console.log(code)
   const isWriteStartupScriptNeeded = event?.ctrlKey
   if (isWriteStartupScriptNeeded) {
-    toast.info("Write startup script")
+    toast.info("กำลังเขียนสคริปต์เริ่มต้นด้วย")
   }
 
   const res = await boardStore.upload(code, isWriteStartupScriptNeeded)
-  toast[res ? 'success' : 'error'](`Upload ${res ? 'success' : 'failed'}`)
+  toast[res ? 'success' : 'error'](res ? "อัปโหลดสำเร็จ" : "อัปโหลดไม่สำเร็จ")
+}
+
+const onStop = async () => {
+  try {
+    await boardStore.stopProgram()
+    toast.info("หยุดโปรแกรมแล้ว")
+  } catch (e) {
+    console.error("stopProgram failed", e)
+    toast.error(`หยุดโปรแกรมไม่สำเร็จ: ${e?.message || e}`)
+  }
 }
 
 //=====================================================================//
@@ -222,18 +231,16 @@ const onDeployAsApp = async submitted => {
     { name: "app.png",  content: iconBytes },
   ]
 
-  // The loading hint auto-closes after ~10 s — long enough for the
-  // typical 5-7 s deploy. The form's submit button + boardStore.uploading
-  // flag give the user a separate "still working" cue, so this toast is
-  // really just "we got your click".
-  toast.info("กำลังติดตั้งแอปพลิเคชัน รอสักครู่...", { autoClose: 10000 })
+  // The submit button's spinner + label "กำลังติดตั้ง..." already tells
+  // the user we got the click. uploadModelIfNeeded / writeFile emit
+  // their own progress toasts, so a top-level info toast here just
+  // adds noise — let the final success/error toast be the only banner.
   try {
     const ok = await boardStore.deployAsApp({
       appId: submitted.id,
       autoStart: !!submitted.autoStart,
       files,
     })
-    console.log("[deploy] result ok =", ok)
     if (ok) {
       toast.success(`ติดตั้งแอปพลิเคชัน “${submitted.name || submitted.id}” สำเร็จ`)
       dialogs.value.deployAsApp = false
@@ -333,6 +340,7 @@ watch(selectedMenu, val => {
           <div class="w-100 h-100">
             <Header
               @download="download"
+              @stop="onStop"
               @newProject="newProjectConfirm"
               @openProject="openProject"
               @saveProject="dialogs.saveProject = true"

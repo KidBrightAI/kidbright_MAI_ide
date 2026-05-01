@@ -132,6 +132,21 @@ export class WebSocketShellHandler extends BoardProtocol {
   async listDir(_path) { return [] }
   async deleteFileOrFolder(_path) { /* not implemented on MaixCAM yet */ }
 
+  // =================================================== log helpers
+
+  /**
+   * The websocket delivers PTY bytes as ArrayBuffer (binaryType is
+   * "arraybuffer") and ws_shell's own JSON acks as text frames. All
+   * the log-stream consumers want a string to scan, so go through one
+   * decoder rather than re-deriving the same conditional in three
+   * different handlers.
+   */
+  _logToString(data) {
+    if (typeof data === 'string') return data
+    if (data instanceof ArrayBuffer) return new TextDecoder().decode(data)
+    return null
+  }
+
   // =================================================== transport primitives
 
   async writeFile(path, content, { permission = 0o666 } = {}) {
@@ -139,7 +154,9 @@ export class WebSocketShellHandler extends BoardProtocol {
     if (buf.byteLength > LARGE_FILE_THRESHOLD) {
       // Give the student feedback on slow uploads (model files can be
       // multi-MB and chunked base64 over PTY is not fast).
-      toast.info(`Uploading ${path.split("/").pop()} (${(buf.byteLength / 1024 / 1024).toFixed(2)} MB)...`)
+      const name = path.split("/").pop()
+      const mb = (buf.byteLength / 1024 / 1024).toFixed(2)
+      toast.info(`กำลังอัปโหลด ${name} (${mb} MB)...`)
     }
     await this._uploadFileChunked(path, buf)
   }
@@ -159,13 +176,14 @@ export class WebSocketShellHandler extends BoardProtocol {
         resolve(result)
       }
       handler = data => {
-        if (typeof data !== 'string') return
-        if (data.includes(`Stat ${path} exists`)) {
-          const size = parseInt(data.split(' ').pop())
+        const str = this._logToString(data)
+        if (str === null) return
+        if (str.includes(`Stat ${path} exists`)) {
+          const size = parseInt(str.split(' ').pop())
           finish({ exists: true, size: isNaN(size) ? 0 : size })
-        } else if (data.includes(`Stat ${path} notfound`)) {
+        } else if (str.includes(`Stat ${path} notfound`)) {
           finish({ exists: false, size: 0 })
-        } else if (data.includes(`Command error`)) {
+        } else if (str.includes(`Command error`)) {
           finish({ exists: false, size: 0, error: true })
         }
       }
@@ -206,7 +224,7 @@ export class WebSocketShellHandler extends BoardProtocol {
     await this.execShell(kill)
     await new Promise(r => setTimeout(r, 500))
     await this.execShell(`python3 ${runPy}`)
-    toast.success("Code uploaded & running...")
+    toast.success("อัปโหลดโค้ดและกำลังรันบนบอร์ด")
   }
 
   // =================================================== deploy-as-app
@@ -218,11 +236,27 @@ export class WebSocketShellHandler extends BoardProtocol {
   // - autoStart flips /maixapp/auto_start.txt: write the id to enable,
   //   clear the file to disable. Doing this from the handler keeps the
   //   pages/index.vue side ignorant of the path layout.
-  async deployAsApp({ appId, autoStart = false, files = [] }) {
+  async deployAsApp({ appId, autoStart = false, files = [] }, fs) {
     if (!appId) throw new Error("deployAsApp: appId is required")
     const appDir = `/maixapp/apps/${appId}`
     await this.execShell(`mkdir -p ${appDir}`)
     await new Promise(r => setTimeout(r, 200))
+
+    // Generators emit absolute paths like /root/model/<hash>.cvimodel
+    // for nn.YOLO11(...) etc., so the model has to be on the board for
+    // the deployed run.py to load. uploadModelIfNeeded is the same
+    // helper Run mode uses — it skips files that already exist with
+    // matching size, so re-deploys after a Run are basically free.
+    if (fs) await this.uploadModelIfNeeded(fs)
+
+    // Run mode lays board libs (classifier_runtime, detector_runtime,
+    // voice_mfcc, msa311, ...) and plugin libs into /root/app/ next to
+    // run.py. Generators emit `from classifier_runtime import Classifier`
+    // and similar — Python's default sys.path includes the script's
+    // own directory, so we drop the same files into /maixapp/apps/<id>/
+    // here. main.py spawns run.py via absolute path so the subprocess
+    // sees that dir on sys.path.
+    await this._uploadAppLibs(appDir)
 
     for (const f of files) {
       const path = `${appDir}/${f.name}`
@@ -263,6 +297,18 @@ export class WebSocketShellHandler extends BoardProtocol {
   }
 
   /**
+   * Drop board python modules and plugin libs alongside run.py inside
+   * the app directory so `from classifier_runtime import Classifier`
+   * (and friends) resolve. Reuses base.js _collectAppLibs so the file
+   * list never drifts from what Run mode writes to /root/app/.
+   */
+  async _uploadAppLibs(appDir) {
+    for (const lib of await this._collectAppLibs()) {
+      await this.writeFile(`${appDir}/${lib.name}`, lib.content)
+    }
+  }
+
+  /**
    * Send a shell command and resolve once the given marker string shows
    * up in the log stream — used to wait out gen_app_info + launcher
    * restart synchronously. Falls back to resolving on timeout so the
@@ -279,11 +325,8 @@ export class WebSocketShellHandler extends BoardProtocol {
         resolve()
       }
       handler = data => {
-        let str
-        if (typeof data === 'string') str = data
-        else if (data instanceof ArrayBuffer) str = new TextDecoder().decode(data)
-        else return
-        if (str.includes(marker)) finish()
+        const str = this._logToString(data)
+        if (str !== null && str.includes(marker)) finish()
       }
       this.on('log', handler)
       setTimeout(finish, timeoutMs)
@@ -331,14 +374,8 @@ export class WebSocketShellHandler extends BoardProtocol {
         resolve(ok)
       }
       handler = data => {
-        // ws_shell.py forwards PTY bytes; the websocket gives us an
-        // ArrayBuffer because of binaryType="arraybuffer". Decode
-        // before matching, else acks are missed and every chunk
-        // hits its 15s timeout.
-        let str
-        if (typeof data === 'string') str = data
-        else if (data instanceof ArrayBuffer) str = new TextDecoder().decode(data)
-        else return
+        const str = this._logToString(data)
+        if (str === null) return
         if (str.includes(`Uploaded ${path} success`)) finish(true)
         else if (str.includes(`Upload error`))       finish(false)
       }

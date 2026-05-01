@@ -137,7 +137,7 @@ export default class BoardProtocol {
   //
   // Install user code as a packaged Maix App at /maixapp/apps/<id>/.
   // Only kidbright-mai-plus implements this today — other boards throw.
-  async deployAsApp(_payload)                { throw new Error("deployAsApp() not supported on this board") }
+  async deployAsApp(_payload, _fs)           { throw new Error("deployAsApp() not supported on this board") }
 
   // ========================================================== shared orchestration
 
@@ -203,7 +203,6 @@ export default class BoardProtocol {
    */
   async _buildFilesUpload(code, writeStartup) {
     const workspaceStore = useWorkspaceStore()
-    const pluginStore = usePluginStore()
     const currentBoard = workspaceStore.currentBoard
 
     if (currentBoard?.codeTemplate) {
@@ -216,29 +215,47 @@ export default class BoardProtocol {
       files.push(...this._buildStartupFiles(code))
     }
 
+    for (const lib of await this._collectAppLibs()) {
+      files.push({ file: appPath(lib.name), content: lib.content })
+    }
+
+    return files
+  }
+
+  /**
+   * Collect every python lib that ships with the current board's
+   * libs/ folder plus every installed plugin's libs/. Returned as
+   * `[{ name, content }, ...]` so both Run mode (writes to /root/app/)
+   * and Deploy mode (writes to /maixapp/apps/<id>/) can share the
+   * loader without DRY violations.
+   */
+  async _collectAppLibs() {
+    const workspaceStore = useWorkspaceStore()
+    const pluginStore = usePluginStore()
+    const currentBoard = workspaceStore.currentBoard
+    const libs = []
+
     for (const module of currentBoard?.pythonModules || []) {
       const response = await fetch(module)
-      if (response.ok) {
-        files.push({
-          file: appPath(module.replace(currentBoard.path + "libs/", "")),
-          content: await response.text(),
-        })
-      }
+      if (!response.ok) continue
+      libs.push({
+        name: module.replace(currentBoard.path + "libs/", ""),
+        content: await response.text(),
+      })
     }
 
     for (const plugin of pluginStore.installed || []) {
       for (const codeFile of plugin.codeFiles || []) {
         const response = await fetch(codeFile)
-        if (response.ok) {
-          files.push({
-            file: appPath(codeFile.replace(plugin.path + "libs/", "")),
-            content: await response.text(),
-          })
-        }
+        if (!response.ok) continue
+        libs.push({
+          name: codeFile.replace(plugin.path + "libs/", ""),
+          content: await response.text(),
+        })
       }
     }
 
-    return files
+    return libs
   }
 
   /**

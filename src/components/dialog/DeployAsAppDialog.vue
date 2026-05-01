@@ -12,8 +12,14 @@ const boardStore = useBoardStore()
 
 const refVForm = ref({})
 // Deep clone so cancelling the dialog doesn't mutate the persisted store.
+// Refreshed every time the dialog opens (see watch below) so a project
+// switch elsewhere shows up here too.
 const form = ref(JSON.parse(JSON.stringify(workspaceStore.appConfig)))
 const iconFile = ref(null)
+// Tracks whether the user has typed a custom App ID. Kept outside `form`
+// so it doesn't leak into workspaceStore.appConfig (and from there into
+// localStorage on every save).
+const idEdited = ref(false)
 
 const slugify = s => (s || "")
   .toLowerCase()
@@ -22,7 +28,18 @@ const slugify = s => (s || "")
 
 watch(() => form.value.name, val => {
   // Auto-suggest id from name as long as the user hasn't typed a custom id yet.
-  if (!form.value._idEdited) form.value.id = slugify(val) || "kidbright"
+  if (!idEdited.value) form.value.id = slugify(val) || "kidbright"
+})
+
+watch(isDialogVisible, isOpen => {
+  // Re-clone from store on each open so external changes (e.g. user
+  // switching projects) are reflected, and a previous cancel doesn't
+  // leave stale typing in the form.
+  if (isOpen) {
+    form.value = JSON.parse(JSON.stringify(workspaceStore.appConfig))
+    iconFile.value = null
+    idEdited.value = false
+  }
 })
 
 const onIconPick = async event => {
@@ -52,9 +69,14 @@ const resetForm = () => {
 const onSubmit = async () => {
   const { valid } = await refVForm.value?.validate()
   if (!valid) return
-  // Persist back to workspaceStore so reopening the dialog shows the same
-  // values (and so the rest of the IDE can read appConfig.id elsewhere).
-  workspaceStore.appConfig = JSON.parse(JSON.stringify(form.value))
+  // Persist text fields so reopening the dialog shows the same values
+  // (and so the rest of the IDE can read appConfig.id elsewhere). The
+  // icon data URL is intentionally NOT persisted — a 1 MB upload would
+  // bloat localStorage on every save. User re-picks the icon next
+  // session if they want a custom one.
+  const persistable = JSON.parse(JSON.stringify(form.value))
+  persistable.icon = null
+  workspaceStore.appConfig = persistable
   // The parent (pages/index.vue) closes the dialog only when the deploy
   // actually finishes, so a failure leaves the form open for the user
   // to fix and retry instead of disappearing silently.
@@ -101,7 +123,7 @@ const onSubmit = async () => {
                   v => /^[a-z0-9_]+$/.test(v) || 'ใช้ a-z, 0-9 และ _ เท่านั้น',
                 ]"
                 outlined dense
-                @input="form._idEdited = true"
+                @input="idEdited = true"
               />
             </VCol>
           </VRow>

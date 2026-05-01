@@ -15,6 +15,10 @@ export const useBoardStore = defineStore({
       isElectron: false,
       firmwareUpdateMode: false,
       uploading: false,
+      // True between a successful upload() and the next stop / reboot /
+      // disconnect — the upload icon flips to a stop icon so the student
+      // can interrupt their loop without dropping into the terminal.
+      running: false,
       connected: false,
       wifiConnected: false,
       wifiConnecting: false,
@@ -114,6 +118,7 @@ export const useBoardStore = defineStore({
         await this.handler.disconnect()
         this.handler = null
         this.connected = false
+        this.running = false
       }
     },
 
@@ -171,11 +176,23 @@ export const useBoardStore = defineStore({
       this.uploading = true
       try {
         // Note: this.$fs is injected by a plugin. We pass it to the handler.
-        return await this.handler.upload(code, writeStartup, this.$fs)
+        const result = await this.handler.upload(code, writeStartup, this.$fs)
+        if (result) this.running = true
+        return result
       } catch (e) {
         throw e
       } finally {
         this.uploading = false
+      }
+    },
+
+    /** Send Ctrl+C to the running script and flip the running flag. */
+    async stopProgram() {
+      if (!this.handler) return
+      try {
+        await this.handler.interrupt()
+      } finally {
+        this.running = false
       }
     },
 
@@ -192,7 +209,7 @@ export const useBoardStore = defineStore({
       }
       this.uploading = true
       try {
-        return await this.handler.deployAsApp(payload)
+        return await this.handler.deployAsApp(payload, this.$fs)
       } finally {
         this.uploading = false
       }
@@ -233,6 +250,7 @@ export const useBoardStore = defineStore({
       await this.handler.rebootBoard()
       this.connected = false
       this.handler = null
+      this.running = false
     },
   },
 })
