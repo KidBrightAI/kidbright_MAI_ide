@@ -5,361 +5,333 @@ import { useBoardStore } from "@/store/board"
 import { useConfirm } from "@/components/comfirm-dialog"
 import { toast } from "vue3-toastify"
 
+const isDialogVisible = defineModel("isDialogVisible", { type: Boolean, default: false })
 
-const isDialogVisible = defineModel('isDialogVisible', { type: Boolean, default: false })
-
-
+const ROOT_PATH = "/root"
 
 const boardStore = useBoardStore()
 const confirm = useConfirm()
 
-const resetForm = () => {
-  isDialogVisible.value = false
-}
-const openNewFolderDialog = ref(false)
-const currentPath = ref('/root')
-const listData = ref([])
-const headers = [
-  //{ title : "Type", align: "start", sortable: true, key: "type", value: (item) => item.type === 4 ? 'Folder' : 'File'},
-  { title : "Name", align: "start", sortable: true, key: "name" },
-  { title : "Size", align: "end", sortable: true, key: "size", value: item => beatifySize(item.size)},  
-  { title : "Permission", align: "center", sortable: true, key: "permission" },
+const currentPath = ref(ROOT_PATH)
+const entries     = ref([])
+const loading     = ref(false)
+const newFolderDialog = ref(false)
 
-  //{ title : "Modify", align: "start", sortable: true, key: "mtime", value: (item) => unixTimestampToDate(item.mtime) }
-  // add action column to delete file or folder
-  { title : "Action", align: "end", key: "action", width: "110"},
-]
-const loading = ref(false)
-const listDir = async path => {
+watch(isDialogVisible, isOpen => {
+  if (isOpen) refresh()
+})
+
+// =========================================================== navigation
+
+async function refresh() {
   loading.value = true
-  let res = await boardStore.listDir(path)
-
-  //filter out . and ..
-  res = res.filter(item => item.name !== '.' && item.name !== '..')
-  listData.value = res
-  loading.value = false
-}
-const listParentDir = async () => {
-  let path = currentPath.value
-  let arr = path.split('/')
-  arr.pop()
-  path = arr.join('/')
-  if(path === '') path = '/'
-  await listDir(path)
-  currentPath.value = path
-}
-
-//split current path into array
-const directoryStructure = computed(() => {
-  let path = currentPath.value
-  let arr = path.split('/')
-  let res = []
-  for(let i = 0; i < arr.length; i++) {
-    let obj = {
-      name: arr[i],
-      path: arr.slice(0, i + 1).join('/'),
-    }
-    res.push(obj)
+  try {
+    const list = await boardStore.listDir(currentPath.value)
+    entries.value = list.filter(e => e.name !== "." && e.name !== "..")
+  } finally {
+    loading.value = false
   }
-  
-  return res
+}
+
+function joinPath(base, name) {
+  return base === "/" ? `/${name}` : `${base}/${name}`
+}
+
+async function enter(item) {
+  if (item.type !== "dir") return
+  currentPath.value = joinPath(currentPath.value, item.name)
+  await refresh()
+}
+
+async function jumpTo(path) {
+  currentPath.value = path || "/"
+  await refresh()
+}
+
+async function goUp() {
+  if (currentPath.value === "/") return
+  const parts = currentPath.value.split("/").filter(Boolean)
+  parts.pop()
+  currentPath.value = parts.length ? "/" + parts.join("/") : "/"
+  await refresh()
+}
+
+const breadcrumb = computed(() => {
+  const acc = [{ title: "/", path: "/" }]
+  if (currentPath.value === "/") return acc
+  let p = ""
+  for (const part of currentPath.value.split("/").filter(Boolean)) {
+    p += "/" + part
+    acc.push({ title: part, path: p })
+  }
+  return acc
 })
 
-const unixTimestampToDate = unixTimestamp => {
-  //convert bigint to number
-  let tick = Number(unixTimestamp)
-
-  //tick = tick * 1000;
-  //unix timestamp modifed time ago  
-  //const tick = new Date().getTime() - timestamp;
-  //console.log(tick);
-  if(tick < 1000) return 'just now'
-  if(tick < 60000) return `${Math.floor(tick / 1000)} seconds ago`
-  if(tick < 3600000) return `${Math.floor(tick / 60000)} minutes ago`
-  if(tick < 86400000) return `${Math.floor(tick / 3600000)} hours ago`
-  if(tick < 604800000) return `${Math.floor(tick / 86400000)} days ago`
-  if(tick < 2592000000) return `${Math.floor(tick / 604800000)} weeks ago`
-  if(tick < 31536000000) return `${Math.floor(tick / 2592000000)} months ago`
-  if(tick < 315360000000) return `${Math.floor(tick / 31536000000)} years ago`
-  
-  return 'long time ago'
-
-  //
-}
-const beatifySize = size => {
-  size = Number(size)
-  if(size < 1024) return `${size} bytes`
-  if(size < 1048576) return `${(size / 1024).toFixed(2)} KB`
-  if(size < 1073741824) return `${(size / 1048576).toFixed(2)} MB`
-  
-  return `${(size / 1073741824).toFixed(2)} GB`
-}
-
-/* array of dir info 
-{
-  mode: 16877
-  mtime: 1693568606n
-  name: "System Volume Information"
-  permission: 493
-  size: 16384n
-  type: 4
-},
-{
-  mode: 33261
-  mtime: 315532800n
-  name: "main.py"
-  permission: 493
-  size: 616n
-  type: 8
-}
-*/
-const itemClickAction = async item => {
-  if(item.type === 4) {
-    await listDir(currentPath.value + '/' + item.name)
-    if(currentPath.value === '/') {
-      currentPath.value = currentPath.value + item.name
-    } else {
-      currentPath.value = currentPath.value + '/' + item.name
-    }    
-  }
-}
-const onPathClick = async item => {
-  await listDir(item.path)
-  currentPath.value = item.path
-}
-
-const deleteFileOrFolder = async item => {
-  try{
-    let message = `คุณต้องการลบ ${item.name} ใช่หรือไม่`
-    await confirm({ title: "ยืนยันการลบไฟล์" , content: message , dialogProps: { width: 'auto' } })
-    let res = await boardStore.deleteFileOrFolder(currentPath.value + '/' + item.name)
-    if(res) {
-      toast.info(`ลบไฟล์ ${item.name} สำเร็จ`)
-      await listDir(currentPath.value)
-    }
-  } catch (err) {
-    console.log(err)
-  } 
-}
-
-const onCreateFolder = async folderName => {
-  try {
-    let res = await boardStore.createNewFolder(currentPath.value + '/' + folderName)
-    if(res) {
-      toast.info(`สร้างโฟลเดอร์ ${folderName} สำเร็จ`)      
-      await listDir(currentPath.value)
-    }
-  } catch (err) {
-    console.log(err)
-  }
-}
-
-const downloadFile = async item => {
-  try {
-    let res = await boardStore.downloadFile(currentPath.value + '/' + item.name)
-    console.log(res)
-  } catch (err) {
-    console.log(err)
-  }
-}
-
-const uploadFile = async () => {
-  try {
-    //crate file dialog
-    let el = document.createElement('input')
-    el.type = 'file'    
-    el.onchange = async e => {
-      let file = e.target.files[0]
-      console.log("File: ", file)
-      let fullPath = currentPath.value + '/' + file.name
-      let res = await boardStore.uploadFile(fullPath, file)
-      if(res) {
-        toast.info(`อัปโหลดไฟล์ ${file.name} สำเร็จ`)
-        await listDir(currentPath.value)
-      }
-    }
-    el.click()
-
-
-  } catch (err) {
-    console.log(err)
-  }
-}
-
-const currentDirInfo = computed(() => {
-  return listData.value.filter(item => item.type === 4 && item.name !== '.' && item.name !== '..')
+const sortedEntries = computed(() => {
+  // Folders first, then files; alphabetical within each.
+  return [...entries.value].sort((a, b) => {
+    if (a.type !== b.type) return a.type === "dir" ? -1 : 1
+    return a.name.localeCompare(b.name)
+  })
 })
 
-//watch when dialog is visible
-watch(isDialogVisible, async value => {
-  if(value) {
-    await listDir(currentPath.value)
+// =========================================================== item actions
+
+async function downloadItem(item) {
+  await boardStore.downloadFile(joinPath(currentPath.value, item.name))
+}
+
+async function deleteItem(item) {
+  try {
+    await confirm({
+      title: "ยืนยันการลบ",
+      content: `ลบ "${item.name}" ใช่หรือไม่?`,
+      dialogProps: { width: "auto" },
+    })
+  } catch (_) { return }
+  const ok = await boardStore.deleteFileOrFolder(joinPath(currentPath.value, item.name))
+  if (ok) {
+    toast.info(`ลบ "${item.name}" แล้ว`)
+    await refresh()
   }
-})
+}
+
+async function createFolder(name) {
+  if (!name) return
+  const ok = await boardStore.createNewFolder(joinPath(currentPath.value, name))
+  if (ok) {
+    toast.info(`สร้างโฟลเดอร์ "${name}"`)
+    await refresh()
+  }
+}
+
+function uploadFile() {
+  const input = document.createElement("input")
+  input.type = "file"
+  input.onchange = async e => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const ok = await boardStore.uploadFile(joinPath(currentPath.value, file.name), file)
+    if (ok) {
+      toast.info(`อัปโหลด "${file.name}" แล้ว`)
+      await refresh()
+    }
+  }
+  input.click()
+}
+
+// =========================================================== presentation
+
+const FILE_ICONS = {
+  py:    "mdi-language-python",
+  json:  "mdi-code-json",
+  yaml:  "mdi-code-braces",
+  yml:   "mdi-code-braces",
+  md:    "mdi-language-markdown",
+  txt:   "mdi-file-document-outline",
+  log:   "mdi-file-document-outline",
+  sh:    "mdi-bash",
+  png:   "mdi-file-image",
+  jpg:   "mdi-file-image",
+  jpeg:  "mdi-file-image",
+  bmp:   "mdi-file-image",
+  wav:   "mdi-file-music",
+  mp3:   "mdi-file-music",
+  mp4:   "mdi-file-video",
+  zip:   "mdi-folder-zip",
+  tar:   "mdi-folder-zip",
+  gz:    "mdi-folder-zip",
+}
+
+function iconFor(item) {
+  if (item.type === "dir") return "mdi-folder"
+  const ext = item.name.split(".").pop().toLowerCase()
+  return FILE_ICONS[ext] || "mdi-file-outline"
+}
+
+function iconColor(item) {
+  return item.type === "dir" ? "amber-darken-2" : "blue-grey"
+}
+
+function humanSize(bytes) {
+  const n = Number(bytes || 0)
+  if (n < 1024)        return `${n} B`
+  if (n < 1024 ** 2)   return `${(n / 1024).toFixed(1)} KB`
+  if (n < 1024 ** 3)   return `${(n / 1024 ** 2).toFixed(1)} MB`
+  return `${(n / 1024 ** 3).toFixed(1)} GB`
+}
+
+function formatTime(unixSec) {
+  const t = Number(unixSec || 0)
+  if (!t) return ""
+  return new Date(t * 1000).toLocaleString("th-TH", {
+    year: "numeric", month: "short", day: "numeric",
+    hour: "2-digit", minute: "2-digit",
+  })
+}
 </script>
 
 <template>
   <VDialog
-    :width="$vuetify.display.smAndDown ? 'auto' : '1000'"
     v-model="isDialogVisible"
+    :width="$vuetify.display.smAndDown ? 'auto' : 1000"
+    persistent
   >
     <VCard class="pa-sm-3 pa-3 bg-background">
-      <DialogCloseBtn
-        variant="text"
-        size="small"
-        @click="resetForm"
-      />
-      <VCardTitle class="text-h5 text-center">
-        File System Explorer
-      </VCardTitle>      
-      <VCardItem>
-        <VCard
-          color="grey-lighten-4"
-          rounded="lg"
-          flat
-        >
-          <VToolbar
-            density="compact"
-            color="primary"
-          >                        
-            <!-- reload -->
-            <VBtn
-              density="compact"
-              icon
-              color="white"
-              class="mx-2"
-              @click="listDir(currentPath)"
-            >
-              <VIcon>mdi-reload</VIcon>
-            </VBtn>
-            <VBtn
-              density="compact"
-              icon
-              color="white"
-              class="mx-2"
-              @click="listParentDir"
-            >
-              <VIcon>mdi-undo-variant</VIcon>
-            </VBtn>
-            <VToolbarTitle>
-              <!-- display path -->
-              <template v-for="(item, index) in directoryStructure">
-                <span
-                  class="cursor-pointer text-decoration-underline"
-                  @click="onPathClick(item)"
-                >
-                  {{ item.name }}
-                </span>
-                <span v-if="index < directoryStructure.length - 1">/</span>
-              </template>
-            </VToolbarTitle>
-            <VSpacer />
-            <VBtn
-              icon="mdi-folder-plus"
-              density="compact"
-              color="white"
-              class="mx-2"
-              @click="openNewFolderDialog = true"
-            />
-            <VBtn
-              icon="mdi-upload"
-              density="compact"
-              color="white"
-              class="mx-2"
-              @click="uploadFile"
-            />            
-          </VToolbar>
-          <VLayout>
-            <!--
-              <VNavigationDrawer absolute permanent>
-              <VDivider></VDivider>
-              <VList v-model:opened="open" :lines="false" density="compact" nav>
-              <VListGroup v-for="item in currentDirInfo" :value="item.name" :key="item.name">
-              <template v-slot:activator="{props, isOpen}">
-              <VListItem 
-              :title="item.name"
-              v-bind="props" 
-              :prepend-icon="!isOpen? 'mdi-folder': 'mdi-folder-open'"
-              >
-              </VListItem>
-              </template>                  
-              </VListGroup>
-              </VList>
-              </VNavigationDrawer> 
-            -->
-            <VMain style="min-height: 700px;">
-              <VDataTable
-                :items="listData"
-                :headers="headers"
-                height="700"
-                :loading="loading"
-                loading-text="... กำลังโหลดข้อมูล ..."
-                no-data-text="ไม่พบข้อมูล"
-                no-results-text="ไม่พบข้อมูลที่ค้นหา"
-                fixed-header
-                :items-per-page="500"
-              >
-                <template #item.name="{ item }">
-                  <VIcon
-                    v-if="item.type === 4"
-                    color="primary"
-                  >
-                    mdi-folder
-                  </VIcon>
-                  <VIcon
-                    v-else-if="item.type === 8"
-                    color="yellow-darken-4"
-                  >
-                    mdi-file
-                  </VIcon>
-                  <!-- link click url -->
-                  <span
-                    v-if="item.type === 4" 
-                    class="ms-1 cursor-pointer text-decoration-underline"
-                    @click="itemClickAction(item)"
-                  >
-                    {{ item.name }}
-                  </span>
-                  <span
-                    v-else
-                    class="ms-1"
-                  >
-                    {{ item.name }}
-                  </span>
-                </template>
-                <!-- action column -->
-                <template #item.action="{ item }">
-                  <VBtn
-                    v-if="item.type === 8"
-                    variant="plain"
-                    icon="mdi-download"
-                    color="green"
-                    density="compact"
-                    class="mx-1"
-                    @click="downloadFile(item)"
-                  />
-                  <VBtn
-                    variant="plain"
-                    icon="mdi-delete"
-                    color="red"
-                    density="compact"
-                    class="mx-1"
-                    @click="deleteFileOrFolder(item)"
-                  />
-                  <!-- download when is file -->                  
-                </template>
-              </VDataTable>
-            </VMain>
-          </VLayout>
-        </VCard>
-      </VCardItem>
+      <DialogCloseBtn variant="text" size="small" @click="isDialogVisible = false" />
+
+      <VCardTitle class="text-h5">
+        <VIcon class="me-2">mdi-folder-open</VIcon>
+        File Explorer
+      </VCardTitle>
+
+      <VToolbar density="compact" color="primary">
+        <VBtn
+          v-tooltip:bottom="'ขึ้นหนึ่งระดับ'"
+          icon="mdi-arrow-up"
+          variant="text"
+          color="white"
+          :disabled="currentPath === '/'"
+          @click="goUp"
+        />
+        <VBtn
+          v-tooltip:bottom="'รีเฟรช'"
+          icon="mdi-refresh"
+          variant="text"
+          color="white"
+          @click="refresh"
+        />
+
+        <div class="d-flex align-center px-3 text-white text-body-2 breadcrumb-row">
+          <template v-for="(crumb, i) in breadcrumb" :key="crumb.path">
+            <VIcon v-if="i > 0" size="small" color="white">mdi-chevron-right</VIcon>
+            <span class="breadcrumb-segment" @click="jumpTo(crumb.path)">
+              {{ crumb.title }}
+            </span>
+          </template>
+        </div>
+
+        <VSpacer />
+
+        <VBtn
+          v-tooltip:bottom="'สร้างโฟลเดอร์ใหม่'"
+          icon="mdi-folder-plus"
+          variant="text"
+          color="white"
+          @click="newFolderDialog = true"
+        />
+        <VBtn
+          v-tooltip:bottom="'อัปโหลดไฟล์'"
+          icon="mdi-upload"
+          variant="text"
+          color="white"
+          @click="uploadFile"
+        />
+      </VToolbar>
+
+      <!-- ============================== body ============================== -->
+      <div class="explorer-body">
+        <VProgressLinear v-if="loading" indeterminate color="primary" height="2" />
+
+        <div v-if="!loading && !sortedEntries.length" class="empty-state">
+          <VIcon size="64" color="grey-lighten-1">mdi-folder-open-outline</VIcon>
+          <div class="text-body-1 text-grey-darken-1 mt-3">โฟลเดอร์ว่างเปล่า</div>
+        </div>
+
+        <VList v-else density="compact" class="bg-transparent pa-0">
+          <VListItem
+            v-for="item in sortedEntries"
+            :key="item.name"
+            :class="{ 'item-clickable': item.type === 'dir' }"
+            class="explorer-row"
+            @click="enter(item)"
+          >
+            <template #prepend>
+              <VIcon :color="iconColor(item)" size="26" class="me-2">
+                {{ iconFor(item) }}
+              </VIcon>
+            </template>
+
+            <VListItemTitle class="text-body-2">{{ item.name }}</VListItemTitle>
+            <VListItemSubtitle class="text-caption text-grey-darken-1">
+              <span v-if="item.type === 'file'">{{ humanSize(item.size) }}</span>
+              <span v-if="item.type === 'file' && item.mtime" class="ms-2">
+                · {{ formatTime(item.mtime) }}
+              </span>
+              <span v-else-if="item.mtime">{{ formatTime(item.mtime) }}</span>
+            </VListItemSubtitle>
+
+            <template #append>
+              <VBtn
+                v-if="item.type === 'file'"
+                icon="mdi-download"
+                variant="text"
+                density="compact"
+                size="small"
+                color="primary"
+                @click.stop="downloadItem(item)"
+              />
+              <VBtn
+                icon="mdi-delete-outline"
+                variant="text"
+                density="compact"
+                size="small"
+                color="red"
+                @click.stop="deleteItem(item)"
+              />
+            </template>
+          </VListItem>
+        </VList>
+      </div>
+
       <GenericInputDialog
-        v-model:isDialogVisible="openNewFolderDialog"
-        title="Create New Folder"
-        label="Folder Name"
-        button-name="Create Folder"
-        @value="onCreateFolder"
+        v-model:isDialogVisible="newFolderDialog"
+        title="สร้างโฟลเดอร์ใหม่"
+        label="ชื่อโฟลเดอร์"
+        button-name="สร้าง"
+        @value="createFolder"
       />
-    </VCard>    
-  </VDialog>  
+    </VCard>
+  </VDialog>
 </template>
+
+<style scoped>
+.explorer-body {
+  min-height: 500px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 0;
+}
+
+.explorer-row {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  transition: background-color 0.15s ease;
+}
+.explorer-row:hover {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+.item-clickable {
+  cursor: pointer;
+}
+
+.breadcrumb-row {
+  overflow-x: auto;
+  white-space: nowrap;
+}
+.breadcrumb-segment {
+  cursor: pointer;
+  padding: 0 4px;
+  border-radius: 3px;
+  transition: background-color 0.15s ease;
+}
+.breadcrumb-segment:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+</style>

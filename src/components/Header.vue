@@ -38,6 +38,16 @@ const boardStore = useBoardStore()
 const projectName = ref(workspaceStore.name)
 const loading = ref(false)
 
+// One-line tooltip — "<ssid> · <ip>" while connected, generic prompt
+// otherwise. v-tooltip directive accepts plain strings, so the
+// formatter has to resolve to a single line.
+const wifiTooltip = computed(() => {
+  if (!boardStore.wifiConnected) return "เชื่อมต่อ WiFi"
+  const parts = [boardStore.wifiSsid || "WiFi connected"]
+  if (boardStore.wifiIp) parts.push(boardStore.wifiIp)
+  return parts.join(" · ")
+})
+
 const saveProjetName = () => {
   loading.value = true
   setTimeout(() => {
@@ -127,7 +137,7 @@ watch(() => workspaceStore.name, val => {
       </template>
     </VTooltip>
 
-    <VTooltip text="WiFi Connect">
+    <VTooltip :text="wifiTooltip">
       <template #activator="{ props }">
         <Kbbtn
           class="mx-1"

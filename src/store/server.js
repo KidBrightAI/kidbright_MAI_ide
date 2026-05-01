@@ -6,7 +6,6 @@ import { useWorkspaceStore } from "./workspace"
 //axios
 import axios from 'axios'
 import { toast } from "vue3-toastify"
-import { md5 } from 'hash-wasm'
 import { pickFor } from "@/engine/model-formats"
 
 export const useServerStore = defineStore({
@@ -58,65 +57,33 @@ export const useServerStore = defineStore({
       this.serverUrl = null
     },
     async connectColab() {
-      console.log("connecting to colab")
-
-      //axios request /ping and server return json success with message "pong"
       this.isColabConnecting = true
       try {
-        let response = await axios.get(this.serverUrl + "/ping")
-        if (response.data.result == "pong") {
-          // Server stage
-          let stage = response.data.stage
-
-          //STAGE = 0 #0 none, 1 = prepare dataset, 2 = training, 3 = trained, 4 = converting, 5 converted
-          if (stage == 0) {
-            //this.step = 0;
-          } else if (stage == 1) {
-            //this.step = 1;
-          } else if (stage == 2) {
-            this.isTraining = true
-            this.isTrainingSuccess = false
-            this.isConverting = false
-            this.isConvertingSuccess = false
-          } else if (stage == 3) {
-            this.isTraining = false
-            this.isTrainingSuccess = true
-            this.isConverting = false
-            this.isConvertingSuccess = false
-          } else if (stage == 4) {
-            this.isTraining = false
-            this.isTrainingSuccess = true
-            this.isConverting = true
-            this.isConvertingSuccess = false
-          } else if (stage == 5) {
-            this.isTraining = false
-            this.isTrainingSuccess = true
-            this.isConverting = false
-            this.isConvertingSuccess = true
-          }
-
-          //check if event is not null, close it
-          if (this.event != null) {
-            this.event.close()
-          }
-
-          //create listener for event using eventsource
-          this.event = new EventSource(this.serverUrl + "/listen")
-
-          //this.event.addEventListener('message', this.onmessage);
-          this.event.onmessage = this.onmessage
-          console.log("connected to colab")
-          this.isColabConnected = true
-
-          return true
+        const response = await axios.get(this.serverUrl + "/ping")
+        if (response.data.result !== "pong") {
+          this.isColabConnected = false
+          return false
         }
-        this.isColabConnected = false
+        // Server stages: 0 none, 1 prepare dataset, 2 training,
+        // 3 trained, 4 converting, 5 converted. Map the meaningful
+        // ones into our boolean flags in one pass.
+        const stageFlags = {
+          2: { isTraining: true,  isTrainingSuccess: false, isConverting: false, isConvertingSuccess: false },
+          3: { isTraining: false, isTrainingSuccess: true,  isConverting: false, isConvertingSuccess: false },
+          4: { isTraining: false, isTrainingSuccess: true,  isConverting: true,  isConvertingSuccess: false },
+          5: { isTraining: false, isTrainingSuccess: true,  isConverting: false, isConvertingSuccess: true  },
+        }
+        const flags = stageFlags[response.data.stage]
+        if (flags) Object.assign(this, flags)
 
-        return false
+        if (this.event) this.event.close()
+        this.event = new EventSource(this.serverUrl + "/listen")
+        this.event.onmessage = this.onmessage
+        this.isColabConnected = true
+        return true
       } catch (e) {
-        console.log(e)
+        console.error(e)
         this.isColabConnected = false
-
         return false
       } finally {
         this.isColabConnecting = false
@@ -124,54 +91,49 @@ export const useServerStore = defineStore({
     },
 
     onmessage(event) {
-      let data = JSON.parse(event.data)
-      let dt = new Date(data.time * 1000)
-      let eventType = data.event
-      if (eventType == "initial") {
-        // clear log
-        this.messagesLog = []
-        this.matric = []
-      } else
-        if (eventType == "epoch_start") {
-          this.messagesLog.push(`[${dt.toLocaleString()}]: training epoch ${data.epoch}`)
+      const data = JSON.parse(event.data)
+      const ts = new Date(data.time * 1000).toLocaleString()
+      const log = msg => this.messagesLog.push(`[${ts}]: ${msg}`)
+
+      switch (data.event) {
+        case "initial":
+          this.messagesLog = []
+          this.matric = []
+          return
+        case "epoch_start":
           this.epoch = data.epoch
           this.totalEpoch = data.max_epoch
-        } else if (eventType == "epoch_end") {
-          this.messagesLog.push(`[${dt.toLocaleString()}]: epoch [${data.epoch}] ended`)
-
-          //add server matric and notify change        
-          this.matric = [... this.matric, {
+          log(`training epoch ${data.epoch}`)
+          return
+        case "epoch_end":
+          this.matric = [...this.matric, {
             epoch: data.epoch,
             max_epoch: data.max_epoch,
             label: data.epoch,
             matric: data.matric,
             prefix: "train_",
           }]
-        } else if (eventType == "batch_start") {
+          log(`epoch [${data.epoch}] ended`)
+          return
+        case "batch_start":
           this.batch = data.batch
           this.totalBatch = data.max_batch
           this.progress = (data.batch / data.max_batch) * 100
-        } else if (eventType == "batch_end") {
+          return
+        case "batch_end":
           this.progress = (data.batch / data.max_batch) * 100
-        } else if (eventType == "train_end") {
+          return
+        case "train_end":
           this.isTrainingSuccess = true
           this.isTraining = false
-          this.messagesLog.push(`[${dt.toLocaleString()}]: ${data["msg"]}`)
-          toast.success("Training end")
-        }
-
-        //convert model  
-        else if (eventType == "convert_model_init") {
-          this.messagesLog.push(`[${dt.toLocaleString()}]: ${data["msg"]}`)
-        } else if (eventType == "convert_model_progress") {
-          this.messagesLog.push(`[${dt.toLocaleString()}]: ${data["msg"]}`)
-        } else if (eventType == "convert_model_end") {
-          this.messagesLog.push(`[${dt.toLocaleString()}]: ${data["msg"]}`)
-
-          // download model
-        } else {
-          this.messagesLog.push(`[${dt.toLocaleString()}]: ${data["msg"]}`)
-        }
+          log(data.msg)
+          toast.success("เทรนโมเดลสำเร็จ")
+          return
+        default:
+          // convert_model_init / _progress / _end and anything else
+          // the server emits — just append to the message log.
+          log(data.msg)
+      }
     },
     async terminateColab() {
       try {
@@ -196,7 +158,7 @@ export const useServerStore = defineStore({
           this.isColabConnecting = false
           this.event.close()
           this.event = null
-          toast.success("Colab terminated")
+          toast.success("ยกเลิกการเทรนแล้ว")
         }
       } catch (e) {
         console.log(e)
@@ -271,10 +233,9 @@ export const useServerStore = defineStore({
           this.isDownloadingSuccess = true
 
           await workspaceStore.importModelFromBlob(Format, blobs)
-          toast.success("Model Downloaded")
+          toast.success("ดาวน์โหลดโมเดลสำเร็จ")
         } else {
-          console.log("model convert failed")
-          toast.error("Model Convert Failed")
+          toast.error("แปลงโมเดลไม่สำเร็จ")
         }
 
       } catch (e) {

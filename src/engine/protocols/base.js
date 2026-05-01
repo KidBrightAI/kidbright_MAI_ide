@@ -144,9 +144,8 @@ export default class BoardProtocol {
   /**
    * Deploy user code + board libs + plugin libs to the device, then
    * restart the running python process. Works on any subclass that
-   * implements the primitives above — do NOT override unless the
-   * protocol has fundamentally different semantics (see WebSocketHandler
-   * which sends Run-command bytes directly and does not upload files).
+   * implements the primitives above — only override if the protocol
+   * has fundamentally different semantics.
    */
   async upload(code, writeStartup = false, fs) {
     try {

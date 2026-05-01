@@ -1,5 +1,5 @@
 import { defineStore } from "pinia"
-import { loadBoard, loadPlugin } from "../engine/board"
+import { loadBoard, loadPlugin } from "@/engine/board"
 import { usePluginStore } from "./plugin"
 import { useDatasetStore } from "./dataset"
 import { useServerStore } from "./server"
@@ -7,6 +7,28 @@ import { useServerStore } from "./server"
 import ProjectIOService from "@/services/ProjectIOService"
 import { applyBoardDefaults } from "@/engine/graph-merge"
 import { setBoardContext } from "@/engine/board-node-options"
+
+// Project-level fields shared between create / open / delete /
+// reset-type. Listed once so adding a field doesn't require touching
+// four near-identical action bodies.
+const BLANK_PROJECT = {
+  mode: 'block',
+  code: null,
+  block: null,
+  currentBoard: null,
+  name: null,
+  id: null,
+  dataset: [],
+  projectType: null,
+  projectTypeTitle: null,
+  lastUpdate: null,
+  extension: null,
+  labels: [],
+  model: null,
+  defaultGraph: {},
+  graph: {},
+  trainConfig: {},
+}
 
 
 export const useWorkspaceStore = defineStore({
@@ -58,7 +80,6 @@ export const useWorkspaceStore = defineStore({
       'block',
       'currentBoard',
       'name',
-      'board',
       'id',
       'dataset',
       'projectType',
@@ -66,7 +87,6 @@ export const useWorkspaceStore = defineStore({
       'lastUpdate',
       'model',
       'labels',
-      'colabUrl',
       'extension',
       'trainConfig',
       'graph',
@@ -75,16 +95,18 @@ export const useWorkspaceStore = defineStore({
     ],
   },
   actions: {
+    /**
+     * Trigger a browser download for the given Blob/File-ish content.
+     * Used everywhere we hand the user a project zip / model file.
+     * (Older code had a near-duplicate `saveAs` — collapsed here.)
+     */
     downloadBlob(filename, data) {
-      var a = document.createElement("a")
-      document.body.appendChild(a)
-      a.style = "display: none"
-      let url = window.URL.createObjectURL(data)
+      const url = URL.createObjectURL(data)
+      const a = document.createElement("a")
       a.href = url
       a.download = filename
       a.click()
-      window.URL.revokeObjectURL(url)
-      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
     },
     async saveProject(mode = 'download', filename = 'project.zip') {
       this.saving = true
@@ -115,12 +137,16 @@ export const useWorkspaceStore = defineStore({
         this.savingProgress = 100
       }
     },
+    /** Reset every project field to its blank-state default in one shot. */
+    _resetProjectFields() {
+      Object.assign(this, BLANK_PROJECT)
+    },
+
     async createNewProject(projectInfo) {
+      this._resetProjectFields()
       this.mode = projectInfo.mode || 'block'
-      this.code = null
-      this.block = null
       this.name = projectInfo.name
-      this.currentBoard = this.boards.find(board => board.id == projectInfo.board)
+      this.currentBoard = this.boards.find(b => b.id == projectInfo.board)
       this.id = projectInfo.id
       this.dataset = projectInfo.dataset
       this.labels = projectInfo.labels
@@ -129,27 +155,13 @@ export const useWorkspaceStore = defineStore({
       this.lastUpdate = projectInfo.lastUpdate
       this.extension = projectInfo.extension
       this.model = projectInfo.model
-      this.defaultGraph = {}
-      this.graph = {}
-      this.trainConfig = {}
+      if (projectInfo.block) this.block = projectInfo.block
+      if (projectInfo.code)  this.code  = projectInfo.code
 
-      // clear server store 
-      const serverStore = useServerStore()
-      serverStore.clear()
+      useServerStore().clear()
 
-      //--------- load default code from board --------//
-      if (projectInfo.block) {
-        this.block = projectInfo.block
-      }
-      if (projectInfo.code) {
-        this.code = projectInfo.code
-      }
-      console.log("create project with code")
-
-      //--------- load board'blocks --------//
       if (projectInfo.plugin) {
-        const pluginStore = usePluginStore()
-        pluginStore.installed = projectInfo.plugin
+        usePluginStore().installed = projectInfo.plugin
         await loadPlugin(projectInfo.plugin)
       }
       await loadBoard(this.currentBoard)
@@ -157,27 +169,8 @@ export const useWorkspaceStore = defineStore({
       return true
     },
     async deleteProject() {
-      // clear dataset
       await this.$fs.removeFolder(this.id)
-
-      this.mode = 'block'
-      this.code = null
-      this.block = null
-      this.currentBoard = null
-      this.name = null
-      this.id = null
-      this.dataset = []
-      this.projectType = null
-      this.projectTypeTitle = null
-      this.lastUpdate = null
-      this.extension = null
-      this.labels = []
-      this.model = null
-
-      // clear local storage
-      this.$reset()
-
-      // reload page
+      this.$reset()        // wipes localStorage too
       window.location.reload()
     },
     async selectProjectType(projectType) {
@@ -221,14 +214,9 @@ export const useWorkspaceStore = defineStore({
       this.graph = {}
       this.trainConfig = {}
 
-      //----- clear dataset -----//      
       await this.$fs.removeFolder(this.id)
-      const datasetStore = useDatasetStore()
-      await datasetStore.clearDataset()
-
-      //----- clear server store -----//
-      const serverStore = useServerStore()
-      serverStore.$reset()
+      await useDatasetStore().clearDataset()
+      useServerStore().$reset()
 
       return true
     },
@@ -348,14 +336,6 @@ export const useWorkspaceStore = defineStore({
 
         return false
       }
-    },
-
-    saveAs(content, filename) {
-      const link = document.createElement('a')
-      link.href = URL.createObjectURL(content)
-      link.download = filename
-      link.click()
-      URL.revokeObjectURL(link.href)
     },
 
     switchMode(mode) {

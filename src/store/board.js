@@ -4,7 +4,6 @@ import { markRaw } from "vue"
 import { toast } from "vue3-toastify"
 import { useWorkspaceStore } from "./workspace"
 import { WebAdbHandler } from "@/engine/protocols/web-adb.js"
-import { WebSocketHandler } from "@/engine/protocols/websocket.js"
 import { WebSocketShellHandler } from "@/engine/protocols/websocket-shell.js"
 
 
@@ -19,8 +18,15 @@ export const useBoardStore = defineStore({
       // disconnect — the upload icon flips to a stop icon so the student
       // can interrupt their loop without dropping into the terminal.
       running: false,
+      // Bumped by the protocol handler whenever its capability set
+      // changes (e.g. after probing the board's ws_shell.py version).
+      // The capabilities getter touches this so Vue knows to re-render
+      // dependent UI even though `handler` itself is markRaw.
+      capabilitiesRevision: 0,
       connected: false,
       wifiConnected: false,
+      wifiSsid: null,                // populated alongside wifiConnected
+      wifiIp: null,                  // ip_address from wpa_cli status
       wifiConnecting: false,
       wifiListing: false,
       handler: null,
@@ -58,8 +64,13 @@ export const useBoardStore = defineStore({
      * wifi / file-explorer menus on boards that don't implement them.
      * Falls back to an all-false shape when no handler exists yet, so
      * templates can access `.wifi` etc. unconditionally.
+     *
+     * The protocol handler is markRaw, so Vue can't observe its
+     * internal feature set. The handler bumps `capabilitiesRevision`
+     * after probing, and we read it here to register the dependency.
      */
     capabilities() {
+      void this.capabilitiesRevision
       return this.handler?.capabilities ?? {
         wifi: false,
         fileExplorer: false,
@@ -84,9 +95,6 @@ export const useBoardStore = defineStore({
         case "web-adb":
           this.handler = markRaw(new WebAdbHandler())
           break
-        case "websocket":
-          this.handler = markRaw(new WebSocketHandler())
-          break
         case "websocket-shell":
           this.handler = markRaw(new WebSocketShellHandler())
           break
@@ -110,7 +118,34 @@ export const useBoardStore = defineStore({
       const success = await handler.connect(currentBoard)
       this.connected = success
 
+      if (success) {
+        // The board may already be on a saved WiFi network from a
+        // previous session — don't make the user click the WiFi
+        // button just to learn that. Try once now (V1 capabilities
+        // are static) and once after a short delay (V2's version
+        // probe runs async, so capabilities.wifi may flip on a beat
+        // after connect).
+        this._refreshWifiSilently()
+        setTimeout(() => this._refreshWifiSilently(), 1500)
+      }
+
       return success
+    },
+
+    /**
+     * Update wifiConnected / wifiSsid by asking the protocol handler.
+     * Silent — failures are swallowed because this runs as a
+     * speculative refresh; if it doesn't work, the WiFi dialog will
+     * just re-query when the user opens it.
+     */
+    async _refreshWifiSilently() {
+      if (!this.handler || !this.capabilities.wifi) return
+      try {
+        const r = await this.handler.checkWifi()
+        this.wifiConnected = !!r?.connected
+        this.wifiSsid      = r?.info?.ssid       || null
+        this.wifiIp        = r?.info?.ip_address || null
+      } catch (_) { /* swallow — speculative */ }
     },
 
     async deviceDisconnect() {
@@ -119,68 +154,68 @@ export const useBoardStore = defineStore({
         this.handler = null
         this.connected = false
         this.running = false
+        this.wifiConnected = false
+        this.wifiSsid = null
+        this.wifiIp = null
       }
+    },
+
+    /**
+     * Lazy-reconnect helper used by every command that talks to the
+     * board. Returns true once the link is up, false if connect failed.
+     * Throws (instead of returning false) when `mustConnect` is set,
+     * matching the WiFi actions that always expected a connection.
+     */
+    async _ensureConnected({ mustConnect = false } = {}) {
+      if (this.connected) return true
+      if (await this.deviceConnect()) {
+        await sleep(300)
+        return true
+      }
+      if (mustConnect) throw new Error("device not connected")
+      return false
     },
 
     async checkWifi() {
-      if (!this.isBoardConnected) {
-        if (!(await this.deviceConnect())) {
-          throw new Error("device not connected")
-        }
-        await sleep(300)
-      }
+      await this._ensureConnected({ mustConnect: true })
       this.wifiListing = true
-      const result = await this.handler.checkWifi()
-      this.wifiConnected = result.connected
-      this.wifiListing = false
-
-      return result
+      try {
+        const result = await this.handler.checkWifi()
+        this.wifiConnected = result.connected
+        return result
+      } finally {
+        this.wifiListing = false
+      }
     },
 
     async listWifi() {
-      if (!this.isBoardConnected) {
-        if (!(await this.deviceConnect())) {
-          throw new Error("device not connected")
-        }
-        await sleep(300)
-      }
+      await this._ensureConnected({ mustConnect: true })
       this.wifiListing = true
-      const wifiList = await this.handler.listWifi()
-      this.wifiListing = false
-
-      return wifiList
+      try {
+        return await this.handler.listWifi()
+      } finally {
+        this.wifiListing = false
+      }
     },
 
     async connectWifi(ssid, password) {
-      if (!this.isBoardConnected) {
-        if (!(await this.deviceConnect())) {
-          throw new Error("device not connected")
-        }
-        await sleep(300)
-      }
+      await this._ensureConnected({ mustConnect: true })
       this.wifiConnecting = true
-      const success = await this.handler.connectWifi(ssid, password)
-      this.wifiConnecting = false
-
-      return success
+      try {
+        return await this.handler.connectWifi(ssid, password)
+      } finally {
+        this.wifiConnecting = false
+      }
     },
 
     async upload(code, writeStartup = false) {
-      if (!this.isBoardConnected) {
-        if (!(await this.deviceConnect())) {
-          return
-        }
-        await sleep(300)
-      }
-
+      if (!(await this._ensureConnected())) return
       this.uploading = true
       try {
-        // Note: this.$fs is injected by a plugin. We pass it to the handler.
+        // this.$fs is the Persistent FS plugin, injected on the store.
         const result = await this.handler.upload(code, writeStartup, this.$fs)
         if (result) this.running = true
         return result
-      } catch (e) {
-        throw e
       } finally {
         this.uploading = false
       }
@@ -203,10 +238,7 @@ export const useBoardStore = defineStore({
      * writes /maixapp/auto_start.txt to set it as the boot app.
      */
     async deployAsApp(payload) {
-      if (!this.isBoardConnected) {
-        if (!(await this.deviceConnect())) return
-        await sleep(300)
-      }
+      if (!(await this._ensureConnected())) return
       this.uploading = true
       try {
         return await this.handler.deployAsApp(payload, this.$fs)
@@ -215,36 +247,21 @@ export const useBoardStore = defineStore({
       }
     },
 
-    // Wrap other handler methods
-    async listDir(path) {
-      if (!this.isBoardConnected) { await this.deviceConnect(); await sleep(300) }
-
-      return this.handler.listDir(path)
+    // File-explorer wrappers: every one is "ensure-connected then
+    // delegate to handler", so route them through a single helper.
+    async _viaHandler(method, ...args) {
+      await this._ensureConnected()
+      return this.handler[method](...args)
     },
-    async downloadFile(path) {
-      if (!this.isBoardConnected) { await this.deviceConnect(); await sleep(300) }
+    listDir(path)               { return this._viaHandler("listDir", path) },
+    downloadFile(path)          { return this._viaHandler("downloadFile", path) },
+    deleteFileOrFolder(path)    { return this._viaHandler("deleteFileOrFolder", path) },
+    createNewFolder(path)       { return this._viaHandler("createNewFolder", path) },
+    uploadFile(path, file)      { return this._viaHandler("uploadFile", path, file) },
 
-      return this.handler.downloadFile(path)
-    },
-    async deleteFileOrFolder(path) {
-      if (!this.isBoardConnected) { await this.deviceConnect(); await sleep(300) }
-
-      return this.handler.deleteFileOrFolder(path)
-    },
-    async createNewFolder(path) {
-      if (!this.isBoardConnected) { await this.deviceConnect(); await sleep(300) }
-
-      return this.handler.createNewFolder(path)
-    },
-    async uploadFile(path, file) {
-      if (!this.isBoardConnected) { await this.deviceConnect(); await sleep(300) }
-
-      return this.handler.uploadFile(path, file)
-    },
     async rebootBoard() {
-      if (!this.isBoardConnected) {
+      if (!this.connected) {
         toast.error("ไม่ได้เชื่อมต่อบอร์ด")
-
         return
       }
       await this.handler.rebootBoard()

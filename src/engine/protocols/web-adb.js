@@ -261,7 +261,17 @@ export class WebAdbHandler extends BoardProtocol {
   async listDir(path) {
     const sync = await this.adb.sync()
     try {
-      return await sync.readdir(path)
+      // ADB sync returns each entry as the raw Linux dirent shape
+      // (type=4 for dir, =8 for file, size + mtime as bigint, plus
+      // permission bits). Normalise to the same shape ws_shell.py
+      // emits for V2 so the file-explorer UI only learns one format.
+      const raw = await sync.readdir(path)
+      return raw.map(e => ({
+        name:  e.name,
+        type:  e.type === LinuxFileType.Directory ? "dir" : "file",
+        size:  Number(e.size  || 0),
+        mtime: Number(e.mtime || 0),
+      }))
     } finally {
       sync.dispose()
     }

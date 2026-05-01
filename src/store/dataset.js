@@ -1,5 +1,4 @@
 import { defineStore } from "pinia"
-import { useWorkspaceStore } from "./workspace"
 
 export const useDatasetStore = defineStore({
   id: "dataset",
@@ -126,37 +125,27 @@ export const useDatasetStore = defineStore({
     },
 
     async createDataset(dataset) {
-      let dirEntry = await this.prepareDataset(dataset.project)
-
-      this.project = dataset.project
-      this.datasetType = dataset.datasetType
-      this.data = dataset.data || []
-      this.baseURL = dirEntry.toURL()
-
-      console.log("create dataset for project : ", this.project)
-      console.log("dataset base url : ", this.baseURL)
-      console.log("dataset type : ", this.datasetType)
+      const dirEntry = await this.prepareDataset(dataset.project)
+      this._loadFrom(dataset, dirEntry)
     },
     async clearDataset() {
       this.data = []
       this.project = ""
       this.datasetType = null
       this.baseURL = ""
-
-      //let dirEntry = await this.$fs.getDirectory(this.project);
-      //await this.$fs.removeDir(dirEntry);
     },
 
     async restoreDataset(dataset) {
-      console.log("Restore dataset ...")
-      let dirEntry = await this.$fs.getDirectory(dataset.project)
-      this.project = dataset.project
+      const dirEntry = await this.$fs.getDirectory(dataset.project)
+      this._loadFrom(dataset, dirEntry)
+    },
+
+    /** Shared assignment used by both createDataset and restoreDataset. */
+    _loadFrom(dataset, dirEntry) {
+      this.project     = dataset.project
       this.datasetType = dataset.datasetType
-      this.data = dataset.data || []
-      this.baseURL = dirEntry.toURL()
-      console.log("restore dataset for project : ", this.project)
-      console.log("dataset base url : ", this.baseURL)
-      console.log("dataset type : ", this.datasetType)
+      this.data        = dataset.data || []
+      this.baseURL     = dirEntry.toURL()
     },
 
     exist(filename) {
@@ -164,7 +153,6 @@ export const useDatasetStore = defineStore({
     },
 
     async addData(data) {
-      console.log(data)
       await this.$fs.writeFile(`${this.project}/${data.id}.${data.ext}`, data.image)
       if (data.sound && data.sound_ext) {
         await this.$fs.writeFile(`${this.project}/${data.id}.${data.sound_ext}`, data.sound)

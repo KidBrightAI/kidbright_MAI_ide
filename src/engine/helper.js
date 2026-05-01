@@ -1,89 +1,9 @@
 export function sleep(time) {
-  return new Promise((resolve, reject) => {
-    setTimeout(resolve, time)
-  })
+  return new Promise(resolve => setTimeout(resolve, time))
 }
 
 export function randomId() {
   return Math.random().toString(36).substr(2, 9)
-}
-
-const moduleBuiltIn = [
-  "framebuf",
-  "ucryptolib",
-  "urandom",
-  "_boot",
-  "gc",
-  "uctypes",
-  "ure",
-  "_onewire",
-  "inisetup",
-  "uerrno",
-  "_thread",
-  "machine",
-  "uhashlib",
-  "uselect",
-  "_webrepl",
-  "math",
-  "uhashlib",
-  "usocket",
-  "apa106",
-  "micropython",
-  "uheapq",
-  "ussl",
-  "btree",
-  "uio",
-  "ustruct",
-  "builtins",
-  "network",
-  "ujson",
-  "utime",
-  "cmath",
-  "ntptime",
-  "umqtt/robust",
-  "utimeq",
-  "dht",
-  "onewire",
-  "umqtt/simple",
-  "uwebsocket",
-  "ds18x20",
-  "sys",
-  "uos",
-  "uzlib",
-  "esp",
-  "uarray",
-  "upip",
-  "webrepl",
-  "esp32",
-  "ubinascii",
-  "upip_utarfile",
-  "webrepl_setup",
-  "flashbdev",
-  "ucollections",
-  "upysh",
-  "websocket_helper",
-  "time", 
-]
-
-export function findIncludeModuleNameInCode(code){
-  const regex = /^\s*?(?:import|from)\s+([^\s]+)/mg
-
-  let moduleList = []
-  let m
-
-  while ((m = regex.exec(code)) !== null) {
-    if (m.index === regex.lastIndex) {
-      regex.lastIndex++
-    }
-
-    let moduleName = m[1]
-    if (moduleList.indexOf(moduleName) < 0) {
-      moduleList.push(moduleName)
-    }
-  }
-  moduleList = moduleList.filter(moduleName => moduleBuiltIn.indexOf(moduleName) < 0)
-  
-  return moduleList
 }
 
 
@@ -186,34 +106,3 @@ export function packMessage(cmd, data) {
   return finalMessage
 }
 
-export function unpackMessage(message) {
-  const data = new Uint8Array(message)
-
-  const header = data.slice(0, 4)
-  if (!header.every((value, index) => value === HEADER[index])) {
-    console.error("message header error")
-    
-    return null
-  }
-
-  const view = new DataView(data.buffer)
-  const dataLen = view.getUint32(4, true) // little-endian
-
-  if (data.length - 8 < dataLen) {
-    console.error("message data frame not complete")
-    
-    return null
-  }
-
-  const calculatedChecksum = data.slice(0, -1).reduce((acc, value) => acc + value, 0) % 256
-  if (calculatedChecksum !== data[dataLen + 7]) {
-    console.error("check sum not equal")
-    
-    return null
-  }
-
-  const cmd = data[9]
-  const content = data.slice(10, 10 + dataLen - 3)
-  
-  return { cmd, content }
-}
