@@ -142,6 +142,16 @@ const undo = () => blocklyComp.value?.undo()
 const redo = () => blocklyComp.value?.redo()
 
 const download = async event => {
+  // On boards that support packaged Maix apps (MaixCAM), Ctrl+click on
+  // the upload button opens the Deploy-as-App dialog instead of the
+  // ad-hoc /root/app/run.py upload. V831 keeps Ctrl+click as
+  // "writeStartup" — its init.d-based auto-start is the only thing
+  // that modifier was ever meaningful for.
+  if (event?.ctrlKey && workspaceStore.currentBoard?.appTemplate) {
+    dialogs.value.deployAsApp = true
+    return
+  }
+
   if (!isSerialPanelOpen.value) {
     await onSerial()
     await sleep(1000)
@@ -175,12 +185,17 @@ const onDeployAsApp = async submitted => {
   const board = workspaceStore.currentBoard
   const tpl = board?.appTemplate
   if (!tpl) {
-    toast.error("บอร์ดนี้ไม่รองรับ Deploy as App")
+    toast.error("บอร์ดนี้ไม่รองรับการติดตั้งเป็นแอปพลิเคชัน")
     return
   }
 
   const code = pythonGenerator.workspaceToCode(blocklyComp.value.workspace)
-  const wrapped = (board.codeTemplate || "##{main}##").replace("##{main}##", code)
+  // Deploy uses a different wrapper than Run: board.codeTemplate calls
+  // kill_system_app() which would tear down the launcher (our parent
+  // process) — fine for Run, fatal for Deploy. The board ships a
+  // run_template.py with just signal handlers + ##{main}## hole.
+  const runTemplate = tpl["run_template.py"] || board.codeTemplate || "##{main}##"
+  const wrapped = runTemplate.replace("##{main}##", code)
 
   // Render app.yaml from the template by string-substituting {{key}}.
   const yamlTpl = tpl["app.yaml.tpl"] || ""
@@ -207,15 +222,27 @@ const onDeployAsApp = async submitted => {
     { name: "app.png",  content: iconBytes },
   ]
 
+  // The loading hint auto-closes after ~10 s — long enough for the
+  // typical 5-7 s deploy. The form's submit button + boardStore.uploading
+  // flag give the user a separate "still working" cue, so this toast is
+  // really just "we got your click".
+  toast.info("กำลังติดตั้งแอปพลิเคชัน รอสักครู่...", { autoClose: 10000 })
   try {
-    await boardStore.deployAsApp({
+    const ok = await boardStore.deployAsApp({
       appId: submitted.id,
       autoStart: !!submitted.autoStart,
       files,
     })
+    console.log("[deploy] result ok =", ok)
+    if (ok) {
+      toast.success(`ติดตั้งแอปพลิเคชัน “${submitted.name || submitted.id}” สำเร็จ`)
+      dialogs.value.deployAsApp = false
+    } else {
+      toast.error("ติดตั้งไม่สำเร็จ — กรุณาตรวจสอบการเชื่อมต่อบอร์ดแล้วลองอีกครั้ง")
+    }
   } catch (e) {
     console.error("deployAsApp failed", e)
-    toast.error(`Deploy ล้มเหลว: ${e?.message || e}`)
+    toast.error(`ติดตั้งแอปพลิเคชันไม่สำเร็จ: ${e?.message || e}`)
   }
 }
 
@@ -306,7 +333,6 @@ watch(selectedMenu, val => {
           <div class="w-100 h-100">
             <Header
               @download="download"
-              @deployAsApp="dialogs.deployAsApp = true"
               @newProject="newProjectConfirm"
               @openProject="openProject"
               @saveProject="dialogs.saveProject = true"

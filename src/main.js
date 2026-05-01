@@ -132,8 +132,17 @@ const boardPythonModules = import.meta.glob('boards/*/libs/*.py', { eager: false
 // "Deploy as App" template — only kidbright-mai-plus (MaixCAM) ships these
 // today. Each file is loaded raw (text or as a URL for the icon) so the
 // deploy handler can render app.yaml + write everything to /maixapp/apps/<id>/.
-const appTemplateText = import.meta.glob('boards/*/app_template/*.{py,tpl,yaml}', { eager: true, as: 'raw' })
-const appTemplateAsset = import.meta.glob('boards/*/app_template/*.{png,jpg}', { eager: true, as: 'url' })
+// Vite 3's micromatch flavour doesn't reliably expand {a,b}, so list each
+// extension as a separate glob and merge.
+const appTemplateText = {
+  ...import.meta.glob('boards/*/app_template/*.py', { eager: true, as: 'raw' }),
+  ...import.meta.glob('boards/*/app_template/*.tpl', { eager: true, as: 'raw' }),
+  ...import.meta.glob('boards/*/app_template/*.yaml', { eager: true, as: 'raw' }),
+}
+const appTemplateAsset = {
+  ...import.meta.glob('boards/*/app_template/*.png', { eager: true, as: 'url' }),
+  ...import.meta.glob('boards/*/app_template/*.jpg', { eager: true, as: 'url' }),
+}
 
 // load examples folder
 const examples = import.meta.glob('boards/*/examples/*/readme.md', { eager: false, as: "raw" })

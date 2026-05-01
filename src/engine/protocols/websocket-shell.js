@@ -236,8 +236,59 @@ export class WebSocketShellHandler extends BoardProtocol {
     } else {
       await this.writeFile("/maixapp/auto_start.txt", "")
     }
-    toast.success(`Deployed as app: ${appId}`)
+
+    // The launcher reads /maixapp/apps/app.info (INI) at startup and does
+    // NOT rescan apps/ at runtime. After dropping a new folder we have to:
+    //   1. regenerate app.info via the stock gen_app_info.py helper
+    //   2. restart launcher_daemon so it picks the refreshed list up
+    // Without this, the icon never appears even though the files are on
+    // disk. Kill is surgical (pid by name) — `killall` would also nuke
+    // ws_shell.py and we'd lose the connection mid-deploy.
+    //
+    // execShell() is fire-and-forget over the PTY, so we chain everything
+    // into one command that ends with `echo <marker>` and wait for that
+    // marker to come back over the log stream — that's the only way to
+    // know all the steps actually finished (especially launcher_daemon's
+    // 2-3 s warm-up) before the caller declares success.
+    const marker = `__KB_DEPLOY_DONE_${Date.now()}__`
+    const finalize =
+      "python3 /maixapp/apps/gen_app_info.py; " +
+      "ps | grep -E 'launcher_daemon|launcher daemon' | grep -v grep | awk '{print $1}' | xargs -r kill -9; " +
+      "sleep 1; " +
+      "/maixapp/apps/launcher/launcher_daemon > /dev/null 2>&1 & " +
+      "sleep 3; " +
+      `echo ${marker}`
+    await this._execAndWaitForMarker(finalize, marker, 20000)
     return true
+  }
+
+  /**
+   * Send a shell command and resolve once the given marker string shows
+   * up in the log stream — used to wait out gen_app_info + launcher
+   * restart synchronously. Falls back to resolving on timeout so the
+   * UI never hangs forever, even if echo never lands.
+   */
+  _execAndWaitForMarker(cmd, marker, timeoutMs = 15000) {
+    return new Promise(resolve => {
+      let handler
+      let settled = false
+      const finish = () => {
+        if (settled) return
+        settled = true
+        this.off('log', handler)
+        resolve()
+      }
+      handler = data => {
+        let str
+        if (typeof data === 'string') str = data
+        else if (data instanceof ArrayBuffer) str = new TextDecoder().decode(data)
+        else return
+        if (str.includes(marker)) finish()
+      }
+      this.on('log', handler)
+      setTimeout(finish, timeoutMs)
+      this.send(cmd + "\r")
+    })
   }
 
   // =================================================== internal helpers
@@ -261,6 +312,12 @@ export class WebSocketShellHandler extends BoardProtocol {
     const bytes = new Uint8Array(contentArrayBuffer)
     let offset = 0
 
+    const sendChunk = async (mode, b64) => {
+      const payload = JSON.stringify({ cmd: "upload", path, mode, data: b64 })
+      this.socket.send(`__SYSTEM__:${payload}`)
+      if (!(await waitForAck())) throw new Error("Upload chunk failed")
+    }
+
     const waitForAck = () => new Promise(resolve => {
       let handler, settled = false
       const finish = ok => {
@@ -274,13 +331,30 @@ export class WebSocketShellHandler extends BoardProtocol {
         resolve(ok)
       }
       handler = data => {
-        if (typeof data !== 'string') return
-        if (data.includes(`Uploaded ${path} success`)) finish(true)
-        else if (data.includes(`Upload error`))       finish(false)
+        // ws_shell.py forwards PTY bytes; the websocket gives us an
+        // ArrayBuffer because of binaryType="arraybuffer". Decode
+        // before matching, else acks are missed and every chunk
+        // hits its 15s timeout.
+        let str
+        if (typeof data === 'string') str = data
+        else if (data instanceof ArrayBuffer) str = new TextDecoder().decode(data)
+        else return
+        if (str.includes(`Uploaded ${path} success`)) finish(true)
+        else if (str.includes(`Upload error`))       finish(false)
       }
       this.on('log', handler)
       setTimeout(() => finish(true), 15000)
     })
+
+    // Empty content still needs one round-trip with mode=wb so the
+    // file is truncated (or created empty). Without this, writing ""
+    // is a silent no-op — bit us when clearing /maixapp/auto_start.txt
+    // left the previous app id behind and the next deploy auto-launched
+    // unexpectedly.
+    if (bytes.length === 0) {
+      await sendChunk("wb", "")
+      return
+    }
 
     while (offset < bytes.length) {
       const mode = offset === 0 ? "wb" : "ab"
@@ -292,16 +366,7 @@ export class WebSocketShellHandler extends BoardProtocol {
       for (let i = 0; i < chunk.length; i += 8192) {
         binary += String.fromCharCode.apply(null, chunk.subarray(i, i + 8192))
       }
-      const payload = JSON.stringify({
-        cmd: "upload",
-        path,
-        mode,
-        data: btoa(binary),
-      })
-      this.socket.send(`__SYSTEM__:${payload}`)
-      if (!(await waitForAck())) {
-        throw new Error("Upload chunk failed")
-      }
+      await sendChunk(mode, btoa(binary))
       offset += CHUNK_SIZE
     }
   }
