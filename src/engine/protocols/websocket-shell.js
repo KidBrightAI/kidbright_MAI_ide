@@ -223,8 +223,38 @@ export class WebSocketShellHandler extends BoardProtocol {
     const kill = `ps | grep "${runPy}" | grep -v grep | awk '{print $1}' | xargs kill -9`
     await this.execShell(kill)
     await new Promise(r => setTimeout(r, 500))
-    await this.execShell(`python3 ${runPy}`)
+
+    // Tail the run with a unique end marker so the IDE can flip the
+    // running flag back off when the user's script finishes naturally
+    // (e.g. a one-shot loop that does its 10 s and exits). Without
+    // this the upload icon would stay as Stop forever.
+    const marker = this._armRunEndWatcher()
+    await this.execShell(`python3 ${runPy}; echo ${marker}`)
     toast.success("อัปโหลดโค้ดและกำลังรันบนบอร์ด")
+  }
+
+  /**
+   * Register a one-shot listener that resets boardStore.running to
+   * false when the just-launched script finishes. Each run uses a
+   * unique marker + run id so a stale listener from a previous
+   * upload can't flip the flag while a new run is still going.
+   */
+  _armRunEndWatcher() {
+    const myRunId = (this._runId = (this._runId || 0) + 1)
+    const marker = `__KB_PROG_END_${myRunId}_${Date.now()}__`
+    let handler
+    handler = data => {
+      const str = this._logToString(data)
+      if (str === null || !str.includes(marker)) return
+      this.off('log', handler)
+      // If a newer run started in the meantime its own watcher will
+      // own the flag — don't clobber it.
+      if (this._runId === myRunId) {
+        this.boardStore.running = false
+      }
+    }
+    this.on('log', handler)
+    return marker
   }
 
   // =================================================== deploy-as-app
