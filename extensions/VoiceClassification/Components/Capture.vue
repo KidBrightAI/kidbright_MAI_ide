@@ -1,5 +1,6 @@
 <script setup>
 import AdbSoundCapture from "@/components/InputConnection/AdbSoundCapture.vue"
+import WsShellSoundCapture from "@/components/InputConnection/WsShellSoundCapture.vue"
 import WaveFormPlayer from "@/components/InputConnection/WaveFormPlayer.vue"
 import DatasetCounter from "@/components/InputConnection/DatasetCounter.vue"
 import SoundDatasetList from "@/components/InputConnection/SoundDatasetList.vue"
@@ -11,6 +12,15 @@ import { useBoardStore } from '@/store/board'
 const datasetStore = useDatasetStore()
 const workspaceStore = useWorkspaceStore()
 const boardStore = useBoardStore()
+
+// Pick the recorder by board transport. V1 (web-adb) uses ADB TCP
+// port-forwarding to the voice_stream daemon; V2 (websocket-shell)
+// has no ADB so we go through ws_shell's tcp_relay command instead.
+const SoundCapture = computed(() =>
+  workspaceStore.currentBoard?.protocol === "websocket-shell"
+    ? WsShellSoundCapture
+    : AdbSoundCapture,
+)
 
 const current = ref([])
 const status = ref("disconnected")
@@ -83,7 +93,8 @@ onMounted(async () => {
             v-show="isRecorderActive || !selectedId"
             class="w-100"
           >
-            <AdbSoundCapture
+            <component
+              :is="SoundCapture"
               ref="soundCapture"
               v-model="status"
               @recorded="onRecordComplete"

@@ -74,6 +74,7 @@ export const useBoardStore = defineStore({
       return this.handler?.capabilities ?? {
         wifi: false,
         fileExplorer: false,
+        tcpRelay: false,
         startupScript: false,
       }
     },
@@ -254,6 +255,7 @@ export const useBoardStore = defineStore({
       return this.handler[method](...args)
     },
     listDir(path)               { return this._viaHandler("listDir", path) },
+    readFile(path)              { return this._viaHandler("readFile", path) },
     downloadFile(path)          { return this._viaHandler("downloadFile", path) },
     deleteFileOrFolder(path)    { return this._viaHandler("deleteFileOrFolder", path) },
     createNewFolder(path)       { return this._viaHandler("createNewFolder", path) },

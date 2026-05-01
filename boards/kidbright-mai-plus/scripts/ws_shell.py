@@ -24,10 +24,11 @@ import subprocess
 import websockets
 
 
-WS_SHELL_VERSION = "1.2.0"
+WS_SHELL_VERSION = "1.3.0"
 WS_SHELL_FEATURES = [
     "upload", "stat", "version", "listdir", "download",
     "wifi_scan", "wifi_status", "wifi_connect",
+    "tcp_relay",
 ]
 DOWNLOAD_CHUNK_SIZE = 256 * 1024
 WIFI_IFACE = "wlan0"
@@ -212,15 +213,99 @@ async def cmd_wifi_connect(ws, args):
     await _send(ws, {"type": "wifi_connect", "success": success, "ssid": ssid})
 
 
+# --------- tcp relay ---------
+# A generic localhost-TCP forwarder so subsystem daemons (voice_stream,
+# camera streamer, future...) keep listening on their own loopback ports
+# and the IDE talks to them through the existing wss:// shell connection
+# rather than exposing extra ports / TLS certs.
+#
+# Wire protocol:
+#   IDE -> board:  cmd=tcp_relay_open, port=N         (one-shot)
+#                  cmd=tcp_relay_send, data=<base64>  (write to socket)
+#                  cmd=tcp_relay_close                (drop the socket)
+#   board -> IDE:  type=tcp_relay_open, ok, error?, port?
+#                  type=tcp_relay_data, data=<base64> (chunks read from socket)
+#                  type=tcp_relay_closed              (socket EOF or close)
+#
+# Per-connection: at most one relay can be open at a time. State lives
+# on the websocket object so each client cleans up independently.
+
+async def cmd_tcp_relay_open(ws, args):
+    if getattr(ws, "_kb_relay_task", None) and not ws._kb_relay_task.done():
+        await _send(ws, {"type": "tcp_relay_open", "ok": False,
+                         "error": "relay already open"})
+        return
+    port = int(args.get("port", 0))
+    try:
+        reader, writer = await asyncio.open_connection("127.0.0.1", port)
+    except Exception as e:
+        await _send(ws, {"type": "tcp_relay_open", "ok": False,
+                         "error": str(e)})
+        return
+    ws._kb_relay_writer = writer
+
+    async def pump():
+        try:
+            while True:
+                chunk = await reader.read(4096)
+                if not chunk:
+                    break
+                await _send(ws, {
+                    "type": "tcp_relay_data",
+                    "data": base64.b64encode(chunk).decode("ascii"),
+                })
+        except asyncio.CancelledError:
+            pass
+        except Exception as e:
+            print(f"tcp_relay pump: {e}")
+        finally:
+            try:
+                writer.close()
+                await writer.wait_closed()
+            except Exception:
+                pass
+            try:
+                await _send(ws, {"type": "tcp_relay_closed"})
+            except Exception:
+                pass  # ws already gone
+
+    ws._kb_relay_task = asyncio.create_task(pump())
+    await _send(ws, {"type": "tcp_relay_open", "ok": True, "port": port})
+
+
+async def cmd_tcp_relay_send(ws, args):
+    writer = getattr(ws, "_kb_relay_writer", None)
+    if writer is None:
+        await _send(ws, {"type": "error", "message": "relay not open"})
+        return
+    try:
+        data = base64.b64decode(args.get("data", ""))
+        writer.write(data)
+        await writer.drain()
+    except Exception as e:
+        await _send(ws, {"type": "error", "message": str(e)})
+
+
+async def cmd_tcp_relay_close(ws, _args):
+    task = getattr(ws, "_kb_relay_task", None)
+    if task and not task.done():
+        task.cancel()
+    ws._kb_relay_task = None
+    ws._kb_relay_writer = None
+
+
 CMD_HANDLERS = {
-    "upload":       cmd_upload,
-    "stat":         cmd_stat,
-    "version":      cmd_version,
-    "listdir":      cmd_listdir,
-    "download":     cmd_download,
-    "wifi_scan":    cmd_wifi_scan,
-    "wifi_status":  cmd_wifi_status,
-    "wifi_connect": cmd_wifi_connect,
+    "upload":           cmd_upload,
+    "stat":             cmd_stat,
+    "version":          cmd_version,
+    "listdir":          cmd_listdir,
+    "download":         cmd_download,
+    "wifi_scan":        cmd_wifi_scan,
+    "wifi_status":      cmd_wifi_status,
+    "wifi_connect":     cmd_wifi_connect,
+    "tcp_relay_open":   cmd_tcp_relay_open,
+    "tcp_relay_send":   cmd_tcp_relay_send,
+    "tcp_relay_close":  cmd_tcp_relay_close,
 }
 
 
@@ -312,6 +397,20 @@ async def connection_handler(websocket, _path):
     )
     for t in pending:
         t.cancel()
+
+    # Drop any active TCP relay tied to this ws so the loopback socket
+    # doesn't outlive the IDE connection (ws send in pump's finally
+    # would just no-op against a closed ws, but the writer needs to
+    # actually close to release fds on the daemon side).
+    relay_task = getattr(websocket, "_kb_relay_task", None)
+    if relay_task and not relay_task.done():
+        relay_task.cancel()
+    relay_writer = getattr(websocket, "_kb_relay_writer", None)
+    if relay_writer is not None:
+        try:
+            relay_writer.close()
+        except Exception:
+            pass
 
     try:
         os.kill(pid, 15)        # SIGTERM the shell

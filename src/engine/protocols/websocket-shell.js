@@ -43,6 +43,7 @@ export class WebSocketShellHandler extends BoardProtocol {
     return {
       wifi:         this._features.has("wifi_scan"),
       fileExplorer: this._features.has("listdir"),
+      tcpRelay:     this._features.has("tcp_relay"),
       startupScript: false,
     }
   }
@@ -233,7 +234,12 @@ export class WebSocketShellHandler extends BoardProtocol {
    * `download_start` arrives first, then a stream of `download_chunk`
    * messages, then `download_done`.
    */
-  async downloadFile(path) {
+  /**
+   * Pull a file into memory as a Blob. Used by file explorer to feed
+   * the browser-download helper, and by capture flows that need the
+   * bytes themselves (voice WAV / MFCC PNG). Returns null on failure.
+   */
+  async readFile(path) {
     const chunks = []
     const ok = await new Promise(resolve => {
       let listener
@@ -255,12 +261,16 @@ export class WebSocketShellHandler extends BoardProtocol {
       setTimeout(() => finish(false), 60000)
       this.socket.send(`__SYSTEM__:${JSON.stringify({ cmd: "download", path })}`)
     })
+    return ok ? new Blob(chunks) : null
+  }
 
-    if (!ok) {
+  async downloadFile(path) {
+    const blob = await this.readFile(path)
+    if (!blob) {
       toast.error(`ดาวน์โหลดไฟล์ไม่สำเร็จ: ${path}`)
       return false
     }
-    triggerBrowserDownload(new Blob(chunks), path.split("/").pop())
+    triggerBrowserDownload(blob, path.split("/").pop())
     return true
   }
 
@@ -300,6 +310,65 @@ export class WebSocketShellHandler extends BoardProtocol {
       timeoutMs: 30000,   // assoc + auth + DHCP can run ~15 s
     })
     return !!msg.success
+  }
+
+  // =================================================== tcp relay
+  // Forwards a localhost-TCP socket (e.g. voice_stream.py on :5000)
+  // through the existing wss:// shell connection so subsystem daemons
+  // don't need their own TLS port. Returns a stream-like handle:
+  //   { send(bytes|string), close() }
+  // and invokes `onData(Uint8Array)` / `onClose()` callbacks for
+  // incoming frames + EOF. Caller is responsible for calling
+  // `.close()` when done; otherwise the board keeps the loopback
+  // socket open until the ws disconnects.
+
+  async tcpRelay(port, { onData, onClose } = {}) {
+    const open = await this._sendCommand({
+      cmd: "tcp_relay_open",
+      args: { port },
+      match: m => m.type === "tcp_relay_open",
+      defaultValue: { ok: false, error: "timeout" },
+      timeoutMs: 5000,
+    })
+    if (!open.ok) {
+      throw new Error(`tcp_relay open failed: ${open.error || "unknown"}`)
+    }
+
+    const listener = data => {
+      const msg = this._parseSystemFrame(data)
+      if (!msg) return
+      if (msg.type === "tcp_relay_data") {
+        if (onData) {
+          // base64 -> Uint8Array, caller decodes if it expects text
+          const bin = atob(msg.data || "")
+          const u8 = new Uint8Array(bin.length)
+          for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i)
+          onData(u8)
+        }
+      } else if (msg.type === "tcp_relay_closed") {
+        this.off("log", listener)
+        if (onClose) onClose()
+      }
+    }
+    this.on("log", listener)
+
+    return {
+      send: bytes => {
+        let b64
+        if (bytes instanceof Uint8Array) {
+          let s = ""
+          for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i])
+          b64 = btoa(s)
+        } else {
+          b64 = btoa(String(bytes))
+        }
+        this.socket.send(`__SYSTEM__:${JSON.stringify({ cmd: "tcp_relay_send", data: b64 })}`)
+      },
+      close: () => {
+        this.off("log", listener)
+        this.socket.send(`__SYSTEM__:${JSON.stringify({ cmd: "tcp_relay_close" })}`)
+      },
+    }
   }
 
   // =================================================== transport primitives

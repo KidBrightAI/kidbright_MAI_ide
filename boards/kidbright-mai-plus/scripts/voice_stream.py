@@ -3,7 +3,7 @@ import threading, pickle, struct, random
 import time
 import os
 import logging
-import pyaudio
+import alsaaudio   # MaixCAM ships pyalsaaudio (0.10), not pyaudio
 import wave
 import sys
 import signal
@@ -168,122 +168,111 @@ def audio_stream():
       
   server_socket.listen(5)
 
+  client_socket = None
+  pcm = None
+
+  def read_period():
+    """Blocking read of one full period; skip empty/overrun returns."""
+    for _ in range(8):
+      length, raw = pcm.read()
+      if length > 0 and raw:
+        return raw
+    return b""
+
   try:
-    # set pyaudio
-    p = pyaudio.PyAudio()
-    stream = p.open(format = p.get_format_from_width(WIDTH),
-                channels = CHANNELS,
-                rate = RATE,
-                input = True,
-                output = False)
-    
+    pcm = alsaaudio.PCM(
+        type=alsaaudio.PCM_CAPTURE,
+        mode=alsaaudio.PCM_NORMAL,
+        rate=RATE, channels=CHANNELS,
+        format=alsaaudio.PCM_FORMAT_S16_LE,
+        periodsize=CHUNK,
+    )
+
     print("Server listening on port 5000")
     client_socket, addr = server_socket.accept()
-    
-    #check if msg is received and got command to start listening
-    detected = False
+
     while True:
       data = client_socket.recv(1024)
-      if data.decode().split(",")[0] == "#start":
-        # init wave file
-        wavefile = wave.open("kbvoice.wav", 'wb')
-        wavefile.setnchannels(CHANNELS)
-        wavefile.setsampwidth(p.get_sample_size(pyaudio.paInt16))
-        wavefile.setframerate(RATE)        
-        # init waveform image
-        waveform = Image.new("RGB", (WAVEFORM_WIDTH, WAVEFORM_HEIGHT), "black")
-        draw = ImageDraw.Draw(waveform)
-        # init mfcc image
-        mfcc = Image.new("RGB", (MFCC_WIDTH, MFCC_HEIGHT), "black")
-        draw_mfcc = ImageDraw.Draw(mfcc)
-        
-        # listen with threshold
-        threshold = data.decode().split(",")[1]
-        record_sec = data.decode().split(",")[2]
-        pixel_width = WAVEFORM_WIDTH / (int(RATE / CHUNK * int(record_sec)))
-        #print("Listening... with threshold: " + threshold)
-        # convert threshold to int
-        threshold = int(threshold)
-        record_sec = int(record_sec)
-        # listen within timeout
-        start = time.time()
-        while time.time() - start < LISTEN_TIMEOUT:
-          data = stream.read(CHUNK, exception_on_overflow = False)
-          rms = audioop.rms(data, 2)          
-          # send rms value to client
-          client_socket.send(("#uv," + str(rms)).encode())
-          if rms > threshold:
-            detected = True
-            break
-        
-        #print("Listening stopped")
-        if detected:
-          # record audio          
-          client_socket.send("#rec_start".encode())          
-          for i in range(0, int(RATE / CHUNK * record_sec)):
-            data = stream.read(CHUNK, exception_on_overflow = False)
-            rms = audioop.rms(data, 2)
-            # draw waveform red rectangle at the center of the image
-            #rms_to_pixel = (rms / 32768) * WAVEFORM_HEIGHT
-            #rms_to_pixel = rms_to_pixel / 2 # reduce height
-            rms_to_pixel = rms / 2.5
-            xy = [(i*pixel_width, WAVEFORM_HEIGHT/2 - rms_to_pixel), ((i+1)*pixel_width, WAVEFORM_HEIGHT/2 + rms_to_pixel)]
-            draw.rectangle(xy, fill="red", outline="black", width=1)
-            # send rms value to client
-            client_socket.send(("#rm," + str(rms)).encode())
-            wavefile.writeframes(data)
-          wavefile.close()
-          
-          #write waveform image to file
-          waveform.save("waveform.png")
+      if not data:
+        break
+      if data.decode().split(",")[0] != "#start":
+        continue
+      # listen with threshold
+      threshold = int(data.decode().split(",")[1])
+      record_sec = int(data.decode().split(",")[2])
+      # init wave file
+      wavefile = wave.open("kbvoice.wav", 'wb')
+      wavefile.setnchannels(CHANNELS)
+      wavefile.setsampwidth(WIDTH)   # int16 = 2 bytes/sample
+      wavefile.setframerate(RATE)
+      # init waveform image
+      waveform = Image.new("RGB", (WAVEFORM_WIDTH, WAVEFORM_HEIGHT), "black")
+      draw = ImageDraw.Draw(waveform)
+      pixel_width = WAVEFORM_WIDTH / (int(RATE / CHUNK * record_sec))
 
-          time.sleep(0.1)
-          client_socket.send("#rec_stop\n".encode())
-          time.sleep(0.1)
-          client_socket.send("#process_start\n".encode())
-          time.sleep(0.1)
-          # read wave file
-          wavefile = wave.open("kbvoice.wav", 'rb')
-          signal = wavefile.readframes(-1)
-          signal = np.frombuffer(signal, dtype=np.int16)
-          # do MFCC
-          mfcc = doMfcc2(signal)
-          #print(mfcc.shape)
-          #print(mfcc)
-          #write mfcc image to file
-          mfcc = mfcc * 255 / np.max(mfcc)
-          mfcc = mfcc.astype(np.uint8)
-          mfcc = Image.fromarray(mfcc)
-          mfcc.save("mfcc.png")
-          time.sleep(0.1)
-          client_socket.send("#process_stop\n".encode())
-          #print("Recording stopped")
-          # send audio to client          
-        else:
-          print("No voice detected")          
-          # send message to stop listening
-          client_socket.send("#novoice".encode())
-    # stop stream (4)
-    stream.stop_stream()
-    stream.close()
+      # Voice-detection phase: stream RMS until threshold or timeout.
+      detected = False
+      start = time.time()
+      while time.time() - start < LISTEN_TIMEOUT:
+        raw = read_period()
+        rms = audioop.rms(raw, 2)
+        client_socket.send(("#uv," + str(rms)).encode())
+        if rms > threshold:
+          detected = True
+          break
 
-    # close PyAudio (5)
-    p.terminate()
-    client_socket.close()
-    server_socket.close()
+      if not detected:
+        print("No voice detected")
+        client_socket.send("#novoice".encode())
+        wavefile.close()
+        continue
+
+      # Recording phase: record_sec of frames + waveform draw.
+      client_socket.send("#rec_start".encode())
+      for i in range(0, int(RATE / CHUNK * record_sec)):
+        raw = read_period()
+        rms = audioop.rms(raw, 2)
+        rms_to_pixel = rms / 2.5
+        xy = [(i*pixel_width, WAVEFORM_HEIGHT/2 - rms_to_pixel),
+              ((i+1)*pixel_width, WAVEFORM_HEIGHT/2 + rms_to_pixel)]
+        draw.rectangle(xy, fill="red", outline="black", width=1)
+        client_socket.send(("#rm," + str(rms)).encode())
+        wavefile.writeframes(raw)
+      wavefile.close()
+      waveform.save("waveform.png")
+
+      time.sleep(0.1)
+      client_socket.send("#rec_stop\n".encode())
+      time.sleep(0.1)
+      client_socket.send("#process_start\n".encode())
+      time.sleep(0.1)
+      # MFCC
+      wavefile = wave.open("kbvoice.wav", 'rb')
+      sigb = wavefile.readframes(-1)
+      sigb = np.frombuffer(sigb, dtype=np.int16)
+      m = doMfcc2(sigb)
+      m = m * 255 / np.max(m)
+      m = m.astype(np.uint8)
+      Image.fromarray(m).save("mfcc.png")
+      time.sleep(0.1)
+      client_socket.send("#process_stop\n".encode())
+
   except KeyboardInterrupt:
     print("KeyboardInterrupt")
-    client_socket.close()
-    server_socket.close()
   except CtrlBreakInterrupt:
     print("CtrlBreakInterrupt")
-    client_socket.close()
-    server_socket.close()
   except Exception as e:
     print("Exception")
     print(e)
-    client_socket.close()
-    server_socket.close()
+  finally:
+    if pcm is not None:
+      try: pcm.close()
+      except Exception: pass
+    if client_socket is not None:
+      try: client_socket.close()
+      except Exception: pass
+    try: server_socket.close()
+    except Exception: pass
 
 
 if __name__ == '__main__':
