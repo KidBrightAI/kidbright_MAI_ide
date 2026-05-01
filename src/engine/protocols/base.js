@@ -133,6 +133,12 @@ export default class BoardProtocol {
   async checkWifi()                          { throw new Error("checkWifi() not implemented") }
   async connectWifi(ssid, password)          { throw new Error("connectWifi() not implemented") }
 
+  // ========================================================== deploy-as-app (optional)
+  //
+  // Install user code as a packaged Maix App at /maixapp/apps/<id>/.
+  // Only kidbright-mai-plus implements this today — other boards throw.
+  async deployAsApp(_payload)                { throw new Error("deployAsApp() not supported on this board") }
+
   // ========================================================== shared orchestration
 
   /**

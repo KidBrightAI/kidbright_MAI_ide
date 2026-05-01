@@ -129,6 +129,11 @@ const boardCodeTemplate = import.meta.glob('boards/*/main.py', { eager: true, as
 const boardScripts = import.meta.glob('boards/*/scripts/*.py', { eager: true, as: 'raw' })
 const workspaces = import.meta.glob('boards/*/workspace.json', { eager: true })
 const boardPythonModules = import.meta.glob('boards/*/libs/*.py', { eager: false, as: 'raw' })
+// "Deploy as App" template — only kidbright-mai-plus (MaixCAM) ships these
+// today. Each file is loaded raw (text or as a URL for the icon) so the
+// deploy handler can render app.yaml + write everything to /maixapp/apps/<id>/.
+const appTemplateText = import.meta.glob('boards/*/app_template/*.{py,tpl,yaml}', { eager: true, as: 'raw' })
+const appTemplateAsset = import.meta.glob('boards/*/app_template/*.{png,jpg}', { eager: true, as: 'url' })
 
 // load examples folder
 const examples = import.meta.glob('boards/*/examples/*/readme.md', { eager: false, as: "raw" })
@@ -166,6 +171,25 @@ for (const path in boardModules) {
   }
   console.log("Scripts", scripts)
   board.scripts = scripts
+
+  // Attach the deploy-as-app template if this board ships one. Keys map
+  // bare filenames to file content — text files as strings, image files
+  // as URLs that the deploy handler can `fetch().arrayBuffer()`.
+  const appTemplate = {}
+  const baseDir = path.replace('index.js', '') + 'app_template/'
+  for (const tplPath in appTemplateText) {
+    if (tplPath.startsWith(baseDir)) {
+      appTemplate[tplPath.slice(baseDir.length)] = appTemplateText[tplPath]
+    }
+  }
+  for (const tplPath in appTemplateAsset) {
+    if (tplPath.startsWith(baseDir)) {
+      appTemplate[tplPath.slice(baseDir.length)] = appTemplateAsset[tplPath]
+    }
+  }
+  if (Object.keys(appTemplate).length > 0) {
+    board.appTemplate = appTemplate
+  }
 
   boards.push({ path: path.replace('index.js', ''), ...board })
 }

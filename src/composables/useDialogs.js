@@ -9,6 +9,7 @@ const DIALOG_NAMES = [
   'newModel',
   'fileExplorer',
   'saveProject',
+  'deployAsApp',
 ]
 
 export function useDialogs() {

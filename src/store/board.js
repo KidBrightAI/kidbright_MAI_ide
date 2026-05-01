@@ -179,6 +179,25 @@ export const useBoardStore = defineStore({
       }
     },
 
+    /**
+     * Install a packaged Maix App into /maixapp/apps/<id>/. Different
+     * from upload(): writes a folder full of files (app.yaml, app.png,
+     * main.py, run.py) so the launcher picks the app up. Optionally
+     * writes /maixapp/auto_start.txt to set it as the boot app.
+     */
+    async deployAsApp(payload) {
+      if (!this.isBoardConnected) {
+        if (!(await this.deviceConnect())) return
+        await sleep(300)
+      }
+      this.uploading = true
+      try {
+        return await this.handler.deployAsApp(payload)
+      } finally {
+        this.uploading = false
+      }
+    },
+
     // Wrap other handler methods
     async listDir(path) {
       if (!this.isBoardConnected) { await this.deviceConnect(); await sleep(300) }

@@ -209,6 +209,37 @@ export class WebSocketShellHandler extends BoardProtocol {
     toast.success("Code uploaded & running...")
   }
 
+  // =================================================== deploy-as-app
+  //
+  // payload = { appId, autoStart, files: [{ name, content }, ...] }
+  // - content can be string | ArrayBuffer | Blob — writeFile handles it
+  // - app.yaml + main.py + run.py + app.png are written under
+  //   /maixapp/apps/<appId>/ which is what the Sipeed launcher scans.
+  // - autoStart flips /maixapp/auto_start.txt: write the id to enable,
+  //   clear the file to disable. Doing this from the handler keeps the
+  //   pages/index.vue side ignorant of the path layout.
+  async deployAsApp({ appId, autoStart = false, files = [] }) {
+    if (!appId) throw new Error("deployAsApp: appId is required")
+    const appDir = `/maixapp/apps/${appId}`
+    await this.execShell(`mkdir -p ${appDir}`)
+    await new Promise(r => setTimeout(r, 200))
+
+    for (const f of files) {
+      const path = `${appDir}/${f.name}`
+      await this.writeFile(path, f.content)
+    }
+
+    // /maixapp/auto_start.txt is a single line with the app id (no newline
+    // in the existing test sample on the device). Empty file = no auto-run.
+    if (autoStart) {
+      await this.writeFile("/maixapp/auto_start.txt", appId)
+    } else {
+      await this.writeFile("/maixapp/auto_start.txt", "")
+    }
+    toast.success(`Deployed as app: ${appId}`)
+    return true
+  }
+
   // =================================================== internal helpers
 
   async _toArrayBuffer(content) {

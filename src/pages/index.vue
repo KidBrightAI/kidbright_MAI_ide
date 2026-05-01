@@ -38,6 +38,7 @@ import NewModelDialog from "@/components/dialog/NewModelDialog.vue"
 import FileExplorerDialog from "@/components/dialog/FileExplorerDialog.vue"
 import SelectBoardDialog from "@/components/dialog/SelectBoardDialog.vue"
 import SecureConnectDialog from "@/components/dialog/SecureConnectDialog.vue"
+import DeployAsAppDialog from "@/components/dialog/DeployAsAppDialog.vue"
 
 //------- Assets --------//
 import RobotPoker from "@/assets/images/png/Mask_Group_12.png"
@@ -159,6 +160,66 @@ const download = async event => {
 }
 
 //=====================================================================//
+//===================== Deploy as App (V2 only) ======================//
+//=====================================================================//
+
+/**
+ * Renders the user's project into a Maix App folder under
+ * /maixapp/apps/<id>/ on the board. Uses the static template that
+ * ships under boards/kidbright-mai-plus/app_template/ (loaded into
+ * `currentBoard.appTemplate` by main.js) and the live Blockly code as
+ * run.py. The template's main.py spawns run.py and watches the
+ * touchscreen for an exit-zone tap.
+ */
+const onDeployAsApp = async submitted => {
+  const board = workspaceStore.currentBoard
+  const tpl = board?.appTemplate
+  if (!tpl) {
+    toast.error("บอร์ดนี้ไม่รองรับ Deploy as App")
+    return
+  }
+
+  const code = pythonGenerator.workspaceToCode(blocklyComp.value.workspace)
+  const wrapped = (board.codeTemplate || "##{main}##").replace("##{main}##", code)
+
+  // Render app.yaml from the template by string-substituting {{key}}.
+  const yamlTpl = tpl["app.yaml.tpl"] || ""
+  const yamlText = yamlTpl
+    .replaceAll("{{id}}",      submitted.id)
+    .replaceAll("{{name}}",    submitted.name)
+    .replaceAll("{{version}}", submitted.version || "1.0.0")
+    .replaceAll("{{author}}",  submitted.author || "kidbright")
+    .replaceAll("{{desc}}",    submitted.desc || "")
+
+  // Resolve the icon: user upload wins, else the bundled default PNG.
+  let iconBytes
+  if (submitted.iconFile) {
+    iconBytes = await submitted.iconFile.arrayBuffer()
+  } else {
+    const url = tpl["app.png"]
+    iconBytes = await (await fetch(url)).arrayBuffer()
+  }
+
+  const files = [
+    { name: "app.yaml", content: yamlText },
+    { name: "main.py",  content: tpl["main.py"] || "" },
+    { name: "run.py",   content: wrapped },
+    { name: "app.png",  content: iconBytes },
+  ]
+
+  try {
+    await boardStore.deployAsApp({
+      appId: submitted.id,
+      autoStart: !!submitted.autoStart,
+      files,
+    })
+  } catch (e) {
+    console.error("deployAsApp failed", e)
+    toast.error(`Deploy ล้มเหลว: ${e?.message || e}`)
+  }
+}
+
+//=====================================================================//
 //========================== Plugin Events ==========================//
 //=====================================================================//
 
@@ -245,6 +306,7 @@ watch(selectedMenu, val => {
           <div class="w-100 h-100">
             <Header
               @download="download"
+              @deployAsApp="dialogs.deployAsApp = true"
               @newProject="newProjectConfirm"
               @openProject="openProject"
               @saveProject="dialogs.saveProject = true"
@@ -332,6 +394,10 @@ watch(selectedMenu, val => {
     @board-selected="onBoardSelected"
   />
   <SecureConnectDialog />
+  <DeployAsAppDialog
+    v-model:isDialogVisible="dialogs.deployAsApp"
+    @submit="onDeployAsApp"
+  />
 </template>
 
 <route lang="yaml">

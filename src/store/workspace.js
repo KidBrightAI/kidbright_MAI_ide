@@ -35,6 +35,20 @@ export const useWorkspaceStore = defineStore({
       graph: {},
 
       trainConfig: {},
+
+      // Metadata for "Deploy as App" — written into /maixapp/apps/<id>/app.yaml
+      // on the MaixCAM. Only used by the kidbright-mai-plus protocol; V831
+      // ignores this field. icon=null means "use the default app.png shipped
+      // in boards/kidbright-mai-plus/app_template/".
+      appConfig: {
+        id: 'kidbright',
+        name: 'Kidbright',
+        version: '1.0.0',
+        author: 'kidbright',
+        desc: 'Kidbright AI app',
+        icon: null, // base64 data URL when user uploads a custom one
+        autoStart: false,
+      },
     }
   },
   persist: {
@@ -57,6 +71,7 @@ export const useWorkspaceStore = defineStore({
       'trainConfig',
       'graph',
       'defaultGraph',
+      'appConfig',
     ],
   },
   actions: {

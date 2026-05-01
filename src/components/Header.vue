@@ -29,7 +29,7 @@ import { useWorkspaceStore } from "@/store/workspace"
 import { useBoardStore } from "@/store/board"
 import {toast} from "vue3-toastify"
 
-const emit = defineEmits(["serial","example", "help", "firmware", "extraSave","plugin","download","newProject","openProject","saveProject","connectBoard","disconnectBoard","fileBrowser","connectWifi","newModel"])
+const emit = defineEmits(["serial","example", "help", "firmware", "extraSave","plugin","download","deployAsApp","newProject","openProject","saveProject","connectBoard","disconnectBoard","fileBrowser","connectWifi","newModel"])
 console.log("Header setup running")
 const workspaceStore = useWorkspaceStore()
 const boardStore = useBoardStore()
@@ -88,14 +88,36 @@ watch(() => workspaceStore.name, val => {
 
     <VTooltip text="Upload Code">
       <template #activator="{ props }">
-        <Kbbtn 
-          class="mx-1" 
-          :icon="uploadIcon" 
-          :disabled-icon="uploadDisabledIcon" 
-          :disabled="!boardStore.isBoardConnected" 
-          v-bind="props" 
+        <Kbbtn
+          class="mx-1"
+          :icon="uploadIcon"
+          :disabled-icon="uploadDisabledIcon"
+          :disabled="!boardStore.isBoardConnected"
+          v-bind="props"
           @click="(ev)=>$emit('download',ev)"
         />
+      </template>
+    </VTooltip>
+
+    <!-- Deploy as App: only visible when the board ships an app_template
+         (currently kidbright-mai-plus only). Plain VBtn for now until the
+         feature stabilises and we mint a proper Kbbtn icon. -->
+    <VTooltip
+      v-if="workspaceStore.currentBoard?.appTemplate"
+      text="Deploy as App"
+    >
+      <template #activator="{ props }">
+        <VBtn
+          icon
+          variant="tonal"
+          color="white"
+          class="mx-1"
+          v-bind="props"
+          :disabled="!boardStore.isBoardConnected"
+          @click="$emit('deployAsApp')"
+        >
+          <VIcon size="32">mdi-rocket-launch</VIcon>
+        </VBtn>
       </template>
     </VTooltip>
 
