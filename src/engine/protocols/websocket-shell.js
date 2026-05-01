@@ -246,13 +246,17 @@ export class WebSocketShellHandler extends BoardProtocol {
       const finish = success => { this.off('log', listener); resolve(success) }
       listener = data => {
         const msg = this._parseSystemFrame(data)
-        if (!msg || msg.path !== path) return
+        if (!msg) return
+        // ws_shell error replies don't carry the path field, so we
+        // can't filter them by path. Any error frame received while
+        // we're the active waiter is for our cmd — fail fast instead
+        // of waiting out the 60 s safety timeout.
+        if (msg.type === "error") { finish(false); return }
+        if (msg.path !== path) return
         if (msg.type === "download_chunk") {
           chunks.push(base64ToBytes(msg.data))
         } else if (msg.type === "download_done") {
           finish(true)
-        } else if (msg.type === "error") {
-          finish(false)
         }
       }
       this.on('log', listener)

@@ -148,25 +148,73 @@ def doMfcc2(signal):
     return mfcc2D
 #===============================================================================
 
+# Output paths fixed at /root so the IDE's readFile("/root/...") matches
+# regardless of where the PTY shell's cwd happens to be (ws_shell.py's
+# pty fork inherits cwd=/ from S99 init, so relative writes land at /).
+WAV_PATH = "/root/kbvoice.wav"
+WAVEFORM_PATH = "/root/waveform.png"
+MFCC_PATH = "/root/mfcc.png"
+
+
+def _log_mel_spec(signal):
+  """Vectorized log-mel-spectrogram. Returns (NFILTERS=40, nframes) float64.
+
+  Replaces the original per-frame doMfcc2 — that loop is ~50× slower on
+  the single-core RISC-V because every frame allocates new arrays and
+  numpy without BLAS does scalar FFT. This batched version computes one
+  rfft over all frames at once and clamps zeros before log to avoid the
+  NaN-cast warning when a mel filter row gets no power.
+  """
+  FrameLen = int(0.040 * 44100)        # 1764
+  FrameShift = int(0.040 * 44100 / 2)  # 882
+  FFTLen = 2048
+  NFILTERS = 40
+  nframes = int((len(signal) - FrameLen) / FrameShift)
+  if nframes <= 1:
+    return np.zeros((NFILTERS, max(nframes, 1)))
+  M = mel(NFILTERS, FFTLen, 44100)[3]   # mel filterbank only (last tuple item)
+  nz = np.any(M > 0, axis=0)
+  first = int(np.argmax(nz))
+  last  = int(len(nz) - np.argmax(nz[::-1]))
+  M_T   = M[:, first:last].T.copy()
+  win   = 0.54 - 0.46 * np.cos(2 * pi / FrameLen * np.arange(FrameLen))
+
+  from numpy.lib.stride_tricks import as_strided
+  s = signal.astype(np.float64, copy=False)
+  stride = (s.strides[0] * FrameShift, s.strides[0])
+  frames = as_strided(s, shape=(nframes, FrameLen), strides=stride).copy()
+  frames *= win
+  frames[:, 1:] -= frames[:, :-1] * 0.95          # pre-emphasis
+  spec = np.fft.rfft(frames, FFTLen, axis=1)
+  mag_sq = np.abs(spec[:, first:last]) ** 2
+  mag_sq[mag_sq < 1e-50] = 1e-50
+  return np.log(mag_sq @ M_T).T
+
+
 def audio_stream():
-  # create socket server
+  # create socket server. SO_REUSEADDR lets us bind even if the prior
+  # daemon's socket is still in TIME_WAIT — the IDE's "kill old, start
+  # new" pattern would otherwise hit ~60 s of EADDRINUSE.
   server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-  # bind the socket to an address and port or retry if it fails 10 times
-  retry = 10
-  while retry > 0:
-    retry -= 1
-    print(f"Trying to bind socket, {retry} retries left...")
+  server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+  bound = False
+  for attempt in range(10):
     try:
       server_socket.bind(('0.0.0.0', 5000))
+      bound = True
       break
     except OSError as e:
-      print(f"Error binding socket: {e}")
+      print(f"bind retry {attempt}: {e}", flush=True)
       time.sleep(1)
-    except Exception as e:
-      print(f"Unexpected error: {e}")
-      time.sleep(1)
-      
+  if not bound:
+    # Don't fall through to listen() on an unbound socket — that auto-
+    # binds to an ephemeral port and the daemon "looks alive" while the
+    # IDE keeps hitting ECONNREFUSED on 5000. Exit so init() retries.
+    print("bind failed after 10 attempts — exiting", flush=True)
+    sys.exit(1)
+
   server_socket.listen(5)
+  print("Server listening on port 5000", flush=True)
 
   client_socket = None
   pcm = None
@@ -188,7 +236,6 @@ def audio_stream():
         periodsize=CHUNK,
     )
 
-    print("Server listening on port 5000")
     client_socket, addr = server_socket.accept()
 
     while True:
@@ -201,7 +248,7 @@ def audio_stream():
       threshold = int(data.decode().split(",")[1])
       record_sec = int(data.decode().split(",")[2])
       # init wave file
-      wavefile = wave.open("kbvoice.wav", 'wb')
+      wavefile = wave.open(WAV_PATH, 'wb')
       wavefile.setnchannels(CHANNELS)
       wavefile.setsampwidth(WIDTH)   # int16 = 2 bytes/sample
       wavefile.setframerate(RATE)
@@ -239,21 +286,24 @@ def audio_stream():
         client_socket.send(("#rm," + str(rms)).encode())
         wavefile.writeframes(raw)
       wavefile.close()
-      waveform.save("waveform.png")
+      waveform.save(WAVEFORM_PATH)
 
       time.sleep(0.1)
       client_socket.send("#rec_stop\n".encode())
       time.sleep(0.1)
       client_socket.send("#process_start\n".encode())
       time.sleep(0.1)
-      # MFCC
-      wavefile = wave.open("kbvoice.wav", 'rb')
-      sigb = wavefile.readframes(-1)
-      sigb = np.frombuffer(sigb, dtype=np.int16)
-      m = doMfcc2(sigb)
-      m = m * 255 / np.max(m)
-      m = m.astype(np.uint8)
-      Image.fromarray(m).save("mfcc.png")
+      # MFCC: vectorized log-mel-spec (40, nframes). Cosmetic only — the
+      # trainer regenerates from the WAV via regen_melspec.py, so what
+      # we save here is just a thumbnail for the dataset Annotate UI.
+      wavefile = wave.open(WAV_PATH, 'rb')
+      sigb = np.frombuffer(wavefile.readframes(-1), dtype=np.int16)
+      wavefile.close()
+      mel_spec = _log_mel_spec(sigb.astype(np.float64))
+      lo, hi = mel_spec.min(), mel_spec.max()
+      img8 = ((mel_spec - lo) * (255.0 / (hi - lo))).astype(np.uint8) if hi > lo \
+              else np.zeros_like(mel_spec, dtype=np.uint8)
+      Image.fromarray(img8).save(MFCC_PATH)
       time.sleep(0.1)
       client_socket.send("#process_stop\n".encode())
 

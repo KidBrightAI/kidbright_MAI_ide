@@ -72,32 +72,38 @@ const countdown = () => {
 }
 
 // Voice_stream.py emits `#uv,<n>` / `#rm,<n>` / `#rec_start` / `#rec_stop`
-// / `#process_start` / `#process_stop` / `#novoice`. We assume one message
-// per relay chunk (small text packets — the daemon always send()s one
-// message at a time, and asyncio.reader.read on the loopback side
-// preserves those boundaries in practice for LAN-speed flows).
-const processChunk = chunk => {
-  const text = decoder.decode(chunk)
-  if (text.startsWith("#uv")) {
-    drawUv(text.split(",")[1])
-  } else if (text.startsWith("#rm")) {
-    drawWaveform(parseInt(text.split(",")[1]))
-  } else if (text.startsWith("#rec_start")) {
+// / `#process_start` / `#process_stop` / `#novoice`. The daemon sends
+// each as its own write() but the relay (and any TCP segment coalescing
+// on the way) can deliver several at once — split on `#` so we don't
+// drop messages when ws_shell batches them into a single chunk.
+const handleMsg = msg => {
+  if (msg.startsWith("uv,")) {
+    drawUv(msg.slice(3))
+  } else if (msg.startsWith("rm,")) {
+    drawWaveform(parseInt(msg.slice(3)))
+  } else if (msg.startsWith("rec_start")) {
     status.value = "recording"
     clearCanvas()
     startPos = 0
     recording.value = true
     countdown()
-  } else if (text.startsWith("#rec_stop")) {
+  } else if (msg.startsWith("rec_stop")) {
     recording.value = false
     counting.value = 0
-  } else if (text.startsWith("#process_start")) {
+  } else if (msg.startsWith("process_start")) {
     status.value = "processing"
-  } else if (text.startsWith("#process_stop")) {
+  } else if (msg.startsWith("process_stop")) {
     status.value = "finishing"
     onFinish()
-  } else if (text.startsWith("#novoice")) {
+  } else if (msg.startsWith("novoice")) {
     status.value = "ready"
+  }
+}
+
+const processChunk = chunk => {
+  const text = decoder.decode(chunk)
+  for (const piece of text.split("#")) {
+    if (piece) handleMsg(piece)
   }
 }
 
@@ -122,14 +128,19 @@ const init = async () => {
       "ps -ef | awk '/voice_stream\\.py/ && !/awk/ {print $1}' | xargs -r kill -9 2>/dev/null; true",
     )
     await sleep(500)
-    await handler.execShell("cd /root && python3 scripts/voice_stream.py &")
-    // Daemon binds with up to ~10 retry-with-1s delays on its side, so
-    // 1 s before opening the relay is usually enough. Real fallback is
-    // tcpRelay() itself — the open command surfaces a meaningful error
-    // if voice_stream isn't listening yet.
-    await sleep(1500)
+    // Absolute path + unbuffered + log redirect: daemon imports numpy /
+    // PIL / alsaaudio + opens an ALSA capture handle, which adds up to
+    // ~5 s of cold start on this board; if anything fails the log gives
+    // us something to read instead of silent ECONNREFUSED.
+    await handler.execShell(
+      "python3 -u /root/scripts/voice_stream.py > /tmp/voice_stream.log 2>&1 &",
+    )
 
-    let retry = 8
+    // Window covers cold start (~5 s import + ALSA) plus headroom for
+    // bind retries on TIME_WAIT. SO_REUSEADDR in the daemon usually
+    // dodges TIME_WAIT, but slow numpy imports on this RISC-V image
+    // still need a generous timeout.
+    let retry = 20
     while (retry-- > 0) {
       try {
         relay = await handler.tcpRelay(5000, {
