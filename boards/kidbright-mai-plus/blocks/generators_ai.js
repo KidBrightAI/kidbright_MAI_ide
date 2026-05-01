@@ -1,10 +1,12 @@
 // All inference for MaixCAM (CV181x) goes through the runtime libraries
-// in boards/kidbright-mai-plus/libs/ — classifier_runtime.py and
-// detector_runtime.py wrap the native nn.Classifier / nn.YOLO11, and
-// voice still uses the legacy voice_mfcc + nn.load path (unchanged).
+// in boards/kidbright-mai-plus/libs/ — classifier_runtime.py wraps
+// nn.Classifier(.mud), detector_runtime.py wraps nn.YOLO11(.mud), and
+// voice_runtime.py runs CPU numpy fp32 (the AWNN INT8 path collapses
+// small-vocab voice models, same trade-off as V831).
 //
-// The classify / yolo result shape matches what kidbright-mai emits, so
-// a student's Blockly program runs on either board without source edits.
+// The classify / yolo / voice result shape matches what kidbright-mai
+// emits, so a student's Blockly program runs on either board without
+// source edits.
 
 const _labelsList = () =>
   workspaceStore.labels.map(lb => `"${lb.label}"`).sort().join(", ")
@@ -38,87 +40,38 @@ python.pythonGenerator.forBlock['maix3_nn_classify_get_result'] = function (bloc
 
 
 // ---------------------------------------------------------------------- voice
-// MaixCAM voice still uses the original AWNN-style .bin/.param path via
-// voice_mfcc. No CPU numpy rewrite here — keep legacy behaviour.
+// MaixCAM voice runs CPU numpy fp32 via voice_runtime.Model — the AWNN
+// INT8 quantizer collapses small-vocab voice models, same trade-off as
+// V831. The runtime wraps record + MFCC + numpy CNN forward so the
+// generator just wires Blockly to its API.
 
 python.pythonGenerator.forBlock['maix3_nn_voice_load'] = function (block, generator) {
-  generator.definitions_['from_maix_import_nn'] = 'from maix import nn'
-  generator.definitions_['import_voice_mfcc'] = 'import voice_mfcc'
-  generator.definitions_['from_maix_import_image'] = 'from maix import image'
-
-  generator.definitions_['class_Resnet'] = `
-class _Resnet:
-  m = {
-    "bin": "/root/model/${workspaceStore.model.hash}.bin",
-    "param": "/root/model/${workspaceStore.model.hash}.param"
-  }
-
-  options = {
-    "model_type": "awnn",
-    "inputs": {
-      "input0": (147, 13, 3)
-    },
-    "outputs": {
-      "output0": (1, 1, ${workspaceStore.labels.map(lb => lb.label).length})
-    },
-    "first_layer_conv_no_pad": True,
-    "mean": [127.5, 127.5, 127.5],
-    "norm": [0.00784313725490196, 0.00784313725490196, 0.00784313725490196],
-  }
-
-  def __init__(self):
-    from maix import nn
-    self.model = nn.load(self.m, opt=self.options)
-
-  def __del__(self):
-    del self.model
-
-_p, _stream = voice_mfcc.start_stream()
-if _stream is None:
-  print("Error: _stream is None")
-  exit()
-else:
-  print("Success: _stream is not None")
-_model = _Resnet()
-_labels = [${_labelsList()}]
-
+  generator.definitions_['import_voice_runtime'] = 'import voice_runtime'
+  generator.definitions_['voice_init'] = `
+_model = voice_runtime.Model("/root/model/${workspaceStore.model.hash}.npz")
+_labels = _model.labels
+_result = None
 `
-
-  return 'print(_model.model)\n'
+  return 'print("voice model loaded:", _labels)\n'
 }
 
-
 python.pythonGenerator.forBlock['maix3_nn_voice_get_rms'] = function (block, generator) {
-  return ['voice_mfcc.get_rms(_stream)', python.Order.NONE]
+  // CPU path opens stream only during classify(); return 0 for now.
+  return ['0', python.Order.ATOMIC]
 }
 
 python.pythonGenerator.forBlock['maix3_nn_voice_classify'] = function (block, generator) {
   const number_duration = block.getFieldValue('duration')
-  let code = `voice_mfcc.audio_record(_stream, _p, record_sec=${number_duration})\n`
-  code += `mfcc_image = image.open('/root/app/mfcc_run.png')\n`
-  code += `mfcc_image = mfcc_image.resize(147, 13)\n`
-  code += `_model_result = _model.model.forward(mfcc_image, quantize=True)\n`
-  return code
+  return `_result = _model.classify(duration=${number_duration})\n`
 }
 
 python.pythonGenerator.forBlock['maix3_nn_voice_get_result'] = function (block, generator) {
   const data = block.getFieldValue('data')
-  let code = ''
-  let order = python.Order.NONE
-  if (data === 'label') {
-    code = '_labels[_model_result.argmax()]'
-    block.setOutput(true, 'String')
-    order = python.Order.ATOMIC
-  } else if (data === 'class_id') {
-    code = '_model_result.argmax()'
-    block.setOutput(true, 'Number')
-    order = python.Order.ATOMIC
-  } else if (data === 'probability') {
-    code = '_model_result.max()'
-    block.setOutput(true, 'Number')
-    order = python.Order.ATOMIC
-  }
-  return [code, order]
+  const key = (data === 'class_id') ? 'class_id'
+    : (data === 'probability') ? 'probability'
+    : 'label'
+  block.setOutput(true, key === 'label' ? 'String' : 'Number')
+  return [`_result["${key}"] if _result else ${key === 'label' ? '"None"' : (key === 'class_id' ? '-1' : '0.0')}`, python.Order.ATOMIC]
 }
 
 

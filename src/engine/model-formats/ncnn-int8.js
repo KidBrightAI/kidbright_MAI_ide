@@ -5,11 +5,9 @@ import ModelFormat from "./base.js"
  *   model_int8.bin     (weights; hash source)
  *   model_int8.param   (network topology)
  *
- * Used by:
- *   - kidbright-mai (V831) for image classification and YOLO (AWNN runtime)
- *   - kidbright-mai-plus for voice classification (also AWNN on CV181x)
- *
- * NOT used for V831 voice — that went to numpy-fp32.
+ * Used by kidbright-mai (V831) for image classification and YOLO via the
+ * AWNN runtime. Voice on both V831 and CV181x goes to numpy-fp32 — INT8
+ * quantization collapses small-vocab voice models regardless of board.
  */
 export default class NcnnInt8 extends ModelFormat {
   static id = "ncnn-int8"

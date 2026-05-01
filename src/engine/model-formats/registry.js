@@ -11,18 +11,15 @@ ALL_FORMATS.push(NcnnInt8, Cvimodel, NumpyFp32)
  *
  *   { projectType, boardId, modelType } -> ModelFormat class
  *
- * The order of checks encodes the product matrix: kidbright-mai (V831)
- * uses cpu numpy for voice and ncnn-int8 for everything else; mai-plus
- * uses cvimodel for image+yolo but still ncnn-int8 for voice (legacy,
- * AWNN on CV181x is fine for some voice scenarios).
+ * The product matrix: kidbright-mai (V831) uses ncnn-int8 for image+yolo
+ * and numpy-fp32 for voice. mai-plus (CV181x) uses cvimodel for image+yolo
+ * and numpy-fp32 for voice — both boards run voice on the CPU because the
+ * INT8 quantizer collapses small-vocab voice models regardless of board.
  */
 export function pickFor({ projectType, boardId, modelType } = {}) {
-  if (boardId === "kidbright-mai-plus") {
-    if (projectType === "VOICE_CLASSIFICATION") return NcnnInt8
-    return Cvimodel
-  }
-  // default / kidbright-mai (V831)
   if (projectType === "VOICE_CLASSIFICATION") return NumpyFp32
+  if (boardId === "kidbright-mai-plus") return Cvimodel
+  // default / kidbright-mai (V831)
   return NcnnInt8
 }
 
