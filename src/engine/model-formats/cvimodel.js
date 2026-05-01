@@ -5,8 +5,8 @@ import ModelFormat from "./base.js"
  *   model.cvimodel   (quantized weights; hash source)
  *   model.mud        (model metadata / config, plain text ini-ish)
  *
- * Used by kidbright-mai-plus (MaixCAM CV181x) for image classification
- * and YOLO via the tpu-mlir toolchain.
+ * Used by kidbright-mai-plus (MaixCAM CV181x) for every model type —
+ * image classification, YOLO, and voice — via the tpu-mlir toolchain.
  *
  * The .mud file embeds a `model = <filename>.cvimodel` line that must be
  * rewritten at upload time to reference this model's hashed filename on

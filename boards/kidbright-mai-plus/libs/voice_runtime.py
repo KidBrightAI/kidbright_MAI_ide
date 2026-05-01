@@ -1,29 +1,27 @@
-"""Voice classification runtime for MaixCAM (CV181x) — CPU numpy fp32 path.
+"""Voice classification runtime for MaixCAM (CV181x) — NPU cvimodel path.
 
-Mirrors the V831 approach (boards/kidbright-mai/libs/voice_cpu_infer.py):
-the AWNN INT8 quantizer collapses small-vocab voice models regardless of
-training, and there's no CVITEK toolchain wired up for voice CNN on V2
-yet, so we run forward in numpy on the A53. Fast enough for keyword
-spotting (~50-200 ms per clip depending on duration / channel widths).
+Loads the trained voice CNN as a `.cvimodel` (compiled by tpu-mlir from the
+ONNX export) and runs forward on the CV181x NPU via `maix.nn.Classifier`.
+~1-3 ms NPU forward vs ~6 s of pure-numpy CNN on the RISC-V A53 CPU
+(no BLAS, no SIMD).
 
-Audio capture uses pyalsaaudio (the library the MaixCAM image actually
-ships with — pyaudio is not installed). Same int16 mono 44.1 kHz PCM as
-V1, so the trained .npz weights load unchanged.
+Audio capture uses pyalsaaudio (the library the MaixCAM image actually ships
+with — pyaudio is not installed). Mel-spec is computed in numpy on the CPU
+because the audio chain is shorter than NPU forward; only the conv layers
+benefit from offloading.
 
 Public API (used by generators_ai.js):
 
     import voice_runtime
-    _model = voice_runtime.Model("/root/model/<hash>.npz")
+    _model = voice_runtime.Model("/root/model/<hash>.mud")
     result = _model.classify(duration=3)
     # result = {"label": "forward", "probability": 0.98, "class_id": 1}
     _model.close()
 
 Result keys (`label` / `probability` / `class_id`) line up with the block
-dropdown in maix3_nn_voice_get_result, so the generator can index the
-dict directly without renaming.
+dropdown in maix3_nn_voice_get_result.
 """
 import atexit
-import os
 from math import pi, floor
 
 import numpy as np
@@ -98,84 +96,30 @@ def _mel_spec(signal):
     return np.log(mag_sq @ _MEL_M_T).T
 
 
-# ---- numpy CNN forward ----
-def _im2col(x, kh, kw, stride=1):
-    from numpy.lib.stride_tricks import as_strided
-    C, H, W = x.shape
-    H_out = (H - kh) // stride + 1
-    W_out = (W - kw) // stride + 1
-    sc, sh, sw = x.strides
-    patches = as_strided(
-        x, shape=(C, kh, kw, H_out, W_out),
-        strides=(sc, sh, sw, sh * stride, sw * stride),
-    )
-    return patches.reshape(C * kh * kw, H_out * W_out).copy()
+def _mel_to_image(mel_spec):
+    """Mel-spec (40, N) float -> (W=N, H=40, 3-channel RGB) maix.image.Image.
 
-
-def _conv2d(x, W, b, pad=1):
-    C_in, H, Wd = x.shape
-    C_out, _, kh, kw = W.shape
-    xp = np.pad(x, ((0, 0), (pad, pad), (pad, pad))) if pad else x
-    cols = _im2col(xp, kh, kw)
-    Wf = W.reshape(C_out, -1)
-    y = Wf @ cols + b[:, None]
-    return y.reshape(C_out, H, Wd)
-
-
-def _maxpool2d(x, k):
-    C, H, W = x.shape
-    Ho, Wo = H // k, W // k
-    x = x[:, :Ho * k, :Wo * k].reshape(C, Ho, k, Wo, k)
-    return x.max(axis=(2, 4))
-
-
-def _maxpool_global(x, kh, kw):
-    return x.reshape(x.shape[0], -1).max(axis=1, keepdims=True)[:, :, None]
-
-
-def _relu(x):
-    return np.maximum(x, 0)
-
-
-def _softmax(v):
-    vmax = np.max(v)
-    e = np.exp(v - vmax)
-    return e / e.sum()
-
-
-def _forward(x, w):
-    """VoiceCNN forward. Global-pool kernel auto-inferred from feature map shape."""
-    x = _relu(_conv2d(x, w["features.0.weight"], w["features.0.bias"], pad=1))
-    x = _maxpool2d(x, 2)
-    x = _relu(_conv2d(x, w["features.3.weight"], w["features.3.bias"], pad=1))
-    x = _maxpool2d(x, 2)
-    x = _relu(_conv2d(x, w["features.6.weight"], w["features.6.bias"], pad=1))
-    x = _maxpool2d(x, 2)
-    x = _maxpool_global(x, x.shape[1], x.shape[2])
-    if "features.10.weight" in w:
-        x = _relu(_conv2d(x, w["features.10.weight"], w["features.10.bias"], pad=0))
-    x = x.flatten()
-    return w["classifier.1.weight"] @ x + w["classifier.1.bias"]
-
-
-def _preprocess_mel(mel_spec):
-    """mel-spec float (H, W) -> (3, H, W) float32 in [-1,1] matching training Normalize."""
+    Matches regen_melspec.py: per-clip min/max normalize to 0-255 uint8, then
+    replicate the grayscale plane to 3 channels (training used Grayscale(3)
+    + ImageFolder, so the network sees identical R/G/B planes).
+    """
+    from maix import image
     lo, hi = mel_spec.min(), mel_spec.max()
     if hi > lo:
-        mel_u8 = ((mel_spec - lo) * (255.0 / (hi - lo))).astype(np.uint8)
+        u8 = ((mel_spec - lo) * (255.0 / (hi - lo))).astype(np.uint8)
     else:
-        mel_u8 = np.zeros_like(mel_spec, dtype=np.uint8)
-    a = mel_u8.astype(np.float32)
-    a = np.stack([a, a, a], axis=0)
-    return (a - 127.5) / 128.0
+        u8 = np.zeros_like(mel_spec, dtype=np.uint8)
+    H, W = u8.shape
+    rgb = np.repeat(u8[..., None], 3, axis=-1).tobytes()
+    return image.from_bytes(W, H, image.Format.FMT_RGB888, rgb)
 
 
 class Model:
-    """Voice classifier. Loads weights + owns the ALSA capture handle."""
-    def __init__(self, npz_path):
-        d = np.load(npz_path, allow_pickle=True)
-        self.weights = {k: d[k] for k in d.files if k != "labels"}
-        self.labels = [str(x) for x in d["labels"]]
+    """Voice classifier. Owns the ALSA capture handle + nn.Classifier."""
+    def __init__(self, mud_path):
+        from maix import nn
+        self._classifier = nn.Classifier(model=mud_path, dual_buff=True)
+        self.labels = list(self._classifier.labels)
         self._pcm = None
         atexit.register(self.close)
 
@@ -200,10 +144,9 @@ class Model:
         return b""
 
     def record(self, duration):
-        """Record `duration` seconds of mono 16-bit audio. Returns np.float64 signal."""
+        """Record `duration` seconds of mono 16-bit audio. Returns float64 np array."""
         self._ensure_stream()
         n_chunks = int(RATE / CHUNK * duration)
-        # Drain a couple buffered periods so we start clean.
         for _ in range(3):
             self._read_chunk()
         buf = []
@@ -215,14 +158,16 @@ class Model:
         """Record + classify in one call. Returns {label, probability, class_id}."""
         sig = self.record(duration)
         mel = _mel_spec(sig)
-        x = _preprocess_mel(mel)
-        logits = _forward(x, self.weights)
-        idx = int(np.argmax(logits))
-        probs = _softmax(logits)
+        img = _mel_to_image(mel)
+        results = self._classifier.classify(img)
+        if not results:
+            return {"label": "None", "probability": 0.0, "class_id": -1}
+        cid, prob = results[0]
+        cid = int(cid)
         return {
-            "label": self.labels[idx] if idx < len(self.labels) else str(idx),
-            "probability": float(probs[idx]),
-            "class_id": idx,
+            "label": self.labels[cid] if cid < len(self.labels) else str(cid),
+            "probability": float(prob),
+            "class_id": cid,
         }
 
     def close(self):

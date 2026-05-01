@@ -11,13 +11,18 @@ ALL_FORMATS.push(NcnnInt8, Cvimodel, NumpyFp32)
  *
  *   { projectType, boardId, modelType } -> ModelFormat class
  *
- * The product matrix: kidbright-mai (V831) uses ncnn-int8 for image+yolo
- * and numpy-fp32 for voice. mai-plus (CV181x) uses cvimodel for image+yolo
- * and numpy-fp32 for voice — both boards run voice on the CPU because the
- * INT8 quantizer collapses small-vocab voice models regardless of board.
+ * The product matrix:
+ *   - kidbright-mai (V831): ncnn-int8 for image+yolo, numpy-fp32 for voice.
+ *     V831's AWNN INT8 collapses the tiny voice classifier head regardless of
+ *     calibration, so voice runs on the A7 CPU via numpy.
+ *   - kidbright-mai-plus (CV181x): cvimodel for everything including voice.
+ *     The CV181x NPU + tpu-mlir handle the small voice classifier fine, and
+ *     CPU numpy on the single-core RISC-V is ~3000× slower than the NPU.
  */
 export function pickFor({ projectType, boardId, modelType } = {}) {
-  if (projectType === "VOICE_CLASSIFICATION") return NumpyFp32
+  if (projectType === "VOICE_CLASSIFICATION") {
+    return boardId === "kidbright-mai-plus" ? Cvimodel : NumpyFp32
+  }
   if (boardId === "kidbright-mai-plus") return Cvimodel
   // default / kidbright-mai (V831)
   return NcnnInt8

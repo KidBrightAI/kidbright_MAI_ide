@@ -1,8 +1,8 @@
 // All inference for MaixCAM (CV181x) goes through the runtime libraries
 // in boards/kidbright-mai-plus/libs/ — classifier_runtime.py wraps
 // nn.Classifier(.mud), detector_runtime.py wraps nn.YOLO11(.mud), and
-// voice_runtime.py runs CPU numpy fp32 (the AWNN INT8 path collapses
-// small-vocab voice models, same trade-off as V831).
+// voice_runtime.py wraps nn.Classifier(.mud) with ALSA capture + numpy
+// mel-spec preprocessing.
 //
 // The classify / yolo / voice result shape matches what kidbright-mai
 // emits, so a student's Blockly program runs on either board without
@@ -40,15 +40,15 @@ python.pythonGenerator.forBlock['maix3_nn_classify_get_result'] = function (bloc
 
 
 // ---------------------------------------------------------------------- voice
-// MaixCAM voice runs CPU numpy fp32 via voice_runtime.Model — the AWNN
-// INT8 quantizer collapses small-vocab voice models, same trade-off as
-// V831. The runtime wraps record + MFCC + numpy CNN forward so the
-// generator just wires Blockly to its API.
+// MaixCAM voice runs on the CV181x NPU via voice_runtime.Model — the
+// runtime wraps ALSA record + numpy mel-spec + nn.Classifier forward into
+// Model.classify(duration=N). NPU forward is ~1-3 ms vs ~6 s on the
+// single-core RISC-V CPU (no BLAS, no SIMD).
 
 python.pythonGenerator.forBlock['maix3_nn_voice_load'] = function (block, generator) {
   generator.definitions_['import_voice_runtime'] = 'import voice_runtime'
   generator.definitions_['voice_init'] = `
-_model = voice_runtime.Model("/root/model/${workspaceStore.model.hash}.npz")
+_model = voice_runtime.Model("/root/model/${workspaceStore.model.hash}.mud")
 _labels = _model.labels
 _result = None
 `
@@ -56,7 +56,7 @@ _result = None
 }
 
 python.pythonGenerator.forBlock['maix3_nn_voice_get_rms'] = function (block, generator) {
-  // CPU path opens stream only during classify(); return 0 for now.
+  // Mic stream opens only during classify(); return 0 for now.
   return ['0', python.Order.ATOMIC]
 }
 
