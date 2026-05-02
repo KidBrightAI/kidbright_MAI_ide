@@ -97,9 +97,12 @@ export class WebSocketShellHandler extends BoardProtocol {
         this.boardStore.connected = true
         toast.success("Connected to Shell")
         this.socket.send('\r')
-        // Async — `capabilities.fileExplorer` flips to true silently
-        // once the version response lands.
+        // Both fire-and-forget — capabilities flip on silently once the
+        // version probe lands, and outdated /root/scripts/ files get
+        // refreshed in the background. Connect resolves immediately so
+        // the UI doesn't block on a slow board.
         this._probeFeatures()
+        this._uploadBoardScripts()
         resolve(true)
       }
 
@@ -325,6 +328,50 @@ export class WebSocketShellHandler extends BoardProtocol {
   // incoming frames + EOF. Caller is responsible for calling
   // `.close()` when done; otherwise the board keeps the loopback
   // socket open until the ws disconnects.
+
+  // =================================================== board scripts auto-sync
+  // Mirrors V1's _uploadBoardScripts: every (re)connect re-pushes the
+  // bundled `boards/<id>/scripts/*` so a board with an outdated
+  // ws_shell.py / voice_stream.py picks up fixes the next time the
+  // student opens the IDE — no manual deploy_services.bat run needed.
+  //
+  // ws_shell.py and S99ws_shell get rewritten on disk but won't hot-
+  // swap (this connection is using the old binary; the new one loads
+  // on the next board reboot). voice_stream.py / mjpg.py spawn fresh
+  // each capture / stream, so the new copy takes effect immediately.
+
+  async _uploadBoardScripts() {
+    const workspaceStore = useWorkspaceStore()
+    const board = workspaceStore.currentBoard
+    const scripts = board?.scripts || []
+    if (scripts.length === 0) return
+
+    // Filename -> absolute destination on board. Anything not listed
+    // here lands in /root/scripts/ to match the V1 default layout.
+    const SPECIAL_DESTS = {
+      "ws_shell.py": "/root/ws_shell.py",
+      "S99ws_shell": "/etc/init.d/S99ws_shell",
+    }
+
+    for (const script of scripts) {
+      const name = script.replace(board.path + "scripts/", "")
+      const dest = SPECIAL_DESTS[name] || `/root/scripts/${name}`
+      try {
+        const response = await fetch(script)
+        if (!response.ok) continue
+        const text = await response.text()
+        // Skip if the on-board copy already matches by size — a cheap
+        // dedup that avoids pushing ~50 KB on every reconnect when
+        // nothing's changed.
+        const stat = await this.statFile(dest)
+        if (stat.exists && stat.size === new Blob([text]).size) continue
+        await this.writeFile(dest, text)
+        console.log(`[script-sync] uploaded ${name} -> ${dest}`)
+      } catch (e) {
+        console.warn(`[script-sync] ${name} failed:`, e?.message || e)
+      }
+    }
+  }
 
   async tcpRelay(port, { onData, onClose } = {}) {
     const open = await this._sendCommand({
