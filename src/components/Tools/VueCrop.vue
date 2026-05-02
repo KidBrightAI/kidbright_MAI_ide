@@ -86,32 +86,40 @@ const colorByLabel = label=>{
   
   return addAlpha(getColorIndex(colorIndex), 0.5)
 }
+// Convert a mouse event's clientX/Y into drawPanel-local coordinates,
+// clamped to the panel's bounds. Using clientX/Y (absolute viewport
+// position) avoids the classic accumulated-movementX drift: under fast
+// mouse motion Chrome coalesces mousemove events and the summed deltas
+// undershoot the cursor's real position, which is exactly the "rect
+// lags behind cursor" symptom users see when annotating quickly.
+const localXY = e => {
+  const r = drawPanel.value.getBoundingClientRect()
+  const x = e.clientX - r.left
+  const y = e.clientY - r.top
+  return [
+    Math.max(0, Math.min(innerMaxWidth.value, x)),
+    Math.max(0, Math.min(innerMaxHeight.value, y)),
+  ]
+}
+
 const startDrawNewCrop = e=>{
   if (props.disabled) {
     return
   }
   onCreateNew.value = true
   window.document.addEventListener('mousemove', doDrag)
-  let rectTemp = drawPanel.value.getBoundingClientRect()
-  let targetRect = e.target.getBoundingClientRect()
-  let pointX = e.offsetX - rectTemp.left + targetRect.left
-  let pointY = e.offsetY - rectTemp.top + targetRect.top
-  rect.value.x1 = pointX
-  rect.value.y1 = pointY
-  rect.value.x2 = pointX
-  rect.value.y2 = pointY
+  const [x, y] = localXY(e)
+  rect.value.x1 = x
+  rect.value.y1 = y
+  rect.value.x2 = x
+  rect.value.y2 = y
   rect.value.label = props.label
   rect.value.color = colorByLabel(props.label)
 }
 const doDrag = e=>{
-  if (e.movementX === 0 && e.movementY === 0) {
-    return
-  }
-  let x2 = rect.value.x2 + e.movementX
-  let y2 = rect.value.y2 + e.movementY
-  
-  rect.value.x2 = x2 > innerMaxWidth.value ? innerMaxWidth.value : (x2 < 0 ? 0: x2)
-  rect.value.y2 = y2 > innerMaxHeight.value ? innerMaxHeight.value : (y2 < 0 ? 0 : y2)
+  const [x, y] = localXY(e)
+  rect.value.x2 = x
+  rect.value.y2 = y
 }
 const remove = id=>{
   rects.value = rects.value.filter(el=>el.id !== id)
