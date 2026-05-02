@@ -154,6 +154,21 @@ class Model:
             buf.append(self._read_chunk())
         return np.frombuffer(b"".join(buf), dtype=np.int16).astype(np.float64)
 
+    def get_rms(self):
+        """Read one period from the mic and return its RMS as an int.
+
+        Lazy-opens the ALSA stream on first call so a student can poll
+        get_rms() in a loop (e.g. to threshold-trigger a recording)
+        without paying for the open until they actually want audio.
+        Same scale as audioop.rms(buf, 2): 0..32768 for int16 PCM.
+        """
+        self._ensure_stream()
+        import audioop
+        data = self._read_chunk()
+        if not data:
+            return 0
+        return audioop.rms(data, 2)
+
     def classify(self, duration=3.0):
         """Record + classify in one call. Returns {label, probability, class_id}."""
         sig = self.record(duration)

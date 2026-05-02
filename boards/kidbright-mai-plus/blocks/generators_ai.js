@@ -56,8 +56,10 @@ _result = None
 }
 
 python.pythonGenerator.forBlock['maix3_nn_voice_get_rms'] = function (block, generator) {
-  // Mic stream opens only during classify(); return 0 for now.
-  return ['0', python.Order.ATOMIC]
+  // voice_runtime.Model.get_rms() lazy-opens the mic on first call and
+  // returns audioop.rms() of one period (~23 ms blocking). Scale 0..32768
+  // for int16 PCM — matches V1's voice_mfcc.get_rms.
+  return ['_model.get_rms()', python.Order.ATOMIC]
 }
 
 python.pythonGenerator.forBlock['maix3_nn_voice_classify'] = function (block, generator) {
