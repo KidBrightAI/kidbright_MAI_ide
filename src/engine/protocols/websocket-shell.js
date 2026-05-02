@@ -37,6 +37,7 @@ export class WebSocketShellHandler extends BoardProtocol {
     // ws_shell.py) don't reply to `{cmd:"version"}` and the set stays
     // empty — feature-gated UI hides itself.
     this._features = new Set()
+    this._boardVersion = null
   }
 
   get capabilities() {
@@ -44,6 +45,7 @@ export class WebSocketShellHandler extends BoardProtocol {
       wifi:         this._features.has("wifi_scan"),
       fileExplorer: this._features.has("listdir"),
       tcpRelay:     this._features.has("tcp_relay"),
+      boardVersion: this._boardVersion,
       startupScript: false,
     }
   }
@@ -97,12 +99,11 @@ export class WebSocketShellHandler extends BoardProtocol {
         this.boardStore.connected = true
         toast.success("Connected to Shell")
         this.socket.send('\r')
-        // Both fire-and-forget — capabilities flip on silently once the
-        // version probe lands, and outdated /root/scripts/ files get
-        // refreshed in the background. Connect resolves immediately so
-        // the UI doesn't block on a slow board.
-        this._probeFeatures()
-        this._uploadBoardScripts()
+        // Probe first so _boardVersion is known by the time
+        // _uploadBoardScripts decides whether to nag for a reboot.
+        // Still fire-and-forget at the top level — connect resolves
+        // immediately and the chain runs in the background.
+        this._probeFeatures().then(() => this._uploadBoardScripts())
         resolve(true)
       }
 
@@ -197,6 +198,7 @@ export class WebSocketShellHandler extends BoardProtocol {
     })
     if (!msg) return
     for (const f of msg.features || []) this._features.add(f)
+    this._boardVersion = msg.version || null
     // Force the boardStore.capabilities getter to re-run so dependent
     // UI flips on (handler is markRaw, so Vue can't track our Set).
     this.boardStore.capabilitiesRevision++
@@ -352,6 +354,12 @@ export class WebSocketShellHandler extends BoardProtocol {
       "ws_shell.py": "/root/ws_shell.py",
       "S99ws_shell": "/etc/init.d/S99ws_shell",
     }
+    // Files in this set need a board reboot to take effect — we can't
+    // hot-swap our own ws shell or its init script. voice_stream /
+    // mjpg respawn fresh per use so the new copy goes live with no
+    // intervention.
+    const REBOOT_FILES = new Set(["ws_shell.py", "S99ws_shell"])
+    let needsReboot = false
 
     for (const script of scripts) {
       const name = script.replace(board.path + "scripts/", "")
@@ -367,9 +375,18 @@ export class WebSocketShellHandler extends BoardProtocol {
         if (stat.exists && stat.size === new Blob([text]).size) continue
         await this.writeFile(dest, text)
         console.log(`[script-sync] uploaded ${name} -> ${dest}`)
+        if (REBOOT_FILES.has(name)) needsReboot = true
       } catch (e) {
         console.warn(`[script-sync] ${name} failed:`, e?.message || e)
       }
+    }
+
+    if (needsReboot) {
+      const cur = this._boardVersion ? ` (ตอนนี้รัน ${this._boardVersion})` : ""
+      toast.info(
+        `บอร์ดได้รับ ws_shell เวอร์ชันใหม่แล้ว${cur} — กรุณา reboot บอร์ดเพื่อให้มีผล`,
+        { autoClose: 8000 },
+      )
     }
   }
 

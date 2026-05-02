@@ -75,6 +75,7 @@ export const useBoardStore = defineStore({
         wifi: false,
         fileExplorer: false,
         tcpRelay: false,
+        boardVersion: null,
         startupScript: false,
       }
     },
