@@ -7,7 +7,7 @@
     <div
       class="rect unselect"
       :style="rectStyle"
-      @mousedown.stop="readyForDrag(['x1', 'y1', 'x2', 'y2'])"
+      @mousedown.stop="readyForDrag(['x1', 'y1', 'x2', 'y2'], $event)"
       @contextmenu="remove"
     >
       <div class="label-text">
@@ -18,25 +18,25 @@
       v-show="resizeAble"
       class="anchor unselect anchor-start"
       :style="startStyle"
-      @mousedown.stop="readyForDrag(['x1', 'y1'])"
+      @mousedown.stop="readyForDrag(['x1', 'y1'], $event)"
     />
     <div
       v-show="resizeAble"
       class="anchor unselect anchor-hv2"
       :style="hv2Style"
-      @mousedown.stop="readyForDrag(['y1', 'x2'])"
+      @mousedown.stop="readyForDrag(['y1', 'x2'], $event)"
     />
     <div
       v-show="resizeAble"
       class="anchor unselect anchor-vh2"
       :style="vh2Style"
-      @mousedown.stop="readyForDrag(['x1', 'y2'])"
+      @mousedown.stop="readyForDrag(['x1', 'y2'], $event)"
     />
     <div
       v-show="resizeAble"
       class="anchor unselect anchor-end"
       :style="endStyle"
-      @mousedown.stop="readyForDrag(['x2', 'y2'])"
+      @mousedown.stop="readyForDrag(['x2', 'y2'], $event)"
     />
   </div>
 </template>
@@ -317,10 +317,22 @@ const remove = e => {
   return false
 }
 
-const readyForDrag = coordinates => {
+// Track the last clientX/Y we saw, so doDrag can compute its own
+// per-event delta instead of trusting e.movementX. Chrome coalesces
+// mousemove events under fast motion and the summed movementX
+// undershoots the cursor — that's the same drift VueCrop hit. By
+// subtracting from clientX (which always reflects the cursor's true
+// post-coalesce position) the delta we feed getTargetCoordinates is
+// always the correct total motion since the previous tick.
+let lastClientX = 0
+let lastClientY = 0
+
+const readyForDrag = (coordinates, mouseEvent) => {
   firstDrag.value = true
   let newCoordinate = reSort(coordinates)
   modifyCoordinates.value = newCoordinate
+  lastClientX = mouseEvent?.clientX ?? 0
+  lastClientY = mouseEvent?.clientY ?? 0
   window.document.addEventListener('mousemove', doDrag)
 }
 
@@ -391,16 +403,22 @@ const getTargetCoordinates = movement => {
 }
 
 const doDrag = e => {
-  if (e.movementX === 0 && e.movementY === 0) {
+  // Derive per-tick delta from absolute clientX so coalesced mousemove
+  // events don't lose motion (see comment above lastClientX).
+  const dx = e.clientX - lastClientX
+  const dy = e.clientY - lastClientY
+  if (dx === 0 && dy === 0) {
     return
   }
+  lastClientX = e.clientX
+  lastClientY = e.clientY
   if (firstDrag.value) {
     directionMark.value = 1
     if ((x1.value === x2.value) && (y1.value === y2.value)) {
       let defaultX = 1
       let defaultY = 1
-      let x = e.movementX || defaultX
-      let y = e.movementY || defaultY
+      let x = dx || defaultX
+      let y = dy || defaultY
       if (x * y < 0) {
         directionMark.value = -1
       }
@@ -414,7 +432,7 @@ const doDrag = e => {
     }
   }
   firstDrag.value = false
-  let targetCoordinates = getTargetCoordinates({ movementX: e.movementX, movementY: e.movementY })
+  let targetCoordinates = getTargetCoordinates({ movementX: dx, movementY: dy })
   x1.value = targetCoordinates.x1
   x2.value = targetCoordinates.x2
   y1.value = targetCoordinates.y1
