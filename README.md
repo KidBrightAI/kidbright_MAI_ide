@@ -4,6 +4,37 @@
 
 ---
 
+## Version
+
+Current release: **1.1.0** (2026-05-02). Live at <https://kidbright-mai.web.app>.
+
+### 1.1.0 — mAI Plus: WiFi + voice + auto-sync
+
+**Added**
+- mAI Plus (CV181x) WiFi support — scan / status / connect via wpa_cli wrappers in `ws_shell.py` 1.3.0; state auto-syncs on IDE connect; SSID + IP shown in the Header tooltip.
+- mAI Plus voice classification end-to-end:
+    - Inference: `voice_runtime.py` wraps `maix.nn.Classifier(.mud)` over the CV181x NPU (~1-3 ms forward, ~3000× faster than the numpy fallback).
+    - Training-time capture: `WsShellSoundCapture.vue` talks to the on-board `voice_stream.py` daemon through a new generic `tcp_relay` command in ws_shell, replacing the V1-only ADB TCP forwarding.
+    - Server (`kidbright_MAI_server`) compiles voice CNN to cvimodel via tpu-mlir with the trainer's actual mean/scale (not the leftover ImageNet defaults) and auto-detects the input W from the dataset wavs.
+- mAI Plus board script auto-sync — every IDE connect rewrites `/root/scripts/*.py` plus `ws_shell.py` and `S99ws_shell` from the bundled `boards/kidbright-mai-plus/scripts/`. Outdated boards self-update without `deploy_services.bat`. A toast nags for a board reboot when the new files include something that needs a restart to take effect.
+
+**Fixed**
+- Voice capture artifacts (`kbvoice.wav`, `waveform.png`, `mfcc.png`) now write to `/root/` instead of `/` (ws_shell's pty inherits cwd=/ from S99 init, not /root).
+- TCP relay chunk parser splits on `#` so coalesced messages like `#process_start#process_stop` aren't dropped.
+- `readFile` fails fast on missing files instead of waiting out the 60 s safety timeout.
+- `voice_stream.py` uses `SO_REUSEADDR` and exits hard on bind failure (no more silent ephemeral-port fallback).
+
+**Changed**
+- File explorer dialog rewrite (cleaner state machine, fewer race conditions).
+- mAI Plus voice route in `model-formats/registry.js` is now `Cvimodel` (was `NumpyFp32` — the numpy path was a stopgap before the cvimodel pipeline came online).
+- `deploy_services.bat` rewritten as initial-setup-only — the IDE handles ongoing updates.
+
+### 1.0.0
+
+Initial release.
+
+---
+
 ## Technology Stack
 
 | Layer | Technology |
