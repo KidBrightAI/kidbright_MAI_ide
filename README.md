@@ -6,7 +6,16 @@
 
 ## Version
 
-Current release: **1.1.0** (2026-05-02). Live at <https://kidbright-mai.web.app>.
+Current release: **1.1.1** (2026-05-02). Live at <https://kidbright-mai.web.app>.
+
+### 1.1.1 — voice get_rms + project-type label
+
+**Fixed**
+- mAI Plus voice `get_rms` block: emitted literal `0` because `voice_runtime.Model` never kept a mic stream around outside of `classify()`. Added a lazy-opening `get_rms()` helper that returns `audioop.rms()` of one period (~23 ms) so threshold-trigger loops work like they do on V1.
+- Model designer side panel header always read "ยังไม่ได้เลือกประเภทโปรเจค" even right after picking a model type. `NewModelDialog` was reading `.name` on a Vue `computed()` Ref (auto-unwrap is template-only, plain JS gets `undefined`); switched to `.value.name`.
+
+**Changed**
+- `/deploy` slash command (`.claude/commands/deploy.md`) gained a Tag + GitHub release step — every release now annotates a `vX.Y.Z` tag and posts the README's section as a GitHub release body.
 
 ### 1.1.0 — mAI Plus: WiFi + voice + auto-sync
 
