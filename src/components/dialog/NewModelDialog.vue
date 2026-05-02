@@ -31,7 +31,7 @@ const onFormSubmit = async() => {
     //let selectedExtension = extensions.find(el=>el.id == selectType.value);
     let project = {
       projectType: selectType.value, //id of extension
-      projectTypeTitle: selectedExtension.name, //this.models.find(el=>el.value == this.selectType).text,
+      projectTypeTitle: selectedExtension.value.name,
       lastUpdate: new Date(),
       extension: selectedExtension.value,
       model : null,
