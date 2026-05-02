@@ -6,7 +6,16 @@
 
 ## Version
 
-Current release: **1.1.3** (2026-05-02). Live at <https://kidbright-mai.web.app>.
+Current release: **1.1.4** (2026-05-02). Live at <https://kidbright-mai.web.app>.
+
+### 1.1.4 — Object Detection annotate quality-of-life + CI release
+
+**Fixed**
+- `VueCropRect` resize / move handles tracked the cursor through the same accumulated `e.movementX` drift that 1.1.3 fixed for `VueCrop`. Switched to absolute `clientX/Y` deltas (cached per-tick via `lastClientX/Y`), so handles stop drifting under fast motion.
+- `ImageDatasetList`'s window-bound A/D + ArrowLeft/Right shortcut hijacked typing in label inputs (typing "Apple" steered the dataset list instead). Now bails when the event target is an `<input>`, `<textarea>`, or contenteditable surface.
+
+**Changed**
+- New `.github/workflows/release.yml`: pushing a `vX.Y.Z` tag now triggers CI to build, deploy to Firebase Hosting, and create the GitHub release automatically. Local `/deploy` flow shrinks to bump → commit → push → tag → push-tag.
 
 ### 1.1.3 — Object Detection annotate: rect tracks the cursor
 
