@@ -98,6 +98,17 @@ const scrollXBy = px => {
 }
 
 const onKey = e => {
+  // The handler is bound to window, so without this guard typing
+  // a label like "Apple" or "Dog" steers the dataset list instead
+  // of going into the input. ArrowLeft / ArrowRight are also caret
+  // navigation inside text fields, so bail for any text-entry
+  // surface (Vuetify VTextField renders a real <input>, so the
+  // tag-name check is enough; isContentEditable covers richer
+  // editors if they ever appear).
+  const t = e.target
+  const tag = t?.tagName
+  if (tag === "INPUT" || tag === "TEXTAREA" || t?.isContentEditable) return
+
   if (e.key == "d" || e.key == "ArrowRight") {
     if (lastSelectedIndex.value >= 0 && lastSelectedIndex.value < datasetStore.data.length - 1) {
       let nextPos = lastSelectedIndex.value + 1
