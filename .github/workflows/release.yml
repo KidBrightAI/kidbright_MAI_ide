@@ -1,0 +1,54 @@
+name: Release on tag
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # softprops/action-gh-release writes a Release
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Deploy to Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KIDBRIGHT_MAI }}
+          channelId: live
+          projectId: kidbright-mai
+
+      - name: Extract release notes from README
+        # Pulls the ### X.Y.Z block out of README so the GitHub release
+        # page mirrors what shipped. Tag drives both the version label
+        # and the section name (we strip the leading 'v').
+        run: |
+          python3 - <<'PY'
+          import os, re
+          tag = os.environ['GITHUB_REF_NAME'].lstrip('v')
+          md = open('README.md').read()
+          m = re.search(rf'### {re.escape(tag)}[^\n]*\n(.*?)(?=\n### |\n---)', md, re.DOTALL)
+          body = (m.group(1).strip() if m else f'Release {tag}.')
+          open('release-notes.md', 'w').write(body + '\n')
+          PY
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.ref_name }}
+          body_path: release-notes.md
