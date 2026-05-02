@@ -33,6 +33,14 @@ jobs:
           channelId: live
           projectId: kidbright-mai
 
+      - name: Package dist as release asset
+        # Single zip of the built site so testers can grab a frozen
+        # snapshot from the Releases page without re-running the
+        # build. Naming: kidbright-mai-ide-vX.Y.Z.zip.
+        run: |
+          cd dist
+          zip -qr "../kidbright-mai-ide-${{ github.ref_name }}.zip" .
+
       - name: Extract release notes from README
         # Pulls the ### X.Y.Z block out of README so the GitHub release
         # page mirrors what shipped. Tag drives both the version label
@@ -52,3 +60,4 @@ jobs:
         with:
           name: ${{ github.ref_name }}
           body_path: release-notes.md
+          files: kidbright-mai-ide-${{ github.ref_name }}.zip
