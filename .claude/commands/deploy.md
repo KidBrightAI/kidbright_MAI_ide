@@ -3,7 +3,8 @@ description: Bump version + commit + push + build + deploy IDE to Firebase Hosti
 ---
 
 Run the full release flow for KidBright mAI IDE. Don't skip steps; each one
-gates the next.
+gates the next. **Step 3.5 is an explicit approval gate — never skip it,
+never commit before the user says go.**
 
 ## 1. Diff against the last release
 
@@ -31,6 +32,22 @@ Decide MAJOR / MINOR / PATCH against the existing version:
   `### X.Y.Z — <one-line theme>` block with **Added** / **Fixed** /
   **Changed** subsections (Keep-a-Changelog style). Keep the previous
   version's entry for history.
+
+## 3.5. PAUSE for user approval (mandatory gate)
+
+Before touching `package.json` / `Header.vue` / `README.md`, before any
+commit, tag, release, build, or deploy, **stop and surface the plan**:
+
+- The proposed version number.
+- The drafted `### X.Y.Z` README block (Added / Fixed / Changed).
+- The list of commits that will go into this release.
+- The URLs that will change (kidbright-mai.web.app, GitHub release).
+
+Then wait for an explicit "go" from the user. Anything ambiguous
+("ok", "ดูดี", silence) does **not** count — `firebase deploy` is
+public + irreversible, see CLAUDE.md §2.
+
+Only after explicit approval, continue with steps 4-7.
 
 ## 4. Commit + push the bump
 
