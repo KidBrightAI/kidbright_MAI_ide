@@ -6,7 +6,12 @@
 
 ## Version
 
-Current release: **1.1.1** (2026-05-02). Live at <https://kidbright-mai.web.app>.
+Current release: **1.1.2** (2026-05-02). Live at <https://kidbright-mai.web.app>.
+
+### 1.1.2 — project-type label backfill for existing users
+
+**Fixed**
+- 1.1.1 fixed `NewModelDialog` so newly-created projects get a real `projectTypeTitle`, but existing users had `projectTypeTitle = null` already persisted in localStorage from before the fix — Pinia's persisted state stuck around so they kept seeing the "ไม่ได้เลือกประเภทโปรเจค" header even after the upgrade. `SidePanel` now falls back to `workspaceStore.extension?.name` (which was always persisted correctly) so returning users see the right title without having to delete + recreate the project.
 
 ### 1.1.1 — voice get_rms + project-type label
 

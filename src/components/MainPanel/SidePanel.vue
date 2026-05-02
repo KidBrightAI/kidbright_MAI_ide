@@ -11,7 +11,14 @@
           </div> 
         -->
         <div class="text-h6 text-yellow font-weight-bold">
-          {{ workspaceStore.projectTypeTitle || 'คุณยังไม่ได้เลือกประเภทโปรเจค' }}
+          <!--
+            Existing workspaces persisted before NewModelDialog's
+            Ref-unwrap fix have projectTypeTitle = null in localStorage,
+            but the extension object was saved correctly — read .name
+            off it as a fallback so returning users don't see the
+            "haven't selected" message after the upgrade.
+          -->
+          {{ workspaceStore.projectTypeTitle || workspaceStore.extension?.name || 'คุณยังไม่ได้เลือกประเภทโปรเจค' }}
         </div>
         <div class="d-flex flex-row mt-2 mb-2 justify-space-between">
           <VBtn 
