@@ -222,7 +222,7 @@ watch(() => workspaceStore.name, val => {
     </VTooltip>
 
     <div class="d-flex flex-column align-center">
-      <span class="text-title text-white me-2">Version 1.1.2</span>
+      <span class="text-title text-white me-2">Version 1.1.3</span>
     </div>
 
     <!--

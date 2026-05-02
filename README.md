@@ -6,7 +6,12 @@
 
 ## Version
 
-Current release: **1.1.2** (2026-05-02). Live at <https://kidbright-mai.web.app>.
+Current release: **1.1.3** (2026-05-02). Live at <https://kidbright-mai.web.app>.
+
+### 1.1.3 — Object Detection annotate: rect tracks the cursor
+
+**Fixed**
+- `VueCrop` (Object Detection annotate): drawing a new bbox under fast mouse motion left a permanent gap between the cursor and the rect's far corner. Root cause was `doDrag` accumulating `e.movementX` / `e.movementY`; Chrome coalesces `mousemove` events under fast motion so the summed deltas undershoot the cursor's real position. Switched to absolute `e.clientX/Y` -> drawPanel-local on every tick — robust against missed events and sub-pixel deltas. (`VueCropRect`'s resize / move handles still accumulate `movementX` and may show the same drift; tracked as a follow-up.)
 
 ### 1.1.2 — project-type label backfill for existing users + SHT31 block
 
