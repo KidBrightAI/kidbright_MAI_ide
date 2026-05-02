@@ -43,7 +43,34 @@ git push
 The `-c user.*` overrides are needed because the repo's git config has no
 identity set globally; match the author of the previous commits.
 
-## 5. Build + deploy
+## 5. Tag + GitHub release
+
+Tag the release commit, push the tag, and create a GitHub release with the
+README's `### X.Y.Z` block as the body so it shows up at
+<https://github.com/KidBrightAI/kidbright_MAI_ide/releases>.
+
+```bash
+# extract the X.Y.Z section out of README.md
+python3 -c "
+import re
+md = open('README.md').read()
+m = re.search(r'### X\.Y\.Z[^\n]*\n(.*?)(?=\n### |\n---)', md, re.DOTALL)
+print(m.group(1).strip() if m else '')
+" > release-notes.tmp.md
+
+git -c user.name="comdet" -c user.email="listzone@hotmail.com" tag -a vX.Y.Z -m "Release X.Y.Z — <one-line theme>"
+git push origin vX.Y.Z
+
+GH='/mnt/c/Users/listz/AppData/Local/Microsoft/WinGet/Packages/GitHub.cli_Microsoft.Winget.Source_8wekyb3d8bbwe/bin/gh.exe'
+"$GH" release create vX.Y.Z --title "vX.Y.Z — <one-line theme>" --notes-file release-notes.tmp.md
+rm release-notes.tmp.md
+```
+
+gh.exe lives in user winget scope so its full path is hardcoded; calling
+it directly from WSL works through the interop layer (no cmd.exe shim
+needed for this one).
+
+## 6. Build + deploy
 
 WSL Node is too old for the Firebase CLI, so shell out to Windows:
 
@@ -54,9 +81,9 @@ cmd.exe /c "F: && cd F:\KidBright_MAI\workspace_kidbright_mai_vue3 && npm run bu
 Watch the tail of the output for `Deploy complete!`. The hosting URL is
 <https://kidbright-mai.web.app>.
 
-## 6. Report back
+## 7. Report back
 
 Tell the user:
 - The new version number.
-- The hosting URL.
+- The hosting URL + GitHub release URL.
 - A one-line recap of what changed (so they can paste it to the team).
