@@ -126,7 +126,14 @@ app.provide('extensions', extensionList)
 const boardModules = import.meta.glob('boards/*/index.js', { eager: true })
 const boardToolbox = import.meta.glob('boards/*/toolbox.js', { eager: true })
 const boardCodeTemplate = import.meta.glob('boards/*/main.py', { eager: true, as: 'raw' })
-const boardScripts = import.meta.glob('boards/*/scripts/*.py', { eager: true, as: 'raw' })
+// Picks up Python scripts plus init.d-style boot scripts (S## prefix,
+// no extension — e.g. S99ws_shell). Both feed into the IDE's
+// managed-scripts sync; managedScripts in each board's index.js
+// declares which of these the IDE actually pushes.
+const boardScripts = {
+  ...import.meta.glob('boards/*/scripts/*.py', { eager: true, as: 'raw' }),
+  ...import.meta.glob('boards/*/scripts/S[0-9][0-9]*', { eager: true, as: 'raw' }),
+}
 const workspaces = import.meta.glob('boards/*/workspace.json', { eager: true })
 const boardPythonModules = import.meta.glob('boards/*/libs/*.py', { eager: false, as: 'raw' })
 // "Deploy as App" template — only kidbright-mai-plus (MaixCAM) ships these

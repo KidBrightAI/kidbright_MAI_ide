@@ -4,6 +4,7 @@ export default {
   description: "บอร์ดสมองกลเพื่อการเรียนรู้ปัญญาประดิษฐ์",
   wsUrl: "ws://10.155.55.1:7899",
   wsShell: "wss://10.155.55.1:5050",
+  pictureDir: "/maixapp/share/picture/",
   camera: {
     type: "mjpeg",
     port: 8000,
@@ -18,6 +19,19 @@ export default {
       vendorId: 0x18d1,
       productId: 0x0002,
     },
+  ],
+  // Scripts the IDE manages on this board. Each entry's content is
+  // shipped in `boards/kidbright-mai-plus/scripts/<name>` (auto-loaded
+  // via Vite glob) and synced once-per-version via the registry at
+  // /root/.kbmai_scripts.json on the board. Hash drives the actual
+  // change detection (auto-derived from bundled file content), so a
+  // forgotten version bump won't silently leave a fix unapplied.
+  // `version` is for human-readable logging/toasts only.
+  managedScripts: [
+    { name: "ws_shell.py",     version: "1.3.0", dest: "/root/ws_shell.py",             needsReboot: true  },
+    { name: "maix_stream.py",  version: "1.1.0", dest: "/root/maix_stream.py",          needsReboot: true  },
+    { name: "voice_stream.py", version: "1.0.0", dest: "/root/scripts/voice_stream.py", needsReboot: false },
+    { name: "S99ws_shell",     version: "1.0.0", dest: "/etc/init.d/S99ws_shell",       needsReboot: true  },
   ],
   blocks: [
     "blocks/blocks_basic.js",

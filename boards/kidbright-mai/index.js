@@ -4,6 +4,7 @@ export default {
   description: "บอร์ดสมองกลเพื่อการเรียนรู้ปัญญาประดิษฐ์",
   image: "images/board.png",
   protocol: "web-adb",
+  pictureDir: "/root",
   version: "1.0.0",
   chip: "MaixII",
   firmware: [],
@@ -12,6 +13,14 @@ export default {
       vendorId: 0x18d1,
       productId: 0x0002,
     },
+  ],
+  // Scripts the IDE manages on this board. V1 has no boot-critical
+  // scripts (mjpg/voice_stream are spawned on-demand), so needsReboot
+  // is false everywhere — new copies take effect on the next session.
+  // Hash-driven change detection; see V2 metadata for the design note.
+  managedScripts: [
+    { name: "mjpg.py",         version: "1.0.0", dest: "/root/scripts/mjpg.py",         needsReboot: false },
+    { name: "voice_stream.py", version: "1.0.0", dest: "/root/scripts/voice_stream.py", needsReboot: false },
   ],
   blocks: [
     "blocks/blocks_basic.js",

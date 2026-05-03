@@ -1,9 +1,57 @@
+import { randomId as randomIdHex } from "@/components/utils"
+
 export function sleep(time) {
   return new Promise(resolve => setTimeout(resolve, time))
 }
 
 export function randomId() {
   return Math.random().toString(36).substr(2, 9)
+}
+
+/**
+ * Pull a list of images off the board (one wss roundtrip per file)
+ * and feed them into the dataset store. Both the Image Classification
+ * and Object Detection import dialogs use this when the source is the
+ * board — the resulting data shape is identical (annotate=[],
+ * class=null) for unannotated imports.
+ *
+ * @param {object}   args
+ * @param {string[]} args.paths        Absolute paths on the board.
+ * @param {object}   args.boardStore   Pinia board store instance.
+ * @param {object}   args.datasetStore Pinia dataset store instance.
+ * @param {function} [args.onProgress] Called as (done, total) per file.
+ * @returns {Promise<{count: number, failures: number}>}
+ */
+export async function importBoardImagesToDataset({
+  paths,
+  boardStore,
+  datasetStore,
+  onProgress,
+}) {
+  const dataset = []
+  let failures = 0
+  for (let i = 0; i < paths.length; i++) {
+    const absPath = paths[i]
+    const blob = await boardStore.readFile(absPath)
+    if (!blob) {
+      failures++
+    } else {
+      const name = absPath.split("/").pop()
+      const data = {
+        id: randomIdHex(16),
+        image: blob,
+        annotate: [],
+        class: null,
+        ext: (name.split(".").pop() || "jpg").toLowerCase(),
+      }
+      await datasetStore.addDataToFs(data)
+      delete data.image
+      dataset.push(data)
+    }
+    onProgress?.(i + 1, paths.length)
+  }
+  datasetStore.addDatasetItems(dataset)
+  return { count: dataset.length, failures }
 }
 
 

@@ -1,5 +1,6 @@
 import { toast } from "vue3-toastify"
 import { useBoardStore } from "@/store/board"
+import { useWorkspaceStore } from "@/store/workspace"
 import { appPath } from "@/engine/board-paths"
 import BoardProtocol from "./base"
 
@@ -7,6 +8,10 @@ const LARGE_FILE_THRESHOLD = 256 * 1024
 const UPLOAD_CHUNK_SIZE    = 256 * 1024
 const SYS_LINE_PREFIX      = "\r\n>>> System: "
 const SYS_LINE_RE          = /^\r\n>>> System: (.+)\r\n$/s
+// Registry of IDE-managed scripts on the board. Stores
+// {name: {version, hash}} so subsequent connects can skip the
+// upload entirely when nothing's changed since last time.
+const SCRIPT_REGISTRY_PATH = "/root/.kbmai_scripts.json"
 
 /**
  * MaixCAM / CV181x transport over wss:// to an on-device PTY shell
@@ -332,62 +337,176 @@ export class WebSocketShellHandler extends BoardProtocol {
   // socket open until the ws disconnects.
 
   // =================================================== board scripts auto-sync
-  // Mirrors V1's _uploadBoardScripts: every (re)connect re-pushes the
-  // bundled `boards/<id>/scripts/*` so a board with an outdated
-  // ws_shell.py / voice_stream.py picks up fixes the next time the
-  // student opens the IDE — no manual deploy_services.bat run needed.
   //
-  // ws_shell.py and S99ws_shell get rewritten on disk but won't hot-
-  // swap (this connection is using the old binary; the new one loads
-  // on the next board reboot). voice_stream.py / mjpg.py spawn fresh
-  // each capture / stream, so the new copy takes effect immediately.
+  // Patches IDE-managed scripts onto the board exactly *once per
+  // version*, never on every connect. Driven by `currentBoard.
+  // managedScripts` (declared in the board metadata) plus a registry
+  // file at /root/.kbmai_scripts.json that records what's already
+  // installed.
+  //
+  // Decision is hash-based, not size-based: SHA-256(file content)
+  // truncated to 16 hex. Bundled hash is computed on demand from the
+  // file text Vite already pulled in via the scripts/*.py glob, so a
+  // forgotten version bump still triggers an upload when the content
+  // genuinely changed. The `version` field in the manifest is a
+  // human-readable label for logs and the reboot-nag toast — it does
+  // not gate anything.
+  //
+  // Bootstrap path (no registry yet — typical first connect after
+  // vendor's deploy_services.bat): we read each on-board file and
+  // compare its hash. If it matches the bundle, just stamp the
+  // registry; if it differs, upload + stamp. Either way the next
+  // connect enters the fast registry-only path.
+  //
+  // Atomic writes: every payload goes to <dest>.tmp first, then a
+  // shell `mv` flips the file in one step. A network drop mid-upload
+  // leaves <dest>.tmp partial but <dest> intact — the board still
+  // boots.
 
   async _uploadBoardScripts() {
     const workspaceStore = useWorkspaceStore()
     const board = workspaceStore.currentBoard
-    const scripts = board?.scripts || []
-    if (scripts.length === 0) return
+    const managed = board?.managedScripts || []
+    if (managed.length === 0) return
 
-    // Filename -> absolute destination on board. Anything not listed
-    // here lands in /root/scripts/ to match the V1 default layout.
-    const SPECIAL_DESTS = {
-      "ws_shell.py": "/root/ws_shell.py",
-      "S99ws_shell": "/etc/init.d/S99ws_shell",
-    }
-    // Files in this set need a board reboot to take effect — we can't
-    // hot-swap our own ws shell or its init script. voice_stream /
-    // mjpg respawn fresh per use so the new copy goes live with no
-    // intervention.
-    const REBOOT_FILES = new Set(["ws_shell.py", "S99ws_shell"])
-    let needsReboot = false
-
-    for (const script of scripts) {
-      const name = script.replace(board.path + "scripts/", "")
-      const dest = SPECIAL_DESTS[name] || `/root/scripts/${name}`
+    // Resolve bundled text + hash for each managed script. The
+    // scripts URLs come from the Vite glob in main.js (board.scripts),
+    // so we can match by trailing /<name>.
+    //
+    // CRLF normalisation: source files committed from Windows can
+    // arrive with `\r\n`. busybox sh on the board chokes on a CRLF
+    // shebang (`#!/bin/sh\r` => "no such interpreter"), and Python
+    // can pick up stray `\r` inside string literals. We strip to LF
+    // both in the bundle (before hashing + writing) and when reading
+    // the board copy back for comparison so the hash check stays
+    // deterministic regardless of which side originally had CRLF.
+    const enriched = []
+    for (const m of managed) {
+      const url = (board.scripts || []).find(s => s.endsWith(`/${m.name}`))
+      if (!url) {
+        console.warn(`[script-sync] bundle missing for ${m.name}`)
+        continue
+      }
       try {
-        const response = await fetch(script)
-        if (!response.ok) continue
-        const text = await response.text()
-        // Skip if the on-board copy already matches by size — a cheap
-        // dedup that avoids pushing ~50 KB on every reconnect when
-        // nothing's changed.
-        const stat = await this.statFile(dest)
-        if (stat.exists && stat.size === new Blob([text]).size) continue
-        await this.writeFile(dest, text)
-        console.log(`[script-sync] uploaded ${name} -> ${dest}`)
-        if (REBOOT_FILES.has(name)) needsReboot = true
+        const res = await fetch(url)
+        if (!res.ok) {
+          console.warn(`[script-sync] fetch ${m.name} -> ${res.status}`)
+          continue
+        }
+        const text = normaliseLineEndings(await res.text())
+        const hash = await this._computeFileHash(text)
+        enriched.push({ ...m, text, hash })
       } catch (e) {
-        console.warn(`[script-sync] ${name} failed:`, e?.message || e)
+        console.warn(`[script-sync] fetch ${m.name} failed:`, e?.message || e)
+      }
+    }
+    if (enriched.length === 0) return
+
+    const registry = await this._readScriptRegistry()
+    const isBootstrap = registry === null
+    const newRegistry = registry ? { ...registry } : {}
+    let needsReboot = false
+    const upgraded = []
+
+    for (const s of enriched) {
+      const known = registry?.[s.name]
+      if (known && known.hash === s.hash) continue   // fast path: registry confirms match
+
+      // Either no registry entry, or it disagrees with the bundled
+      // hash. Verify against the on-board file before deciding to
+      // upload — this also lets the bootstrap branch skip uploads
+      // when vendor's deploy_services.bat already installed matching
+      // copies.
+      let onBoardHash = null
+      const blob = await this.readFile(s.dest)
+      if (blob) {
+        try {
+          const onBoardText = normaliseLineEndings(await blob.text())
+          onBoardHash = await this._computeFileHash(onBoardText)
+        } catch (_) { /* ignore — treat as missing */ }
+      }
+
+      if (onBoardHash === s.hash) {
+        // Already up-to-date — just stamp the registry so the next
+        // connect takes the fast path.
+        newRegistry[s.name] = { version: s.version, hash: s.hash }
+        continue
+      }
+
+      // Real upgrade. Atomic: chunked-upload to .tmp then mv.
+      try {
+        await this._writeAtomicFile(s.dest, s.text)
+        const oldVer = known?.version || (isBootstrap ? "vendor" : "none")
+        console.log(`[script-sync] ${s.name}: ${oldVer} -> ${s.version}`)
+        newRegistry[s.name] = { version: s.version, hash: s.hash }
+        upgraded.push(s)
+        if (s.needsReboot) needsReboot = true
+      } catch (e) {
+        console.warn(`[script-sync] ${s.name} write failed:`, e?.message || e)
+      }
+    }
+
+    // Persist registry only if it actually changed (avoid pointless
+    // wss roundtrip on no-op connects).
+    if (JSON.stringify(newRegistry) !== JSON.stringify(registry || {})) {
+      try {
+        await this._writeAtomicFile(SCRIPT_REGISTRY_PATH, JSON.stringify(newRegistry, null, 2))
+      } catch (e) {
+        console.warn(`[script-sync] registry write failed:`, e?.message || e)
       }
     }
 
     if (needsReboot) {
-      const cur = this._boardVersion ? ` (ตอนนี้รัน ${this._boardVersion})` : ""
+      const names = upgraded.filter(s => s.needsReboot).map(s => s.name).join(", ")
       toast.info(
-        `บอร์ดได้รับ ws_shell เวอร์ชันใหม่แล้ว${cur} — กรุณา reboot บอร์ดเพื่อให้มีผล`,
+        `อัปเดต ${names} เรียบร้อย กรุณารีสตาร์ทบอร์ดเพื่อให้การเปลี่ยนแปลงมีผล`,
         { autoClose: 8000 },
       )
     }
+  }
+
+  // SHA-256 of `text`, truncated to 16 hex chars (64 bits — collision
+  // probability negligible for the handful of scripts we manage).
+  async _computeFileHash(text) {
+    const buf = new TextEncoder().encode(text)
+    const digest = await crypto.subtle.digest("SHA-256", buf)
+    return [...new Uint8Array(digest)]
+      .map(b => b.toString(16).padStart(2, "0"))
+      .join("")
+      .slice(0, 16)
+  }
+
+  // Returns the parsed registry object, null when the file is absent
+  // or unreadable (caller treats null as "bootstrap mode").
+  async _readScriptRegistry() {
+    const stat = await this.statFile(SCRIPT_REGISTRY_PATH)
+    if (!stat.exists) return null
+    const blob = await this.readFile(SCRIPT_REGISTRY_PATH)
+    if (!blob) return null
+    try {
+      return JSON.parse(await blob.text())
+    } catch (e) {
+      console.warn("[script-sync] registry corrupt; treating as fresh:", e)
+      return null
+    }
+  }
+
+  // Chunked-upload to <path>.tmp, then `mv` it onto <path>. The mv
+  // is atomic on the same filesystem, so a partial upload can't
+  // brick the board — <path> is only replaced after every chunk
+  // landed cleanly.
+  async _writeAtomicFile(path, content) {
+    const tmpPath = `${path}.tmp`
+    const buf = await this._toArrayBuffer(content)
+    await this._uploadFileChunked(tmpPath, buf)
+
+    const counter = this._syncMvCounter = (this._syncMvCounter || 0) + 1
+    const marker = `__KB_SYNC_DONE_${counter}_${Date.now()}__`
+    await this._execAndWaitForMarker(
+      `mv -f '${shellQuote(tmpPath)}' '${shellQuote(path)}'; echo ${marker}`,
+      marker,
+      5000,
+    )
   }
 
   async tcpRelay(port, { onData, onClose } = {}) {
@@ -542,15 +661,27 @@ export class WebSocketShellHandler extends BoardProtocol {
     await new Promise(r => setTimeout(r, 500))
 
     // Tail the run with a unique end marker so the IDE flips the
-    // running flag back off when the script exits naturally.
-    const marker = this._armRunEndWatcher()
-    await this.execShell(`python3 ${runPy}; echo ${marker}`)
+    // running flag back off when the script exits naturally. The
+    // returned snippet — not the bare marker — gets appended to the
+    // python invocation; see _armRunEndWatcher for why.
+    const sentinel = this._armRunEndWatcher()
+    await this.execShell(`python3 ${runPy}; ${sentinel}`)
     toast.success("อัปโหลดโค้ดและกำลังรันบนบอร์ด")
   }
 
+  // Register a one-shot listener that flips boardStore.running back
+  // to false when the just-launched script finishes. Returns a shell
+  // snippet to append after the python invocation; that snippet
+  // prints the marker only after shell variable expansion, so the
+  // PTY echo of the command line itself never contains the assembled
+  // marker substring. Without that split, the watcher would match
+  // the marker in the command echo and reset `running` to false
+  // before the user's loop even started — leaving the upload icon
+  // stuck on Upload instead of switching to Stop.
   _armRunEndWatcher() {
     const myRunId = (this._runId = (this._runId || 0) + 1)
-    const marker = `__KB_PROG_END_${myRunId}_${Date.now()}__`
+    const id = `${myRunId}_${Date.now()}`
+    const marker = `__KB_PROG_END_${id}__`
     let listener
     listener = data => {
       const str = this._logToString(data)
@@ -560,7 +691,10 @@ export class WebSocketShellHandler extends BoardProtocol {
       if (this._runId === myRunId) this.boardStore.running = false
     }
     this.on('log', listener)
-    return marker
+    // \${M} stays literal in the JS template so the shell does the
+    // expansion at runtime; the assembled marker only appears in the
+    // command's stdout, never in the line we send.
+    return `M='__KB_PROG_END'; echo "\${M}_${id}__"`
   }
 
   // =================================================== deploy-as-app
@@ -646,6 +780,13 @@ function shellQuote(s) {
   // '\\''. Doesn't try to handle every shell pathology — paths from
   // the file-explorer dialog are vetted upstream.
   return s.replace(/'/g, "'\\''")
+}
+
+function normaliseLineEndings(text) {
+  // CRLF -> LF + bare CR -> LF. Targets shell + Python scripts that
+  // run on the Linux board; binary content isn't expected here so
+  // we don't bother sniffing.
+  return text.replace(/\r\n?/g, "\n")
 }
 
 function base64ToBytes(b64) {

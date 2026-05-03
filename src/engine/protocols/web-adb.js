@@ -14,6 +14,13 @@ import { AdbDaemonWebUsbDeviceManager } from "@yume-chan/adb-daemon-webusb"
 import { isProxy, toRaw } from "vue"
 import SingletonShell from "../SingletonShell"
 
+// Registry of IDE-managed scripts on the board. Stores
+// {name: {version, hash}} so subsequent connects can skip the
+// upload entirely when nothing's changed since last time. Same
+// path/format as the V2 protocol so the on-board layout stays
+// uniform.
+const SCRIPT_REGISTRY_PATH = "/root/.kbmai_scripts.json"
+
 const startupScript = `#!/bin/sh
 
 [ ! -e /va/run ] && mkdir -p /var/run
@@ -239,20 +246,120 @@ export class WebAdbHandler extends BoardProtocol {
   }
 
   /**
-   * Upload any board-shipped one-time scripts (e.g. boot scripts under
-   * boards/*\/scripts/) into /root/scripts/ on first connect. Reuses the
-   * active bulk tx opened by `connect()`.
+   * Sync IDE-managed scripts onto the board, once per version. See
+   * the matching method in websocket-shell.js for the design notes —
+   * the algorithm is identical: hash-driven detection, bootstrap by
+   * comparing on-board hashes when the registry is missing, registry
+   * stamped after a successful upload so the next connect skips work.
+   *
+   * V1's adb sync.write is already atomic at the protocol level
+   * (transactional file replace), so no .tmp + mv dance needed here.
    */
   async _uploadBoardScripts() {
     const workspaceStore = useWorkspaceStore()
-    const currentBoard = workspaceStore.currentBoard
-    const scripts = currentBoard?.scripts || []
-    for (const script of scripts) {
-      const response = await fetch(script)
-      if (response.ok) {
-        const relPath = script.replace(currentBoard.path + "scripts/", "")
-        await this.writeFile(`/root/scripts/${relPath}`, await response.text())
+    const board = workspaceStore.currentBoard
+    const managed = board?.managedScripts || []
+    if (managed.length === 0) return
+
+    // CRLF normalisation — see the matching block in
+    // websocket-shell.js for why. Same rule applies to V1 boards.
+    const enriched = []
+    for (const m of managed) {
+      const url = (board.scripts || []).find(s => s.endsWith(`/${m.name}`))
+      if (!url) {
+        console.warn(`[script-sync] bundle missing for ${m.name}`)
+        continue
       }
+      try {
+        const res = await fetch(url)
+        if (!res.ok) {
+          console.warn(`[script-sync] fetch ${m.name} -> ${res.status}`)
+          continue
+        }
+        const text = (await res.text()).replace(/\r\n?/g, "\n")
+        const hash = await this._computeFileHash(text)
+        enriched.push({ ...m, text, hash })
+      } catch (e) {
+        console.warn(`[script-sync] fetch ${m.name} failed:`, e?.message || e)
+      }
+    }
+    if (enriched.length === 0) return
+
+    const registry = await this._readScriptRegistry()
+    const isBootstrap = registry === null
+    const newRegistry = registry ? { ...registry } : {}
+    let needsReboot = false
+    const upgraded = []
+
+    for (const s of enriched) {
+      const known = registry?.[s.name]
+      if (known && known.hash === s.hash) continue
+
+      let onBoardHash = null
+      const blob = await this.readFile(s.dest)
+      if (blob) {
+        try {
+          const onBoardText = (await blob.text()).replace(/\r\n?/g, "\n")
+          onBoardHash = await this._computeFileHash(onBoardText)
+        } catch (_) { /* ignore */ }
+      }
+
+      if (onBoardHash === s.hash) {
+        newRegistry[s.name] = { version: s.version, hash: s.hash }
+        continue
+      }
+
+      try {
+        await this.writeFile(s.dest, s.text)
+        const oldVer = known?.version || (isBootstrap ? "vendor" : "none")
+        console.log(`[script-sync] ${s.name}: ${oldVer} -> ${s.version}`)
+        newRegistry[s.name] = { version: s.version, hash: s.hash }
+        upgraded.push(s)
+        if (s.needsReboot) needsReboot = true
+      } catch (e) {
+        console.warn(`[script-sync] ${s.name} write failed:`, e?.message || e)
+      }
+    }
+
+    if (JSON.stringify(newRegistry) !== JSON.stringify(registry || {})) {
+      try {
+        await this.writeFile(SCRIPT_REGISTRY_PATH, JSON.stringify(newRegistry, null, 2))
+      } catch (e) {
+        console.warn("[script-sync] registry write failed:", e?.message || e)
+      }
+    }
+
+    if (needsReboot) {
+      const names = upgraded.filter(s => s.needsReboot).map(s => s.name).join(", ")
+      toast.info(
+        `อัปเดต ${names} เรียบร้อย กรุณารีสตาร์ทบอร์ดเพื่อให้การเปลี่ยนแปลงมีผล`,
+        { autoClose: 8000 },
+      )
+    }
+  }
+
+  // SHA-256 of `text`, truncated to 16 hex chars. Mirrors the same
+  // helper in websocket-shell.js so both protocols use identical
+  // hashes for the registry stored at SCRIPT_REGISTRY_PATH.
+  async _computeFileHash(text) {
+    const buf = new TextEncoder().encode(text)
+    const digest = await crypto.subtle.digest("SHA-256", buf)
+    return [...new Uint8Array(digest)]
+      .map(b => b.toString(16).padStart(2, "0"))
+      .join("")
+      .slice(0, 16)
+  }
+
+  async _readScriptRegistry() {
+    const stat = await this.statFile(SCRIPT_REGISTRY_PATH)
+    if (!stat.exists) return null
+    const blob = await this.readFile(SCRIPT_REGISTRY_PATH)
+    if (!blob) return null
+    try {
+      return JSON.parse(await blob.text())
+    } catch (e) {
+      console.warn("[script-sync] registry corrupt; treating as fresh:", e)
+      return null
     }
   }
 
@@ -277,22 +384,30 @@ export class WebAdbHandler extends BoardProtocol {
     }
   }
 
-  async downloadFile(path) {
+  async readFile(path) {
     const sync = await this.adb.sync()
     try {
       const file = await sync.read(path)
       const arrayBuffer = await new Response(file).arrayBuffer()
-      const blob = new Blob([arrayBuffer])
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement("a")
-      a.href = url
-      a.download = path.split("/").pop()
-      a.click()
-      URL.revokeObjectURL(url)
-      return true
+      return new Blob([arrayBuffer])
+    } catch (e) {
+      console.error("readFile failed:", e)
+      return null
     } finally {
       sync.dispose()
     }
+  }
+
+  async downloadFile(path) {
+    const blob = await this.readFile(path)
+    if (!blob) return false
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = path.split("/").pop()
+    a.click()
+    URL.revokeObjectURL(url)
+    return true
   }
 
   async deleteFileOrFolder(path) {

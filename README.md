@@ -6,7 +6,24 @@
 
 ## Version
 
-Current release: **1.1.4** (2026-05-02). Live at <https://kidbright-mai.web.app>.
+Current release: **1.2.0** (2026-05-03). Live at <https://kidbright-mai.web.app>.
+
+### 1.2.0 — Board image import + capture connection widget + script-sync registry
+
+**Added**
+- `BoardImagePicker` component: นำเข้ารูปภาพจากบอร์ดเข้า dataset ของ Image Classification / Object Detection. รองรับ list/grid view, thumbnail lazy-load (ใช้ `.thumbnail/` ของ MaixCAM camera-app), multi-select ข้ามโฟลเดอร์. Default path คือ `/maixapp/share/picture/` (V2) / `/root` (V1).
+- `BoardConnectionStatus` widget ใน Image Classification + Object Detection capture pages, สอดคล้องกับ Voice Classification ที่มีอยู่แล้ว. Auto-connect on mount: V2 ผ่าน wss แบบเงียบ, V1 fall back ไปปุ่มเมื่อ WebUSB ต้องการ user gesture.
+- IC import dialog: tab "เครื่อง PC" / "บอร์ด". OD import dialog: tab ที่ 4 "BOARD" คู่กับ IMAGE / PASCAL VOC / KidBright AI.
+- V1 (`web-adb`) ได้ `readFile()` ที่คืน Blob เพื่อ parity กับ V2 (รองรับ flow import-from-board ของ V1 ด้วย).
+- README Troubleshooting section: บันทึกข้อจำกัด firmware ของ CVITEK ที่ทำให้หน้าจอบอร์ดอาจปรากฏข้อความ "open display failed" เมื่อสลับหน้า capture เร็ว ๆ พร้อมวิธีแก้ไข (รีสตาร์ทบอร์ด).
+
+**Changed**
+- Script-sync rewrite: เปลี่ยนจาก size-based dedup เป็น hash-driven registry ที่ `/root/.kbmai_scripts.json` บนบอร์ด. ไฟล์จะถูก upload ก็ต่อเมื่อ hash ต่างจากที่ registry บันทึกไว้ (one-shot per version), เขียนแบบ atomic ผ่าน `<dest>.tmp` + `mv`, normalise CRLF → LF ทั้งสองฝั่งก่อน hash. แต่ละบอร์ดประกาศ manifest ผ่าน `managedScripts` ใน `index.js`. `S99ws_shell` (init.d script) อยู่ในระบบแล้ว — Vite glob ขยายให้รับไฟล์ init.d-style.
+- `BoardConnectionStatus` แสดงคำแนะนำสั้น ๆ ใต้ปุ่ม Connect Board ชี้ผู้ใช้ V2 ไปรีสตาร์ทบอร์ดเมื่อพบปัญหา display ที่กล่าวข้างต้น.
+
+**Fixed**
+- `_uploadBoardScripts` ของ V2 throw `ReferenceError: useWorkspaceStore is not defined` เพราะ import หาย — บั๊กเดิมที่เพิ่งโผล่เพราะ auto-connect ทำให้ใช้งานบ่อยขึ้น.
+- Upload icon ค้างที่ "Upload" แทนที่จะเปลี่ยนเป็น "Stop" สำหรับ script ที่รันนาน. Watcher เดิมจับ marker ใน PTY echo ของ command line ทำให้ fire ก่อน script เริ่มทำงานด้วยซ้ำ. Fix แยก marker ผ่าน shell variable expansion เพื่อให้ literal เต็ม ๆ ปรากฏเฉพาะใน output ของ shell ตอน runtime ไม่อยู่ใน command line.
 
 ### 1.1.4 — Object Detection annotate quality-of-life + CI release
 
@@ -627,6 +644,18 @@ docker run -p 5173:5173 kidbright-mai-ide
 - Disabled text selection globally (app-like UI)
 - Fixed `null.png` error from WaveFormPlayer when no item selected
 - Fixed SoundDatasetList delete not clearing v-model selection
+
+## Troubleshooting
+
+### MaixCAM (V2) — ข้อความ "open display failed" ปรากฏบนหน้าจอบอร์ด
+
+**อาการ:** ขณะใช้งานกล้องของบอร์ด V2 ผ่าน IDE ในขั้นตอน Capture ของ Image Classification หรือ Object Detection แล้วสลับระหว่างหน้าต่าง ๆ อย่างต่อเนื่องในเวลาสั้น หน้าจอบอร์ดอาจปรากฏข้อความแสดงข้อผิดพลาด `launcher open display failed please refer to doc's FAQ exit in 10s` และการสตรีมภาพจากกล้องจะหยุดทำงาน
+
+**สาเหตุ:** ข้อจำกัดของ firmware ระดับล่าง (CVITEK `soph_vpss` kernel module) ที่ไม่คืนค่า VPSS video buffer pool โดยสมบูรณ์เมื่อปิดการใช้งานกล้อง สคริปต์ `maix_stream.py` ของผู้ผลิต (พอร์ต 8000) จะหยุดการทำงานของ launcher และเปิดกล้องใหม่ทุกครั้งที่มีการเชื่อมต่อ MJPEG เข้ามา การสลับหน้าอย่างรวดเร็วทำให้รอบของการหยุด-เปิดสะสมขึ้นจนถึงจุดที่ launcher ไม่สามารถเปิดหน้าจอได้สำเร็จ (`_create_vb_pool failed, id -2`)
+
+**วิธีแก้ไข:** กรุณาเริ่มต้นการทำงานของบอร์ดใหม่ (รีสตาร์ท) โดยถอดและเสียบสาย USB หรือกดปุ่มเปิด-ปิดบนตัวบอร์ด
+
+**หมายเหตุ:** การแก้ไขในระดับ IDE ทำได้เพียงการลดความถี่ของรอบดังกล่าว ไม่สามารถแก้ที่ต้นเหตุได้ จึงต้องรอการอัปเดต firmware จากผู้ผลิตในอนาคต
 
 ## Contributing
 

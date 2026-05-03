@@ -8,6 +8,7 @@ import ImageCapture from "@/components/InputConnection/ImageCapture.vue"
 import ImageDisplay from "@/components/InputConnection/ImageDisplay.vue"
 import ImageDatasetList from "@/components/InputConnection/ImageDatasetList.vue"
 import DatasetCounter from "@/components/InputConnection/DatasetCounter.vue"
+import BoardConnectionStatus from "@/components/BoardConnectionStatus.vue"
 
 import { useDatasetStore } from '@/store/dataset'
 
@@ -73,29 +74,32 @@ const snapAndSave = async () => {
           size="20"
         >
           <div class="side-panel">
-            <ImageCapture
-              ref="camera"
-              source=""
-              @started="(_) => (cameraReady = true)"
-              @stoped="(_) => (cameraReady = false)"
-            />
-            <div class="d-flex align-center justify-center flex-wrap">
-              <img
-                class="mt-2 op-btn"
-                :class="[
-                  { 'op-btn-disable': !cameraReady },
-                ]"
-                src="@/assets/images/png/Group198.png"
-                height="96"
-                @click.prevent
-                @click="snapAndSave"
-              >
-              <img
-                class="mt-2 op-btn"
-                src="@/assets/images/png/Group199.png"
-                height="96"
-                @click.prevent="showImportDialog = true"
-              >
+            <BoardConnectionStatus />
+            <div class="capture-cluster">
+              <ImageCapture
+                ref="camera"
+                source=""
+                @started="(_) => (cameraReady = true)"
+                @stoped="(_) => (cameraReady = false)"
+              />
+              <div class="d-flex align-center justify-center flex-wrap">
+                <img
+                  class="mt-2 op-btn"
+                  :class="[
+                    { 'op-btn-disable': !cameraReady },
+                  ]"
+                  src="@/assets/images/png/Group198.png"
+                  height="96"
+                  @click.prevent
+                  @click="snapAndSave"
+                >
+                <img
+                  class="mt-2 op-btn"
+                  src="@/assets/images/png/Group199.png"
+                  height="96"
+                  @click.prevent="showImportDialog = true"
+                >
+              </div>
             </div>
           </div>
         </Pane>
@@ -125,9 +129,15 @@ $primary-color: #007e4e;
   padding: 15px;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: center;
   width: 100%;
+  .capture-cluster {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
   .next {
     height: 50px;
     background: #ffffff 0% 0% no-repeat padding-box;

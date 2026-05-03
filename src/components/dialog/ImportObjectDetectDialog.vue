@@ -1,8 +1,10 @@
 <script setup>
 import { randomId } from "@/components/utils"
-import { sleep } from "@/engine/helper"
+import { sleep, importBoardImagesToDataset } from "@/engine/helper"
+import BoardImagePicker from "@/components/BoardImagePicker.vue"
 import { useDatasetStore } from "@/store/dataset"
 import { useWorkspaceStore } from "@/store/workspace"
+import { useBoardStore } from "@/store/board"
 import { toast } from "vue3-toastify"
 import JSZip from "jszip"
 import { useConfirm } from "@/components/comfirm-dialog"
@@ -11,15 +13,29 @@ const isDialogVisible = defineModel('isDialogVisible', { type: Boolean, default:
 
 const datasetStore = useDatasetStore()
 const workspaceStore = useWorkspaceStore()
+const boardStore = useBoardStore()
 const confirm = useConfirm()
 
 const files = ref([])
 const xmlfiles = ref([])
 const kidBrightProjectZipFile = ref(null)
+const boardSelectedPaths = ref([])
 
 const step = ref(1) //1= select file , 2 = importing, 3 = import success
 const progress = ref(0)
 const percentage = ref(0)
+
+// Number of items the active tab will iterate over — drives the
+// progress label so it stays correct across import sources.
+const totalDivisor = computed(() => {
+  if (tab.value === "BOARD") return boardSelectedPaths.value.length
+  return files.value.length
+})
+
+const canImport = computed(() => {
+  if (tab.value === "BOARD") return boardSelectedPaths.value.length > 0
+  return true
+})
 
 const importImages = e=>{
   if(tab.value == "PASCAL_VOC"){
@@ -28,6 +44,31 @@ const importImages = e=>{
     importKidBrightProject(e)
   }else if(tab.value == "IMAGE"){
     importOnlyImage(e)
+  }else if(tab.value == "BOARD"){
+    importFromBoard(e)
+  }
+}
+
+const importFromBoard = async e=>{
+  if(step.value !== 1) return
+  e.preventDefault()
+  step.value = 2
+  progress.value = 0
+  percentage.value = 0
+  const result = await importBoardImagesToDataset({
+    paths: boardSelectedPaths.value,
+    boardStore,
+    datasetStore,
+    onProgress: (done, total) => {
+      progress.value = done
+      percentage.value = Math.round((done / total) * 100)
+    },
+  })
+  step.value = 3
+  if (result.failures > 0) {
+    toast.warning(`นำเข้าข้อมูลสำเร็จเพียงบางส่วน ดาวน์โหลดไม่สำเร็จจำนวน ${result.failures} ไฟล์`)
+  } else {
+    toast.success("นำเข้าข้อมูลสำเร็จ")
   }
 }
 const importOnlyImage = async e=>{
@@ -257,12 +298,16 @@ const importPascalVOC = async e=>{
 }
 const resetAndClose = e=>{
   files.value = []
+  xmlfiles.value = []
+  kidBrightProjectZipFile.value = null
+  boardSelectedPaths.value = []
 
   //importWithLabel.value = false;
   step.value = 1
   progress.value = 0
+  percentage.value = 0
   isDialogVisible.value = false
-  
+
   return
 }
 const tab = ref("PASCAL VOL")
@@ -274,7 +319,7 @@ const tab = ref("PASCAL VOL")
     width="auto"
     persistent
   >
-    <VCard width="480">
+    <VCard :width="$vuetify.display.smAndDown ? 'auto' : 640">
       <VCardTitle class="bg-primary d-flex flex-row">
         นำเข้ารูปภาพ
         <VSpacer />
@@ -310,7 +355,13 @@ const tab = ref("PASCAL VOL")
                 value="KBAI"
                 style="text-transform: none !important;"
               >
-                <span>KidBright AI</span> 
+                <span>KidBright AI</span>
+              </VTab>
+              <VTab value="BOARD">
+                <VIcon start>
+                  mdi-developer-board
+                </VIcon>
+                <span>BOARD</span>
               </VTab>
             </VTabs>
             <VWindow v-model="tab">
@@ -460,20 +511,26 @@ const tab = ref("PASCAL VOL")
                   <VCol
                     cols="12"
                     class="text-center"
-                  >     
+                  >
                     <span class="text-title px-2 w-100">นำเข้า Dataset จากโปรเจค KidBright AI IDE</span>
                   </VCol>
                   <VCol cols="12">
                     <VFileInput
                       v-model="kidBrightProjectZipFile"
                       label="เลือกไฟล์ .zip ของโปรเจค KidBright AI IDE"
-                      density="compact"                      
+                      density="compact"
                       hide-details
                       color="primary"
                       accept=".zip"
                     />
                   </VCol>
                 </VRow>
+              </VWindowItem>
+              <VWindowItem value="BOARD">
+                <BoardImagePicker
+                  v-model="boardSelectedPaths"
+                  :active="tab === 'BOARD'"
+                />
               </VWindowItem>
             </VWindow>
           </VCol>          
@@ -495,7 +552,7 @@ const tab = ref("PASCAL VOL")
             class="my-3 text-center"
             text-black
           >
-            กำลังนำเข้า ...<br> {{ progress }} / {{ files.length || "" }}
+            กำลังนำเข้า ...<br> {{ progress }} / {{ totalDivisor || "" }}
           </h4>
           <h4
             v-else-if="step == 3"
@@ -520,6 +577,7 @@ const tab = ref("PASCAL VOL")
           v-if="step == 1"
           color="primary"
           variant="flat"
+          :disabled="!canImport"
           @click="importImages"
         >
           นำเข้า
