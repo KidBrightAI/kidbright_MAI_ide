@@ -145,12 +145,12 @@ export default function () {
           <block type="display_resolution">
             <value name="width">
               <shadow type="math_number">
-                <field name="NUM">240</field>
+                <field name="NUM">640</field>
               </shadow>
             </value>
             <value name="height">
               <shadow type="math_number">
-                <field name="NUM">240</field>
+                <field name="NUM">480</field>
               </shadow>
             </value>
           </block>
@@ -164,12 +164,12 @@ export default function () {
             <block type="camera_resolution">
               <value name="width">
                 <shadow type="math_number">
-                  <field name="NUM">240</field>
+                  <field name="NUM">640</field>
                 </shadow>
               </value>
               <value name="height">
                 <shadow type="math_number">
-                  <field name="NUM">240</field>
+                  <field name="NUM">480</field>
                 </shadow>
               </value>
             </block>
@@ -185,12 +185,12 @@ export default function () {
                 <field name="color">#000000</field>
                 <value name="width">
                   <shadow type="math_number">
-                    <field name="NUM">240</field>
+                    <field name="NUM">640</field>
                   </shadow>
                 </value>
                 <value name="height">
                   <shadow type="math_number">
-                    <field name="NUM">240</field>
+                    <field name="NUM">480</field>
                   </shadow>
                 </value>
               </block>
@@ -543,10 +543,10 @@ export default function () {
           </block>
           <block type="image_from_bytes">
             <value name="width">
-              <shadow type="math_number"><field name="NUM">240</field></shadow>
+              <shadow type="math_number"><field name="NUM">640</field></shadow>
             </value>
             <value name="height">
-              <shadow type="math_number"><field name="NUM">240</field></shadow>
+              <shadow type="math_number"><field name="NUM">480</field></shadow>
             </value>
           </block>
           `,

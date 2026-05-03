@@ -6,6 +6,7 @@ export default {
   version: "1.0.0",
   icon: "/static/i2c.png",
   color: "#8b507c",
+  boards: ['kidbright-mai'],
   blocks: [
     {
       xml : 
