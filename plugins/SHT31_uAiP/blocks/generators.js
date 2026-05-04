@@ -24,9 +24,9 @@ python.pythonGenerator.forBlock['sht31_i2c_sensor_uAiP'] = function(block, gener
       '  fTemp = -49 + (315 * temp / 65535.0)',
       '  humidity = 100 * (data[3] * 256 + data[4]) / 65535.0',    
       '  if datatype == 0:',
-      '    return cTemp',
+      '    return round(cTemp, 2)',
       '  else:',
-      '    return humidity'])              
+      '    return round(humidity,2)'])              
   var code = `${functionName}(${dropdown_type})`
   
   return [code, python.Order.NONE]

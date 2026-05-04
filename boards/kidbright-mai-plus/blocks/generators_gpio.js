@@ -93,7 +93,8 @@ python.pythonGenerator.forBlock['board_get_acc'] = function(block, generator) {
                               +'gyro_odr=imu.GyroOdr.GYRO_ODR_8000)'
 
   var dropdown_axis = block.getFieldValue('axis')
-  var code = `_imu.read()[${dropdown_axis}]`
+  
+  var code = dropdown_axis < 2 ? `round(((_imu.read()[${dropdown_axis}]*10) * -1),3)`: `round(((_imu.read()[${dropdown_axis}]*10)),3)`
   
   return [code, python.Order.ATOMIC]
 }
@@ -107,7 +108,7 @@ python.pythonGenerator.forBlock['board_get_gyro'] = function(block, generator) {
                               +'gyro_odr=imu.GyroOdr.GYRO_ODR_8000)'
 
   var dropdown_axis = block.getFieldValue('axis')
-  var code = `_imu.read()[${dropdown_axis}]`
+    var code = dropdown_axis < 5 ? `round(((_imu.read()[${dropdown_axis}]) * -1),3)`: `round((_imu.read()[${dropdown_axis}]),3)`
   
   return [code, python.Order.ATOMIC]
 }

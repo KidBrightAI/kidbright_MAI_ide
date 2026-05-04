@@ -57,7 +57,7 @@ class ADC:
         write([ 0x80 + (self.pin << 4) ])
         sleep(0.1)
         d = read(2)
-        print(d)
+        #print(d)
         return (d[0] << 8) | d[1]
 
 class Motor:
