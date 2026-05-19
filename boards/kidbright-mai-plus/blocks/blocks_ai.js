@@ -226,8 +226,8 @@ Blockly.defineBlocksWithJsonArray([{
           "label",
         ],
         [
-          "class_id",
           "class id",
+          "class_id",
         ],
         [
           "probability",
