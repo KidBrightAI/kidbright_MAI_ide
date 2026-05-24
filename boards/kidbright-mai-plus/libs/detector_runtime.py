@@ -30,12 +30,19 @@ class Detector:
         detections = []
         for obj in objects:
             cid = int(obj.class_id)
+            # The server's convert pipeline pads YOLO11 sigmoid to C=5
+            # when num_classes == 4 to dodge a MaixCAM wrapper bug. That
+            # means the on-board model may surface a class id past the
+            # caller's real label list — drop those silently so the
+            # placeholder never reaches user blocks.
+            if cid >= len(self.labels):
+                continue
             detections.append(Detection(
                 x=float(obj.x), y=float(obj.y),
                 w=float(obj.w), h=float(obj.h),
                 class_id=cid,
                 score=float(obj.score),
-                label=self.labels[cid] if cid < len(self.labels) else str(cid),
+                label=self.labels[cid],
             ))
         return detections
 

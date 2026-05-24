@@ -45,3 +45,24 @@ esac
 - No watchdog. If a service crashes, the board doesn't relaunch it. Same behavior as today's hard-coded services, so not a regression.
 
 **Decision deferred:** the current Path B (S99ws_shell IDE-managed, hand-edited per new service) handles the foreseeable workload. Revisit when there's a third service to add.
+
+---
+
+## Remove the YOLO11 N==4 sigmoid-pad workaround
+
+**Why:** MaixCAM's on-board `nn.YOLO11.detect()` C++ wrapper raises `Invalid arguments: Tensors get tensor idx error` (`-404232217`) on the *second* forward call when the trained model has exactly `num_classes == 4`. The wrapper appears to disambiguate DFL vs Sigmoid output tensors via a shape heuristic that collides when Sigmoid's class channel C equals DFL's bbox dimension (always 4).
+
+**Verified scope:**
+- Reproduces on two unrelated datasets converted from scratch with N=4 (`Test-OBJ`, `object_detect_kbplus` split into A/B variants).
+- Does *not* reproduce at N = 2, 3, 5, 80 — tested across bundled COCO yolo11s, dogphone, V1.zip, and an N=5 synthesis of Test-OBJ.
+- Independent of label names, training params, model variant (yolo11n/yolo11s), tpu-mlir version (v1.27 vs v1.28.1), or quantize flag (INT8/BF16).
+
+**Workaround currently in place:**
+- `kidbright_MAI_server/main.py` → `_yolo11_pad_sigmoid_output()` injects an all-zero channel via ONNX `Concat` after `/model.23/Sigmoid_output_0`, turning the head's class output from `[1, 4, 1470]` into `[1, 5, 1470]`. Auto-applied only when `num_classes == 4`; other N pass through unchanged. The resulting `.mud` appends a trailing `__pad__` label so the on-board wrapper's label count matches the new sigmoid C.
+- `boards/kidbright-mai-plus/libs/detector_runtime.py` → `Detector.detect()` skips any output whose `class_id >= len(self.labels)`. Defensive for every N, hides the placeholder for N=4.
+
+**Remove when:** MaixCAM team patches the wrapper. Set `KBMAI_YOLO11_PAD_OFF=1` in the server env to disable the pad locally and re-verify whether the upstream fix actually resolves it. To fully remove: drop `_yolo11_pad_sigmoid_output` plus the `yolo11_pad_sigmoid` branch and `mud_labels.append("__pad__")` from `main.py`, plus the `cid >= len(self.labels)` skip in `detector_runtime.py`.
+
+**Cost of keeping:** negligible — N=4 cvimodel grows by a few KB (one extra zero channel through the head), one extra label string in `.mud`, and one comparison per detection. Other N values bypass the whole path.
+
+**Tracked at:** [#1 — YOLO11 detect() crashes on 2nd call when num_classes == 4](https://github.com/KidBrightAI/kidbright_MAI_ide/issues/1)
