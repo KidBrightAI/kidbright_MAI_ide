@@ -6,7 +6,18 @@
 
 ## Version
 
-Current release: **1.2.0** (2026-05-03). Live at <https://kidbright-mai.web.app>.
+Current release: **1.2.1** (2026-05-24). Live at <https://kidbright-mai.web.app>.
+
+### 1.2.1 — Object Detection N==4 fix + plugin board filter + small fixes
+
+**Fixed**
+- **YOLO11 Object Detection N==4 crash on MaixCAM.** Trained models with exactly 4 classes raised `Invalid arguments: Tensors get tensor idx error` (`-404232217`) on the second inference call. Verified the bug reproduces only at N=4 across multiple unrelated datasets; N=2/3/5/80 work cleanly. Server now pads the sigmoid output to C=5 with an all-zero channel via ONNX `Concat` (guarded by `num_classes == 4` only); the on-board `detector_runtime` filters the placeholder class so user code is unaffected. Tracked at [ide#1](https://github.com/KidBrightAI/kidbright_MAI_ide/issues/1) / [server#3](https://github.com/KidBrightAI/kidbright_MAI_server/issues/3) pending an upstream MaixCAM fix.
+- Object Detection block "get attribute" dropdown — the `class id` row had display label and internal value swapped, so selecting "class id" emitted the literal string `"class_id"` instead of binding the class index.
+- Generators ลดจำนวนทศนิยมที่ generate ใน GPIO block + SHT31_uAiP block — generated Python อ่านง่ายขึ้น
+
+**Changed**
+- Plugins ประกาศบอร์ดที่รองรับผ่าน field `boards: [...]` ใหม่ใน `index.js` (I2C, SHT31, SHT31_pylibi2c, SHT31_uAiP, iKB1, iKB1_uAiP — ปัจจุบันทั้งหมด `kidbright-mai`). Toolbox จัด section ตามด้วย
+- ลบ `plugins/DHT11/` ที่ไม่ได้ใช้งานออก (5 ไฟล์, 122 บรรทัด) — V2-side DHT11 มี implementation ที่ path อื่นอยู่แล้ว
 
 ### 1.2.0 — Board image import + capture connection widget + script-sync registry
 
