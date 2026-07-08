@@ -313,6 +313,12 @@ Blockly.defineBlocksWithJsonArray(
             [
               "IO7",
               "2",
+            ],[
+              "UART_TX",
+              "7",
+            ],[
+              "UART_RX",
+              "6",
             ]
           ],
         },

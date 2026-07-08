@@ -138,6 +138,10 @@ class C906Servo:
         self.pin = pin
         if(pin==2):
            pinmap.set_pin_function("P24", "PWM2")
+        elif(pin==6):
+           pinmap.set_pin_function("A18", "PWM6")
+        elif(pin==7):
+           pinmap.set_pin_function("A19", "PWM7")
         self.min = 2.5 # 5% duty cycle 5% of 20ms = 1ms 0.68
         self.max = 12.25 # 10% duty cycle 10% of 20ms = 2ms 2.50
         self.angle = 0
