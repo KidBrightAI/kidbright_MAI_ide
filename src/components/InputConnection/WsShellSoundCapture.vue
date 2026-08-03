@@ -21,7 +21,14 @@ const boardStore = useBoardStore()
 const status = defineModel({ default: "disconnected" })
 const recording = ref(false)
 const counting = ref(0)
-const threshold = ref(80)
+
+// Loudness on the board is audioop.rms() over int16 samples, so it runs 0..32768
+// (see voice_stream.py and voice_runtime.get_rms). The slider has to speak that
+// same scale — the value goes to the daemon untouched and is compared with
+// `rms > threshold` there.
+const RMS_MAX = 32768
+const threshold = ref(2000)
+const lastRms = ref(0)
 const timeCurrent = ref(0)
 
 const canvas = ref(null)
@@ -53,6 +60,7 @@ const drawWaveform = data => {
 
 const drawUv = data => {
   const value = parseInt(data)
+  lastRms.value = value
   uvMeterCtx.value.clearRect(0, 0, uvMeter.value.width, uvMeter.value.height)
   uvMeterCtx.value.fillStyle = "#ff0000"
   uvMeterCtx.value.fillRect(0, uvMeter.value.height - value, uvMeter.value.width, value)
@@ -168,7 +176,7 @@ const listen = async () => {
   if (!relay) return
   clearCanvas()
   status.value = "listening"
-  const th = threshold.value || 128
+  const th = threshold.value
   const sec = workspaceStore.extension.options.durations.value || 3
   barWidth = (RATE / SAMPLES_PER_FRAME * sec)
   relay.send(`#start,${th},${sec}\n`)
@@ -302,14 +310,19 @@ defineExpose({ init, listen, stop, clearCanvas })
         </template>
         <VList>
           <VListItem>
-            <VListItemTitle>Setting Threshold</VListItemTitle>
+            <VListItemTitle>ระดับเสียงที่เริ่มอัด</VListItemTitle>
             <VListItem>
               <VSlider
                 v-model="threshold"
-                min="1"
-                max="255"
-                step="1"
+                :min="0"
+                :max="RMS_MAX"
+                :step="128"
+                thumb-label="always"
+                class="threshold-slider"
               />
+            </VListItem>
+            <VListItem class="threshold-hint">
+              เสียงตอนนี้ {{ lastRms }} — ตั้งให้สูงกว่าเสียงตอนเงียบ
             </VListItem>
           </VListItem>
         </VList>
@@ -391,5 +404,15 @@ $primary-color: #007e4e;
 }
 .threshold-config{
   width: 180px;
+}
+
+.threshold-slider{
+  min-width: 220px;
+  margin-block-start: 1.5rem;  /* room for the always-on thumb label */
+}
+
+.threshold-hint{
+  font-size: 0.75rem;
+  opacity: 0.7;
 }
 </style>
