@@ -22,7 +22,11 @@ class Detector:
         self.labels = list(labels)
         self._model = nn.YOLO11(
             model=f"/root/model/{hash}.mud",
-            dual_buff=True,
+            # Same staleness as the classifier: with dual_buff on, the first
+            # detect() on a real photo returned nothing at all and every later
+            # call described the previous frame. Off, objects are found from the
+            # first call onward. See classifier_runtime for the measurements.
+            dual_buff=False,
         )
 
     def detect(self, img, conf=0.5, iou=0.45):

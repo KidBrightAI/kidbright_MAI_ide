@@ -13,7 +13,14 @@ class Classifier:
         self.labels = list(labels)
         self._model = nn.Classifier(
             model=f"/root/model/{hash}.mud",
-            dual_buff=True,
+            # dual_buff pipelines the NPU, so classify() answers about the
+            # *previous* image and the first call comes back empty. A student
+            # who snaps one photo and asks for a label gets the last photo's
+            # answer. Measured on the board with alternating images: with it on,
+            # the reply always described the previous frame; off, it tracked the
+            # input every time — and ran faster (11.1 ms vs 13.0 ms per forward),
+            # since nothing else happens while we wait for the result anyway.
+            dual_buff=False,
         )
 
     def classify(self, img):

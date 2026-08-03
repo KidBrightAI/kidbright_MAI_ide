@@ -143,7 +143,14 @@ class Model:
     """Voice classifier. Owns the ALSA capture handle + nn.Classifier."""
     def __init__(self, mud_path):
         from maix import nn
-        self._classifier = nn.Classifier(model=mud_path, dual_buff=True)
+        # dual_buff pipelines the NPU: classify() returns the result of the
+        # *previous* call. That is fine for a camera loop where being one frame
+        # behind is invisible, but voice is one-shot — the student says a word,
+        # waits, and gets the answer to whatever they said last time. Measured
+        # on the board: with dual_buff the answer matched the previous clip's
+        # label 29 times out of 29 and the first call came back empty; without
+        # it, 30 of 30 clips classified correctly.
+        self._classifier = nn.Classifier(model=mud_path, dual_buff=False)
         self.labels = list(self._classifier.labels)
         self._pcm = None
         # Frame count baked into the compiled model. Asking the model itself
