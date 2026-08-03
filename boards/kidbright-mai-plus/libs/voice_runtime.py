@@ -114,6 +114,31 @@ def _mel_to_image(mel_spec):
     return image.from_bytes(W, H, image.Format.FMT_RGB888, rgb)
 
 
+def _fit_frames(mel_spec, want):
+    """Force the spectrogram to the frame count the model was trained on.
+
+    The network is trained on clips of one fixed length, so its input width is
+    fixed too. Recording for longer produces more frames, and handing those
+    straight to the classifier makes it squeeze the whole clip along the time
+    axis — the word ends up compressed and the prediction collapses. Trim to
+    the loudest window instead, and pad with the quietest value if the
+    recording came up short.
+    """
+    have = mel_spec.shape[1]
+    if want <= 0 or have == want:
+        return mel_spec
+    if have > want:
+        # Slide a window of the target size and keep the most energetic one,
+        # which is where the spoken word sits.
+        energy = mel_spec.sum(axis=0)
+        csum = np.concatenate([[0.0], np.cumsum(energy)])
+        totals = csum[want:] - csum[:have - want + 1]
+        start = int(np.argmax(totals))
+        return mel_spec[:, start:start + want]
+    pad = np.full((mel_spec.shape[0], want - have), mel_spec.min(), dtype=mel_spec.dtype)
+    return np.concatenate([mel_spec, pad], axis=1)
+
+
 class Model:
     """Voice classifier. Owns the ALSA capture handle + nn.Classifier."""
     def __init__(self, mud_path):
@@ -121,7 +146,21 @@ class Model:
         self._classifier = nn.Classifier(model=mud_path, dual_buff=True)
         self.labels = list(self._classifier.labels)
         self._pcm = None
+        # Frame count baked into the compiled model. Asking the model itself
+        # keeps inference tied to whatever the project was trained with,
+        # instead of trusting a duration typed into the block.
+        try:
+            self._want_frames = int(self._classifier.input_width())
+        except Exception:
+            self._want_frames = 0
         atexit.register(self.close)
+
+    @property
+    def trained_duration(self):
+        """Seconds of audio the model expects, derived from its input width."""
+        if self._want_frames <= 0:
+            return None
+        return (self._want_frames * FrameShift + FrameLen) / float(RATE)
 
     def _ensure_stream(self):
         if self._pcm is not None:
@@ -169,10 +208,18 @@ class Model:
             return 0
         return audioop.rms(data, 2)
 
-    def classify(self, duration=3.0):
-        """Record + classify in one call. Returns {label, probability, class_id}."""
+    def classify(self, duration=None):
+        """Record + classify in one call. Returns {label, probability, class_id}.
+
+        `duration` is how long the mic stays open. Leave it unset to listen for
+        exactly as long as the model was trained on. Listening longer is fine —
+        the loudest window of that recording is what gets classified.
+        """
+        if duration is None:
+            duration = self.trained_duration or 3.0
         sig = self.record(duration)
         mel = _mel_spec(sig)
+        mel = _fit_frames(mel, self._want_frames)
         img = _mel_to_image(mel)
         results = self._classifier.classify(img)
         if not results:
