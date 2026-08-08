@@ -1,24 +1,69 @@
 Blockly.defineBlocksWithJsonArray(
   [
+    // ---- External RGB LED (KidBright blocks) : 3 GPIO pins, digital on/off ----
+    // These drive an RGB LED wired to the board's GPIO header. The user selects
+    // which pin each colour is connected to. Only IO7 exposes hardware PWM on this
+    // board, so a 3-pin RGB LED cannot be dimmed per-colour -> each colour is
+    // on/off (>=128 = on). See generators_gpio.js for details.
     {
       "type": "maixpy3_gpio_rgb_hex",
-      "message0": "Set RGB color %1",
+      "message0": "Set RGB LED color %1 on pins R %2 G %3 B %4",
       "args0": [
         {
           "type": "field_colour",
           "name": "color",
           "colour": "#ff0000",
         },
+        {
+          "type": "field_dropdown",
+          "name": "pin_r",
+          "options": [
+            ["IO2", "A23"],
+            ["IO3", "A27"],
+            ["IO4", "A25"],
+            ["IO5", "A22"],
+            ["IO6", "A24"],
+            ["IO7", "P24"],
+            ["IO8", "A15"],
+          ],
+        },
+        {
+          "type": "field_dropdown",
+          "name": "pin_g",
+          "options": [
+            ["IO2", "A23"],
+            ["IO3", "A27"],
+            ["IO4", "A25"],
+            ["IO5", "A22"],
+            ["IO6", "A24"],
+            ["IO7", "P24"],
+            ["IO8", "A15"],
+          ],
+        },
+        {
+          "type": "field_dropdown",
+          "name": "pin_b",
+          "options": [
+            ["IO2", "A23"],
+            ["IO3", "A27"],
+            ["IO4", "A25"],
+            ["IO5", "A22"],
+            ["IO6", "A24"],
+            ["IO7", "P24"],
+            ["IO8", "A15"],
+          ],
+        },
       ],
+      "inputsInline": true,
       "previousStatement": null,
       "nextStatement": null,
       "colour": "#a5745b",
-      "tooltip": "",
+      "tooltip": "Drive an external RGB LED from 3 GPIO pins (digital on/off).",
       "helpUrl": "",
     },
     {
       "type": "maixpy3_gpio_rgb",
-      "message0": "Set RGB color red %1 green %2 blue %3",
+      "message0": "Set RGB LED red %1 green %2 blue %3 on pins R %4 G %5 B %6",
       "args0": [
         {
           "type": "input_value",
@@ -35,12 +80,71 @@ Blockly.defineBlocksWithJsonArray(
           "name": "b",
           "check": "Number",
         },
+        {
+          "type": "field_dropdown",
+          "name": "pin_r",
+          "options": [
+            ["IO2", "A23"],
+            ["IO3", "A27"],
+            ["IO4", "A25"],
+            ["IO5", "A22"],
+            ["IO6", "A24"],
+            ["IO7", "P24"],
+            ["IO8", "A15"],
+          ],
+        },
+        {
+          "type": "field_dropdown",
+          "name": "pin_g",
+          "options": [
+            ["IO2", "A23"],
+            ["IO3", "A27"],
+            ["IO4", "A25"],
+            ["IO5", "A22"],
+            ["IO6", "A24"],
+            ["IO7", "P24"],
+            ["IO8", "A15"],
+          ],
+        },
+        {
+          "type": "field_dropdown",
+          "name": "pin_b",
+          "options": [
+            ["IO2", "A23"],
+            ["IO3", "A27"],
+            ["IO4", "A25"],
+            ["IO5", "A22"],
+            ["IO6", "A24"],
+            ["IO7", "P24"],
+            ["IO8", "A15"],
+          ],
+        },
       ],
       "inputsInline": true,
       "previousStatement": null,
       "nextStatement": null,
       "colour": "#a5745b",
-      "tooltip": "",
+      "tooltip": "Drive an external RGB LED from 3 GPIO pins with red/green/blue values (0-255, on/off).",
+      "helpUrl": "",
+    },
+    // ---- On-board user LED (KidBright block) : led-user via sysfs ----
+    // The single on-board light is a leds-gpio device (on/off only). 0 = off,
+    // 255 = on. Named "Board LED" so it is not confused with the RGB LED above.
+    {
+      "type": "board_led",
+      "message0": "Board LED brightness %1",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "brightness",
+          "check": "Number",
+        },
+      ],
+      "inputsInline": true,
+      "previousStatement": null,
+      "nextStatement": null,
+      "colour": "#a5745b",
+      "tooltip": "Turn the on-board user LED on/off. 0 = off, 255 = on (this LED is on/off only).",
       "helpUrl": "",
     },
     {

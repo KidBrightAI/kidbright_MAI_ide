@@ -771,6 +771,39 @@ export default function () {
                 </shadow>
               </value>
             </block>
+            <block type="board_led">
+              <value name="brightness">
+                <shadow type="math_number">
+                  <field name="NUM">255</field>
+                </shadow>
+              </value>
+            </block>
+            <block type="maixpy3_gpio_rgb_hex">
+              <field name="color">#ff0000</field>
+              <field name="pin_r">A23</field>
+              <field name="pin_g">A27</field>
+              <field name="pin_b">A25</field>
+            </block>
+            <block type="maixpy3_gpio_rgb">
+              <field name="pin_r">A23</field>
+              <field name="pin_g">A27</field>
+              <field name="pin_b">A25</field>
+              <value name="r">
+                <shadow type="math_number">
+                  <field name="NUM">255</field>
+                </shadow>
+              </value>
+              <value name="g">
+                <shadow type="math_number">
+                  <field name="NUM">50</field>
+                </shadow>
+              </value>
+              <value name="b">
+                <shadow type="math_number">
+                  <field name="NUM">50</field>
+                </shadow>
+              </value>
+            </block>
                       `,
           //  <block type="board_get_acc_tap">
           //  </block> 
@@ -783,26 +816,6 @@ export default function () {
           //      </shadow>
           //    </value>
           //  </block>
-          // <block type="maixpy3_gpio_rgb_hex">
-          //   <field name="color">#ff0000</field>
-          // </block>
-          // <block type="maixpy3_gpio_rgb">
-          //   <value name="r">
-          //     <shadow type="math_number">
-          //       <field name="NUM">255</field>
-          //     </shadow>
-          //   </value>
-          //   <value name="g">
-          //     <shadow type="math_number">
-          //       <field name="NUM">50</field>
-          //     </shadow>
-          //   </value>
-          //   <value name="b">
-          //     <shadow type="math_number">
-          //       <field name="NUM">50</field>
-          //     </shadow>
-          //   </value>
-          // </block>
         },
       ],
     },
