@@ -68,19 +68,60 @@ python.pythonGenerator.forBlock['maixpy3_gpio_set'] = function(block, generator)
 }
 
 python.pythonGenerator.forBlock['maixpy3_gpio_rgb'] = function(block, generator) {
-  var value_r = generator.valueToCode(block, 'r', python.Order.ATOMIC)
-  var value_g = generator.valueToCode(block, 'g', python.Order.ATOMIC)
-  var value_b = generator.valueToCode(block, 'b', python.Order.ATOMIC)
+  // External RGB LED wired to 3 GPIO pins. On this board only IO7 exposes hardware
+  // PWM, and an RGB LED needs 3 pins, so each colour is digital on/off (>=128 = on).
+  generator.definitions_['from_maix_import_gpio'] = 'from maix import gpio'
+  var pin_r = block.getFieldValue('pin_r')
+  var pin_g = block.getFieldValue('pin_g')
+  var pin_b = block.getFieldValue('pin_b')
+  generator.definitions_['_gpio_' + pin_r] = '_gpio_' + pin_r + ' = gpio.GPIO(\'' + pin_r + '\',gpio.Mode.OUT)'
+  generator.definitions_['_gpio_' + pin_g] = '_gpio_' + pin_g + ' = gpio.GPIO(\'' + pin_g + '\',gpio.Mode.OUT)'
+  generator.definitions_['_gpio_' + pin_b] = '_gpio_' + pin_b + ' = gpio.GPIO(\'' + pin_b + '\',gpio.Mode.OUT)'
+  var value_r = generator.valueToCode(block, 'r', python.Order.NONE) || '0'
+  var value_g = generator.valueToCode(block, 'g', python.Order.NONE) || '0'
+  var value_b = generator.valueToCode(block, 'b', python.Order.NONE) || '0'
 
-  // TODO: Assemble python into code variable.
-  return '...\n'
+  return '_gpio_' + pin_r + '.value(1 if int(' + value_r + ') >= 128 else 0)\n'
+       + '_gpio_' + pin_g + '.value(1 if int(' + value_g + ') >= 128 else 0)\n'
+       + '_gpio_' + pin_b + '.value(1 if int(' + value_b + ') >= 128 else 0)\n'
 }
 
 python.pythonGenerator.forBlock['maixpy3_gpio_rgb_hex'] = function(block, generator) {
+  // Same external RGB LED, colour picked from a palette. The hex colour is known at
+  // generation time, so we resolve each channel to on/off here (>=128 = on).
+  generator.definitions_['from_maix_import_gpio'] = 'from maix import gpio'
+  var pin_r = block.getFieldValue('pin_r')
+  var pin_g = block.getFieldValue('pin_g')
+  var pin_b = block.getFieldValue('pin_b')
+  generator.definitions_['_gpio_' + pin_r] = '_gpio_' + pin_r + ' = gpio.GPIO(\'' + pin_r + '\',gpio.Mode.OUT)'
+  generator.definitions_['_gpio_' + pin_g] = '_gpio_' + pin_g + ' = gpio.GPIO(\'' + pin_g + '\',gpio.Mode.OUT)'
+  generator.definitions_['_gpio_' + pin_b] = '_gpio_' + pin_b + ' = gpio.GPIO(\'' + pin_b + '\',gpio.Mode.OUT)'
   var colour_color = block.getFieldValue('color')
+  var r = parseInt(colour_color.substr(1, 2), 16)
+  var g = parseInt(colour_color.substr(3, 2), 16)
+  var b = parseInt(colour_color.substr(5, 2), 16)
 
-  // TODO: Assemble python into code variable.
-  return '...\n'
+  return '_gpio_' + pin_r + '.value(' + (r >= 128 ? 1 : 0) + ')\n'
+       + '_gpio_' + pin_g + '.value(' + (g >= 128 ? 1 : 0) + ')\n'
+       + '_gpio_' + pin_b + '.value(' + (b >= 128 ? 1 : 0) + ')\n'
+}
+
+python.pythonGenerator.forBlock['board_led'] = function(block, generator) {
+  // On-board user LED (led-user) is a leds-gpio device: on/off only, controlled via
+  // sysfs. Disable its kernel trigger once so brightness writes hold, then write the
+  // value to /sys/class/leds/led-user/brightness (0 = off, any value >= 1 = on).
+  generator.definitions_['_board_led_trigger_off'] =
+    'open("/sys/class/leds/led-user/trigger", "w").write("none")'
+  var functionName = generator.provideFunction_(
+    '_board_led_set',
+    ['def ' + '_board_led_set' + '(v):',
+      '  v = int(v)',
+      '  v = 0 if v < 0 else (255 if v > 255 else v)',
+      '  with open("/sys/class/leds/led-user/brightness", "w") as f:',
+      '    f.write(str(v))'])
+  var value_brightness = generator.valueToCode(block, 'brightness', python.Order.NONE) || '0'
+
+  return functionName + '(' + value_brightness + ')\n'
 }
 
 python.pythonGenerator.forBlock['board_get_acc'] = function(block, generator) {
