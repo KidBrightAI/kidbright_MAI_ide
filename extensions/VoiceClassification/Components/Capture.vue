@@ -211,10 +211,16 @@ onMounted(async () => {
         <!-- Record Button with status feedback -->
         <div class="center bottom-action d-flex flex-column align-center ga-2">
           <span
-            v-if="status === 'disconnected' || status === 'error'"
+            v-if="status === 'disconnected'"
             class="text-caption text-medium-emphasis"
           >
             Connect board to record
+          </span>
+          <span
+            v-else-if="status === 'error'"
+            class="text-caption text-error"
+          >
+            Microphone unavailable, press Connect Board to retry
           </span>
           <span
             v-else-if="status === 'connecting'"
