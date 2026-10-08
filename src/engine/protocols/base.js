@@ -46,13 +46,6 @@ export default class BoardProtocol {
   isConnected()           { throw new Error("isConnected() not implemented") }
   async rebootBoard()     { throw new Error("rebootBoard() not implemented") }
 
-  /**
-   * Wait for any connect-time script sync to finish. Protocols that
-   * sync inline inside connect() (web-adb) have nothing pending;
-   * websocket-shell overrides this because it syncs in the background.
-   */
-  async scriptsSynced()   { /* nothing pending by default */ }
-
   // ========================================================== transport primitives
 
   /**

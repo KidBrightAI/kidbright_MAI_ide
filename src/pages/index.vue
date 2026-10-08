@@ -12,7 +12,7 @@ import { useRouter } from 'vue-router'
 
 import { randomId } from "@/components/utils"
 
-import { onMounted, ref, shallowRef, nextTick, watch } from "vue"
+import { onMounted, ref, shallowRef, nextTick, watch, onBeforeUnmount, onBeforeMount } from "vue"; //Simulator Add {onBeforeUnmount, onBeforeMoun}
 
 import { Splitpanes, Pane } from 'splitpanes'
 import 'splitpanes/dist/splitpanes.css'
@@ -43,6 +43,15 @@ import DeployAsAppDialog from "@/components/dialog/DeployAsAppDialog.vue"
 //------- Assets --------//
 import RobotPoker from "@/assets/images/png/Mask_Group_12.png"
 
+import SimulatorController from "@/components/SimulatorController.vue"; //Simulator Add
+import { aev } from '../../AE/AEsession.js'; //Simulator Add
+import { runSimulatorPython, stopSimulatorPython } from '@/store/simulator' //Simulator Add
+
+//import { logkmv } from "@/components/SimulatorController.vue"; //Simulator Add
+
+const showSimulator = ref(false)//Simulator Add
+const isSimDocked = ref(false)//Simulator Add
+
 const confirm = useConfirm()
 const workspaceStore = useWorkspaceStore()
 const boardStore = useBoardStore()
@@ -57,6 +66,65 @@ const selectedMenu = ref(workspaceStore.currentBoard ? 4 : 0)
 const isProjectCreating = ref(false)
 
 const { dialogs } = useDialogs()
+
+//simulator add (start)
+let updateImpactTimer;
+function generateRandomSessionID(length) {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  let result = ''
+  for (let i = 0; i < length; i++) {
+    const randomIndex = Math.floor(Math.random() * characters.length);
+    result += characters.charAt(randomIndex);
+  }
+  return result;
+}
+setInterval(() => { aev.duration++ }, 1000);
+onBeforeMount(() => {
+  aev.sessionid = generateRandomSessionID(15);
+  fetch('https://api.ipify.org?format=json')
+    .then(res => res.json())
+    .then(data => { aev.ip = data.ip })
+    .catch(() => { aev.ip = 'none' })
+
+    console.log("Init KMV:" + aev.email + ", " + aev.sessionid);
+})
+
+const generateSimCode = () => {
+  if (!blocklyComp.value?.workspace) return ""
+  try {
+    pythonGenerator.STATEMENT_PREFIX = '_kmv_step(%1)\n'
+    const code = pythonGenerator.workspaceToCode(blocklyComp.value.workspace)
+    pythonGenerator.STATEMENT_PREFIX = ''
+    return code
+  } catch (e) {
+    pythonGenerator.STATEMENT_PREFIX = ''
+    console.warn("[Simulator] Error generating sim code with prefix:", e)
+    return pythonGenerator.workspaceToCode(blocklyComp.value.workspace)
+  }
+}
+
+const openSimulator = async () => {
+  if (showSimulator.value === false) {
+    showSimulator.value = true
+    await sleep(600)
+  }
+  const code = generateSimCode()
+  if (code) {
+    toast.info("กำลังอัปโหลดโค้ดสู่ Simulator...")
+    await boardStore.upload_kmv(code)
+    toast.success("อัปโหลดโค้ดสู่ Simulator สำเร็จ")
+  }
+}
+
+const closeSimulator = () => {
+  showSimulator.value = false
+  stopSimulatorPython()
+}
+
+const toggleSimDock = () => {
+  isSimDocked.value = !isSimDocked.value
+}
+//simulator add (end)
 
 const {
   bottomPaneSize,
@@ -306,7 +374,47 @@ onMounted(() => {
   if (selectedMenu.value === 4) {
     addChangeListener()
   }
+
+  //simulator add (start)
+  // ฟังก์ชันที่ปุ่มใน Unity KMV เรียกมายัง Vue IDE
+  window.runBlocklyFromSim = async () => {
+    const code = generateSimCode()
+    if (!code) return
+    await boardStore.upload_kmv(code)
+  }
+  window.stopBlocklyFromSim = () => {
+    stopSimulatorPython()
+  }
+
+  // รองรับการส่งข้อความผ่าน postMessage จาก Iframe KMV
+  const onSimMessage = event => {
+    if (event.data?.action === 'KMV_RUN_CODE') {
+      if (typeof window.runBlocklyFromSim === 'function') {
+        window.runBlocklyFromSim()
+      }
+    } else if (event.data?.action === 'KMV_STOP_CODE') {
+      if (typeof window.stopBlocklyFromSim === 'function') {
+        window.stopBlocklyFromSim()
+      }
+    }
+  }
+  window.addEventListener('message', onSimMessage)
+  window._kmv_onSimMessage = onSimMessage
+
 })
+
+onBeforeUnmount(() => {
+  if (typeof window !== 'undefined') {
+    if (window._kmv_onSimMessage) {
+      window.removeEventListener('message', window._kmv_onSimMessage)
+      delete window._kmv_onSimMessage
+    }
+    delete window.runBlocklyFromSim
+    delete window.stopBlocklyFromSim
+    stopSimulatorPython()
+  }
+})
+// Simulator Add (end)
 
 watch(selectedMenu, val => {
   calculateMinBottomPlaneSize()
@@ -353,6 +461,7 @@ watch(selectedMenu, val => {
               @restartBoard="boardStore.rebootBoard"
               @newModel="onAiOpen"
               @plugin="dialogs.plugin = true"
+              @openKMV="openSimulator"
             />
             <BlocklyComponent ref="blocklyComp" />
           </div>
@@ -393,6 +502,122 @@ watch(selectedMenu, val => {
           />
         </Pane>
       </Splitpanes>
+      <!-- Simulator Add (start)-->
+      <div
+        v-if="showSimulator"
+        :style="isSimDocked ? {
+          position: 'fixed',
+          right: '24px',
+          top: '115px',
+          width: '540px',
+          height: '460px',
+          zIndex: 9999,
+          boxShadow: '0 12px 36px rgba(0,0,0,0.5)',
+          border: '2px solid #00b0ff',
+          borderRadius: '12px',
+          background: '#1a1d24',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+        } : {
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          width: '82%',
+          height: '82%',
+          transform: 'translate(-50%, -50%)',
+          zIndex: 9999,
+          boxShadow: '0 16px 48px rgba(0,0,0,0.65)',
+          border: '2px solid #3f4450',
+          borderRadius: '14px',
+          background: '#1a1d24',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+        }"
+      >
+        <!-- Titlebar with Dock/Undock and Close -->
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 16px;
+            background: #252830;
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 13px;
+            border-bottom: 1px solid rgba(255,255,255,0.12);
+            user-select: none;
+          "
+        >
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span>🤖 KMV Virtual Board</span>
+            <span
+              style="
+                font-size: 11px;
+                color: #00e5ff;
+                background: rgba(0,229,255,0.12);
+                padding: 2px 8px;
+                border-radius: 10px;
+                font-weight: 500;
+              "
+            >
+              {{ isSimDocked ? 'โหมดแบ่งหน้าจอ (มองเห็นบล็อก)' : 'โหมดขยายเต็มหน้าจอ' }}
+            </span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button
+              style="
+                background: rgba(255,255,255,0.12);
+                border: 1px solid rgba(255,255,255,0.15);
+                color: #ffffff;
+                padding: 4px 10px;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 12px;
+                display: flex;
+                align-items: center;
+                gap: 5px;
+                transition: background 0.15s;
+              "
+              :title="isSimDocked ? 'สลับเป็นโหมดขยายเต็มหน้าจอ' : 'ย่อไว้ข้างจอ (ให้มองเห็นบล็อกไปพร้อมกัน)'"
+              @click="toggleSimDock"
+            >
+              <span>{{ isSimDocked ? '🗖 ขยายเต็ม' : '📌 แบ่งหน้าจอ' }}</span>
+            </button>
+            <button
+              style="
+                background: #dc3545;
+                border: none;
+                color: #ffffff;
+                padding: 4px 10px;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 12px;
+                font-weight: bold;
+                transition: background 0.15s;
+              "
+              title="ปิดหน้าต่าง Simulator"
+              @click="closeSimulator"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+        <simulator-controller
+          style="width: 100%; height: 100%; background-color: black"
+          ref="simulator"
+          :showController="false"
+          :captureKey="false"
+          v-slot="instance"
+          >
+
+        </simulator-controller>
+      </div>
+      <!-- Simulator Add (end)-->
     </VMain>
   </VLayout>
 

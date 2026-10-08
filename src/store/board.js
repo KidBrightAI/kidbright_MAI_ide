@@ -5,7 +5,7 @@ import { toast } from "vue3-toastify"
 import { useWorkspaceStore } from "./workspace"
 import { WebAdbHandler } from "@/engine/protocols/web-adb.js"
 import { WebSocketShellHandler } from "@/engine/protocols/websocket-shell.js"
-
+import { CodeToSim, runSimulatorPython } from "@/store/simulator" //Simulator Add
 
 export const useBoardStore = defineStore({
   id: "board",
@@ -272,5 +272,16 @@ export const useBoardStore = defineStore({
       this.handler = null
       this.running = false
     },
+    //Simulator add (start)
+    async upload_kmv(code) {
+      console.log("[BoardStore] Uploading code to KMV Simulator...")
+      // ไม่ใช้ currentBoard.codeTemplate เพราะมี Linux system calls (เช่น signal, os.popen) ที่รันบน WebAssembly/Pyodide ไม่ได้
+      // และรันแบบ non-blocking เพื่อไม่ให้ UI ค้างเมื่อมี while loop ในโค้ด Blockly
+      runSimulatorPython(code).catch(err => {
+        console.error("[BoardStore] Simulator runtime error:", err)
+      })
+      return true
+    },
+    //Simulator add (end)
   },
 })

@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <title>Unity WebGL Player | KMV</title>
+  <link rel="shortcut icon" href="TemplateData/favicon.ico">
+  <link rel="stylesheet" href="TemplateData/style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+  <!-- Add for Responsive (Start)-->
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    #unity-container {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    #unity-canvas {
+      width: 100% !important;
+      height: 100% !important;
+      display: block;
+    }
+  </style>
+  <!-- Add for Responsive (End)-->
+
+</head>
+
+<body>
+  <div id="unity-container" class="unity-desktop">
+    <canvas id="unity-canvas" tabindex="-1"></canvas>
+    <div id="unity-loading-bar">
+      <div id="unity-logo"></div>
+      <div id="unity-progress-bar-empty">
+        <div id="unity-progress-bar-full"></div>
+      </div>
+    </div>
+    <div id="unity-warning"> </div>
+    <div id="unity-footer">
+      <div id="unity-webgl-logo"></div>
+      <!-- simulator edit (start) -->
+      <button id="unity-run-button" type="button" onclick="onSimRunButtonPressed()" title="สั่งรันโค้ด Blockly จาก IDE"
+        style="
+            float: right;
+            margin-right: 8px;
+            margin-top: 5px;
+            padding: 5px 14px;
+            background-color: #28a745;
+            color: #ffffff;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: background-color 0.2s, transform 0.1s;
+          " onmouseover="this.style.backgroundColor='#218838'" onmouseout="this.style.backgroundColor='#28a745'"
+        onmousedown="this.style.transform='scale(0.96)'" onmouseup="this.style.transform='scale(1)'">
+        <span>▶</span> Run Code
+      </button>
+      <button id="unity-stop-button" type="button" onclick="onSimStopButtonPressed()" title="หยุดการรันโค้ด Blockly"
+        style="
+            float: right;
+            margin-right: 12px;
+            margin-top: 5px;
+            padding: 5px 14px;
+            background-color: #dc3545;
+            color: #ffffff;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: background-color 0.2s, transform 0.1s;
+          " onmouseover="this.style.backgroundColor='#c82333'" onmouseout="this.style.backgroundColor='#dc3545'"
+        onmousedown="this.style.transform='scale(0.96)'" onmouseup="this.style.transform='scale(1)'">
+        <span>⏹</span> Stop
+      </button>
+      <!-- simulator edit (end) -->
+      <div id="unity-fullscreen-button"></div>
+      <div id="unity-build-title">KMV</div>
+    </div>
+  </div>
+  <details style="visibility: hidden">
+    <p id="Switch_1">0</p>
+    <p id="Switch_2">0</p>
+    <p id="imgBase64">0</p>
+    <p id="PIN">0</p>
+    <p id="PIN_val">0</p>
+    <p id="PIN_PH14">0</p>
+    <p id="PIN_PH13">0</p>
+    <p id="PIN_PH3">0</p>
+    <p id="PIN_PH2">0</p>
+    <p id="PIN_PH1">0</p>
+    <p id="PIN_PH0">0</p>
+    <p id="PIN_PH8">0</p>
+    <p id="PIN_PH7">0</p>
+    <p id="PIN_PH6">0</p>
+    <p id="PIN_IO2">0</p>
+    <p id="PIN_IO3">0</p>
+    <p id="PIN_IO4">0</p>
+    <p id="PIN_IO5">0</p>
+    <p id="PIN_IO6">0</p>
+    <p id="PIN_IO7">0</p>
+    <p id="PIN_IO8">0</p>
+    <p id="PIN_IO9">0</p>
+    <p id="PIN_IO10">0</p>
+    <p id="PIN_A23">0</p>
+    <p id="PIN_A27">0</p>
+    <p id="PIN_A25">0</p>
+    <p id="PIN_A22">0</p>
+    <p id="PIN_A24">0</p>
+    <p id="PIN_P24">0</p>
+    <p id="PIN_A15">0</p>
+    <p id="PIN_A17">0</p>
+    <p id="PIN_A14">0</p>
+    <p id="DISPLAY_COLOR">0</p>
+    <p id="COLOR">0</p>
+    <p id="DISPLAY_CAMERA">0</p>
+    <p id="CAMERA">0</p>
+    <p id="DRAW_TEXT">0</p>
+    <p id="DRAW_TEXT_STATUS">0</p>
+    <p id="DRAW_TEXT_CONTENT"></p>
+    <p id="DRAW_TEXT_X">0</p>
+    <p id="DRAW_TEXT_Y">0</p>
+    <p id="DRAW_TEXT_COLOR">0</p>
+    <p id="DRAW_TEXT_SCALE">0</p>
+    <p id="Board">1</p>
+    <p id="Board_12">1</p>
+    <p id="BoardVersion">1</p>
+  </details>
+  <script>
+    var gameInstance;
+    var container = document.querySelector("#unity-container");
+    var canvas = document.querySelector("#unity-canvas");
+    var loadingBar = document.querySelector("#unity-loading-bar");
+    var progressBarFull = document.querySelector("#unity-progress-bar-full");
+    var fullscreenButton = document.querySelector("#unity-fullscreen-button");
+    var warningBanner = document.querySelector("#unity-warning");
+
+    // Shows a temporary message banner/ribbon for a few seconds, or
+    // a permanent error message on top of the canvas if type=='error'.
+    // If type=='warning', a yellow highlight color is used.
+    // Modify or remove this function to customize the visually presented
+    // way that non-critical warnings and error messages are presented to the
+    // user.
+    function unityShowBanner(msg, type) {
+      function updateBannerVisibility() {
+        warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
+      }
+      var div = document.createElement('div');
+      div.innerHTML = msg;
+      warningBanner.appendChild(div);
+      if (type == 'error') div.style = 'background: red; padding: 10px;';
+      else {
+        if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
+        setTimeout(function () {
+          warningBanner.removeChild(div);
+          updateBannerVisibility();
+        }, 5000);
+      }
+      updateBannerVisibility();
+    }
+
+    var buildUrl = "Build";
+    var loaderUrl = buildUrl + "/KMV.loader.js";
+    var config = {
+      dataUrl: buildUrl + "/KMV.data",
+      frameworkUrl: buildUrl + "/KMV.framework.js",
+      codeUrl: buildUrl + "/KMV.wasm",
+      streamingAssetsUrl: "StreamingAssets",
+      companyName: "Nectec",
+      productName: "KMV",
+      productVersion: "1.00.1",
+      showBanner: unityShowBanner,
+      devicePixelRatio: window.devicePixelRatio || 1, //Add for Responsive
+    };
+
+    // By default, Unity keeps WebGL canvas render target size matched with
+    // the DOM size of the canvas element (scaled by window.devicePixelRatio)
+    // Set this to false if you want to decouple this synchronization from
+    // happening inside the engine, and you would instead like to size up
+    // the canvas DOM size and WebGL render target sizes yourself.
+    // config.matchWebGLToCanvasSize = false;
+
+    // If you would like all file writes inside Unity Application.persistentDataPath
+    // directory to automatically persist so that the contents are remembered when
+    // the user revisits the site the next time, uncomment the following line:
+    // config.autoSyncPersistentDataPath = true;
+    // This autosyncing is currently not the default behavior to avoid regressing
+    // existing user projects that might rely on the earlier manual
+    // JS_FileSystem_Sync() behavior, but in future Unity version, this will be
+    // expected to change.
+
+    if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+      // Mobile device style: fill the whole browser client area with the game canvas:
+
+      var meta = document.createElement('meta');
+      meta.name = 'viewport';
+      meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
+      document.getElementsByTagName('head')[0].appendChild(meta);
+      container.className = "unity-mobile";
+      canvas.className = "unity-mobile";
+
+      // To lower canvas resolution on mobile devices to gain some
+      // performance, uncomment the following line:
+      // config.devicePixelRatio = 1;
+
+
+    } else {
+      // Desktop style: Render the game canvas in a window that can be maximized to fullscreen:
+
+      canvas.style.width = "1280px";
+      canvas.style.height = "720px";
+    }
+
+    loadingBar.style.display = "block";
+
+    var script = document.createElement("script");
+    script.src = loaderUrl;
+    script.onload = () => {
+      createUnityInstance(canvas, config, (progress) => {
+        progressBarFull.style.width = 100 * progress + "%";
+      }).then((unityInstance) => {
+        loadingBar.style.display = "none";
+        fullscreenButton.onclick = () => {
+          unityInstance.SetFullscreen(1);
+        };
+        gameInstance = unityInstance;
+      }).catch((message) => {
+        alert(message);
+      });
+    };
+
+    document.body.appendChild(script);
+
+    var boardVer = "1";
+
+    function Switch1Push(value) {
+      console.log("SW1= " + value);
+      document.getElementById("Switch_1").innerHTML = value;
+      //simulator edit (start)
+      if (window.parent && typeof window.parent.setSwitchFromKMV === "function") {
+        window.parent.setSwitchFromKMV("S1", value == "1");
+      }
+      //simulator edit (end)
+    }
+    function Switch2Push(value) {
+      console.log("SW2= " + value);
+      document.getElementById("Switch_2").innerHTML = value;
+      //simulator edit (start)
+      if (window.parent && typeof window.parent.setSwitchFromKMV === "function") {
+        window.parent.setSwitchFromKMV("S2", value == "1");
+      }
+      //simulator edit (end)
+    }
+    function ImageBase64(value) {
+      document.getElementById("imgBase64").innerHTML = value;
+    }
+    function SensorInput(pin, value) {
+      if (pin === undefined) {
+        console.warn("[SensorInput] Invalid pin:", pin);
+        return;
+      }
+
+      // 1. รองรับกรณีส่งเป็น Object ชุดพินพร้อมค่า เช่น { PH14: 1, PH13: 0, PH8: 1 }
+      if (typeof pin === "object" && !Array.isArray(pin) && value === undefined) {
+        for (var k in pin) {
+          if (Object.prototype.hasOwnProperty.call(pin, k)) {
+            SensorInput(k, pin[k]);
+          }
+        }
+        return;
+      }
+
+      // 2. รองรับกรณีส่งหลายพินเป็น Array เช่น ["PH14", "PH13"], 1
+      if (Array.isArray(pin)) {
+        for (var i = 0; i < pin.length; i++) {
+          SensorInput(pin[i], value);
+        }
+        return;
+      }
+
+      // 3. รองรับกรณีส่งหลายพินคั่นด้วยเครื่องหมายจุลภาค เช่น "PH14,PH13", 1
+      if (typeof pin === "string" && pin.indexOf(",") !== -1) {
+        var parts = pin.split(",");
+        for (var j = 0; j < parts.length; j++) {
+          var pName = parts[j].trim();
+          if (pName) SensorInput(pName, value);
+        }
+        return;
+      }
+
+      if (value === undefined) {
+        console.warn("[SensorInput] Invalid value for pin:", pin);
+        return;
+      }
+
+      var strPin = String(pin).trim();
+      var numVal = (value === 1 || value === "1" || value === true || String(value).toLowerCase() === "true") ? 1 : 0;
+
+      // ตารางแมปปิ้งพินของ KidBright Micro AI Plus (IO2..IO8 <-> A23..A15)
+      var aToIo = { 'A23': 'IO2', 'A27': 'IO3', 'A25': 'IO4', 'A22': 'IO5', 'A24': 'IO6', 'P24': 'IO7', 'A15': 'IO8', 'A17': 'IO9', 'A14': 'IO10' };
+      var ioToA = { 'IO2': 'A23', 'IO3': 'A27', 'IO4': 'A25', 'IO5': 'A22', 'IO6': 'A24', 'IO7': 'P24', 'IO8': 'A15', 'IO9': 'A17', 'IO10': 'A14' };
+      var upperPin = strPin.toUpperCase();
+      var aliasPin = aToIo[upperPin] || ioToA[upperPin] || null;
+
+      console.log("[SensorInput] Pin: " + strPin + (aliasPin ? " (" + aliasPin + ")" : "") + ", Value: " + numVal + " (raw: " + value + ")");
+
+      // 1. อัปเดตลง Element HTML DOM ใน index.html
+      var pinEl = document.getElementById("PIN");
+      var pinValEl = document.getElementById("PIN_val");
+      if (pinEl) pinEl.innerHTML = strPin;
+      if (pinValEl) pinValEl.innerHTML = String(numVal);
+
+      // อัปเดต Element ประจำ Pin เช่น id="PIN_IO2", id="PIN_A23", id="PIN_PH14"
+      var specificPinEl = document.getElementById("PIN_" + strPin);
+      if (specificPinEl) {
+        specificPinEl.innerHTML = String(numVal);
+      }
+      var upperPinEl = document.getElementById("PIN_" + upperPin);
+      if (upperPinEl) {
+        upperPinEl.innerHTML = String(numVal);
+      }
+      if (aliasPin) {
+        var aliasEl = document.getElementById("PIN_" + aliasPin);
+        if (aliasEl) aliasEl.innerHTML = String(numVal);
+      }
+
+      // 2. ส่งค่าต่อไปยัง IDE ผ่าน window.parent.setPinFromKMV
+      if (window.parent && typeof window.parent.setPinFromKMV === "function") {
+        window.parent.setPinFromKMV(strPin, numVal);
+        if (aliasPin) {
+          window.parent.setPinFromKMV(aliasPin, numVal);
+        }
+      }
+
+      // 3. ถ้าอยู่ใน Window เดียวกัน
+      if (typeof window.setPinFromKMV === "function" && window.setPinFromKMV !== window.parent?.setPinFromKMV) {
+        window.setPinFromKMV(strPin, numVal);
+        if (aliasPin) {
+          window.setPinFromKMV(aliasPin, numVal);
+        }
+      }
+
+      // 4. ส่งผ่าน postMessage เผื่อ Cross-Origin / Iframe Sandbox
+      try {
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({
+            action: "KMV_SENSOR_INPUT",
+            type: "KMV_SENSOR_INPUT",
+            pin: strPin,
+            value: numVal
+          }, "*");
+          if (aliasPin) {
+            window.parent.postMessage({
+              action: "KMV_SENSOR_INPUT",
+              type: "KMV_SENSOR_INPUT",
+              pin: aliasPin,
+              value: numVal
+            }, "*");
+          }
+        }
+      } catch (e) { }
+    }
+    window.SensorInput = SensorInput;
+    function SetBoardVersion() {
+      gameInstance.SendMessage("[ComunicationIDE]", "SetBoardVersion", String(boardVer));
+    }
+    function Switch12() {
+      //console.log("SW2= " + document.getElementById("Switch_2").innerHTML);
+      //console.log("PinState= " + document.getElementById("PIN").innerHTML + ":" + document.getElementById("PIN_val").innerHTML);
+      return (document.getElementById("Switch_1").innerHTML + ", " + document.getElementById("Switch_2").innerHTML);
+
+    }
+    window.setPinState = function (pin, value) {
+      // 1. ป้องกันค่า undefined
+      if (pin === undefined || value === undefined || pin === "undefined") {
+        console.warn("[Iframe KMV] Received undefined pin or value, skipping.");
+        return;
+      }
+
+      console.log(`[Iframe KMV Received] Pin: ${pin}, Value: ${value}`);
+
+      // 2. ปริ้นท์/อัปเดตลง Element HTML DOM
+      var pinEl = document.getElementById("PIN");
+      var pinValEl = document.getElementById("PIN_val");
+      if (pinEl) pinEl.innerHTML = pin;
+      if (pinValEl) pinValEl.innerHTML = value;
+
+      // จัดการค่าสีหน้าจอ Display Color (เลข 1-70 ตาม Palette)
+      if (pin === "DISPLAY_COLOR" || pin === "COLOR") {
+        var dispColorEl = document.getElementById("DISPLAY_COLOR");
+        if (dispColorEl) dispColorEl.innerHTML = value;
+        var colEl = document.getElementById("COLOR");
+        if (colEl) colEl.innerHTML = value;
+        console.log(`[Iframe KMV Display Color Updated] Number: ${value} (1-70)`);
+      }
+
+      // จัดการสถานะกล้องหน้าจอ Display Camera (1 = เรียกใช้, 0 = ไม่ได้เรียกใช้)
+      if (pin === "DISPLAY_CAMERA" || pin === "CAMERA") {
+        var dispCamEl = document.getElementById("DISPLAY_CAMERA");
+        if (dispCamEl) dispCamEl.innerHTML = String(value);
+        var camEl = document.getElementById("CAMERA");
+        if (camEl) camEl.innerHTML = String(value);
+        console.log(`[Iframe KMV Display Camera Updated] State: ${value} (1=Active, 0=Inactive)`);
+      }
+
+      // จัดการสถานะข้อความบนจอ Draw Text (0=ไม่เรียกใช้, 1,text,x,y,color,scale=เรียกใช้)
+      if (pin === "DRAW_TEXT" || pin === "DISPLAY_DRAW_TEXT") {
+        var dtEl = document.getElementById("DRAW_TEXT");
+        if (dtEl) dtEl.innerHTML = String(value);
+
+        var dtStatus = "0";
+        var dtText = "";
+        var dtX = "0";
+        var dtY = "0";
+        var dtColor = "0";
+        var dtScale = "0";
+
+        if (String(value) === "0" || value === 0 || value === false) {
+          dtStatus = "0";
+        } else {
+          var valStr = String(value);
+          var parts = valStr.split(",");
+          if (parts.length >= 6) {
+            dtStatus = parts[0];
+            dtScale = parts[parts.length - 1];
+            dtColor = parts[parts.length - 2];
+            dtY = parts[parts.length - 3];
+            dtX = parts[parts.length - 4];
+            dtText = parts.slice(1, parts.length - 4).join(",");
+          } else if (parts.length > 1) {
+            dtStatus = parts[0] || "1";
+            dtText = parts[1] || "";
+            dtX = parts[2] || "0";
+            dtY = parts[3] || "0";
+            dtColor = parts[4] || "0";
+            dtScale = parts[5] || "1";
+          } else {
+            dtStatus = valStr;
+          }
+        }
+
+        var dtStatusEl = document.getElementById("DRAW_TEXT_STATUS");
+        if (dtStatusEl) dtStatusEl.innerHTML = dtStatus;
+        var dtContentEl = document.getElementById("DRAW_TEXT_CONTENT");
+        if (dtContentEl) dtContentEl.innerHTML = dtText;
+        var dtXEl = document.getElementById("DRAW_TEXT_X");
+        if (dtXEl) dtXEl.innerHTML = dtX;
+        var dtYEl = document.getElementById("DRAW_TEXT_Y");
+        if (dtYEl) dtYEl.innerHTML = dtY;
+        var dtColorEl = document.getElementById("DRAW_TEXT_COLOR");
+        if (dtColorEl) dtColorEl.innerHTML = dtColor;
+        var dtScaleEl = document.getElementById("DRAW_TEXT_SCALE");
+        if (dtScaleEl) dtScaleEl.innerHTML = dtScale;
+
+        console.log(`[Iframe KMV Draw Text Updated] Status: ${dtStatus}, Text: "${dtText}", X: ${dtX}, Y: ${dtY}, Color: ${dtColor}, Scale: ${dtScale}`);
+      }
+
+      // จัดการค่าเลือกบอร์ด (Select a Board: ซ้าย=1, ขวา=2, เริ่มต้น=1)
+      if (pin === "BOARD" || pin === "BOARD_VER" || pin === "BOARD_TYPE" || pin === "Board") {
+        var boardEl = document.getElementById("Board");
+        if (boardEl) boardEl.innerHTML = value;
+        var board12El = document.getElementById("Board_12");
+        if (board12El) board12El.innerHTML = value;
+        var boardVerEl = document.getElementById("BoardVersion");
+        if (boardVerEl) boardVerEl.innerHTML = value;
+        console.log(`[Iframe KMV Board Selected] Value: ${value} (1=ซ้าย, 2=ขวา)`);
+
+        boardVer = value;
+      }
+
+      // 3. ส่งค่าต่อไปยัง Unity C# Script (เช็คเพิ่มเพื่อป้องกัน error "PinManager not found")
+      if (typeof gameInstance !== "undefined" && gameInstance && typeof gameInstance.SendMessage === "function") {
+        try {
+          // แมปปิ้งพิน KidBright Micro AI Plus (A23..A15 <-> IO2..IO8)
+          var aToIo = { 'A23': 'IO2', 'A27': 'IO3', 'A25': 'IO4', 'A22': 'IO5', 'A24': 'IO6', 'P24': 'IO7', 'A15': 'IO8', 'A17': 'IO9', 'A14': 'IO10' };
+          var ioToA = { 'IO2': 'A23', 'IO3': 'A27', 'IO4': 'A25', 'IO5': 'A22', 'IO6': 'A24', 'IO7': 'P24', 'IO8': 'A15', 'IO9': 'A17', 'IO10': 'A14' };
+          var uPin = String(pin).toUpperCase();
+          var alias = aToIo[uPin] || ioToA[uPin] || null;
+
+          // **ข้อควรระวัง**: ใน Unity Hierarchy ต้องมี GameObject ชื่อ "[ComunicationIDE]" 
+          // และมี C# Script ที่มีฟังก์ชัน public void SetPinState(string data) อยู่ด้วย
+          if (pin === "DISPLAY_COLOR" || pin === "COLOR") {
+            try { gameInstance.SendMessage("[ComunicationIDE]", "SetPinState", pin + ":" + value); } catch (e) { }
+            try { gameInstance.SendMessage("[ComunicationIDE]", "SetDisplayColor", String(value - 1)); } catch (e) { }
+            try { gameInstance.SendMessage("GameManager", "SetDisplayColor", parseInt(value, 10)); } catch (e) { }
+            try { gameInstance.SendMessage("LoadUp", "InitColor", parseInt(value, 10)); } catch (e) { }
+          }
+          else if (pin === "DISPLAY_CAMERA" || pin === "CAMERA") {
+            try { gameInstance.SendMessage("[ComunicationIDE]", "SetPinState", pin + ":" + value); } catch (e) { }
+            try { gameInstance.SendMessage("[ComunicationIDE]", "SetPinState", "DISPLAY_CAMERA:" + value); } catch (e) { }
+            var isCamOn = (value == "1" || value == 1);
+            try { gameInstance.SendMessage("GameManager", "EnableWebcam", isCamOn ? 1 : 0); } catch (e) { }
+            try { gameInstance.SendMessage("GameManager", "EnableWebcam", isCamOn); } catch (e) { }
+            try { gameInstance.SendMessage("[ComunicationIDE]", "EnableWebcam", isCamOn ? "1" : "0"); } catch (e) { }
+            try { gameInstance.SendMessage("KMV_Webcam", "EnableWebcam", isCamOn ? 1 : 0); } catch (e) { }
+          }
+          else if (pin === "DRAW_TEXT" || pin === "DISPLAY_DRAW_TEXT") {
+            try { gameInstance.SendMessage("[ComunicationIDE]", "SetPinState", pin + ":" + value); } catch (e) { }
+            try { gameInstance.SendMessage("[ComunicationIDE]", "SetPinState", "DRAW_TEXT:" + value); } catch (e) { }
+            try { gameInstance.SendMessage("[ComunicationIDE]", "DrawText", String(value)); } catch (e) { }
+            try { gameInstance.SendMessage("GameManager", "SetDrawText", String(value)); } catch (e) { }
+            try { gameInstance.SendMessage("GameManager", "DrawText", String(value)); } catch (e) { }
+
+            console.log("---------DRAW_TEXT-------- " + value);
+          }
+          else if (pin === "BOARD" || pin === "BOARD_VER" || pin === "BOARD_TYPE" || pin === "Board") {
+            try { gameInstance.SendMessage("[ComunicationIDE]", "SetPinState", pin + ":" + value); } catch (e) { }
+            try { gameInstance.SendMessage("[ComunicationIDE]", "SetBoardVersion", String(value)); } catch (e) { }
+            try { gameInstance.SendMessage("GameManager", "newBoardVer", parseInt(value, 10)); } catch (e) { }
+            try { gameInstance.SendMessage("KMV_Main", "currentChangeVer", parseInt(value, 10)); } catch (e) { }
+          }
+          else {
+            gameInstance.SendMessage("[ComunicationIDE]", "SetPinState", pin + ":" + value);
+            // ส่ง Alias ไปยัง Unity ด้วยเสมอ เพื่อให้ Unity script ทำงานได้ไม่ว่าโค้ด Unity จะเช็ค "IO2" หรือ "A23"
+            if (alias) {
+              try { gameInstance.SendMessage("[ComunicationIDE]", "SetPinState", alias + ":" + value); } catch (e) { }
+            }
+          }
+        } catch (err) {
+          console.warn("[Unity SendMessage Warning]", err);
+        }
+      }
+    };
+
+    // ฟังก์ชันเฉพาะสำหรับเซ็ตสีหน้าจอ 1-70
+    window.setDisplayColor = function (colorNum) {
+      window.setPinState("DISPLAY_COLOR", colorNum);
+    };
+
+    // ฟังก์ชันเฉพาะสำหรับสถานะกล้อง Display Camera (1=เรียกใช้, 0=ไม่ได้เรียกใช้)
+    window.setDisplayCamera = function (value) {
+      window.setPinState("DISPLAY_CAMERA", String(value === undefined ? "0" : value));
+    };
+
+    // ฟังก์ชันเฉพาะสำหรับสถานะข้อความบนจอ Draw Text (0=ไม่ได้เรียกใช้, หรือ 1 พร้อม text, x, y, color, scale)
+    window.setDrawText = function (statusOrVal, text, x, y, color, scale) {
+      if (arguments.length > 1) {
+        var valStr = String(statusOrVal) + "," + String(text !== undefined ? text : "") + "," + String(x !== undefined ? x : "0") + "," + String(y !== undefined ? y : "0") + "," + String(color !== undefined ? color : "10") + "," + String(scale !== undefined ? scale : "1");
+        window.setPinState("DRAW_TEXT", valStr);
+      } else {
+        window.setPinState("DRAW_TEXT", String(statusOrVal !== undefined ? statusOrVal : "0"));
+      }
+    };
+
+    // ฟังก์ชันเฉพาะสำหรับเลือกบอร์ด 1 (ซ้าย) หรือ 2 (ขวา), ค่าเริ่มต้น 1
+    window.setBoard = function (boardNum) {
+      window.setPinState("BOARD", String(boardNum || "1"));
+    };
+    window.setBoardType = window.setBoard;
+    window.setBoardVersion = window.setBoard;
+
+    // กำหนดค่าเริ่มต้นของบอร์ดทันที (1=ซ้าย, 2=ขวา, ค่าเริ่มต้นเป็น 1)
+    (function initDefaultBoard() {
+      var initialBoard = "1";
+      try {
+        initialBoard = localStorage.getItem("kmv_board_type") || sessionStorage.getItem("kmv_board_type") || "1";
+      } catch (e) { }
+      window.setBoard(initialBoard);
+    })();
+
+    //var setPinState = window.setPinState;
+
+    //simulator edit (start)
+    // ฟังก์ชันสำหรับส่งคำสั่งให้ IDE รันโค้ด Blockly ล่าสุด
+    function onSimRunButtonPressed() {
+      console.log("[KMV Sim] Run button triggered, notifying IDE...");
+
+      // 1. เรียกฟังก์ชันตรงบน window.parent (ถ้ามี)
+      if (window.parent && typeof window.parent.runBlocklyFromSim === "function") {
+        try {
+          window.parent.runBlocklyFromSim();
+          return;
+        } catch (e) {
+          console.warn("[KMV Sim] Direct call error:", e);
+        }
+      }
+
+      // 2. ส่งผ่าน postMessage ข้าม Iframe ไปยัง IDE กรณีไม่สามารถเรียกตรงได้
+      if (window.parent) {
+        window.parent.postMessage({ action: "KMV_RUN_CODE" }, "*");
+      }
+    }
+
+    // ฟังก์ชันสำหรับส่งคำสั่งหยุดการรันโค้ด Blockly
+    function onSimStopButtonPressed() {
+      console.log("[KMV Sim] Stop button triggered, notifying IDE...");
+
+      // 1. เรียกฟังก์ชันตรงบน window.parent (ถ้ามี)
+      if (window.parent && typeof window.parent.stopBlocklyFromSim === "function") {
+        try {
+          window.parent.stopBlocklyFromSim();
+          return;
+        } catch (e) {
+          console.warn("[KMV Sim] Direct stop call error:", e);
+        }
+      }
+
+      // 2. ส่งผ่าน postMessage ข้าม Iframe ไปยัง IDE กรณีไม่สามารถเรียกตรงได้
+      if (window.parent) {
+        window.parent.postMessage({ action: "KMV_STOP_CODE" }, "*");
+      }
+    }
+
+    // ผูกเข้ากับ window scope ให้ Unity C# หรือสคริปต์ภายนอกเรียกได้
+    window.onSimRunButtonPressed = onSimRunButtonPressed;
+    window.runCodeFromSim = onSimRunButtonPressed;
+    window.runSimCode = onSimRunButtonPressed;
+
+    window.onSimStopButtonPressed = onSimStopButtonPressed;
+    window.stopCodeFromSim = onSimStopButtonPressed;
+    window.stopSimCode = onSimStopButtonPressed;
+    //simulator edit (end)
+  </script>
+</body>
+
+</html>

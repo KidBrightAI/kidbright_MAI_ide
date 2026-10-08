@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref, shallowRef, nextTick } from "vue"
+import { onMounted, onBeforeUnmount, ref, shallowRef, nextTick } from "vue" //Simulator Add 'onBeforeUnmount'
 import Blockly from "blockly"
 import { pythonGenerator } from "blockly/python"
 import CustomCategory from "./CustomCategory"
@@ -10,6 +10,7 @@ import PythonLogo from "@/assets/images/python.png"
 
 import { useWorkspaceStore } from "@/store/workspace"
 import { usePluginStore } from "@/store/plugin"
+import { registerHighlightCallback } from "@/store/simulator" // Simulator Add
 
 import { updateBlockCategory } from "./utils"
 
@@ -97,6 +98,14 @@ const reload = initBlock => {
   workspace.value = Blockly.inject(blocklyDiv.value, options)
   workspace.value.scrollCenter()
 
+  // Register simulator block highlight callback // Simulator Add (Start)
+  registerHighlightCallback(blockId => {
+    if (workspace.value && typeof workspace.value.highlightBlock === 'function') {
+      workspace.value.highlightBlock(blockId)
+    }
+  })
+  // Simulator Add (End)
+
   //-------- add custom trashcan ----------//
   workspace.value.trashcan.dispose()
   workspace.value.trashcan  = new CustomTrashcan(workspace.value)
@@ -154,6 +163,13 @@ const redo = () => {
   console.log("redo")
   workspace.value.undo(true)
 }
+
+// Simulator Add (Start)
+onBeforeUnmount(() => {
+  registerHighlightCallback(null)
+})
+// Simulator Add (End)
+
 defineExpose({ workspace,resizeWorkspace,undo,redo, reload, getSerializedWorkspace })
 </script>
 

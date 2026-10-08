@@ -60,6 +60,7 @@
 
 <script setup>
 import { computed, getCurrentInstance } from 'vue'
+import { writePinToKMV } from '@/store/simulator'
 
 const emit = defineEmits(['board-selected'])
 const isDialogVisible = defineModel('isDialogVisible', { type: Boolean, default: false })
@@ -71,6 +72,18 @@ const getImagePath = board => {
 }
 
 const selectBoard = board => {
+  const boardIndex = boards.value.findIndex(b => b.id === board?.id)
+  // บอร์ดด้านซ้าย (index 0) = 1, บอร์ดด้านขวา (index 1) = 2, กรณีอื่น = 1
+  const boardVal = (boardIndex === 1 || board?.id === 'kidbright-mai-plus') ? 2 : 1
+  try {
+    localStorage.setItem('kmv_board_type', String(boardVal))
+    sessionStorage.setItem('kmv_board_type', String(boardVal))
+  } catch (e) {}
+
+  try {
+    writePinToKMV('BOARD', String(boardVal))
+  } catch (e) {}
+
   emit('board-selected', board)
   isDialogVisible.value = false
 }

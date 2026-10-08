@@ -1,6 +1,8 @@
 <script setup>
 import Kbbtn from "@/components/buttons/kbbtn.vue"
 
+import simulatorIcon from "@/assets/images/icons/btn_KMV.png"//Simulator add
+
 import connectIcon from "@/assets/images/icons/btn_connect.png"
 import connectedIcon from "@/assets/images/icons/btn_connected.png"
 
@@ -31,7 +33,7 @@ import { useWorkspaceStore } from "@/store/workspace"
 import { useBoardStore } from "@/store/board"
 import {toast} from "vue3-toastify"
 
-const emit = defineEmits(["serial","example", "help", "firmware", "extraSave","plugin","download","stop","newProject","openProject","saveProject","connectBoard","disconnectBoard","fileBrowser","connectWifi","newModel"])
+const emit = defineEmits(["serial","example", "help", "firmware", "extraSave","plugin","download","stop","newProject","openProject","saveProject","connectBoard","disconnectBoard","fileBrowser","connectWifi","newModel" ,"openKMV"])
 console.log("Header setup running")
 const workspaceStore = useWorkspaceStore()
 const boardStore = useBoardStore()
@@ -83,6 +85,19 @@ watch(() => workspaceStore.name, val => {
       />
     </div>
     <VSpacer />
+    <!-- Simulator add (start) -->
+    <VTooltip text="Upload to Simulator (KMV)">
+      <template #activator="{ props }">
+        <Kbbtn 
+          class="mx-1" 
+          :icon="simulatorIcon" 
+          :disabled="false" 
+          v-bind="props" 
+          @click="$emit('openKMV')"
+        />
+      </template>
+    </VTooltip>
+    <!-- Simulator add (end) -->
     <VTooltip :text="boardStore.isBoardConnected ? 'Disconnect Board' : 'Connect Board'">
       <template #activator="{ props }">
         <Kbbtn

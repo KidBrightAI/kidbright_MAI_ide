@@ -43,14 +43,6 @@ export class WebSocketShellHandler extends BoardProtocol {
     // empty — feature-gated UI hides itself.
     this._features = new Set()
     this._boardVersion = null
-
-    // In-flight connect() promise, shared with callers that arrive
-    // while the socket is still opening (see connect()).
-    this._connecting = null
-
-    // Connect-time script sync, awaited by scriptsSynced() so nobody
-    // launches a managed script that is still being replaced.
-    this._scriptSync = null
   }
 
   get capabilities() {
@@ -103,38 +95,20 @@ export class WebSocketShellHandler extends BoardProtocol {
     }
     if (this.isConnected()) return true
 
-    // A caller that arrives while the socket is still opening (the
-    // capture page's auto-connect racing a header click) joins the
-    // in-flight attempt instead of being told "connected" before the
-    // capability probe below has answered.
-    if (this._connecting) return this._connecting
-
-    this._connecting = new Promise(resolve => {
+    return new Promise(resolve => {
       this.socket = new WebSocket(board.wsShell)
       this.socket.binaryType = "arraybuffer"
 
-      this.socket.onopen = async () => {
+      this.socket.onopen = () => {
         this.connected = true
+        this.boardStore.connected = true
         toast.success("Connected to Shell")
         this.socket.send('\r')
-
-        // Resolve only once the capability probe has answered (or timed
-        // out on a pre-1.1.0 ws_shell). Callers gate on `capabilities`
-        // right after connect — the voice recorder checks tcpRelay
-        // before starting its daemon — and used to read the empty
-        // pre-probe set because connect resolved in the same tick the
-        // probe was sent. Script sync stays in the background (it can
-        // take seconds on a first connect); scriptsSynced() exposes it.
-        await this._probeFeatures()
-        if (!this.isConnected()) {
-          // Dropped mid-probe: onerror / onclose already cleaned up.
-          resolve(false)
-
-          return
-        }
-        this.boardStore.connected = true
-        this._scriptSync = this._uploadBoardScripts()
-          .catch(e => console.warn("[script-sync] failed:", e?.message || e))
+        // Probe first so _boardVersion is known by the time
+        // _uploadBoardScripts decides whether to nag for a reboot.
+        // Still fire-and-forget at the top level — connect resolves
+        // immediately and the chain runs in the background.
+        this._probeFeatures().then(() => this._uploadBoardScripts())
         resolve(true)
       }
 
@@ -154,9 +128,7 @@ export class WebSocketShellHandler extends BoardProtocol {
       }
 
       this.socket.onmessage = event => this.emit('log', event.data)
-    }).finally(() => { this._connecting = null })
-
-    return this._connecting
+    })
   }
 
   async disconnect() {
@@ -168,21 +140,10 @@ export class WebSocketShellHandler extends BoardProtocol {
     this.connected = false
     this.socket = null
     this._features = new Set()
-    this._scriptSync = null
     this.boardStore.capabilitiesRevision++
   }
 
   async rebootBoard() { this.send("reboot\r") }
-
-  /**
-   * Resolves once the connect-time script sync has settled. Consumers
-   * that launch a managed script (voice capture starts
-   * /root/scripts/voice_stream.py) wait on this so a first connect
-   * after an IDE update never runs a half-written or outdated copy.
-   */
-  async scriptsSynced() {
-    if (this._scriptSync) await this._scriptSync
-  }
 
   // =================================================== frame helpers
 

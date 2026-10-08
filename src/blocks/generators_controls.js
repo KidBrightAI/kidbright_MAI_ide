@@ -26,8 +26,8 @@ Blockly.Python['controls_forever_no_connect'] = function(block) {
 }
 
 Blockly.Python['while_loop'] = function(block) {
-  var value_condition = Blockly.Python.valueToCode(block, 'condition', Blockly.Python.ORDER_ATOMIC)
+  var value_condition = Blockly.Python.valueToCode(block, 'condition', Blockly.Python.ORDER_ATOMIC) || 'True'
   var statements_DO = Blockly.Python.statementToCode(block, 'DO')
   
-  return `while ${value_condition}:\n${statements_DO}`
+  return `while ${value_condition}:\n${statements_DO || '  pass\n'}`
 }

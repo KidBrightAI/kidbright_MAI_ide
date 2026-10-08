@@ -8,7 +8,6 @@ import wave
 import sys
 import signal
 import audioop
-import traceback
 # image drawing 
 from PIL import Image, ImageDraw 
 # mfcc
@@ -191,114 +190,8 @@ def _log_mel_spec(signal):
   mag_sq[mag_sq < 1e-50] = 1e-50
   return np.log(mag_sq @ M_T).T
 
-# --------------------------- microphone ownership -----------------------------
-# ALSA capture on this board is exclusive: if any other process has the
-# device open (a user script polling get_rms(), an auto-start app that
-# loaded the voice model, a stale copy of this daemon), our PCM open
-# fails with EBUSY and recording looks dead from the IDE. The IDE can
-# only Ctrl-C the script running in *its* shell, so the daemon evicts
-# whoever holds the device itself, right before opening it, and logs
-# who it was so /tmp/voice_stream.log explains the failure.
-
-CAPTURE_NODE_PREFIX = "/dev/snd/pcmC"   # /dev/snd/pcmC<card>D<dev>c = capture
-
-
-def _cmdline(pid):
-  try:
-    with open(f"/proc/{pid}/cmdline", "rb") as f:
-      return f.read().replace(b"\0", b" ").decode(errors="replace").strip()
-  except OSError:
-    return "?"
-
-
-def _capture_holders():
-  """[(pid, cmdline, node)] for every other process with an ALSA capture node open."""
-  me = os.getpid()
-  found = []
-  for entry in os.listdir("/proc"):
-    if not entry.isdigit() or int(entry) == me:
-      continue
-    fd_dir = f"/proc/{entry}/fd"
-    try:
-      fds = os.listdir(fd_dir)
-    except OSError:
-      continue
-    for fd in fds:
-      try:
-        target = os.readlink(f"{fd_dir}/{fd}")
-      except OSError:
-        continue
-      if target.startswith(CAPTURE_NODE_PREFIX) and target.endswith("c"):
-        found.append((int(entry), _cmdline(entry), target))
-        break
-  return found
-
-
-def _free_microphone():
-  """SIGTERM every capture holder (user scripts handle it and release the
-  device on exit), then SIGKILL whatever still holds it a second later.
-  Returns False when nobody held the device."""
-  holders = _capture_holders()
-  if not holders:
-    return False
-  for pid, cmd, node in holders:
-    print(f"mic busy: {node} held by pid {pid} ({cmd}) -> SIGTERM", flush=True)
-    try:
-      os.kill(pid, signal.SIGTERM)
-    except ProcessLookupError:
-      pass
-  deadline = time.time() + 1.0
-  while time.time() < deadline and _capture_holders():
-    time.sleep(0.1)
-  for pid, cmd, node in _capture_holders():
-    print(f"mic still held by pid {pid} ({cmd}) -> SIGKILL", flush=True)
-    try:
-      os.kill(pid, signal.SIGKILL)
-    except ProcessLookupError:
-      pass
-  return True
-
-
-def _kill_stale_daemons():
-  """A previous voice_stream.py that outlived its IDE session holds both
-  port 5000 and the mic. The IDE kills it before starting us; this is the
-  fallback that does not depend on the shell's ps flavour."""
-  me = os.getpid()
-  for entry in os.listdir("/proc"):
-    if not entry.isdigit() or int(entry) == me:
-      continue
-    if "voice_stream.py" in _cmdline(entry):
-      print(f"killing stale voice_stream.py pid {entry}", flush=True)
-      try:
-        os.kill(int(entry), signal.SIGKILL)
-      except ProcessLookupError:
-        pass
-
-
-def _open_capture(attempts=6):
-  """Open the ALSA capture stream. On failure evict whoever holds the mic
-  and retry: a just-killed holder's handle takes a moment to release."""
-  for attempt in range(1, attempts + 1):
-    try:
-      pcm = alsaaudio.PCM(
-          type=alsaaudio.PCM_CAPTURE,
-          mode=alsaaudio.PCM_NORMAL,
-          rate=RATE, channels=CHANNELS,
-          format=alsaaudio.PCM_FORMAT_S16_LE,
-          periodsize=CHUNK,
-      )
-      print("microphone opened", flush=True)
-      return pcm
-    except (alsaaudio.ALSAAudioError, OSError) as e:
-      print(f"ALSA capture open failed ({attempt}/{attempts}): {e}", flush=True)
-      if not _free_microphone():
-        print("no other process holds the capture device", flush=True)
-      time.sleep(0.5)
-  raise RuntimeError("could not open the ALSA capture device, see messages above")
-
 
 def audio_stream():
-  _kill_stale_daemons()
   # create socket server. SO_REUSEADDR lets us bind even if the prior
   # daemon's socket is still in TIME_WAIT — the IDE's "kill old, start
   # new" pattern would otherwise hit ~60 s of EADDRINUSE.
@@ -335,13 +228,15 @@ def audio_stream():
     return b""
 
   try:
-    pcm = _open_capture()
+    pcm = alsaaudio.PCM(
+        type=alsaaudio.PCM_CAPTURE,
+        mode=alsaaudio.PCM_NORMAL,
+        rate=RATE, channels=CHANNELS,
+        format=alsaaudio.PCM_FORMAT_S16_LE,
+        periodsize=CHUNK,
+    )
 
     client_socket, addr = server_socket.accept()
-    print(f"IDE connected from {addr}", flush=True)
-    # The IDE waits for this before enabling the record button: a
-    # listening socket alone does not prove we hold the microphone.
-    client_socket.send("#ready".encode())
 
     while True:
       data = client_socket.recv(1024)
@@ -417,8 +312,8 @@ def audio_stream():
   except CtrlBreakInterrupt:
     print("CtrlBreakInterrupt")
   except Exception as e:
-    print(f"Exception: {e}", flush=True)
-    traceback.print_exc()
+    print("Exception")
+    print(e)
   finally:
     if pcm is not None:
       try: pcm.close()

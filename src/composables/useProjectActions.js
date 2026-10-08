@@ -1,4 +1,5 @@
 import { toast } from 'vue3-toastify'
+import { writePinToKMV } from '@/store/simulator'
 
 export function useProjectActions({
   workspaceStore,
@@ -11,6 +12,16 @@ export function useProjectActions({
 }) {
   const createdProject = async projectInfo => {
     try {
+      const boardVal = (projectInfo?.board === 'kidbright-mai-plus') ? 2 : 1
+      try {
+        localStorage.setItem('kmv_board_type', String(boardVal))
+        sessionStorage.setItem('kmv_board_type', String(boardVal))
+      } catch (e) {}
+
+      try {
+        writePinToKMV('BOARD', String(boardVal))
+      } catch (e) {}
+
       const res = await workspaceStore.createNewProject(projectInfo)
       if (res) {
         toast.success('สร้างโปรเจคเสร็จเรียบร้อย')
