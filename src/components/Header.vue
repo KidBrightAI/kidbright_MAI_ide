@@ -1,5 +1,6 @@
 <script setup>
 import Kbbtn from "@/components/buttons/kbbtn.vue"
+import LanguageSwitcher from "@/components/LanguageSwitcher.vue"
 
 import simulatorIcon from "@/assets/images/icons/btn_KMV.png"//Simulator add
 
@@ -235,6 +236,8 @@ watch(() => workspaceStore.name, val => {
         />
       </template>
     </VTooltip>
+
+    <LanguageSwitcher />
 
     <div class="d-flex flex-column align-center">
       <span class="text-title text-white me-2">Version 1.2.5</span>

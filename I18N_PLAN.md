@@ -6,7 +6,7 @@
 
 | เฟส | สถานะ | หมายเหตุ |
 |---|---|---|
-| 0 โครงสร้างพื้นฐาน | กำลังทำ เริ่ม 2026-10-09 | branch `feat/i18n-phase0` |
+| 0 โครงสร้างพื้นฐาน | เสร็จ 2026-10-09 รอ merge | branch `feat/i18n-phase0` ทดสอบสลับภาษาใน browser แล้ว |
 | 1 เปลือกหลักของ IDE | ยังไม่เริ่ม | |
 | 2 หน้า Capture / Annotate / Train | ยังไม่เริ่ม | |
 | 3 Blockly | ยังไม่เริ่ม | รอคำตอบว่าจะแปล block หรือไม่ |
@@ -123,14 +123,21 @@ metadata ของบอร์ด plugin และ extension
 
 รายการตรวจของเฟส 0
 
-- [ ] `src/plugins/i18n.js` และ `app.use(i18n)` ใน `main.js`
-- [ ] `src/locales/th.json` และ `en.json` พร้อม key ชุดแรกที่ปุ่มสลับภาษาใช้
-- [ ] ปุ่มสลับภาษาใน Header ข้าง Version เลือกแล้วจำค่าและ reload
-- [ ] `Blockly.setLocale` ตามภาษาก่อน block ทุกชุดถูกนิยาม
-- [ ] Vuetify ใช้ `createVueI18nAdapter`
-- [ ] `document.documentElement.lang` ตามภาษา
-- [ ] `scripts/i18n-check.mjs` และ `npm run i18n:check`
-- [ ] build ผ่าน และทดสอบสลับภาษาใน browser แล้ว block มาตรฐานของ Blockly เปลี่ยนภาษา
+- [x] `src/plugins/i18n.js` และ `app.use(i18n)` ใน `main.js`
+- [x] `src/locales/th.json` และ `en.json` พร้อม key ชุดแรกที่ปุ่มสลับภาษาใช้
+- [x] ปุ่มสลับภาษาใน Header ข้าง Version เลือกแล้วจำค่าและ reload
+- [x] `Blockly.setLocale` ตามภาษาก่อน block ทุกชุดถูกนิยาม
+- [x] Vuetify ใช้ `createVueI18nAdapter`
+- [x] `document.documentElement.lang` ตามภาษา
+- [x] `scripts/i18n-check.mjs` และ `npm run i18n:check`
+- [x] build ผ่าน และทดสอบสลับภาษาใน browser แล้ว block มาตรฐานของ Blockly เปลี่ยนภาษา
+
+บันทึกจากการทำเฟส 0
+
+- ตัวเลือกภาษาในเมนูแสดงชื่อภาษาในตัวอักษรของภาษานั้นเอง (ไทย, English) และไม่ถูกแปล
+- `blockly/msg/th` เป็น UMD ใช้ `import BlocklyMsgTh from 'blockly/msg/th'` แบบ default import แล้วส่งให้ `Blockly.setLocale` ได้ทั้งใน dev และ build
+- การสลับภาษาทดสอบผ่าน `vite preview` ด้วย browser จริง: เลือกไทยแล้วหน้า reload, `html lang` เป็น th, block ใน Logic แสดง "ถ้า / ทำ / นอกเหนือจากนี้" และหัวเมนูเป็น "ภาษา"
+- `npm run i18n:check` ในโหมดรายงานนับอักษรไทยนอก locale ได้ 354 บรรทัดใน 57 ไฟล์ ซึ่งคือปริมาณงานของเฟส 1 ถึง 4 รวมทั้งคอมเมนต์ภาษาไทยใน `src/store/simulator.js`
 
 ## คำถามที่รอตัดสินใจ
 
