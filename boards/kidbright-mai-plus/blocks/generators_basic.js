@@ -50,8 +50,8 @@ python.pythonGenerator.forBlock['display_draw_string'] = function (block, genera
   if (!generator.definitions_['init_display']) generator.definitions_['init_display'] = 'disp = display.Display()'
 
   var value_text = generator.valueToCode(block, 'text', python.Order.NONE) || '""'
-  var value_x = generator.valueToCode(block, 'x', python.Order.ATOMIC) || '0'
-  var value_y = generator.valueToCode(block, 'y', python.Order.ATOMIC) || '0'
+  var value_x = generator.valueToCode(block, 'x', python.Order.NONE) || '0'
+  var value_y = generator.valueToCode(block, 'y', python.Order.NONE) || '0'
   var colour_color = block.getFieldValue('color') || '#ff0000'
   var value_scale = generator.valueToCode(block, 'scale', python.Order.ATOMIC) || "1"
 
@@ -62,8 +62,12 @@ python.pythonGenerator.forBlock['display_draw_string'] = function (block, genera
   var color_idx = COLOUR_PALETTE_70.indexOf(colour_color.toLowerCase()) + 1
   if (color_idx <= 0) color_idx = 10
 
-  // Create a new image to draw on and show, similar to V3 behavior
-  return `try:\n  import js\n  if hasattr(js, 'writePinToKMV'):\n    js.writePinToKMV('DRAW_TEXT', '1,%s,%s,%s,%s,%s' % (str(${value_text}), str(${value_x}), str(${value_y}), '${color_idx}', str(${value_scale})))\nexcept Exception:\n  pass\n_display_text_image = image.Image(disp.width(), disp.height())\n_display_text_image.draw_string(${value_x}, ${value_y}, str(${value_text}), scale=${value_scale}, color=image.Color.from_rgb(${r}, ${g}, ${b}))\ndisp.show(_display_text_image)\n`
+  // Create a new image to draw on and show, similar to V3 behavior.
+  // maix.image.draw_string only accepts int coordinates (pybind11 refuses
+  // floats with "incompatible function arguments"), and any division in
+  // a Blockly expression yields a float in Python 3, e.g. the centre of a
+  // detected object. int() keeps such programs from stopping mid-run.
+  return `try:\n  import js\n  if hasattr(js, 'writePinToKMV'):\n    js.writePinToKMV('DRAW_TEXT', '1,%s,%s,%s,%s,%s' % (str(${value_text}), str(${value_x}), str(${value_y}), '${color_idx}', str(${value_scale})))\nexcept Exception:\n  pass\n_display_text_image = image.Image(disp.width(), disp.height())\n_display_text_image.draw_string(int(${value_x}), int(${value_y}), str(${value_text}), scale=${value_scale}, color=image.Color.from_rgb(${r}, ${g}, ${b}))\ndisp.show(_display_text_image)\n`
 }
 
 python.pythonGenerator.forBlock['main_forever'] = function (block, generator) {
