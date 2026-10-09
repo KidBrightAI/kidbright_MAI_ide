@@ -4,9 +4,11 @@ import { useBoardStore } from "@/store/board"
 import { useWorkspaceStore } from "@/store/workspace"
 import { toast } from "vue3-toastify"
 import { Command, packMessage } from "@/engine/helper"
+import { useI18n } from "vue-i18n"
 
 const boardStore = useBoardStore()
 const workspaceStore = useWorkspaceStore()
+const { t } = useI18n()
 const status = ref("disconnected")
 const handler = ref(null)
 const imageUrl = ref(null)
@@ -31,7 +33,7 @@ const start = async () => {
   const success = await handler.value.connect(workspaceStore.currentBoard)
   if (!success) {
     status.value = "disconnected"
-    toast.error("ไม่สามารถเชื่อมต่อ WebSocket ได้")
+    toast.error(t("capture.camera.websocketFailed"))
   }
 
   // //run script 
@@ -130,7 +132,7 @@ defineExpose({
     class="w-100 d-flex text-white align-center justify-center"
     style="height: 200px;"
   >
-    <span v-if="status == 'disconnected'">กรุณาเชื่อมต่ออุปกรณ์</span>
+    <span v-if="status == 'disconnected'">{{ $t('capture.camera.connectDevice') }}</span>
     <VProgressCircular
       v-if="status == 'connecting'"
       :width="7"

@@ -46,3 +46,10 @@
 
 ## 5. การใช้ความรู้จาก Knowledge Base
 ทุกครั้งที่พบปัญหาที่น่าสงสัย หรือต้องการอ้างอิงลอจิกการทำงานเชิงลึกของโปรเจค ให้ตรวจสอบและดูที่ไฟล์ **Knowledge.md** ประกอบการวิเคราะห์เสมอ
+
+## 6. ข้อความที่ผู้ใช้มองเห็นต้องผ่านระบบสองภาษา
+- ห้ามเขียนข้อความไทยหรืออังกฤษที่ผู้ใช้มองเห็นลงใน template, toast, dialog, block หรือ metadata ตรง ๆ ให้ใส่ key ใน `src/locales/th/*.json` และ `src/locales/en/*.json` พร้อมกันทั้งสองภาษา แล้วเรียกผ่าน `$t('ns.key')` ใน template, `useI18n()` ใน `<script setup>` หรือ `import { t } from '@/plugins/i18n'` ในโมดูล JS
+- ข้อความบน block ของ Blockly อยู่ใน `boards/<id>/locales/{th,en}.json`, `plugins/<id>/locales/{th,en}.json` หรือ `src/blocks/locales/{th,en}.json` และอ้างด้วย `%{BKY_KB_...}`
+- metadata ของบอร์ด plugin และ extension ที่แสดงผล เช่น `description`, `title` เขียนเป็น `{ th, en }` แล้วอ่านผ่าน `localized()`
+- รัน `npm run i18n:check -- --strict` ก่อน commit ทุกครั้ง CI รันคำสั่งเดียวกันก่อน build และจะล้มถ้ามี key ขาด key ซ้ำ reference ของ Blockly ที่ไม่มีคำแปล หรือข้อความไทยนอกไฟล์ locale
+- รายละเอียดการตั้งชื่อ key, glossary และสถานะแต่ละเฟสอยู่ใน **I18N_PLAN.md**

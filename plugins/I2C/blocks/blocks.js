@@ -1,7 +1,7 @@
 Blockly.defineBlocksWithJsonArray([
   {
     "type": "pylibi2c_init",
-    "message0": "Initial I2C device  %1 address %2",
+    "message0": "%{BKY_KB_PLUGIN_I2C_PYLIBI2C_INIT}",
     "args0": [
       {
         "type": "field_dropdown",
@@ -38,7 +38,7 @@ Blockly.defineBlocksWithJsonArray([
   },
   {
     "type": "pylibi2c_write",
-    "message0": "I2C device  %1 internal addr %2 write data %3",
+    "message0": "%{BKY_KB_PLUGIN_I2C_PYLIBI2C_WRITE}",
     "args0": [
       {
         "type": "input_value",
@@ -64,7 +64,7 @@ Blockly.defineBlocksWithJsonArray([
   },
   {
     "type": "pylibi2c_read",
-    "message0": "I2C device  %1 internal addr %2 read data # %3 byte(s)",
+    "message0": "%{BKY_KB_PLUGIN_I2C_PYLIBI2C_READ}",
     "args0": [
       {
         "type": "input_value",

@@ -1,6 +1,9 @@
 export default {
   name: "I2C",    
-  description: "I2C raw data read and write via pylibi2c",
+  description: {
+    en: "I2C raw data read and write via pylibi2c",
+    th: "อ่านและเขียนข้อมูลดิบผ่าน I2C ด้วย pylibi2c",
+  },
   category: "Communication",
   author: "comdet",
   version: "1.0.0",

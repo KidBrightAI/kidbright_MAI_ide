@@ -260,7 +260,7 @@ function humanSize(bytes) {
       mdi-developer-board
     </VIcon>
     <p class="text-body-2 text-grey-darken-1 mt-3">
-      {{ boardStore.connected ? "บอร์ดรุ่นนี้ไม่รองรับการเรียกดูไฟล์" : "กรุณาเชื่อมต่อบอร์ดก่อน" }}
+      {{ boardStore.connected ? $t('capture.boardImagePicker.fileBrowserUnsupported') : $t('capture.boardImagePicker.connectBoardFirst') }}
     </p>
   </div>
   <div v-else>
@@ -270,7 +270,7 @@ function humanSize(bytes) {
       flat
     >
       <VBtn
-        v-tooltip:bottom="'ขึ้นหนึ่งระดับ'"
+        v-tooltip:bottom="$t('capture.boardImagePicker.goUp')"
         icon="mdi-arrow-up"
         variant="text"
         color="white"
@@ -278,7 +278,7 @@ function humanSize(bytes) {
         @click="goUp"
       />
       <VBtn
-        v-tooltip:bottom="'รีเฟรช'"
+        v-tooltip:bottom="$t('common.refresh')"
         icon="mdi-refresh"
         variant="text"
         color="white"
@@ -313,13 +313,13 @@ function humanSize(bytes) {
         class="me-1"
       >
         <VBtn
-          v-tooltip:bottom="'มุมมองรายการ'"
+          v-tooltip:bottom="$t('capture.boardImagePicker.listView')"
           value="list"
           icon="mdi-view-list"
           size="small"
         />
         <VBtn
-          v-tooltip:bottom="'มุมมองภาพย่อ'"
+          v-tooltip:bottom="$t('capture.boardImagePicker.gridView')"
           value="grid"
           icon="mdi-view-grid"
           size="small"
@@ -345,7 +345,7 @@ function humanSize(bytes) {
           mdi-image-off-outline
         </VIcon>
         <div class="text-body-2 text-grey-darken-1 mt-2">
-          ไม่พบไฟล์ในโฟลเดอร์นี้
+          {{ $t('capture.boardImagePicker.emptyFolder') }}
         </div>
       </div>
 
@@ -467,11 +467,11 @@ function humanSize(bytes) {
         :disabled="!boardFilesInDir.length"
         @click="selectAllInDir"
       >
-        เลือกทั้งหมดในโฟลเดอร์
+        {{ $t('capture.boardImagePicker.selectAllInFolder') }}
       </VBtn>
       <VSpacer />
       <span class="text-body-2 text-grey-darken-1 me-2">
-        เลือกแล้ว {{ selectedSet.size }} รายการ
+        {{ $t('capture.boardImagePicker.selectedCount', { count: selectedSet.size }) }}
       </span>
       <VBtn
         v-if="selectedSet.size"
@@ -480,7 +480,7 @@ function humanSize(bytes) {
         color="grey-darken-1"
         @click="clearSelection"
       >
-        ล้าง
+        {{ $t('capture.boardImagePicker.clearSelection') }}
       </VBtn>
     </div>
   </div>

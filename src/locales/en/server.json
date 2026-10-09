@@ -1,0 +1,6 @@
+{
+  "trainSuccess": "Model trained successfully",
+  "trainCancelled": "Training cancelled",
+  "modelDownloaded": "Model downloaded successfully",
+  "convertFailed": "Model conversion failed"
+}

@@ -1,7 +1,10 @@
 export default {
   id: "kidbright-mai-plus",
   name: "KidBright uAI plus",
-  description: "บอร์ดสมองกลเพื่อการเรียนรู้ปัญญาประดิษฐ์",
+  description: {
+    th: "บอร์ดสมองกลเพื่อการเรียนรู้ปัญญาประดิษฐ์",
+    en: "A microcontroller board for learning artificial intelligence",
+  },
   wsUrl: "ws://10.155.55.1:7899",
   wsShell: "wss://10.155.55.1:5050",
   pictureDir: "/maixapp/share/picture/",
@@ -30,7 +33,7 @@ export default {
   managedScripts: [
     { name: "ws_shell.py",     version: "1.3.0", dest: "/root/ws_shell.py",             needsReboot: true  },
     { name: "maix_stream.py",  version: "1.1.0", dest: "/root/maix_stream.py",          needsReboot: true  },
-    { name: "voice_stream.py", version: "1.0.0", dest: "/root/scripts/voice_stream.py", needsReboot: false },
+    { name: "voice_stream.py", version: "1.1.0", dest: "/root/scripts/voice_stream.py", needsReboot: false },
     { name: "S99ws_shell",     version: "1.0.0", dest: "/etc/init.d/S99ws_shell",       needsReboot: true  },
   ],
   blocks: [

@@ -4,10 +4,13 @@ import { useBoardStore } from "@/store/board"
 import { onMounted } from "vue"
 import { useConfirm } from "@/components/comfirm-dialog"
 import { toast } from "vue3-toastify"
+import { useI18n } from "vue-i18n"
 
 const isDialogVisible = defineModel('isDialogVisible', { type: Boolean, default: false })
 
 
+
+const { t } = useI18n()
 
 const boardStore = useBoardStore()
 const confirm = useConfirm()
@@ -26,10 +29,10 @@ const connectWifi = async() => {
   if (isValid) {
     let res = await boardStore.connectWifi(selectedSSID.value, password.value)
     if(res){
-      toast.success("เชื่อมต่อ WiFi สำเร็จ")
+      toast.success(t('dialog.connectWifi.connected'))
       isDialogVisible.value = false
     }else if(res === false){
-      toast.error("เกิดข้อผิดพลาดในการเชื่อมต่อ WiFi")
+      toast.error(t('dialog.connectWifi.connectFailed'))
     }
   }
 }
@@ -61,7 +64,7 @@ watch(isDialogVisible, async val=>{
       :disabled="boardStore.wifiConnecting || boardStore.wifiListing"
     >
       <VToolbar density="compact">
-        <VToolbarTitle>เชื่อมต่อ WiFi</VToolbarTitle>
+        <VToolbarTitle>{{ $t('dialog.connectWifi.title') }}</VToolbarTitle>
         <VSpacer /> 
         <VBtn
           icon
@@ -78,7 +81,7 @@ watch(isDialogVisible, async val=>{
               <VSelect
                 v-model="selectedSSID"
                 :items="ssid"
-                label="เลือก WiFi"
+                :label="$t('dialog.connectWifi.network')"
                 item-title="ssid"
                 item-value="ssid"
                 outlined
@@ -88,7 +91,7 @@ watch(isDialogVisible, async val=>{
             <VCol cols="12">
               <VTextField
                 v-model="password"
-                label="รหัสผ่าน WiFi"
+                :label="$t('dialog.connectWifi.password')"
                 outlined
                 required
               />
@@ -104,7 +107,7 @@ watch(isDialogVisible, async val=>{
           variant="elevated"
           @click="connectWifi"
         >
-          เชื่อมต่อ WiFi
+          {{ $t('dialog.connectWifi.connect') }}
         </VBtn>
       </VCardActions>
     </VCard>

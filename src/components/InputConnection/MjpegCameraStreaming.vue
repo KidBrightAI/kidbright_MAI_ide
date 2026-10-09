@@ -11,7 +11,7 @@
       ref="imgElement"
       :src="computedUrl"
       crossorigin="anonymous"
-      alt="Camera Stream"
+      :alt="$t('capture.camera.cameraStream')"
       @error="onError"
       @load="onLoad"
     >

@@ -35,10 +35,10 @@ const resetForm = () => {
         @click="resetForm"
       />
       <VCardTitle class="text-h5 text-center">
-        Board Example
+        {{ $t('dialog.example.title') }}
       </VCardTitle>
       <VCardSubtitle class="text-center mb-8">
-        Select example to load
+        {{ $t('dialog.example.subtitle') }}
       </VCardSubtitle>
       <VCardItem>        
         <div class="text-subtitle-2 mb-3 ml-2">
@@ -58,14 +58,14 @@ const resetForm = () => {
                   color="primary"
                   @click="emit('loadExample','block', example)"
                 >
-                  Open Block
+                  {{ $t('dialog.example.openBlock') }}
                 </VBtn>
                 <VBtn
                   class="mx-2 my-3"
                   color="primary"
                   @click="emit('loadExample','code', example)"
                 >
-                  Open Code
+                  {{ $t('dialog.example.openCode') }}
                 </VBtn>
               </div>
             </VExpansionPanelText>

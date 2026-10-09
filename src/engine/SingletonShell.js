@@ -6,6 +6,7 @@ import {
   WritableStream,
 } from "@yume-chan/stream-extra"
 import { encodeUtf8 } from "@yume-chan/adb"
+import { t } from "@/plugins/i18n"
 
 /**
  * Process-scoped wrapper around the device's interactive shell.
@@ -77,7 +78,7 @@ export default class SingletonShell {
         if (this._instance?.writer) return resolve()
         await sleep(1000)
       }
-      reject(new Error("shell is not ready"))
+      reject(new Error(t("board.shellNotReady")))
     })
   }
 

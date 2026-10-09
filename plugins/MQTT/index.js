@@ -1,6 +1,9 @@
 export default {
   name: "MQTT",    
-  description: "MQTT Plugin for connecting to MQTT broker and publish/subscribe messages.",
+  description: {
+    en: "MQTT Plugin for connecting to MQTT broker and publish/subscribe messages.",
+    th: "ปลั๊กอิน MQTT สำหรับเชื่อมต่อ MQTT broker และรับส่งข้อความแบบ publish/subscribe",
+  },
   category: "Communication",    
   author: "comdet",
   version: "1.0.0",

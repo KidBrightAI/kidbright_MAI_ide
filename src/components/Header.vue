@@ -1,5 +1,6 @@
 <script setup>
 import Kbbtn from "@/components/buttons/kbbtn.vue"
+import LanguageSwitcher from "@/components/LanguageSwitcher.vue"
 
 import simulatorIcon from "@/assets/images/icons/btn_KMV.png"//Simulator add
 
@@ -32,9 +33,12 @@ import kblogo from "@/assets/kblogo_white.png"
 import { useWorkspaceStore } from "@/store/workspace"
 import { useBoardStore } from "@/store/board"
 import {toast} from "vue3-toastify"
+import { useI18n } from "vue-i18n"
+import { version as appVersion } from "../../package.json"
 
 const emit = defineEmits(["serial","example", "help", "firmware", "extraSave","plugin","download","stop","newProject","openProject","saveProject","connectBoard","disconnectBoard","fileBrowser","connectWifi","newModel" ,"openKMV"])
 console.log("Header setup running")
+const { t } = useI18n()
 const workspaceStore = useWorkspaceStore()
 const boardStore = useBoardStore()
 const projectName = ref(workspaceStore.name)
@@ -44,8 +48,8 @@ const loading = ref(false)
 // otherwise. v-tooltip directive accepts plain strings, so the
 // formatter has to resolve to a single line.
 const wifiTooltip = computed(() => {
-  if (!boardStore.wifiConnected) return "เชื่อมต่อ WiFi"
-  const parts = [boardStore.wifiSsid || "WiFi connected"]
+  if (!boardStore.wifiConnected) return t("header.connectWifi")
+  const parts = [boardStore.wifiSsid || t("header.wifiConnected")]
   if (boardStore.wifiIp) parts.push(boardStore.wifiIp)
   return parts.join(" · ")
 })
@@ -55,7 +59,7 @@ const saveProjetName = () => {
   setTimeout(() => {
     workspaceStore.name = projectName.value
     loading.value = false
-    toast.success("Project name saved")
+    toast.success(t("header.projectNameSaved"))
   }, 2000)
 }
 
@@ -86,7 +90,7 @@ watch(() => workspaceStore.name, val => {
     </div>
     <VSpacer />
     <!-- Simulator add (start) -->
-    <VTooltip text="Upload to Simulator (KMV)">
+    <VTooltip :text="$t('header.uploadToSimulator')">
       <template #activator="{ props }">
         <Kbbtn 
           class="mx-1" 
@@ -98,7 +102,7 @@ watch(() => workspaceStore.name, val => {
       </template>
     </VTooltip>
     <!-- Simulator add (end) -->
-    <VTooltip :text="boardStore.isBoardConnected ? 'Disconnect Board' : 'Connect Board'">
+    <VTooltip :text="boardStore.isBoardConnected ? $t('header.disconnectBoard') : $t('header.connectBoard')">
       <template #activator="{ props }">
         <Kbbtn
           class="mx-1"
@@ -130,16 +134,16 @@ watch(() => workspaceStore.name, val => {
           @click="(ev) => boardStore.running ? $emit('stop') : $emit('download', ev)"
         />
       </template>
-      <div v-if="boardStore.running">หยุดโปรแกรมที่กำลังทำงาน</div>
+      <div v-if="boardStore.running">{{ $t('header.stopProgram') }}</div>
       <template v-else>
-        <div>อัปโหลดโค้ดและรันบนบอร์ด</div>
+        <div>{{ $t('header.uploadAndRun') }}</div>
         <div v-if="workspaceStore.currentBoard?.appTemplate" class="text-caption mt-1">
-          กด Ctrl ค้างขณะคลิกเพื่อติดตั้งเป็นแอปพลิเคชัน
+          {{ $t('header.ctrlClickDeployApp') }}
         </div>
       </template>
     </VTooltip>
 
-    <VTooltip text="File Browser">
+    <VTooltip :text="$t('header.fileBrowser')">
       <template #activator="{ props }">
         <Kbbtn
           class="mx-1"
@@ -167,7 +171,7 @@ watch(() => workspaceStore.name, val => {
       </template>
     </VTooltip>
 
-    <VTooltip text="AI Model">
+    <VTooltip :text="$t('header.aiModel')">
       <template #activator="{ props }">
         <Kbbtn 
           class="mx-1" 
@@ -182,7 +186,7 @@ watch(() => workspaceStore.name, val => {
       </template>
     </VTooltip>
 
-    <VTooltip text="Plugins">
+    <VTooltip :text="$t('header.plugins')">
       <template #activator="{ props }">
         <Kbbtn
           class="mx-1"
@@ -200,7 +204,7 @@ watch(() => workspaceStore.name, val => {
       class="mx-2"
     />
 
-    <VTooltip text="New Project">
+    <VTooltip :text="$t('header.newProject')">
       <template #activator="{ props }">
         <Kbbtn
           class="mx-1"
@@ -212,7 +216,7 @@ watch(() => workspaceStore.name, val => {
       </template>
     </VTooltip>
 
-    <VTooltip text="Open Project">
+    <VTooltip :text="$t('header.openProject')">
       <template #activator="{ props }">
         <Kbbtn
           class="mx-1"
@@ -224,7 +228,7 @@ watch(() => workspaceStore.name, val => {
       </template>
     </VTooltip>
 
-    <VTooltip text="Save Project">
+    <VTooltip :text="$t('header.saveProject')">
       <template #activator="{ props }">
         <Kbbtn
           class="mx-1 me-5"
@@ -236,8 +240,10 @@ watch(() => workspaceStore.name, val => {
       </template>
     </VTooltip>
 
+    <LanguageSwitcher />
+
     <div class="d-flex flex-column align-center">
-      <span class="text-title text-white me-2">Version 1.2.5</span>
+      <span class="text-title text-white me-2">{{ $t('common.version') }} {{ appVersion }}</span>
     </div>
 
     <!--

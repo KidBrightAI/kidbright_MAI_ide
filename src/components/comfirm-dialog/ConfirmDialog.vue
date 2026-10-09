@@ -1,12 +1,13 @@
 <script setup>
 import { computed, inject, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ConfirmDialogKey } from './utils'
 
 const props = defineProps({
   title: {
     type: String,
     required: false,
-    default: 'Are you sure?',
+    default: undefined,
   },
   content: {
     type: String,
@@ -26,12 +27,12 @@ const props = defineProps({
   confirmationText: {
     type: String,
     required: false,
-    default: 'Ok',
+    default: undefined,
   },
   cancellationText: {
     type: String,
     required: false,
-    default: 'Cancel',
+    default: undefined,
   },
   dialogProps: {
     type: Object,
@@ -83,6 +84,13 @@ const props = defineProps({
 })
 
 const dialog = inject(ConfirmDialogKey)
+const { t } = useI18n()
+
+// Prop defaults cannot call useI18n(), so the English defaults became
+// locale-aware fallbacks here; a text passed by the caller still wins.
+const finalTitle = computed(() => props.title ?? t('dialog.confirm.title'))
+const finalConfirmationText = computed(() => props.confirmationText ?? t('common.ok'))
+const finalCancellationText = computed(() => props.cancellationText ?? t('common.cancel'))
 const isOpen = ref(true)
 const textFieldInput = ref(null)
 const textField = ref('')
@@ -125,7 +133,7 @@ const finalDialogProps = computed(() => {
     >
       <VCard v-bind="cardProps">
         <VCardTitle v-bind="cardTitleProps">
-          {{ title }}
+          {{ finalTitle }}
         </VCardTitle>
         <VCardText v-bind="cardTextProps">
           <template v-if="confirmationKeyword">
@@ -146,7 +154,7 @@ const finalDialogProps = computed(() => {
             v-bind="cancellationButtonProps"
             @click="cancel"
           >
-            {{ cancellationText }}
+            {{ finalCancellationText }}
           </VBtn>
           <VBtn
             color="primary"
@@ -154,7 +162,7 @@ const finalDialogProps = computed(() => {
             v-bind="confirmationButtonProps"
             @click="confirm"
           >
-            {{ confirmationText }}
+            {{ finalConfirmationText }}
           </VBtn>
         </VCardActions>
       </VCard>

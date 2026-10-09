@@ -1,0 +1,20 @@
+{
+  "shared": {
+    "messageLog": "บันทึกข้อความ",
+    "accuracy": "ความแม่นยำ",
+    "loss": "ค่า loss",
+    "colabNotConnected": "กรุณาเชื่อมต่อ Google Colab ก่อน"
+  },
+  "chart": {
+    "accuracySeries": "ความแม่นยำ {'|'} mAP",
+    "lossSeries": "ค่า loss"
+  },
+  "toolbar": {
+    "converting": "กำลังแปลงโมเดล",
+    "downloading": "กำลังดาวน์โหลด {done}/{total}",
+    "tunnelUrlPlaceholder": "วาง TUNNEL URL ที่นี่ ...",
+    "train": "เทรน",
+    "terminate": "หยุดเทรน",
+    "test": "ทดสอบ"
+  }
+}

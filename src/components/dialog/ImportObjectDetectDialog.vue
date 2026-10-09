@@ -8,6 +8,7 @@ import { useBoardStore } from "@/store/board"
 import { toast } from "vue3-toastify"
 import JSZip from "jszip"
 import { useConfirm } from "@/components/comfirm-dialog"
+import { useI18n } from "vue-i18n"
 
 const isDialogVisible = defineModel('isDialogVisible', { type: Boolean, default: false })
 
@@ -15,6 +16,7 @@ const datasetStore = useDatasetStore()
 const workspaceStore = useWorkspaceStore()
 const boardStore = useBoardStore()
 const confirm = useConfirm()
+const { t } = useI18n()
 
 const files = ref([])
 const xmlfiles = ref([])
@@ -66,9 +68,9 @@ const importFromBoard = async e=>{
   })
   step.value = 3
   if (result.failures > 0) {
-    toast.warning(`นำเข้าข้อมูลสำเร็จเพียงบางส่วน ดาวน์โหลดไม่สำเร็จจำนวน ${result.failures} ไฟล์`)
+    toast.warning(t("dialog.importObjectDetect.partialSuccess", { count: result.failures }))
   } else {
-    toast.success("นำเข้าข้อมูลสำเร็จ")
+    toast.success(t("dialog.importObjectDetect.success"))
   }
 }
 const importOnlyImage = async e=>{
@@ -93,7 +95,7 @@ const importOnlyImage = async e=>{
       percentage.value= Math.round(progress.value/files.value.length*100)
     }
     step.value = 3
-    toast.success("นำเข้าข้อมูลสำเร็จ")
+    toast.success(t("dialog.importObjectDetect.success"))
     datasetStore.addDatasetItems(dataset)
   }else if(step.value == 3){
     //import success 
@@ -109,7 +111,7 @@ const importKidBrightProject = async e=>{
     let labels = []
     let zipfiles = kidBrightProjectZipFile.value
     if(zipfiles.length == 0){
-      toast.error("กรุณาเลือกไฟล์ .zip ของโปรเจค KidBright AI IDE")
+      toast.error(t("dialog.importObjectDetect.zipRequired"))
       
       return
     }
@@ -123,10 +125,10 @@ const importKidBrightProject = async e=>{
     let project = JSON.parse(await projectFile.async("text"))
     if(project?.project?.project?.extension?.id == "IMAGE_CLASSIFICATION"){
       try{
-        await confirm({ title: "โปรเจคนี้เป็นโปรเจคประเภทการจำแนกรูปภาพ", content: `การนำเข้าจะทำได้เฉพาะรูปภาพอย่างเดียว`, dialogProps: { width: 'auto' } })
+        await confirm({ title: t("dialog.importObjectDetect.classifyProjectTitle"), content: t("dialog.importObjectDetect.classifyProjectContent"), dialogProps: { width: 'auto' } })
         let datasetFiles = project.dataset?.dataset?.data
         if(!datasetFiles){
-          toast.error("ไม่พบไฟล์รูปภาพในโปรเจค")
+          toast.error(t("dialog.importObjectDetect.noImagesInProject"))
           
           return
         }
@@ -153,7 +155,7 @@ const importKidBrightProject = async e=>{
           percentage.value= Math.round(progress.value/datasetFiles.length*100)
         }
         step.value = 3
-        toast.success("นำเข้าข้อมูลสำเร็จ")
+        toast.success(t("dialog.importObjectDetect.success"))
         datasetStore.addDatasetItems(dataset)
         labels.forEach(label=>{
           workspaceStore.addLabel({label : label})
@@ -164,7 +166,7 @@ const importKidBrightProject = async e=>{
         return        
       }
     }else if(project?.project?.project?.extension?.id != "OBJECT_DETECTION"){
-      toast.error("โปรเจคนี้ไม่ใช่โปรเจคที่ใช้ในการตรวจจับวัตถุ")
+      toast.error(t("dialog.importObjectDetect.notObjectDetectProject"))
       
       return
     }
@@ -172,7 +174,7 @@ const importKidBrightProject = async e=>{
     //import for object detection
     let datasetFiles = project.dataset?.dataset?.data
     if(!datasetFiles){
-      toast.error("ไม่พบไฟล์รูปภาพในโปรเจค")
+      toast.error(t("dialog.importObjectDetect.noImagesInProject"))
       
       return
     }
@@ -201,7 +203,7 @@ const importKidBrightProject = async e=>{
       percentage.value= Math.round(progress.value/datasetFiles.length*100)
     }
     step.value = 3
-    toast.success("นำเข้าข้อมูลสำเร็จ")
+    toast.success(t("dialog.importObjectDetect.success"))
     datasetStore.addDatasetItems(dataset2)
     labels2.forEach(label=>{
       workspaceStore.addLabel({label : label})
@@ -216,7 +218,7 @@ const importPascalVOC = async e=>{
 
   //check image and xml files match 
   if(files.value.length != xmlfiles.value.length){
-    toast.error("จำนวนไฟล์รูปภาพ และไฟล์ XML Annotation ไม่ตรงกัน")
+    toast.error(t("dialog.importObjectDetect.xmlCountMismatch"))
     
     return
   }
@@ -287,7 +289,7 @@ const importPascalVOC = async e=>{
       //await this.delay(100);
     }
     step.value = 3
-    toast.success("นำเข้าข้อมูลสำเร็จ")
+    toast.success(t("dialog.importObjectDetect.success"))
     datasetStore.addDatasetItems(dataset)
     labels.forEach(label=>{
       workspaceStore.addLabel({label : label})
@@ -321,7 +323,7 @@ const tab = ref("PASCAL VOL")
   >
     <VCard :width="$vuetify.display.smAndDown ? 'auto' : 640">
       <VCardTitle class="bg-primary d-flex flex-row">
-        นำเข้ารูปภาพ
+        {{ $t('dialog.importObjectDetect.title') }}
         <VSpacer />
         <VBtn
           density="compact"
@@ -346,7 +348,7 @@ const tab = ref("PASCAL VOL")
               grow
             >
               <VTab value="IMAGE">
-                <span>IMPORT IMAGE</span>
+                <span>{{ $t('dialog.importObjectDetect.tabImage') }}</span>
               </VTab>
               <VTab value="PASCAL_VOC">
                 <span>PASCAL VOC</span>
@@ -361,7 +363,7 @@ const tab = ref("PASCAL VOL")
                 <VIcon start>
                   mdi-developer-board
                 </VIcon>
-                <span>BOARD</span>
+                <span>{{ $t('common.board') }}</span>
               </VTab>
             </VTabs>
             <VWindow v-model="tab">
@@ -374,13 +376,13 @@ const tab = ref("PASCAL VOL")
                     cols="12"
                     class="text-center"
                   >     
-                    <span class="text-title px-2 w-100">นำเข้าเฉพาะรูปภาพ</span>
+                    <span class="text-title px-2 w-100">{{ $t('dialog.importObjectDetect.imageOnlyHeading') }}</span>
                   </VCol>
                   <VCol cols="12">                    
                     <VFileInput
                       v-model="files"
                       color="primary"
-                      label="เลือก Folder รูปภาพ"
+                      :label="$t('dialog.importObjectDetect.selectImageFolder')"
                       multiple
                       density="compact"
                       hide-details
@@ -407,7 +409,7 @@ const tab = ref("PASCAL VOL")
                             v-else-if="index === 3"
                             class="text-overline text-grey-darken-3 mx-2"
                           >
-                            +{{ files.length - 3 }} File(s)
+                            {{ $t('dialog.importObjectDetect.moreFiles', { count: files.length - 3 }) }}
                           </span>
                         </template>
                       </template>
@@ -424,7 +426,7 @@ const tab = ref("PASCAL VOL")
                     <VFileInput
                       v-model="files"
                       color="primary"
-                      label="เลือก Folder รูปภาพ"
+                      :label="$t('dialog.importObjectDetect.selectImageFolder')"
                       multiple
                       density="compact"
                       hide-details
@@ -451,7 +453,7 @@ const tab = ref("PASCAL VOL")
                             v-else-if="index === 3"
                             class="text-overline text-grey-darken-3 mx-2"
                           >
-                            +{{ files.length - 3 }} File(s)
+                            {{ $t('dialog.importObjectDetect.moreFiles', { count: files.length - 3 }) }}
                           </span>
                         </template>
                       </template>
@@ -461,7 +463,7 @@ const tab = ref("PASCAL VOL")
                     <VFileInput
                       v-model="xmlfiles"
                       color="primary"
-                      label="เลือก Folder XML Annotation"
+                      :label="$t('dialog.importObjectDetect.selectXmlFolder')"
                       multiple
                       density="compact"
                       counter
@@ -488,7 +490,7 @@ const tab = ref("PASCAL VOL")
                             v-else-if="index === 3"
                             class="text-overline text-grey-darken-3 mx-2"
                           >
-                            +{{ files.length - 3 }} File(s)
+                            {{ $t('dialog.importObjectDetect.moreFiles', { count: files.length - 3 }) }}
                           </span>
                         </template>
                       </template>
@@ -512,12 +514,12 @@ const tab = ref("PASCAL VOL")
                     cols="12"
                     class="text-center"
                   >
-                    <span class="text-title px-2 w-100">นำเข้า Dataset จากโปรเจค KidBright AI IDE</span>
+                    <span class="text-title px-2 w-100">{{ $t('dialog.importObjectDetect.kbaiHeading') }}</span>
                   </VCol>
                   <VCol cols="12">
                     <VFileInput
                       v-model="kidBrightProjectZipFile"
-                      label="เลือกไฟล์ .zip ของโปรเจค KidBright AI IDE"
+                      :label="$t('dialog.importObjectDetect.selectKbaiZip')"
                       density="compact"
                       hide-details
                       color="primary"
@@ -552,14 +554,14 @@ const tab = ref("PASCAL VOL")
             class="my-3 text-center"
             text-black
           >
-            กำลังนำเข้า ...<br> {{ progress }} / {{ totalDivisor || "" }}
+            {{ $t('dialog.importObjectDetect.importing') }}<br> {{ progress }} / {{ totalDivisor || "" }}
           </h4>
           <h4
             v-else-if="step == 3"
             class="my-3"
             text-black
           >
-            นำเข้าสำเร็จ
+            {{ $t('dialog.importObjectDetect.done') }}
           </h4>
         </VProgressCircular>
       </VCardItem>
@@ -571,7 +573,7 @@ const tab = ref("PASCAL VOL")
           variant="flat"
           @click="resetAndClose"
         >
-          ยกเลิก
+          {{ $t('common.cancel') }}
         </VBtn>
         <VBtn
           v-if="step == 1"
@@ -580,7 +582,7 @@ const tab = ref("PASCAL VOL")
           :disabled="!canImport"
           @click="importImages"
         >
-          นำเข้า
+          {{ $t('common.import') }}
         </VBtn>
         <VBtn
           v-if="step == 3"
@@ -588,7 +590,7 @@ const tab = ref("PASCAL VOL")
           variant="flat"
           @click="resetAndClose"
         >
-          ปิด
+          {{ $t('common.close') }}
         </VBtn>
       </VCardActions>
     </VCard>

@@ -85,6 +85,18 @@ editor.registerNodeType(DenseNode, { category: "Layer" })
 editor.registerNodeType(FlattenNode, { category: "Layer" })
 editor.registerNodeType(MaxPooling2DNode, { category: "Layer" })
 
+
+// Saved graphs carry each node's title in whichever language was active
+// when they were saved (baklava persists `title`). Put the current
+// language's title back after every load so the designer follows the
+// switcher like the rest of the IDE.
+const refreshNodeTitles = () => {
+  for (const node of editor.graph.nodes) {
+    const info = editor.nodeTypes.get(node.type)
+    if (info?.title) node.title = info.title
+  }
+}
+
 //props
 
 const resetToDefault = ()=> {  
@@ -93,6 +105,7 @@ const resetToDefault = ()=> {
   //check props.graph is empty object
   if(Object.keys(workspaceStore.defaultGraph).length !== 0){
     editor.load(workspaceStore.defaultGraph)
+    refreshNodeTitles()
   }
 }
 
@@ -131,6 +144,7 @@ const uploadGraph = () => {
       const data = e.target.result
       const graph = JSON.parse(data)
       editor.load(graph)
+      refreshNodeTitles()
     }
     reader.readAsText(file)
   }
@@ -153,9 +167,11 @@ onMounted(async () => {
   if (Object.keys(workspaceStore.graph).length === 0) {
     if(Object.keys(workspaceStore.defaultGraph).length !== 0){
       editor.load(workspaceStore.defaultGraph)
+      refreshNodeTitles()
     }
   } else {
     editor.load(workspaceStore.graph)
+    refreshNodeTitles()
   }
 
   // Re-derive trainConfig from the just-loaded graph. Covers the case
@@ -187,6 +203,7 @@ onMounted(async () => {
 watch(() => workspaceStore.defaultGraph, (newVal, oldVal) => {
   if (Object.keys(newVal).length !== 0) {
     editor.load(newVal)
+    refreshNodeTitles()
   }
 })
 

@@ -1,6 +1,9 @@
 export default {
   name: "I2C uAiP",    
-  description: "I2C raw data for uAI plus",
+  description: {
+    en: "I2C raw data for uAI plus",
+    th: "ข้อมูลดิบ I2C สำหรับ uAI plus",
+  },
   category: "Communication",
   author: "inex",
   version: "1.0.0",

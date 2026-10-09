@@ -1,20 +1,27 @@
+<script setup>
+import { Translation as I18nT } from 'vue-i18n'
+</script>
+
 <template>
   <div class="hint">
     <div class="main-hint txt">
       <p class="p-color font-weight-bold">
-        ขั้นตอนที่ 1 Capture (Object Detection)
+        {{ $t('instructions.object.capture.title') }}
       </p>
       <p>
-        ขั้นตอนนี้เป็นการใช้งานกล้องในการเก็บภาพที่ต้องการ โดยกดปุ่ม
-        <img
-          src="@/assets/images/png/Group_113.png"
-          alt=""
-          srcset=""
+        <I18nT
+          keypath="instructions.object.capture.intro"
+          scope="global"
         >
-        เพื่อถ่ายภาพ 
-        <br> ควรถ่ายภาพวัตถุในมุมต่างๆ ประมาณ 50 ภาพต่อวัตถุหรือมากกว่า
-        และสามารถถ่ายภาพวัตถุหลายชนิดหรือหลายชิ้นในภาพเดียวกันได้ ไม่จำกัดจำนวน 
-        แต่ต้องเห็นขอบเขตลักษณะวัตถุแต่ละชิ้นแยกกันอย่างชัดเจน
+          <template #button>
+            <img
+              src="@/assets/images/png/Group_113.png"
+              alt=""
+              srcset=""
+            >
+          </template>
+        </I18nT>
+        <br> {{ $t('instructions.object.capture.note') }}
       </p>
     </div>
     <div class="mascot">

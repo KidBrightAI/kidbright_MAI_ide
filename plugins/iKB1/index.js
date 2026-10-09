@@ -1,6 +1,9 @@
 export default {
   name: "iKB-1",    
-  description: "Universal I/O board",
+  description: {
+    en: "Universal I/O board",
+    th: "บอร์ดอินพุต/เอาต์พุตอเนกประสงค์",
+  },
   category: "Signal Input/Output",    
   author: "comdet",
   version: "1.0.0",

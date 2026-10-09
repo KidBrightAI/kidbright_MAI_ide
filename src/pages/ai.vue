@@ -5,6 +5,7 @@ import { useBoardStore } from "@/store/board"
 import { usePluginStore } from "@/store/plugin"
 import { useConfirm } from "@/components/comfirm-dialog"
 import { toast } from "vue3-toastify"
+import { useI18n } from "vue-i18n"
 import { onMounted, ref, shallowRef, nextTick , getCurrentInstance } from "vue"
 import { useRoute, useRouter } from 'vue-router'
 
@@ -24,6 +25,7 @@ import RobotPoker from "@/assets/images/png/Mask_Group_12.png"
 import { dialog } from 'blockly'
 
 const confirm = useConfirm()
+const { t } = useI18n()
 const workspaceStore = useWorkspaceStore()
 const boardStore = useBoardStore()
 const pluginStore = usePluginStore()
@@ -40,10 +42,12 @@ const onBackToCoding = async () => {
 
 const onResetModel = async () => {
   try{
-    let message = "ข้อมูลโมเดลปัจจุบันจะถูกลบทั้งหมด คุณต้องการจะเริ่มต้นโมเดลใหม่หรือไม่ ?"
+    let message = t("page.ai.resetModelContent")
     await confirm({
-      title: "ยืนยันการรีเซ็ตโมเดล",
+      title: t("page.ai.resetModelTitle"),
       content : message,
+      confirmationText: t("common.ok"),
+      cancellationText: t("common.cancel"),
       dialogProps: { width: 'auto' },
     })
     workspaceStore.resetProjectType()
@@ -107,7 +111,7 @@ const onResetModel = async () => {
               width="400"
               :src="RobotPoker"
             >
-            <span style="margin-top: 50px; display: block;text-align: center;font-size: 25px;"> สร้างโปรเจคใหม่ หรือ เลือกกดเมนูด้านซ้ายมือ</span>
+            <span style="margin-top: 50px; display: block;text-align: center;font-size: 25px;">{{ $t('page.ai.emptyHint') }}</span>
           </div>
         </Pane>
       </Splitpanes>

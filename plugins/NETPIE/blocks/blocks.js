@@ -5,7 +5,7 @@ const MAX_INSTANCES = {
 Blockly.defineBlocksWithJsonArray(
   [{
     "type": "netpie_connect",
-    "message0": "Connect NETPIE.io %1 Device ID: %2 Device Token: %3 Subscribe private msg: %4 %5 Subscribe shadow updated: %6",
+    "message0": "%{BKY_KB_PLUGIN_NETPIE_NETPIE_CONNECT}",
     "args0": [
       {
         "type": "input_dummy",
@@ -49,7 +49,7 @@ Blockly.defineBlocksWithJsonArray(
 
   {
     "type": "netpie_on_connected",
-    "message0": "On Connected %1 do %2",
+    "message0": "%{BKY_KB_PLUGIN_NETPIE_NETPIE_ON_CONNECTED}",
     "args0": [
       {
         "type": "input_dummy",
@@ -66,7 +66,7 @@ Blockly.defineBlocksWithJsonArray(
 
   {
     "type": "netpie_on_disconnected",
-    "message0": "On Disconnected %1 do %2",
+    "message0": "%{BKY_KB_PLUGIN_NETPIE_NETPIE_ON_DISCONNECTED}",
     "args0": [
       {
         "type": "input_dummy",
@@ -84,7 +84,7 @@ Blockly.defineBlocksWithJsonArray(
 
   {
     "type": "netpie_publish",
-    "message0": "Publish to topic: @msg/%1 with payload: %2",
+    "message0": "%{BKY_KB_PLUGIN_NETPIE_NETPIE_PUBLISH}",
     "args0": [
       {
         "type": "field_input",
@@ -112,7 +112,7 @@ Blockly.defineBlocksWithJsonArray(
 
   {
     "type": "netpie_subscribe",
-    "message0": "Subscribe to topic: @msg/%1",
+    "message0": "%{BKY_KB_PLUGIN_NETPIE_NETPIE_SUBSCRIBE}",
     "args0": [
       {
         "type": "field_input",
@@ -131,7 +131,7 @@ Blockly.defineBlocksWithJsonArray(
 
   {
     "type": "netpie_on_reveived_msg",
-    "message0": "On Received message matching topic: @msg/%1 %2 do %3",
+    "message0": "%{BKY_KB_PLUGIN_NETPIE_NETPIE_ON_REVEIVED_MSG}",
     "args0": [
       {
         "type": "field_input",
@@ -154,22 +154,22 @@ Blockly.defineBlocksWithJsonArray(
 
   {
     "type": "netpie_msg_payload",
-    "message0": "@msg payload as %1",
+    "message0": "%{BKY_KB_PLUGIN_NETPIE_NETPIE_MSG_PAYLOAD}",
     "args0": [
       {
         "type": "field_dropdown",
         "name": "datatype",
         "options": [
           [
-            "string",
+            "%{BKY_KB_PLUGIN_NETPIE_NETPIE_MSG_PAYLOAD_OPT_STRING}",
             "string",
           ],
           [
-            "int",
+            "%{BKY_KB_PLUGIN_NETPIE_NETPIE_MSG_PAYLOAD_OPT_INT}",
             "int",
           ],
           [
-            "float",
+            "%{BKY_KB_PLUGIN_NETPIE_NETPIE_MSG_PAYLOAD_OPT_FLOAT}",
             "float",
           ],
         ],
@@ -184,7 +184,7 @@ Blockly.defineBlocksWithJsonArray(
 
   {
     "type": "netpie_write_shadow_field",
-    "message0": "Write @shadow field:%1 with value: %2",
+    "message0": "%{BKY_KB_PLUGIN_NETPIE_NETPIE_WRITE_SHADOW_FIELD}",
     "args0": [
       {
         "type": "input_value",
@@ -213,7 +213,7 @@ Blockly.defineBlocksWithJsonArray(
 
   {
     "type": "netpie_read_shadow",
-    "message0": "Read @shadow %1 %2",
+    "message0": "%{BKY_KB_PLUGIN_NETPIE_NETPIE_READ_SHADOW}",
     "args0": [
       {
         "type": "input_dummy",
@@ -231,7 +231,7 @@ Blockly.defineBlocksWithJsonArray(
 
   {
     "type": "netpie_on_shadow_updated",
-    "message0": "On @shadow updated %1 do %2",
+    "message0": "%{BKY_KB_PLUGIN_NETPIE_NETPIE_ON_SHADOW_UPDATED}",
     "args0": [
       {
         "type": "input_dummy",
@@ -249,7 +249,7 @@ Blockly.defineBlocksWithJsonArray(
 
   {
     "type": "netpie_shadow_field",
-    "message0": "@shadow field: %1 as %2",
+    "message0": "%{BKY_KB_PLUGIN_NETPIE_NETPIE_SHADOW_FIELD}",
     "args0": [
       {
         "type": "input_value",
@@ -261,19 +261,19 @@ Blockly.defineBlocksWithJsonArray(
         "name": "datatype",
         "options": [
           [
+            "%{BKY_KB_PLUGIN_NETPIE_NETPIE_SHADOW_FIELD_OPT_INT}",
             "int",
-            "int",
           ],
           [
+            "%{BKY_KB_PLUGIN_NETPIE_NETPIE_SHADOW_FIELD_OPT_FLOAT}",
             "float",
-            "float",
           ],
           [
-            "string",
+            "%{BKY_KB_PLUGIN_NETPIE_NETPIE_SHADOW_FIELD_OPT_STRING}",
             "string",
           ],
           [
-            "bool",
+            "%{BKY_KB_PLUGIN_NETPIE_NETPIE_SHADOW_FIELD_OPT_BOOL}",
             "bool",
           ],
         ],
@@ -289,7 +289,7 @@ Blockly.defineBlocksWithJsonArray(
 
   {
     "type": "netpie_on_reveived_private_msg",
-    "message0": "On Received private message  of topic: @private/%1 %2 do %3",
+    "message0": "%{BKY_KB_PLUGIN_NETPIE_NETPIE_ON_REVEIVED_PRIVATE_MSG}",
     "args0": [
       {
         "type": "field_input",
@@ -312,22 +312,22 @@ Blockly.defineBlocksWithJsonArray(
 
   {
     "type": "netpie_private_msg_payload",
-    "message0": "@private payload as %1",
+    "message0": "%{BKY_KB_PLUGIN_NETPIE_NETPIE_PRIVATE_MSG_PAYLOAD}",
     "args0": [
       {
         "type": "field_dropdown",
         "name": "datatype",
         "options": [
           [
-            "string",
+            "%{BKY_KB_PLUGIN_NETPIE_NETPIE_PRIVATE_MSG_PAYLOAD_OPT_STRING}",
             "string",
           ],
           [
-            "int",
+            "%{BKY_KB_PLUGIN_NETPIE_NETPIE_PRIVATE_MSG_PAYLOAD_OPT_INT}",
             "int",
           ],
           [
-            "float",
+            "%{BKY_KB_PLUGIN_NETPIE_NETPIE_PRIVATE_MSG_PAYLOAD_OPT_FLOAT}",
             "float",
           ],
         ],
@@ -342,7 +342,7 @@ Blockly.defineBlocksWithJsonArray(
 
   {
     "type": "netpie_push",
-    "message0": "Mobile @push with title: %1 and body: %2",
+    "message0": "%{BKY_KB_PLUGIN_NETPIE_NETPIE_PUSH}",
     "args0": [
       {
         "type": "field_input",
@@ -418,11 +418,11 @@ Blockly.defineBlocksWithJsonArray(
         "name": "value",
         "options": [
           [
-            "True",
+            "%{BKY_KB_PLUGIN_NETPIE_NETPIE_BOOLEAN_OPT_TRUE}",
             "True",
           ],
           [
-            "False",
+            "%{BKY_KB_PLUGIN_NETPIE_NETPIE_BOOLEAN_OPT_FALSE}",
             "False",
           ],
         ],

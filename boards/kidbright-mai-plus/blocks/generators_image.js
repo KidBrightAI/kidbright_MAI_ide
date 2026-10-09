@@ -11,17 +11,19 @@ python.pythonGenerator.forBlock['image_new'] = function (block, generator) {
 python.pythonGenerator.forBlock['image_draw_string'] = function (block, generator) {
   var img = generator.valueToCode(block, 'image', python.Order.ATOMIC)
   var text = generator.valueToCode(block, 'text', python.Order.ATOMIC)
-  var x = generator.valueToCode(block, 'x', python.Order.ATOMIC)
-  var y = generator.valueToCode(block, 'y', python.Order.ATOMIC)
+  var x = generator.valueToCode(block, 'x', python.Order.NONE) || '0'
+  var y = generator.valueToCode(block, 'y', python.Order.NONE) || '0'
   var color = block.getFieldValue('color')
   var scale = generator.valueToCode(block, 'scale', python.Order.ATOMIC) || "1"
-  var thickness = generator.valueToCode(block, 'thickness', python.Order.ATOMIC) || "1"
+  var thickness = generator.valueToCode(block, 'thickness', python.Order.NONE) || "1"
 
   var r = parseInt(color.substring(1, 3), 16)
   var g = parseInt(color.substring(3, 5), 16)
   var b = parseInt(color.substring(5, 7), 16)
 
-  return `${img}.draw_string(${x}, ${y}, str(${text}), scale=${scale}, thickness=${thickness}, color=image.Color.from_rgb(${r}, ${g}, ${b}))\n`
+  // draw_string takes int x / y / thickness; see display_draw_string in
+  // generators_basic.js for why the values are wrapped in int().
+  return `${img}.draw_string(int(${x}), int(${y}), str(${text}), scale=${scale}, thickness=int(${thickness}), color=image.Color.from_rgb(${r}, ${g}, ${b}))\n`
 }
 
 python.pythonGenerator.forBlock['image_draw_line'] = function (block, generator) {

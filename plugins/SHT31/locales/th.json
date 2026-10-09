@@ -1,0 +1,5 @@
+{
+  "KB_PLUGIN_SHT31_SHT31_I2C_SENSOR": "SHT31 address %1 อ่าน %2",
+  "KB_PLUGIN_SHT31_SHT31_I2C_SENSOR_OPT_0": "อุณหภูมิ (°C)",
+  "KB_PLUGIN_SHT31_SHT31_I2C_SENSOR_OPT_1": "ความชื้น (%RH)"
+}

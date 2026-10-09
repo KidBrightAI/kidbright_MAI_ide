@@ -1,27 +1,43 @@
+<script setup>
+import { Translation as I18nT } from 'vue-i18n'
+</script>
+
 <template>
   <div class="hint">
     <div class="main-hint txt">
       <p class="p-color font-weight-bold">
-        ขั้นตอนที่ 2 Annotate (Image Classification)
+        {{ $t('instructions.image.annotate.title') }}
       </p>
-      <p>ขั้นตอนนี้ใช้สำหรับติดป้ายกำกับให้กับรูปภาพ</p>
+      <p>{{ $t('instructions.image.annotate.intro') }}</p>
       <p>
-        <br>1. กดปุ่ม
-        <img
-          src="@/assets/images/png/Group_97.png"
-          alt=""
-          srcset=""
+        <br>
+        <I18nT
+          keypath="instructions.image.annotate.step1"
+          scope="global"
         >
-        เพื่อตั้งชื่อป้ายกำกับให้กับรูปแต่ละประเภท
+          <template #button>
+            <img
+              src="@/assets/images/png/Group_97.png"
+              alt=""
+              srcset=""
+            >
+          </template>
+        </I18nT>
       </p>
       <p>
-        <br>2. กดปุ่ม
-        <img
-          src="@/assets/images/png/interface-2.png"
-          alt=""
-          srcset=""
+        <br>
+        <I18nT
+          keypath="instructions.image.annotate.step2"
+          scope="global"
         >
-        หลังชื่อป้ายกำกับ เมื่อต้องการใช้ชื่อที่ตั้งไว้เเล้ว จะปรากฏป้ายกำกับบริเวณขวามือ
+          <template #button>
+            <img
+              src="@/assets/images/png/interface-2.png"
+              alt=""
+              srcset=""
+            >
+          </template>
+        </I18nT>
       </p>
     </div>
     <div class="mascot">

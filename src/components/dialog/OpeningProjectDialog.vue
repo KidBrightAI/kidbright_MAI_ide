@@ -11,7 +11,7 @@ const workspaceStore = useWorkspaceStore()
   >
     <VCard width="480">
       <VCardTitle class="bg-primary d-flex flex-row">
-        เปิดโปรเจค        
+        {{ $t('dialog.openingProject.title') }}
       </VCardTitle>
       <VCardItem class="d-flex align-center justify-center">
         <VProgressCircular
@@ -25,7 +25,7 @@ const workspaceStore = useWorkspaceStore()
             class="my-3 text-center"
             text-black
           >
-            กำลังนำเข้าข้อมูล ...<br> {{ workspaceStore.openingProgress }}%
+            {{ $t('dialog.openingProject.importing') }}<br> {{ workspaceStore.openingProgress }}%
           </h4>
         </VProgressCircular>
       </VCardItem>

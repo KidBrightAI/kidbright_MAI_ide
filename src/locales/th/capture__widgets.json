@@ -1,0 +1,36 @@
+{
+  "camera": {
+    "connectDevice": "กรุณาเชื่อมต่ออุปกรณ์",
+    "websocketFailed": "ไม่สามารถเชื่อมต่อ WebSocket ได้",
+    "cameraStream": "ภาพจากกล้อง"
+  },
+  "sound": {
+    "thresholdTitle": "ระดับเสียงที่เริ่มอัด",
+    "thresholdHint": "เสียงตอนนี้ {rms} — ตั้งให้สูงกว่าเสียงตอนเงียบ",
+    "daemonFailure": "{reason}: {tail}",
+    "daemonFailureNoLog": "{reason} (อ่าน {log} ไม่ได้)",
+    "daemonStopped": "ตัวอัดเสียงบนบอร์ดหยุดทำงาน",
+    "daemonStartFailed": "เริ่มตัวอัดเสียงบนบอร์ดไม่สำเร็จ",
+    "micUnavailable": "ไมโครโฟนบนบอร์ดไม่พร้อมใช้งาน",
+    "wsShellTooOld": "ws_shell บนบอร์ดเวอร์ชัน {ver} ยังไม่รองรับการอัดเสียง ต้องเป็น 1.3.0 ขึ้นไป กรุณารีสตาร์ทบอร์ดเพื่อให้สคริปต์ที่ IDE อัปเดตให้มีผล แล้วกด Connect Board อีกครั้ง"
+  },
+  "datasetList": {
+    "keyboardHint": "กด 'A' - 'D' หรือ 'ลูกศรซ้าย' - 'ลูกศรขวา' เพื่อเลื่อนรายการที่เลือก",
+    "holdCtrlToDelete": "กดปุ่ม CTRL ค้างไว้ เพื่อลบรายการที่เลือก",
+    "confirmDeleteImages": "ยืนยันการลบรูปภาพ ต้องการลบรูปที่เลือก {count} รูป หรือไม่ ?",
+    "confirmDeleteSoundsTitle": "ยืนยันการลบเสียงที่เลือก",
+    "confirmDeleteSoundsContent": "ต้องการลบเสียงที่เลือก {count} รายการ",
+    "pluralOf": "{word}"
+  },
+  "boardImagePicker": {
+    "fileBrowserUnsupported": "บอร์ดรุ่นนี้ไม่รองรับการเรียกดูไฟล์",
+    "connectBoardFirst": "กรุณาเชื่อมต่อบอร์ดก่อน",
+    "goUp": "ขึ้นหนึ่งระดับ",
+    "listView": "มุมมองรายการ",
+    "gridView": "มุมมองภาพย่อ",
+    "emptyFolder": "ไม่พบไฟล์ในโฟลเดอร์นี้",
+    "selectAllInFolder": "เลือกทั้งหมดในโฟลเดอร์",
+    "selectedCount": "เลือกแล้ว {count} รายการ",
+    "clearSelection": "ล้าง"
+  }
+}

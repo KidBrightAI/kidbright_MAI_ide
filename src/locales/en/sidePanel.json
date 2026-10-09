@@ -1,0 +1,14 @@
+{
+  "noProjectType": "You haven't chosen a project type yet",
+  "backToCoding": "Back to Coding",
+  "reset": "Reset",
+  "capture": "Capture",
+  "annotate": "Annotate",
+  "train": "Train",
+  "modelReady": "Model is Ready!",
+  "boardStatus": {
+    "connected": "Board Connected",
+    "connect": "Connect Board",
+    "rebootHint": "If the board screen shows \"open display failed\", please reboot the board"
+  }
+}

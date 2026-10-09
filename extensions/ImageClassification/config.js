@@ -1,7 +1,10 @@
 export default {
   id: "IMAGE_CLASSIFICATION",
   name: "Image Classification",
-  title: "การแยกแยะรูปภาพ (Image classification)",
+  title: {
+    th: "การแยกแยะรูปภาพ (Image classification)",
+    en: "Image classification",
+  },
   type: "Classifier",
   description: "",
   config: {}, // not use yet

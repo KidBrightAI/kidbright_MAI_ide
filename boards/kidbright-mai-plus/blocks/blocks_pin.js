@@ -1,7 +1,7 @@
 Blockly.defineBlocksWithJsonArray([
   {
     "type": "pin_digital_write",
-    "message0": "digital write %1 to pin %2",
+    "message0": "%{BKY_KB_MAIPLUS_PIN_DIGITAL_WRITE}",
     "args0": [
       {
         "type": "input_value",
@@ -34,7 +34,7 @@ Blockly.defineBlocksWithJsonArray([
   },
   {
     "type": "pin_digital_read",
-    "message0": "digital read pin %1",
+    "message0": "%{BKY_KB_MAIPLUS_PIN_DIGITAL_READ}",
     "args0": [
       {
         "type": "field_dropdown",
@@ -61,7 +61,7 @@ Blockly.defineBlocksWithJsonArray([
   },
   {
     "type": "pin_analog_read",
-    "message0": "analog read pin %1",
+    "message0": "%{BKY_KB_MAIPLUS_PIN_ANALOG_READ}",
     "args0": [
       {
         "type": "field_dropdown",
@@ -81,12 +81,12 @@ Blockly.defineBlocksWithJsonArray([
     "output": "Number",
     "inputsInline": true,
     "colour": "#E74C3C",
-    "tooltip": "Read analog value from pin Ax in range 0 - 4095",
+    "tooltip": "%{BKY_KB_MAIPLUS_PIN_ANALOG_READ_TOOLTIP}",
     "helpUrl": "",
   },
   {
     "type": "pin_analog_write",
-    "message0": "PWM write %1 to pin %2",
+    "message0": "%{BKY_KB_MAIPLUS_PIN_ANALOG_WRITE}",
     "args0": [
       {
         "type": "input_value",
@@ -110,7 +110,7 @@ Blockly.defineBlocksWithJsonArray([
     "previousStatement": null,
     "nextStatement": null,
     "colour": "#E74C3C",
-    "tooltip": "Write PWM value 0 to 1023 to any pin",
+    "tooltip": "%{BKY_KB_MAIPLUS_PIN_ANALOG_WRITE_TOOLTIP}",
     "helpUrl": "",
   },
 ])

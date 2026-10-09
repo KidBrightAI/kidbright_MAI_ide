@@ -1,12 +1,18 @@
 export default {
   id: "VOICE_CLASSIFICATION",
   name: "Voice Classification",
-  title: "Time series: การแยกแยะเสียง (Voice Classification)",
+  title: {
+    th: "Time series: การแยกแยะเสียง (Voice Classification)",
+    en: "Time series: voice classification",
+  },
   type: "Classifier",
   description: "",
   options: {
     durations : {
-      title: "Durations",
+      title: {
+        th: "ระยะเวลาอัดเสียง (วินาที)",
+        en: "Duration (seconds)",
+      },
       type: 'number',
       value: 3,
     },

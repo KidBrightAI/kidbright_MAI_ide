@@ -17,7 +17,10 @@ import { RecycleScroller, DynamicScroller, DynamicScrollerItem } from 'vue-virtu
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 
 import VuetifyUseDialog from '@/components/comfirm-dialog'
+import { i18n, currentLocale } from '@/plugins/i18n'
 import Blockly from "blockly"
+import BlocklyMsgEn from 'blockly/msg/en'
+import BlocklyMsgTh from 'blockly/msg/th'
 import "blockly/blocks"
 import "blockly/blocks_compressed.js"
 import python, { pythonGenerator } from 'blockly/python'
@@ -45,8 +48,30 @@ app.config.globalProperties.$adb = {
 const storageService = new StorageService()
 app.config.globalProperties.$fs = await storageService.init()
 
+// UI language. Blockly's built-in blocks, context menus and dialogs read
+// Blockly.Msg when a block is created, so the locale must be applied
+// before any block is defined or the workspace is injected. Custom
+// block messages (%{BKY_KB_...}) are merged in per board / plugin
+// later, see I18N_PLAN.md.
+Blockly.setLocale(currentLocale() === 'th' ? BlocklyMsgTh : BlocklyMsgEn)
+
+// Custom block messages: every board, plugin and the shared src/blocks
+// ship locales/<code>.json holding { "KB_...": "..." }. Block definitions
+// reference them as %{BKY_KB_...}, so the active language's tables are
+// merged into Blockly.Msg here, before any block is defined.
+// scripts/i18n-check.mjs verifies that each referenced key exists.
+const blocklyMsgTables = {
+  ...import.meta.glob('boards/*/locales/*.json', { eager: true }),
+  ...import.meta.glob('plugins/*/locales/*.json', { eager: true }),
+  ...import.meta.glob('@/blocks/locales/*.json', { eager: true }),
+}
+for (const [file, mod] of Object.entries(blocklyMsgTables)) {
+  if (file.endsWith(`/locales/${currentLocale()}.json`)) Object.assign(Blockly.Msg, mod.default || mod)
+}
+
 //change blockly default color
 Blockly.Msg.BKY_LOGIC_HUE = 10
+app.use(i18n)
 app.use(vuetify)
 app.use(Vue3Toastify, {
   autoClose: 3000,

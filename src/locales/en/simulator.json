@@ -1,0 +1,12 @@
+{
+  "title": "🤖 KMV Virtual Board",
+  "dockedMode": "Split-screen mode (blocks visible)",
+  "fullscreenMode": "Full-screen mode",
+  "dockHint": "Dock to the side (keep the blocks visible)",
+  "undockHint": "Switch to full-screen mode",
+  "dock": "📌 Split screen",
+  "undock": "🗖 Full screen",
+  "closeWindow": "Close the Simulator window",
+  "uploading": "Uploading code to the Simulator...",
+  "uploaded": "Code uploaded to the Simulator"
+}

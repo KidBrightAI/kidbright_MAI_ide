@@ -8,6 +8,7 @@ import { useBoardStore } from "@/store/board"
 import { usePluginStore } from "@/store/plugin"
 import { useConfirm } from "@/components/comfirm-dialog"
 import { toast } from "vue3-toastify"
+import { useI18n } from "vue-i18n"
 import { useRouter } from 'vue-router'
 
 import { randomId } from "@/components/utils"
@@ -53,6 +54,7 @@ const showSimulator = ref(false)//Simulator Add
 const isSimDocked = ref(false)//Simulator Add
 
 const confirm = useConfirm()
+const { t } = useI18n()
 const workspaceStore = useWorkspaceStore()
 const boardStore = useBoardStore()
 const pluginStore = usePluginStore()
@@ -110,9 +112,9 @@ const openSimulator = async () => {
   }
   const code = generateSimCode()
   if (code) {
-    toast.info("กำลังอัปโหลดโค้ดสู่ Simulator...")
+    toast.info(t("simulator.uploading"))
     await boardStore.upload_kmv(code)
-    toast.success("อัปโหลดโค้ดสู่ Simulator สำเร็จ")
+    toast.success(t("simulator.uploaded"))
   }
 }
 
@@ -188,7 +190,7 @@ const onBoardSelected = async board => {
     await createdProject(project)
   } catch (error) {
     console.error("Error creating project from board selection:", error)
-    toast.error("เกิดข้อผิดพลาดในการสร้างโปรเจค")
+    toast.error(t("page.home.createProjectFailed"))
   } finally {
     isProjectCreating.value = false
   }
@@ -229,20 +231,20 @@ const download = async event => {
   const code = pythonGenerator.workspaceToCode(blocklyComp.value.workspace)
   const isWriteStartupScriptNeeded = event?.ctrlKey
   if (isWriteStartupScriptNeeded) {
-    toast.info("กำลังเขียนสคริปต์เริ่มต้นด้วย")
+    toast.info(t("page.home.writingStartupScript"))
   }
 
   const res = await boardStore.upload(code, isWriteStartupScriptNeeded)
-  toast[res ? 'success' : 'error'](res ? "อัปโหลดสำเร็จ" : "อัปโหลดไม่สำเร็จ")
+  toast[res ? 'success' : 'error'](res ? t("page.home.uploadSuccess") : t("page.home.uploadFailed"))
 }
 
 const onStop = async () => {
   try {
     await boardStore.stopProgram()
-    toast.info("หยุดโปรแกรมแล้ว")
+    toast.info(t("page.home.programStopped"))
   } catch (e) {
     console.error("stopProgram failed", e)
-    toast.error(`หยุดโปรแกรมไม่สำเร็จ: ${e?.message || e}`)
+    toast.error(t("page.home.stopFailed", { error: e?.message || e }))
   }
 }
 
@@ -262,7 +264,7 @@ const onDeployAsApp = async submitted => {
   const board = workspaceStore.currentBoard
   const tpl = board?.appTemplate
   if (!tpl) {
-    toast.error("บอร์ดนี้ไม่รองรับการติดตั้งเป็นแอปพลิเคชัน")
+    toast.error(t("page.home.deployUnsupported"))
     return
   }
 
@@ -310,14 +312,14 @@ const onDeployAsApp = async submitted => {
       files,
     })
     if (ok) {
-      toast.success(`ติดตั้งแอปพลิเคชัน “${submitted.name || submitted.id}” สำเร็จ`)
+      toast.success(t("page.home.deploySuccess", { name: submitted.name || submitted.id }))
       dialogs.value.deployAsApp = false
     } else {
-      toast.error("ติดตั้งไม่สำเร็จ — กรุณาตรวจสอบการเชื่อมต่อบอร์ดแล้วลองอีกครั้ง")
+      toast.error(t("page.home.deployFailed"))
     }
   } catch (e) {
     console.error("deployAsApp failed", e)
-    toast.error(`ติดตั้งแอปพลิเคชันไม่สำเร็จ: ${e?.message || e}`)
+    toast.error(t("page.home.deployError", { error: e?.message || e }))
   }
 }
 
@@ -331,7 +333,7 @@ const onInstallPlugin = async plugin => {
     pluginStore.installed.push(plugin)
     await loadPlugin(pluginStore.installed)
     plugin.installing = false
-    toast.success("Install plugin success")
+    toast.success(t("page.home.pluginInstalled"))
     if (selectedMenu.value === 4) {
       blocklyComp.value.reload()
     }
@@ -346,7 +348,7 @@ const onUninstallPlugin = async plugin => {
       pluginStore.installed.splice(index, 1)
     }
     plugin.installing = false
-    toast.success("Uninstall plugin success")
+    toast.success(t("page.home.pluginUninstalled"))
     if (selectedMenu.value === 4) {
       blocklyComp.value.reload()
     }
@@ -484,7 +486,7 @@ watch(selectedMenu, val => {
               color="primary"
               @click="openSelectBoardDialog"
             >
-              สร้างโปรเจคใหม่
+              {{ $t('page.home.newProject') }}
             </VBtn>
           </div>
         </Pane>
@@ -554,7 +556,7 @@ watch(selectedMenu, val => {
           "
         >
           <div style="display: flex; align-items: center; gap: 8px;">
-            <span>🤖 KMV Virtual Board</span>
+            <span>{{ $t('simulator.title') }}</span>
             <span
               style="
                 font-size: 11px;
@@ -565,7 +567,7 @@ watch(selectedMenu, val => {
                 font-weight: 500;
               "
             >
-              {{ isSimDocked ? 'โหมดแบ่งหน้าจอ (มองเห็นบล็อก)' : 'โหมดขยายเต็มหน้าจอ' }}
+              {{ isSimDocked ? $t('simulator.dockedMode') : $t('simulator.fullscreenMode') }}
             </span>
           </div>
           <div style="display: flex; align-items: center; gap: 8px;">
@@ -583,10 +585,10 @@ watch(selectedMenu, val => {
                 gap: 5px;
                 transition: background 0.15s;
               "
-              :title="isSimDocked ? 'สลับเป็นโหมดขยายเต็มหน้าจอ' : 'ย่อไว้ข้างจอ (ให้มองเห็นบล็อกไปพร้อมกัน)'"
+              :title="isSimDocked ? $t('simulator.undockHint') : $t('simulator.dockHint')"
               @click="toggleSimDock"
             >
-              <span>{{ isSimDocked ? '🗖 ขยายเต็ม' : '📌 แบ่งหน้าจอ' }}</span>
+              <span>{{ isSimDocked ? $t('simulator.undock') : $t('simulator.dock') }}</span>
             </button>
             <button
               style="
@@ -600,7 +602,7 @@ watch(selectedMenu, val => {
                 font-weight: bold;
                 transition: background 0.15s;
               "
-              title="ปิดหน้าต่าง Simulator"
+              :title="$t('simulator.closeWindow')"
               @click="closeSimulator"
             >
               ✕

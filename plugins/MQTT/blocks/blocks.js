@@ -2,7 +2,7 @@
 Blockly.defineBlocksWithJsonArray([
   {
     "type": "mqtt_config",
-    "message0": "MQTT Connect %1 Host %2 Port %3 Client Id %4 Username %5 Password %6 Wait Internet %7",
+    "message0": "%{BKY_KB_PLUGIN_MQTT_MQTT_CONFIG}",
     "args0": [
       {
         "type": "input_dummy",
@@ -52,7 +52,7 @@ Blockly.defineBlocksWithJsonArray([
   },
   {
     "type": "mqtt_on_connected",
-    "message0": "MQTT on Connected %1 %2",
+    "message0": "%{BKY_KB_PLUGIN_MQTT_MQTT_ON_CONNECTED}",
     "args0": [
       {
         "type": "input_dummy",
@@ -70,7 +70,7 @@ Blockly.defineBlocksWithJsonArray([
   },
   {
     "type": "mqtt_is_connect",
-    "message0": "MQTT is connected ?",
+    "message0": "%{BKY_KB_PLUGIN_MQTT_MQTT_IS_CONNECT}",
     "output": [
       "Number",
       "Boolean",
@@ -81,7 +81,7 @@ Blockly.defineBlocksWithJsonArray([
   },
   {
     "type": "mqtt_publish",
-    "message0": "MQTT Publish  topic : %1   data: %2",
+    "message0": "%{BKY_KB_PLUGIN_MQTT_MQTT_PUBLISH}",
     "args0": [
       {
         "type": "field_input",
@@ -108,7 +108,7 @@ Blockly.defineBlocksWithJsonArray([
   },
   {
     "type": "mqtt_subscribe",
-    "message0": "MQTT Subscribe topic : %1",
+    "message0": "%{BKY_KB_PLUGIN_MQTT_MQTT_SUBSCRIBE}",
     "args0": [
       {
         "type": "field_input",
@@ -126,7 +126,7 @@ Blockly.defineBlocksWithJsonArray([
   //mqtt on message
   {
     "type": "mqtt_on_message",
-    "message0": "MQTT on Message %1 %2",
+    "message0": "%{BKY_KB_PLUGIN_MQTT_MQTT_ON_MESSAGE}",
     "args0": [
       {
         "type": "input_dummy",
@@ -146,7 +146,7 @@ Blockly.defineBlocksWithJsonArray([
   //mqtt loop
   {
     "type": "mqtt_loop",
-    "message0": "MQTT Loop",
+    "message0": "%{BKY_KB_PLUGIN_MQTT_MQTT_LOOP}",
     "previousStatement": null,
     "nextStatement": null,
     "colour": 180,
@@ -155,7 +155,7 @@ Blockly.defineBlocksWithJsonArray([
   },
   {
     "type": "mqtt_get_topic",
-    "message0": "MQTT get topic",
+    "message0": "%{BKY_KB_PLUGIN_MQTT_MQTT_GET_TOPIC}",
     "output": "String",
     "colour": 180,
     "tooltip": "",
@@ -163,7 +163,7 @@ Blockly.defineBlocksWithJsonArray([
   },
   {
     "type": "mqtt_get_number",
-    "message0": "MQTT get payload number",
+    "message0": "%{BKY_KB_PLUGIN_MQTT_MQTT_GET_NUMBER}",
     "output": [
       "Number",
       "Boolean",
@@ -174,7 +174,7 @@ Blockly.defineBlocksWithJsonArray([
   },
   {
     "type": "mqtt_get_text",
-    "message0": "MQTT get payload text",
+    "message0": "%{BKY_KB_PLUGIN_MQTT_MQTT_GET_TEXT}",
     "output": "String",
     "colour": 180,
     "tooltip": "",

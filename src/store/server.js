@@ -6,6 +6,7 @@ import { useWorkspaceStore } from "./workspace"
 //axios
 import axios from 'axios'
 import { toast } from "vue3-toastify"
+import { t } from "@/plugins/i18n"
 import { pickFor } from "@/engine/model-formats"
 
 export const useServerStore = defineStore({
@@ -127,7 +128,7 @@ export const useServerStore = defineStore({
           this.isTrainingSuccess = true
           this.isTraining = false
           log(data.msg)
-          toast.success("เทรนโมเดลสำเร็จ")
+          toast.success(t("server.trainSuccess"))
           return
         default:
           // convert_model_init / _progress / _end and anything else
@@ -158,7 +159,7 @@ export const useServerStore = defineStore({
           this.isColabConnecting = false
           this.event.close()
           this.event = null
-          toast.success("ยกเลิกการเทรนแล้ว")
+          toast.success(t("server.trainCancelled"))
         }
       } catch (e) {
         console.log(e)
@@ -233,9 +234,9 @@ export const useServerStore = defineStore({
           this.isDownloadingSuccess = true
 
           await workspaceStore.importModelFromBlob(Format, blobs)
-          toast.success("ดาวน์โหลดโมเดลสำเร็จ")
+          toast.success(t("server.modelDownloaded"))
         } else {
-          toast.error("แปลงโมเดลไม่สำเร็จ")
+          toast.error(t("server.convertFailed"))
         }
 
       } catch (e) {

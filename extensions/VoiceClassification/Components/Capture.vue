@@ -5,6 +5,7 @@ import WaveFormPlayer from "@/components/InputConnection/WaveFormPlayer.vue"
 import DatasetCounter from "@/components/InputConnection/DatasetCounter.vue"
 import SoundDatasetList from "@/components/InputConnection/SoundDatasetList.vue"
 import { randomId } from "@/components/utils"
+import { Translation as I18nT } from "vue-i18n"
 import { useDatasetStore } from '@/store/dataset'
 import { useWorkspaceStore } from '@/store/workspace'
 import { useBoardStore } from '@/store/board'
@@ -120,13 +121,13 @@ onMounted(async () => {
             v-if="!selectedId && !isRecorderActive"
             class="center-pos text-white"
           >
-            No selected item, please click on the list below to select.
+            {{ $t('capture.voice.noItemSelected') }}
           </p>
 
           <DatasetCounter
             :current="selectedId ? datasetStore.positionOf(selectedId) + 1 : null"
-            prefix="Selected "
-            suffix="Sound"
+            :prefix="$t('capture.voice.counter.selected')"
+            :suffix="$t('capture.voice.counter.sound')"
           />
         </div>
         <SoundDatasetList
@@ -143,7 +144,7 @@ onMounted(async () => {
         <div class="w-100">
           <!-- Board Connection Status -->
           <h5 class="side-panel-ttl">
-            Board Connection
+            {{ $t('capture.voice.boardConnection') }}
           </h5>
           <div class="pa-3">
             <div
@@ -155,7 +156,7 @@ onMounted(async () => {
                 color="success"
                 size="20"
               />
-              <span class="text-success font-weight-bold">Connected</span>
+              <span class="text-success font-weight-bold">{{ $t('common.connected') }}</span>
             </div>
             <div
               v-else-if="connecting || status === 'connecting'"
@@ -167,7 +168,7 @@ onMounted(async () => {
                 width="2"
                 color="primary"
               />
-              <span>Connecting...</span>
+              <span>{{ $t('common.connecting') }}</span>
             </div>
             <div v-else>
               <VBtn
@@ -178,22 +179,29 @@ onMounted(async () => {
                 :loading="connecting"
                 @click="connectBoard"
               >
-                Connect Board
+                {{ $t('capture.voice.connectBoard') }}
               </VBtn>
             </div>
           </div>
 
           <!-- Recorder Settings -->
           <h5 class="side-panel-ttl">
-            Recorder Settings
+            {{ $t('capture.voice.recorderSettings') }}
           </h5>
           <div class="pa-3">
-            <p>Range : <b>{{ duration }}</b> seconds</p>
+            <I18nT
+              keypath="capture.voice.rangeSeconds"
+              tag="p"
+            >
+              <template #duration>
+                <b>{{ duration }}</b>
+              </template>
+            </I18nT>
           </div>
 
           <!-- Playback Volume -->
           <h5 class="side-panel-ttl">
-            Playback Volume
+            {{ $t('capture.voice.playbackVolume') }}
           </h5>
           <div class="pa-3">
             <VSlider
@@ -211,34 +219,40 @@ onMounted(async () => {
         <!-- Record Button with status feedback -->
         <div class="center bottom-action d-flex flex-column align-center ga-2">
           <span
-            v-if="status === 'disconnected' || status === 'error'"
+            v-if="status === 'disconnected'"
             class="text-caption text-medium-emphasis"
           >
-            Connect board to record
+            {{ $t('capture.voice.status.needBoard') }}
+          </span>
+          <span
+            v-else-if="status === 'error'"
+            class="text-caption text-error"
+          >
+            {{ $t('capture.voice.status.micUnavailable') }}
           </span>
           <span
             v-else-if="status === 'connecting'"
             class="text-caption text-medium-emphasis"
           >
-            Initializing microphone...
+            {{ $t('capture.voice.status.initMic') }}
           </span>
           <span
             v-else-if="status === 'listening'"
             class="text-caption text-primary font-weight-bold"
           >
-            Listening for sound...
+            {{ $t('capture.voice.status.listening') }}
           </span>
           <span
             v-else-if="status === 'recording'"
             class="text-caption text-error font-weight-bold"
           >
-            Recording...
+            {{ $t('capture.voice.status.recording') }}
           </span>
           <span
             v-else-if="status === 'processing' || status === 'finishing'"
             class="text-caption text-medium-emphasis"
           >
-            Processing audio...
+            {{ $t('capture.voice.status.processing') }}
           </span>
 
           <img

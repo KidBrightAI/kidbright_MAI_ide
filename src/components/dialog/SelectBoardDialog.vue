@@ -6,7 +6,7 @@
   >
     <VCard>
       <VCardTitle>
-        <span class="text-h5">Select a Board</span>
+        <span class="text-h5">{{ $t('dialog.selectBoard.title') }}</span>
       </VCardTitle>
       <VCardText>
         <VContainer>
@@ -37,7 +37,7 @@
                   </VChip>
                 </VCardTitle>
                 <VCardText class="flex-grow-1">
-                  {{ board.description }}
+                  {{ localized(board.description) }}
                 </VCardText>
               </VCard>
             </VCol>
@@ -51,7 +51,7 @@
           variant="text"
           @click="isDialogVisible = false"
         >
-          Close
+          {{ $t('common.close') }}
         </VBtn>
       </VCardActions>
     </VCard>
@@ -59,6 +59,7 @@
 </template>
 
 <script setup>
+import { localized } from '@/plugins/i18n'
 import { computed, getCurrentInstance } from 'vue'
 import { writePinToKMV } from '@/store/simulator'
 

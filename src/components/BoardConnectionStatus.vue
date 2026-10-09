@@ -73,7 +73,7 @@ onMounted(() => {
           size="20"
         />
         <span class="text-success font-weight-bold text-body-2">
-          Board Connected
+          {{ $t('sidePanel.boardStatus.connected') }}
         </span>
       </div>
       <div
@@ -86,7 +86,7 @@ onMounted(() => {
           width="2"
           color="primary"
         />
-        <span class="text-body-2">Connecting...</span>
+        <span class="text-body-2">{{ $t('common.connecting') }}</span>
       </div>
       <VBtn
         v-else
@@ -97,7 +97,7 @@ onMounted(() => {
         prepend-icon="mdi-usb"
         @click="connect"
       >
-        Connect Board
+        {{ $t('sidePanel.boardStatus.connect') }}
       </VBtn>
     </div>
     <div
@@ -112,7 +112,7 @@ onMounted(() => {
         mdi-information-outline
       </VIcon>
       <span class="text-caption text-grey-darken-1">
-        หากปรากฏข้อความ "open display failed" บนหน้าจอบอร์ด กรุณารีสตาร์ทบอร์ด
+        {{ $t('sidePanel.boardStatus.rebootHint') }}
       </span>
     </div>
   </div>

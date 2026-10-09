@@ -4,7 +4,7 @@
     @mousewheel="scrollX"
   >
     <div class="info-text">
-      <span>press 'A' - 'D' or 'Left Arrow' - 'Right Arrow' to move select</span>
+      <span>{{ $t('capture.datasetList.keyboardHint') }}</span>
     </div>
     <DynamicScroller
       ref="img_scroller"
@@ -48,7 +48,7 @@
             </div>
           </div>
           <img
-            title="กดปุ่ม CTRL ค้างไว้ เพื่อทำการลบรูปที่เลือก"
+            :title="$t('capture.datasetList.holdCtrlToDelete')"
             class="cancel-btn"
             src="@/assets/images/png/cancel.png"
             @click="removeItem($event, item)"
@@ -63,6 +63,7 @@
 import { useDatasetStore } from "@/store/dataset"
 import { onMounted, onBeforeUnmount } from "vue"
 import { useConfirm } from "@/components/comfirm-dialog"
+import { useI18n } from "vue-i18n"
 
 const props = defineProps({
   modelValue: {
@@ -81,6 +82,7 @@ const props = defineProps({
 const emit = defineEmits(["update:modelValue"])
 const datasetStore = useDatasetStore()
 const confirm = useConfirm()
+const { t } = useI18n()
 
 const selected = ref(props.value || [])
 const lastSelectedIndex = ref(0)
@@ -186,7 +188,7 @@ const removeItem = async (e, item) => {
     if (e.ctrlKey) {
       if (selected.value.length > 1) {
         try{
-          await confirm({ title: `ยืนยันการลบรูปภาพ ต้องการลบรูปที่เลือก ${selected.value.length} รูป หรือไม่ ?`, dialogProps: { width: 'auto' } })
+          await confirm({ title: t("capture.datasetList.confirmDeleteImages", { count: selected.value.length }), dialogProps: { width: 'auto' } })
           emit("update:modelValue", [])
           await datasetStore.deleteDatasetItems(selected.value)
           selected.value = []

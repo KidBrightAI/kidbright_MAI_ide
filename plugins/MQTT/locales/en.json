@@ -1,0 +1,12 @@
+{
+  "KB_PLUGIN_MQTT_MQTT_CONFIG": "MQTT Connect %1 Host %2 Port %3 Client Id %4 Username %5 Password %6 Wait Internet %7",
+  "KB_PLUGIN_MQTT_MQTT_ON_CONNECTED": "MQTT on Connected %1 %2",
+  "KB_PLUGIN_MQTT_MQTT_IS_CONNECT": "MQTT is connected ?",
+  "KB_PLUGIN_MQTT_MQTT_PUBLISH": "MQTT Publish  topic : %1   data: %2",
+  "KB_PLUGIN_MQTT_MQTT_SUBSCRIBE": "MQTT Subscribe topic : %1",
+  "KB_PLUGIN_MQTT_MQTT_ON_MESSAGE": "MQTT on Message %1 %2",
+  "KB_PLUGIN_MQTT_MQTT_LOOP": "MQTT Loop",
+  "KB_PLUGIN_MQTT_MQTT_GET_TOPIC": "MQTT get topic",
+  "KB_PLUGIN_MQTT_MQTT_GET_NUMBER": "MQTT get payload number",
+  "KB_PLUGIN_MQTT_MQTT_GET_TEXT": "MQTT get payload text"
+}

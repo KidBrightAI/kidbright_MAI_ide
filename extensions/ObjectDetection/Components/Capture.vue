@@ -53,13 +53,13 @@ const snapAndSave = async () => {
                 v-if="!current.length"
                 class="d-flex align-center justify-center text-white"
               >
-                No selected image, please click on the image below to select.
+                {{ $t('capture.shared.noImageSelected') }}
               </p>
               <DatasetCounter
                 :current="
                   current.length ? datasetStore.positionOf(current.slice(-1).pop()) + 1 : null
                 "
-                suffix="Image"
+                :suffix="$t('capture.shared.counter.image')"
               />
             </div>
             <ImageDatasetList

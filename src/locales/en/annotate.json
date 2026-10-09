@@ -1,0 +1,18 @@
+{
+  "shared": {
+    "noImageSelected": "No selected image, please click on the image below to select.",
+    "labelHeading": "LABEL",
+    "annotateHeading": "ANNOTATE",
+    "newLabel": "New label",
+    "counter": {
+      "labeled": "Labeled",
+      "selected": "Selected",
+      "of": "of",
+      "image": "Image"
+    },
+    "editLabel": "Edit label",
+    "renameLabelFrom": "Rename label {name} to",
+    "removeLabelTitle": "Confirm label deletion",
+    "removeLabelContent": "If you delete '{label}', images using this label will be cleared."
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "cannotDeleteEmptyPath": "Cannot delete: no file or folder path was given",
+  "cannotDeleteRoot": "Cannot delete a system folder",
+  "cannotCreateEmptyFolder": "Cannot create a folder with an empty name",
+  "downloadFailed": "Failed to download file: {path}",
+  "uploading": "Uploading {name} ({size} MB)...",
+  "uploadFailed": "upload chunk failed: {path}"
+}

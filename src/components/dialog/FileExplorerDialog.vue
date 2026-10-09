@@ -1,9 +1,11 @@
 <script setup>
+import { currentLocale } from "@/plugins/i18n"
 import DialogCloseBtn from "@/components/dialog/DialogCloseBtn.vue"
 import GenericInputDialog from "@/components/dialog/GenericInputDialog.vue"
 import { useBoardStore } from "@/store/board"
 import { useConfirm } from "@/components/comfirm-dialog"
 import { toast } from "vue3-toastify"
+import { useI18n } from "vue-i18n"
 
 const isDialogVisible = defineModel("isDialogVisible", { type: Boolean, default: false })
 
@@ -11,6 +13,7 @@ const ROOT_PATH = "/root"
 
 const boardStore = useBoardStore()
 const confirm = useConfirm()
+const { t } = useI18n()
 
 const currentPath = ref(ROOT_PATH)
 const entries     = ref([])
@@ -84,14 +87,14 @@ async function downloadItem(item) {
 async function deleteItem(item) {
   try {
     await confirm({
-      title: "ยืนยันการลบ",
-      content: `ลบ "${item.name}" ใช่หรือไม่?`,
+      title: t("dialog.fileExplorer.confirmDeleteTitle"),
+      content: t("dialog.fileExplorer.confirmDeleteContent", { name: item.name }),
       dialogProps: { width: "auto" },
     })
   } catch (_) { return }
   const ok = await boardStore.deleteFileOrFolder(joinPath(currentPath.value, item.name))
   if (ok) {
-    toast.info(`ลบ "${item.name}" แล้ว`)
+    toast.info(t("dialog.fileExplorer.deleted", { name: item.name }))
     await refresh()
   }
 }
@@ -100,7 +103,7 @@ async function createFolder(name) {
   if (!name) return
   const ok = await boardStore.createNewFolder(joinPath(currentPath.value, name))
   if (ok) {
-    toast.info(`สร้างโฟลเดอร์ "${name}"`)
+    toast.info(t("dialog.fileExplorer.folderCreated", { name }))
     await refresh()
   }
 }
@@ -113,7 +116,7 @@ function uploadFile() {
     if (!file) return
     const ok = await boardStore.uploadFile(joinPath(currentPath.value, file.name), file)
     if (ok) {
-      toast.info(`อัปโหลด "${file.name}" แล้ว`)
+      toast.info(t("dialog.fileExplorer.uploaded", { name: file.name }))
       await refresh()
     }
   }
@@ -164,7 +167,7 @@ function humanSize(bytes) {
 function formatTime(unixSec) {
   const t = Number(unixSec || 0)
   if (!t) return ""
-  return new Date(t * 1000).toLocaleString("th-TH", {
+  return new Date(t * 1000).toLocaleString(currentLocale() === "th" ? "th-TH" : "en-US", {
     year: "numeric", month: "short", day: "numeric",
     hour: "2-digit", minute: "2-digit",
   })
@@ -182,12 +185,12 @@ function formatTime(unixSec) {
 
       <VCardTitle class="text-h5">
         <VIcon class="me-2">mdi-folder-open</VIcon>
-        File Explorer
+        {{ $t('dialog.fileExplorer.title') }}
       </VCardTitle>
 
       <VToolbar density="compact" color="primary">
         <VBtn
-          v-tooltip:bottom="'ขึ้นหนึ่งระดับ'"
+          v-tooltip:bottom="$t('dialog.fileExplorer.upOneLevel')"
           icon="mdi-arrow-up"
           variant="text"
           color="white"
@@ -195,7 +198,7 @@ function formatTime(unixSec) {
           @click="goUp"
         />
         <VBtn
-          v-tooltip:bottom="'รีเฟรช'"
+          v-tooltip:bottom="$t('common.refresh')"
           icon="mdi-refresh"
           variant="text"
           color="white"
@@ -214,14 +217,14 @@ function formatTime(unixSec) {
         <VSpacer />
 
         <VBtn
-          v-tooltip:bottom="'สร้างโฟลเดอร์ใหม่'"
+          v-tooltip:bottom="$t('dialog.fileExplorer.newFolder')"
           icon="mdi-folder-plus"
           variant="text"
           color="white"
           @click="newFolderDialog = true"
         />
         <VBtn
-          v-tooltip:bottom="'อัปโหลดไฟล์'"
+          v-tooltip:bottom="$t('dialog.fileExplorer.uploadFile')"
           icon="mdi-upload"
           variant="text"
           color="white"
@@ -235,7 +238,7 @@ function formatTime(unixSec) {
 
         <div v-if="!loading && !sortedEntries.length" class="empty-state">
           <VIcon size="64" color="grey-lighten-1">mdi-folder-open-outline</VIcon>
-          <div class="text-body-1 text-grey-darken-1 mt-3">โฟลเดอร์ว่างเปล่า</div>
+          <div class="text-body-1 text-grey-darken-1 mt-3">{{ $t('dialog.fileExplorer.emptyFolder') }}</div>
         </div>
 
         <VList v-else density="compact" class="bg-transparent pa-0">
@@ -286,9 +289,9 @@ function formatTime(unixSec) {
 
       <GenericInputDialog
         v-model:isDialogVisible="newFolderDialog"
-        title="สร้างโฟลเดอร์ใหม่"
-        label="ชื่อโฟลเดอร์"
-        button-name="สร้าง"
+        :title="$t('dialog.fileExplorer.newFolder')"
+        :label="$t('dialog.fileExplorer.folderName')"
+        :button-name="$t('common.create')"
         @value="createFolder"
       />
     </VCard>

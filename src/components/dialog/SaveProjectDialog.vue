@@ -1,12 +1,31 @@
 <script setup>
 import DialogCloseBtn from "@/components/dialog/DialogCloseBtn.vue"
+import { useI18n } from "vue-i18n"
 
 const isDialogVisible = defineModel('isDialogVisible', { type: Boolean, default: false })
 
 const emit = defineEmits(['submit'])
 
+const { t } = useI18n()
+
 const refVForm = ref({})
 const filename = ref("")
+
+const filenameRules = [
+  v => !!v || t('dialog.saveProject.filenameRequired'),
+  v => (v && v.length <= 128) || t('dialog.saveProject.filenameTooLong'),
+
+  // filename validation
+  v => {
+    if (v) {
+      let regex = /^[ก-๙a-zA-Z0-9_\- ]+$/ // i18n-ignore: Thai character range, not UI text
+
+      return regex.test(v) || t('dialog.saveProject.filenameInvalid')
+    }
+
+    return true
+  },
+]
 
 const resetForm = () => {
   isDialogVisible.value = false
@@ -39,7 +58,7 @@ watch(isDialogVisible, val => {
       />
       <VCardItem>
         <VCardTitle class="text-h5">
-          ตั้งชื่อไฟล์
+          {{ $t('dialog.saveProject.title') }}
         </VCardTitle>
       </VCardItem>
       <VCardText class="pt-0">
@@ -51,22 +70,11 @@ watch(isDialogVisible, val => {
             <VCol cols="12">
               <VTextField
                 v-model="filename"
-                label="ชื่อไฟล์"
+                :label="$t('dialog.saveProject.filename')"
                 outlined
                 dense
                 clearable
-                :rules="[
-                  (v) => !!v || 'ต้องการชื่อไฟล์',
-                  (v) => (v && v.length <= 128) || 'ชื่อไฟล์ต้องน้อยกว่า 128 ตัวอักษร',
-                  //filename validation
-                  (v) => {
-                    if(v){
-                      let regex = /^[ก-๙a-zA-Z0-9_\- ]+$/;
-                      return regex.test(v) || 'ชื่อไฟล์ต้องข้อความ ตัวเลข และ _ - หรือว่างเท่านั้น';
-                    }
-                    return true;
-                  }
-                ]"
+                :rules="filenameRules"
               />
             </VCol>
           </VRow>
@@ -80,7 +88,7 @@ watch(isDialogVisible, val => {
                 class="me-3"
                 color="primary"
               >
-                บันทึกโปรเจค
+                {{ $t('dialog.saveProject.save') }}
               </VBtn>
             </VCol>
           </VRow>

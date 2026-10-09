@@ -8,13 +8,14 @@ import {
   
 import { setType } from "@baklavajs/interface-types"
 import { modelInput, modelOutput } from "../interfaces/interface-types"
+import { t } from "@/plugins/i18n"
 
 export const MobileNetNode = defineNode({
   type: "MobileNet",
-  title: "Image classification model",
+  title: t("designer.node.imageClassification"),
   inputs: {        
-    modelInput : () => new NodeInterface("Model Input").use(setType, modelInput),
-    modelType : () => new SelectInterface("Model Type", "mobilenet-75", 
+    modelInput : () => new NodeInterface(t("designer.field.modelInput")).use(setType, modelInput),
+    modelType : () => new SelectInterface(t("designer.field.modelType"), "mobilenet-75", 
       [
         { text: "MobileNet-100", value : "mobilenet-100" },
 
@@ -26,7 +27,7 @@ export const MobileNetNode = defineNode({
       ]).setPort(false),                
   },
   outputs: {
-    result: () => new NodeInterface("Model Output").use(setType, modelOutput),
+    result: () => new NodeInterface(t("designer.field.modelOutput")).use(setType, modelOutput),
   },
   calculate({ modelInput, modelType}) {
     return {

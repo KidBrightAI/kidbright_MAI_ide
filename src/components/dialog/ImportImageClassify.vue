@@ -6,12 +6,14 @@ import { useDatasetStore } from "@/store/dataset"
 import { useWorkspaceStore } from "@/store/workspace"
 import { useBoardStore } from "@/store/board"
 import { toast } from "vue3-toastify"
+import { useI18n } from "vue-i18n"
 
 const isDialogVisible = defineModel('isDialogVisible', { type: Boolean, default: false })
 
 const datasetStore   = useDatasetStore()
 const workspaceStore = useWorkspaceStore()
 const boardStore     = useBoardStore()
+const { t }          = useI18n()
 
 const source             = ref("pc")          // "pc" | "board"
 const files              = ref([])            // PC mode: File[]
@@ -53,9 +55,9 @@ const importImages = async e => {
   }
   step.value = 3
   if (failures.value > 0) {
-    toast.warning(`นำเข้าข้อมูลสำเร็จเพียงบางส่วน ดาวน์โหลดไม่สำเร็จจำนวน ${failures.value} ไฟล์`)
+    toast.warning(t("dialog.importImageClassify.partialSuccess", { count: failures.value }))
   } else {
-    toast.success("นำเข้าข้อมูลสำเร็จ")
+    toast.success(t("dialog.importImageClassify.success"))
   }
 }
 
@@ -114,7 +116,7 @@ const resetAndClose = () => {
   >
     <VCard>
       <VCardTitle class="bg-primary d-flex flex-row">
-        นำเข้ารูปภาพ
+        {{ $t('dialog.importImageClassify.title') }}
         <VSpacer />
         <VBtn
           density="compact"
@@ -134,13 +136,13 @@ const resetAndClose = () => {
           <VIcon start>
             mdi-folder
           </VIcon>
-          เครื่อง PC
+          {{ $t('dialog.importImageClassify.tabPc') }}
         </VTab>
         <VTab value="board">
           <VIcon start>
             mdi-developer-board
           </VIcon>
-          บอร์ด
+          {{ $t('common.board') }}
         </VTab>
       </VTabs>
 
@@ -168,7 +170,7 @@ const resetAndClose = () => {
                 <VFileInput
                   v-model="files"
                   color="primary"
-                  label="เลือก Folder รูปภาพ"
+                  :label="$t('dialog.importImageClassify.selectImageFolder')"
                   multiple
                   density="compact"
                   counter
@@ -194,7 +196,7 @@ const resetAndClose = () => {
                         v-else-if="index === 3"
                         class="text-overline text-grey-darken-3 mx-2"
                       >
-                        +{{ files.length - 3 }} File(s)
+                        {{ $t('dialog.importImageClassify.moreFiles', { count: files.length - 3 }) }}
                       </span>
                     </template>
                   </template>
@@ -206,7 +208,7 @@ const resetAndClose = () => {
               >
                 <VSwitch
                   v-model="importWithLabel"
-                  label="นำเข้าพร้อมกับชื่อโฟลเดอร์"
+                  :label="$t('dialog.importImageClassify.importWithLabel')"
                   dense
                 />
               </VCol>
@@ -216,7 +218,7 @@ const resetAndClose = () => {
                   cols="12"
                 >
                   <VDivider class="mb-3" />
-                  <span>ภาพทั้งหมดจะตั้งชื่อตามโฟลเดอร์หลักที่เลือก</span>
+                  <span>{{ $t('dialog.importImageClassify.importWithLabelNote') }}</span>
                   <img
                     class="ps-5"
                     src="@/assets/images/png/import_note_anno.png"
@@ -253,14 +255,14 @@ const resetAndClose = () => {
             class="my-3 text-center"
             text-black
           >
-            กำลังนำเข้า ...<br> {{ progress }} / {{ totalCount || "" }}
+            {{ $t('dialog.importImageClassify.importing') }}<br> {{ progress }} / {{ totalCount || "" }}
           </h4>
           <h4
             v-else-if="step == 3"
             class="my-3"
             text-black
           >
-            นำเข้าสำเร็จ
+            {{ $t('dialog.importImageClassify.done') }}
           </h4>
         </VProgressCircular>
       </VCardItem>
@@ -273,7 +275,7 @@ const resetAndClose = () => {
           variant="flat"
           @click="resetAndClose"
         >
-          ยกเลิก
+          {{ $t('common.cancel') }}
         </VBtn>
         <VBtn
           v-if="step == 1"
@@ -282,7 +284,7 @@ const resetAndClose = () => {
           :disabled="!canImport"
           @click="importImages"
         >
-          นำเข้า
+          {{ $t('common.import') }}
         </VBtn>
         <VBtn
           v-if="step == 3"
@@ -290,7 +292,7 @@ const resetAndClose = () => {
           variant="flat"
           @click="resetAndClose"
         >
-          ปิด
+          {{ $t('common.close') }}
         </VBtn>
       </VCardActions>
     </VCard>

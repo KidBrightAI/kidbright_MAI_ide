@@ -1,6 +1,6 @@
 Blockly.defineBlocksWithJsonArray([{
   "type": "maix3_nn_classify_load",
-  "message0": "load image classification model",
+  "message0": "%{BKY_KB_MAIPLUS_MAIX3_NN_CLASSIFY_LOAD}",
   "previousStatement": null,
   "nextStatement": null,
   "colour": 120,
@@ -9,7 +9,7 @@ Blockly.defineBlocksWithJsonArray([{
 },
 {
   "type": "maix3_nn_classify_classify",
-  "message0": "Classify Image %1",
+  "message0": "%{BKY_KB_MAIPLUS_MAIX3_NN_CLASSIFY_CLASSIFY}",
   "args0": [
     {
       "type": "input_value",
@@ -27,7 +27,7 @@ Blockly.defineBlocksWithJsonArray([{
 //load voice model
 {
   "type": "maix3_nn_voice_load",
-  "message0": "load voice classification model",
+  "message0": "%{BKY_KB_MAIPLUS_MAIX3_NN_VOICE_LOAD}",
   "previousStatement": null,
   "nextStatement": null,
   "colour": 120,
@@ -38,7 +38,7 @@ Blockly.defineBlocksWithJsonArray([{
 //get voice rms level
 {
   "type": "maix3_nn_voice_get_rms",
-  "message0": "get voice rms level",
+  "message0": "%{BKY_KB_MAIPLUS_MAIX3_NN_VOICE_GET_RMS}",
   "output": null,
   "colour": 120,
   "tooltip": "",
@@ -46,7 +46,7 @@ Blockly.defineBlocksWithJsonArray([{
 },
 {
   "type": "maix3_nn_voice_classify",
-  "message0": "Classify voice for %1 seconds",
+  "message0": "%{BKY_KB_MAIPLUS_MAIX3_NN_VOICE_CLASSIFY}",
   "args0": [
     {
       "type": "field_number",
@@ -67,22 +67,22 @@ Blockly.defineBlocksWithJsonArray([{
 //get result for voice
 {
   "type": "maix3_nn_voice_get_result",
-  "message0": "get voice %1",
+  "message0": "%{BKY_KB_MAIPLUS_MAIX3_NN_VOICE_GET_RESULT}",
   "args0": [
     {
       "type": "field_dropdown",
       "name": "data",
       "options": [
         [
-          "label",
+          "%{BKY_KB_MAIPLUS_MAIX3_NN_VOICE_GET_RESULT_OPT_LABEL}",
           "label",
         ],
         [
-          "class_id",
+          "%{BKY_KB_MAIPLUS_MAIX3_NN_VOICE_GET_RESULT_OPT_CLASS_ID}",
           "class id",
         ],
         [
-          "probability",
+          "%{BKY_KB_MAIPLUS_MAIX3_NN_VOICE_GET_RESULT_OPT_PROBABILITY}",
           "probability",
         ],
       ],
@@ -96,7 +96,7 @@ Blockly.defineBlocksWithJsonArray([{
 },
 {
   "type": "maix3_nn_yolo_load",
-  "message0": "load object detection model",
+  "message0": "%{BKY_KB_MAIPLUS_MAIX3_NN_YOLO_LOAD}",
   "previousStatement": null,
   "nextStatement": null,
   "colour": 120,
@@ -105,7 +105,7 @@ Blockly.defineBlocksWithJsonArray([{
 },
 {
   "type": "maix3_nn_yolo_detect",
-  "message0": "Detect Image %1 with NMS %2 threshold %3",
+  "message0": "%{BKY_KB_MAIPLUS_MAIX3_NN_YOLO_DETECT}",
   "args0": [
     {
       "type": "input_value",
@@ -137,7 +137,7 @@ Blockly.defineBlocksWithJsonArray([{
 },
 {
   "type": "maix3_nn_yolo_get_result_array",
-  "message0": "get results",
+  "message0": "%{BKY_KB_MAIPLUS_MAIX3_NN_YOLO_GET_RESULT_ARRAY}",
   "output": "Array",
   "colour": 120,
   "tooltip": "",
@@ -147,7 +147,7 @@ Blockly.defineBlocksWithJsonArray([{
 //get count of objects detected
 {
   "type": "maix3_nn_yolo_get_count",
-  "message0": "get object detected count",
+  "message0": "%{BKY_KB_MAIPLUS_MAIX3_NN_YOLO_GET_COUNT}",
   "output": "Number",
   "colour": 120,
   "tooltip": "",
@@ -155,46 +155,46 @@ Blockly.defineBlocksWithJsonArray([{
 },
 {
   "type": "maix3_nn_yolo_get",
-  "message0": "get %1 %2 from object %3",
+  "message0": "%{BKY_KB_MAIPLUS_MAIX3_NN_YOLO_GET}",
   "args0": [
     {
       "type": "field_dropdown",
       "name": "data",
       "options": [
         [
+          "%{BKY_KB_MAIPLUS_MAIX3_NN_YOLO_GET_OPT_X1}",
           "x1",
-          "x1",
         ],
         [
+          "%{BKY_KB_MAIPLUS_MAIX3_NN_YOLO_GET_OPT_Y1}",
           "y1",
-          "y1",
         ],
         [
+          "%{BKY_KB_MAIPLUS_MAIX3_NN_YOLO_GET_OPT_X2}",
           "x2",
-          "x2",
         ],
         [
+          "%{BKY_KB_MAIPLUS_MAIX3_NN_YOLO_GET_OPT_Y2}",
           "y2",
-          "y2",
         ],
         [
+          "%{BKY_KB_MAIPLUS_MAIX3_NN_YOLO_GET_OPT_WIDTH}",
           "width",
-          "width",
         ],
         [
+          "%{BKY_KB_MAIPLUS_MAIX3_NN_YOLO_GET_OPT_HEIGHT}",
           "height",
-          "height",
         ],
         [
-          "label",
+          "%{BKY_KB_MAIPLUS_MAIX3_NN_YOLO_GET_OPT_LABEL}",
           "label",
         ],
         [
-          "class id",
+          "%{BKY_KB_MAIPLUS_MAIX3_NN_YOLO_GET_OPT_CLASS_ID}",
           "class_id",
         ],
         [
-          "probability",
+          "%{BKY_KB_MAIPLUS_MAIX3_NN_YOLO_GET_OPT_PROBABILITY}",
           "probability",
         ],
       ],
@@ -215,22 +215,22 @@ Blockly.defineBlocksWithJsonArray([{
 },
 {
   "type": "maix3_nn_classify_get_result",
-  "message0": "get %1",
+  "message0": "%{BKY_KB_MAIPLUS_MAIX3_NN_CLASSIFY_GET_RESULT}",
   "args0": [
     {
       "type": "field_dropdown",
       "name": "data",
       "options": [
         [
-          "label",
+          "%{BKY_KB_MAIPLUS_MAIX3_NN_CLASSIFY_GET_RESULT_OPT_LABEL}",
           "label",
         ],
         [
-          "class id",
+          "%{BKY_KB_MAIPLUS_MAIX3_NN_CLASSIFY_GET_RESULT_OPT_CLASS_ID}",
           "class_id",
         ],
         [
-          "probability",
+          "%{BKY_KB_MAIPLUS_MAIX3_NN_CLASSIFY_GET_RESULT_OPT_PROBABILITY}",
           "probability",
         ],
       ],

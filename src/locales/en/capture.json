@@ -1,0 +1,28 @@
+{
+  "shared": {
+    "noImageSelected": "No selected image, please click on the image below to select.",
+    "counter": {
+      "image": "Image"
+    }
+  },
+  "voice": {
+    "noItemSelected": "No selected item, please click on the list below to select.",
+    "counter": {
+      "selected": "Selected",
+      "sound": "Sound"
+    },
+    "boardConnection": "Board Connection",
+    "connectBoard": "Connect Board",
+    "recorderSettings": "Recorder Settings",
+    "rangeSeconds": "Range : {duration} seconds",
+    "playbackVolume": "Playback Volume",
+    "status": {
+      "needBoard": "Connect board to record",
+      "initMic": "Initializing microphone...",
+      "listening": "Listening for sound...",
+      "recording": "Recording...",
+      "processing": "Processing audio...",
+      "micUnavailable": "Microphone unavailable, press Connect Board to retry"
+    }
+  }
+}

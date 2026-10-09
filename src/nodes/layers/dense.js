@@ -50,28 +50,29 @@ import {
 
 import { setType } from "@baklavajs/interface-types"
 import { modelInput, modelOutput, tensor } from "../interfaces/interface-types"
+import { t } from "@/plugins/i18n"
 
 export const DenseNode = defineNode({
   type: "Dense",
-  title: "Dense Layer",
+  title: t("designer.node.dense"),
   inputs: {        
-    modelInput : () => new NodeInterface("Model Input | Tensor").use(setType, [modelInput, tensor]),
-    output_nodes : () => new IntegerInterface("Output Nodes", 50).setPort(false),
-    activation : () => new SelectInterface("Activation", "ReLU",
+    modelInput : () => new NodeInterface(t("designer.field.modelInputTensor")).use(setType, [modelInput, tensor]),
+    output_nodes : () => new IntegerInterface(t("designer.field.outputNodes"), 50).setPort(false),
+    activation : () => new SelectInterface(t("designer.field.activation"), "ReLU",
       [
         { text: "ReLU", value : "ReLU" },
         { text: "Sigmoid", value : "Sigmoid" },
         { text: "Tanh", value : "Tanh" },
         { text: "Softmax", value : "Softmax" },
       ]).setPort(false),
-    use_bias : () => new SelectInterface("Use Bias", "True",
+    use_bias : () => new SelectInterface(t("designer.field.useBias"), "True",
       [
-        { text: "True", value : "True" },
-        { text: "Talse", value : "False" },
+        { text: t("designer.option.true"), value : "True" },
+        { text: t("designer.option.false"), value : "False" },
       ]).setPort(false),
   },
   outputs: {
-    result: () => new NodeInterface("Tensor").use(setType, tensor),
+    result: () => new NodeInterface(t("designer.field.tensor")).use(setType, tensor),
   },
   calculate({ modelInput, output_nodes, activation, use_bias})  {
     let activationCode = "torch.nn." + activation + "()\n"

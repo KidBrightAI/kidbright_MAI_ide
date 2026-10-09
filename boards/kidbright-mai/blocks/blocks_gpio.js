@@ -2,7 +2,7 @@ Blockly.defineBlocksWithJsonArray(
   [
     {
       "type": "maixpy3_gpio_rgb_hex",
-      "message0": "Set RGB color %1",
+      "message0": "%{BKY_KB_MAI_MAIXPY3_GPIO_RGB_HEX}",
       "args0": [
         {
           "type": "field_colour",
@@ -18,7 +18,7 @@ Blockly.defineBlocksWithJsonArray(
     },
     {
       "type": "maixpy3_gpio_rgb",
-      "message0": "Set RGB color red %1 green %2 blue %3",
+      "message0": "%{BKY_KB_MAI_MAIXPY3_GPIO_RGB}",
       "args0": [
         {
           "type": "input_value",
@@ -45,7 +45,7 @@ Blockly.defineBlocksWithJsonArray(
     },
     {
       "type": "maixpy3_delay",
-      "message0": "delay %1 second(s)",
+      "message0": "%{BKY_KB_MAI_MAIXPY3_DELAY}",
       "args0": [
         {
           "type": "input_value",
@@ -61,18 +61,18 @@ Blockly.defineBlocksWithJsonArray(
     },
     {
       "type": "maixpy3_gpio_when_switch",
-      "message0": "When Switch %1 pressed %2 %3",
+      "message0": "%{BKY_KB_MAI_MAIXPY3_GPIO_WHEN_SWITCH}",
       "args0": [
         {
           "type": "field_dropdown",
           "name": "switch",
           "options": [
             [
-              "S1",
+              "%{BKY_KB_MAI_MAIXPY3_GPIO_WHEN_SWITCH_OPT_S1}",
               "S1",
             ],
             [
-              "S2",
+              "%{BKY_KB_MAI_MAIXPY3_GPIO_WHEN_SWITCH_OPT_S2}",
               "S2",
             ],
           ],
@@ -93,18 +93,18 @@ Blockly.defineBlocksWithJsonArray(
     },
     {
       "type": "maixpy3_gpio_switch",
-      "message0": "switch %1 pressed",
+      "message0": "%{BKY_KB_MAI_MAIXPY3_GPIO_SWITCH}",
       "args0": [
         {
           "type": "field_dropdown",
           "name": "switch",
           "options": [
             [
-              "S1",
+              "%{BKY_KB_MAI_MAIXPY3_GPIO_SWITCH_OPT_S1}",
               "S1",
             ],
             [
-              "S2",
+              "%{BKY_KB_MAI_MAIXPY3_GPIO_SWITCH_OPT_S2}",
               "S2",
             ],
           ],
@@ -117,7 +117,7 @@ Blockly.defineBlocksWithJsonArray(
     },
     {
       "type": "maixpy3_gpio_buzzer",
-      "message0": "Buzzer beep tone %1 delay %2",
+      "message0": "%{BKY_KB_MAI_MAIXPY3_GPIO_BUZZER}",
       "args0": [
         {
           "type": "input_dummy",
@@ -137,22 +137,22 @@ Blockly.defineBlocksWithJsonArray(
     },
     {
       "type": "board_get_acc",
-      "message0": "get acceleration %1",
+      "message0": "%{BKY_KB_MAI_BOARD_GET_ACC}",
       "args0": [
         {
           "type": "field_dropdown",
           "name": "axis",
           "options": [
             [
-              "x",
+              "%{BKY_KB_MAI_BOARD_GET_ACC_OPT_0}",
               "0",
             ],
             [
-              "y",
+              "%{BKY_KB_MAI_BOARD_GET_ACC_OPT_1}",
               "1",
             ],
             [
-              "z",
+              "%{BKY_KB_MAI_BOARD_GET_ACC_OPT_2}",
               "2",
             ],
           ],
@@ -165,7 +165,7 @@ Blockly.defineBlocksWithJsonArray(
     },
     {
       "type": "board_get_acc_tap",
-      "message0": "is tapped",
+      "message0": "%{BKY_KB_MAI_BOARD_GET_ACC_TAP}",
       "output": "Boolean",
       "colour": "#a5745b",
       "tooltip": "",
@@ -173,46 +173,46 @@ Blockly.defineBlocksWithJsonArray(
     },
     {
       "type": "maixpy3_gpio_get",
-      "message0": "read pin %1",
+      "message0": "%{BKY_KB_MAI_MAIXPY3_GPIO_GET}",
       "args0": [
         {
           "type": "field_dropdown",
           "name": "pin",
           "options": [
             [
-              "PH14",
+              "%{BKY_KB_MAI_MAIXPY3_GPIO_GET_OPT_14}",
               "14",
             ],
             [
-              "PH13",
+              "%{BKY_KB_MAI_MAIXPY3_GPIO_GET_OPT_13}",
               "13",
             ],
             [
-              "PH3",
+              "%{BKY_KB_MAI_MAIXPY3_GPIO_GET_OPT_3}",
               "3",
             ],
             [
-              "PH2",
+              "%{BKY_KB_MAI_MAIXPY3_GPIO_GET_OPT_2}",
               "2",
             ],
             [
-              "PH1",
+              "%{BKY_KB_MAI_MAIXPY3_GPIO_GET_OPT_1}",
               "1",
             ],
             [
-              "PH0",
+              "%{BKY_KB_MAI_MAIXPY3_GPIO_GET_OPT_0}",
               "0",
             ],
             [
-              "PH8",
+              "%{BKY_KB_MAI_MAIXPY3_GPIO_GET_OPT_8}",
               "8",
             ],
             [
-              "PH7",
+              "%{BKY_KB_MAI_MAIXPY3_GPIO_GET_OPT_7}",
               "7",
             ],
             [
-              "PH6",
+              "%{BKY_KB_MAI_MAIXPY3_GPIO_GET_OPT_6}",
               "6",
             ],
           ],
@@ -225,62 +225,62 @@ Blockly.defineBlocksWithJsonArray(
     },
     {
       "type": "maixpy3_gpio_set",
-      "message0": "write pin %1 %2 value %3",
+      "message0": "%{BKY_KB_MAI_MAIXPY3_GPIO_SET}",
       "args0": [
         {
           "type": "field_dropdown",
           "name": "pin",
           "options": [
             [
-              "PH14",
+              "%{BKY_KB_MAI_MAIXPY3_GPIO_SET_OPT_14}",
               "14",
             ],
             [
-              "PH13",
+              "%{BKY_KB_MAI_MAIXPY3_GPIO_SET_OPT_13}",
               "13",
             ],
             [
-              "PH3",
+              "%{BKY_KB_MAI_MAIXPY3_GPIO_SET_OPT_3}",
               "3",
             ],
             [
-              "PH2",
+              "%{BKY_KB_MAI_MAIXPY3_GPIO_SET_OPT_2}",
               "2",
             ],
             [
-              "PH1",
+              "%{BKY_KB_MAI_MAIXPY3_GPIO_SET_OPT_1}",
               "1",
             ],
             [
-              "PH0",
+              "%{BKY_KB_MAI_MAIXPY3_GPIO_SET_OPT_0}",
               "0",
             ],
             [
-              "PH8",
+              "%{BKY_KB_MAI_MAIXPY3_GPIO_SET_OPT_8}",
               "8",
             ],
             [
-              "PH7",
+              "%{BKY_KB_MAI_MAIXPY3_GPIO_SET_OPT_7}",
               "7",
             ],
             [
-              "PH6",
+              "%{BKY_KB_MAI_MAIXPY3_GPIO_SET_OPT_6}",
               "6",
             ],
             [
-              "LED TX",
+              "%{BKY_KB_MAI_MAIXPY3_GPIO_SET_OPT_9}",
               "9",
             ],
             [
-              "LED RX",
+              "%{BKY_KB_MAI_MAIXPY3_GPIO_SET_OPT_10}",
               "10",
             ],
             [
-              "LED SCK",
+              "%{BKY_KB_MAI_MAIXPY3_GPIO_SET_OPT_11}",
               "11",
             ],
             [
-              "LED SDA",
+              "%{BKY_KB_MAI_MAIXPY3_GPIO_SET_OPT_12}",
               "12",
             ],
           ],
@@ -308,22 +308,22 @@ Blockly.defineBlocksWithJsonArray(
     // servo block for gpio
     {
       "type": "maixpy3_gpio_servo",
-      "message0": "Servo motor set pin %1 angle %2",
+      "message0": "%{BKY_KB_MAI_MAIXPY3_GPIO_SERVO}",
       "args0": [
         {
           "type": "field_dropdown",
           "name": "pin",
           "options": [
             [
-              "PH6",
+              "%{BKY_KB_MAI_MAIXPY3_GPIO_SERVO_OPT_6}",
               "6",
             ],
             [
-              "PH7",
+              "%{BKY_KB_MAI_MAIXPY3_GPIO_SERVO_OPT_7}",
               "7",
             ],              
             [
-              "PH8",
+              "%{BKY_KB_MAI_MAIXPY3_GPIO_SERVO_OPT_8}",
               "8",
             ],
           ],

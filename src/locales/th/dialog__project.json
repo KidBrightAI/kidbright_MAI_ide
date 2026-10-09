@@ -1,0 +1,96 @@
+{
+  "newProject": {
+    "title": "สร้างโปรเจคใหม่",
+    "defaultName": "โปรเจค KidBright Micro AI",
+    "name": "ชื่อโปรเจค",
+    "nameRequired": "ต้องการชื่อโปรเจค",
+    "nameTooLong": "ชื่อโปรเจคต้องน้อยกว่า 60 ตัวอักษร",
+    "create": "สร้างโปรเจคใหม่"
+  },
+  "saveProject": {
+    "title": "ตั้งชื่อไฟล์",
+    "filename": "ชื่อไฟล์",
+    "filenameRequired": "ต้องการชื่อไฟล์",
+    "filenameTooLong": "ชื่อไฟล์ต้องน้อยกว่า 128 ตัวอักษร",
+    "filenameInvalid": "ชื่อไฟล์ต้องข้อความ ตัวเลข และ _ - หรือว่างเท่านั้น",
+    "save": "บันทึกโปรเจค"
+  },
+  "openingProject": {
+    "title": "เปิดโปรเจค",
+    "importing": "กำลังนำเข้าข้อมูล ..."
+  },
+  "savingProject": {
+    "title": "บันทึกโปรเจค",
+    "saving": "กำลังบันทึก ..."
+  },
+  "uploadProject": {
+    "title": "อัปโหลดโปรเจค",
+    "uploading": "กำลังอัปโหลด ..."
+  },
+  "selectBoard": {
+    "title": "เลือกบอร์ด"
+  },
+  "newModel": {
+    "title": "เลือกประเภทโมเดลให้กับโปรเจคนี้",
+    "learningType": "ประเภทการเรียนรู้",
+    "select": "เลือกโมเดล"
+  },
+  "newLabel": {
+    "title": "เพิ่มป้ายกำกับใหม่",
+    "name": "ตั้งชื่อป้ายกำกับ",
+    "add": "เพิ่มป้ายกำกับ"
+  },
+  "addEditLabel": {
+    "addTitle": "เพิ่ม ป้ายกำกับใหม่",
+    "editTitle": "แก้ไข ป้ายกำกับใหม่",
+    "name": "ตั้งชื่อป้ายกำกับ",
+    "editName": "แก้ไขชื่อป้ายกำกับ",
+    "add": "เพิ่มป้ายกำกับ",
+    "edit": "แก้ไขป้ายกำกับ"
+  },
+  "genericInput": {
+    "title": "หัวข้อ",
+    "label": "ข้อความ",
+    "submit": "ยืนยัน"
+  },
+  "example": {
+    "title": "ตัวอย่างของบอร์ด",
+    "subtitle": "เลือกตัวอย่างที่ต้องการเปิด",
+    "openBlock": "เปิดเป็นบล็อก",
+    "openCode": "เปิดเป็นโค้ด"
+  },
+  "plugin": {
+    "title": "จัดการปลั๊กอิน",
+    "subtitle": "เลือกปลั๊กอินที่ต้องการติดตั้ง",
+    "installed": "ปลั๊กอินที่ติดตั้งแล้ว",
+    "categories": {
+      "all": "ปลั๊กอินทั้งหมด",
+      "communication": "การสื่อสาร",
+      "dataProcessing": "การประมวลผลข้อมูล",
+      "dataStorage": "การจัดเก็บข้อมูล",
+      "display": "การแสดงผล",
+      "sensors": "เซนเซอร์",
+      "signalIo": "สัญญาณเข้า/ออก",
+      "timing": "การจับเวลา",
+      "other": "อื่น ๆ"
+    }
+  },
+  "secureConnect": {
+    "title": "การตั้งค่าความปลอดภัย (Secure Connect)",
+    "heading": "ยืนยันความปลอดภัย",
+    "httpsNotice": "เนื่องจากเป็นการเชื่อมต่อผ่าน HTTPS บน Local Network",
+    "allowOnce": "Browser จะบล็อกการทำงาน ต้องทำการอนุญาตก่อน (ทำครั้งเดียว):",
+    "imageAlt": "คลิกเพื่อเปิดลิงก์ยืนยันความปลอดภัย",
+    "openTab": "กดปุ่มนี้เพื่อเปิดแท็บยืนยัน",
+    "target": "(ปลายทาง: {url})",
+    "closeWindow": "ปิดหน้าต่าง"
+  },
+  "connectWifi": {
+    "title": "เชื่อมต่อ WiFi",
+    "network": "เลือก WiFi",
+    "password": "รหัสผ่าน WiFi",
+    "connect": "เชื่อมต่อ WiFi",
+    "connected": "เชื่อมต่อ WiFi สำเร็จ",
+    "connectFailed": "เกิดข้อผิดพลาดในการเชื่อมต่อ WiFi"
+  }
+}

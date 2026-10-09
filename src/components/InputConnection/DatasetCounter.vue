@@ -1,11 +1,13 @@
 <template>
   <div class="img-counter">
     <span class="current-img">{{ props.prefix }} </span>
-    <span class="ov-img">{{ props.current || "-" }} {{ props.seperator }} {{ datasetStore.dataLength }} {{ props.suffix }}{{ datasetStore.dataLength > 1? "s" : "" }}</span>
+    <span class="ov-img">{{ props.current || "-" }} {{ props.seperator }} {{ datasetStore.dataLength }} {{ suffixText }}</span>
   </div>
 </template>
 
 <script setup>
+import { computed } from "vue"
+import { useI18n } from "vue-i18n"
 import { useDatasetStore } from "@/store/dataset"
 const props = defineProps({
   prefix : {
@@ -22,7 +24,14 @@ const props = defineProps({
     type : String,
   },
 })
+const { t } = useI18n()
 const datasetStore = useDatasetStore()
+
+// The plural form of the unit word belongs to the locale: English appends
+// "s" past one item, Thai nouns do not change.
+const suffixText = computed(() => (
+  datasetStore.dataLength > 1 ? t("capture.datasetList.pluralOf", { word: props.suffix }) : props.suffix
+))
 </script>
 
 <style lang="scss" scoped>

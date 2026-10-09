@@ -1,5 +1,6 @@
 /* eslint-disable no-undef */
 import { toast } from "vue3-toastify"
+import { t } from "@/plugins/i18n"
 
 export default class StorageService {
   constructor() {
@@ -20,7 +21,7 @@ export default class StorageService {
 
       const onError = err => {
         console.error("File system initialization failed", err)
-        toast.error("Failed to initialize storage.")
+        toast.error(t("project.storageInitFailed"))
         reject(err)
       }
 

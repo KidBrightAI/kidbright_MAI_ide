@@ -1,4 +1,5 @@
 import { toast } from "vue3-toastify"
+import { t } from "@/plugins/i18n"
 import { useWorkspaceStore } from "@/store/workspace"
 import { usePluginStore } from "@/store/plugin"
 import { pickByType } from "@/engine/model-formats"
@@ -45,6 +46,13 @@ export default class BoardProtocol {
   async disconnect()      { throw new Error("disconnect() not implemented") }
   isConnected()           { throw new Error("isConnected() not implemented") }
   async rebootBoard()     { throw new Error("rebootBoard() not implemented") }
+
+  /**
+   * Wait for any connect-time script sync to finish. Protocols that
+   * sync inline inside connect() (web-adb) have nothing pending;
+   * websocket-shell overrides this because it syncs in the background.
+   */
+  async scriptsSynced()   { /* nothing pending by default */ }
 
   // ========================================================== transport primitives
 
@@ -184,10 +192,10 @@ export default class BoardProtocol {
 
     try {
       await Format.uploadToBoard({ writeFile, statFile }, model.hash, blobs)
-      toast.success("อัพโหลดโมเดลสำเร็จ")
+      toast.success(t("model.uploadSuccess"))
     } catch (e) {
       console.error("Model upload error:", e)
-      toast.error("อัพโหลดโมเดลไม่สำเร็จ")
+      toast.error(t("model.uploadFailed"))
     }
   }
 

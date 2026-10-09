@@ -5,10 +5,13 @@ import { toast } from "vue3-toastify"
 import { useWorkspaceStore } from "@/store/workspace"
 import { onMounted } from "vue"
 import { randomId } from "../utils"
+import { useI18n } from "vue-i18n"
 
 const isDialogVisible = defineModel('isDialogVisible', { type: Boolean, default: false })
 
 const emit = defineEmits(['submit'])
+
+const { t } = useI18n()
 
 const boardStore = useBoardStore()
 const workspaceStore = useWorkspaceStore()
@@ -17,9 +20,14 @@ const extensions = inject('extensions')
 const models = extensions.map(el => ({title : el.title, value : el.id}))
 const modelOptions = Object.fromEntries(extensions.map(el=> el.options? [el.id,el.options] : null).filter(el=>el!=null))
 const selectType = ref(extensions[0].id)
-const projectName = ref("โปรเจค KidBright Micro AI")
+const projectName = ref(t('dialog.newProject.defaultName'))
 
 const refVForm = ref({})
+
+const nameRules = [
+  v => !!v || t('dialog.newProject.nameRequired'),
+  v => (v && v.length <= 60) || t('dialog.newProject.nameTooLong'),
+]
 
 const resetForm = () => {
   isDialogVisible.value = false
@@ -59,7 +67,7 @@ const onFormSubmit = async() => {
       />
       <VCardItem>
         <VCardTitle class="text-h5">
-          สร้างโปรเจคใหม่
+          {{ $t('dialog.newProject.title') }}
         </VCardTitle>
       </VCardItem>
       <VCardText class="pt-0">
@@ -77,14 +85,11 @@ const onFormSubmit = async() => {
             <VCol cols="12">
               <VTextField
                 v-model="projectName"
-                label="ชื่อโปรเจค"
+                :label="$t('dialog.newProject.name')"
                 outlined
                 dense
                 clearable
-                :rules="[
-                  (v) => !!v || 'ต้องการชื่อโปรเจค',
-                  (v) => (v && v.length <= 60) || 'ชื่อโปรเจคต้องน้อยกว่า 60 ตัวอักษร',
-                ]"
+                :rules="nameRules"
               />
             </VCol>
           </VRow>
@@ -98,7 +103,7 @@ const onFormSubmit = async() => {
                 class="me-3"
                 color="primary"
               >
-                สร้างโปรเจคใหม่
+                {{ $t('dialog.newProject.create') }}
               </VBtn>
             </VCol>
           </VRow>

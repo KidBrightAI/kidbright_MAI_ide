@@ -1,0 +1,66 @@
+{
+  "importObjectDetect": {
+    "title": "Import Images",
+    "tabImage": "IMPORT IMAGE",
+    "imageOnlyHeading": "Import images only",
+    "selectImageFolder": "Select image folder",
+    "selectXmlFolder": "Select XML annotation folder",
+    "moreFiles": "+{count} file(s)",
+    "kbaiHeading": "Import a dataset from a KidBright AI IDE project",
+    "selectKbaiZip": "Select the .zip file of a KidBright AI IDE project",
+    "importing": "Importing ...",
+    "done": "Import complete",
+    "success": "Data imported successfully",
+    "partialSuccess": "Only part of the data was imported: {count} file(s) could not be downloaded",
+    "zipRequired": "Please select the .zip file of a KidBright AI IDE project",
+    "classifyProjectTitle": "This is an image classification project",
+    "classifyProjectContent": "Only the images can be imported",
+    "noImagesInProject": "No image files found in the project",
+    "notObjectDetectProject": "This project is not an object detection project",
+    "xmlCountMismatch": "The number of image files and XML annotation files does not match"
+  },
+  "importImageClassify": {
+    "title": "Import Images",
+    "tabPc": "PC",
+    "selectImageFolder": "Select image folder",
+    "moreFiles": "+{count} file(s)",
+    "importWithLabel": "Import with the folder name as the label",
+    "importWithLabelNote": "All images will be labelled with the name of the selected top-level folder",
+    "importing": "Importing ...",
+    "done": "Import complete",
+    "success": "Data imported successfully",
+    "partialSuccess": "Only part of the data was imported: {count} file(s) could not be downloaded"
+  },
+  "fileExplorer": {
+    "title": "File Explorer",
+    "upOneLevel": "Up one level",
+    "newFolder": "New folder",
+    "folderName": "Folder name",
+    "uploadFile": "Upload file",
+    "emptyFolder": "This folder is empty",
+    "confirmDeleteTitle": "Confirm delete",
+    "confirmDeleteContent": "Delete \"{name}\"?",
+    "deleted": "Deleted \"{name}\"",
+    "folderCreated": "Created folder \"{name}\"",
+    "uploaded": "Uploaded \"{name}\""
+  },
+  "deployAsApp": {
+    "title": "Install as an App",
+    "subtitle": "Install this project on the board as an app so it can be opened any time from the menu on the board's screen",
+    "appName": "App name",
+    "appNameRequired": "Please enter an app name",
+    "appId": "App ID",
+    "appIdHint": "Use English letters, digits and underscores",
+    "appIdRequired": "Please enter an app ID",
+    "appIdPattern": "Use only a-z, 0-9 and _",
+    "author": "Author",
+    "icon": "App icon",
+    "iconHint": "PNG 96×96 px recommended; the default icon is used if none is chosen",
+    "autoStart": "Start this app automatically when the board powers on",
+    "deploying": "Installing...",
+    "deploy": "Install App"
+  },
+  "confirm": {
+    "title": "Are you sure?"
+  }
+}

@@ -1,39 +1,61 @@
+<script setup>
+import { Translation as I18nT } from 'vue-i18n'
+</script>
+
 <template>
   <div class="hint">
     <div class="main-hint txt">
       <p class="p-color font-weight-bold">
-        ขั้นตอนที่ 2 Annotate (Object Detection)
+        {{ $t('instructions.object.annotate.title') }}
       </p>
-      <p>ขั้นตอนนี้ใช้สำหรับกำหนดขอบเขตและติดป้ายกำกับให้วัตถุ</p>
+      <p>{{ $t('instructions.object.annotate.intro') }}</p>
       <p>
-        <br>1. กดปุ่ม
-        <img
-          src="@/assets/images/png/Group_97.png"
-          alt=""
-          srcset=""
+        <br>
+        <I18nT
+          keypath="instructions.object.annotate.step1"
+          scope="global"
         >
-        เพื่อตั้งชื่อป้ายกำกับให้กับวัตถุแต่ละชนิด 
+          <template #button>
+            <img
+              src="@/assets/images/png/Group_97.png"
+              alt=""
+              srcset=""
+            >
+          </template>
+        </I18nT>
       </p>
       <p>
-        <br>2. กำหนดขอบเขตของวัตถุ โดยทำการลากคลุมวัตถุให้อยู่ภายในกรอบสี่เหลี่ยม
-        <img
-          src="@/assets/images/png/Group_96.png"
-          alt=""
-          srcset=""
+        <br>
+        <I18nT
+          keypath="instructions.object.annotate.step2"
+          scope="global"
         >
-        ที่กำหนดพอดี ไม่ตีกรอบใหญ่หรือเล็กเกินไป 
+          <template #box>
+            <img
+              src="@/assets/images/png/Group_96.png"
+              alt=""
+              srcset=""
+            >
+          </template>
+        </I18nT>
       </p>
       <p>
-        <br>3. กดปุ่ม
-        <img
-          src="@/assets/images/png/interface.png"
-          alt=""
-          srcset=""
+        <br>
+        <I18nT
+          keypath="instructions.object.annotate.step3"
+          scope="global"
         >
-        หลังชื่อป้ายกำกับ เมื่อต้องการใช้ชื่อที่ตั้งไว้เเล้ว จะปรากฏป้ายกำกับพร้อมพิกัดอยู่บริเวณขวามือ
+          <template #button>
+            <img
+              src="@/assets/images/png/interface.png"
+              alt=""
+              srcset=""
+            >
+          </template>
+        </I18nT>
       </p>
       <p>
-        <br> หมายเหตุ: สามารถติดป้ายกำกับมากกว่า 1 ป้ายต่อภาพ ขึ้นอยู่กับจำนวนวัตถุในรูปภาพนั้น
+        <br> {{ $t('instructions.object.annotate.note') }}
       </p>
     </div>
     <div class="mascot">

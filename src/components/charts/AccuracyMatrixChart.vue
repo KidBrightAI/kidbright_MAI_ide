@@ -12,6 +12,7 @@ import {
   Legend,
 } from 'chart.js'
 import { onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 const props = defineProps({
   title : {
@@ -42,6 +43,7 @@ ChartJS.register(
 )
 
 const serverStore = useServerStore()
+const { t } = useI18n()
 
 const colors = [
   "#00ff00",
@@ -79,7 +81,7 @@ const data = computed(() => {
     labels: serverStore.matric.map(m => m.epoch),
     datasets: [ 
       {
-        label: 'Accuracy | mAP',
+        label: t('train.chart.accuracySeries'),
         backgroundColor: 'rgba(255, 99, 132, 0.2)',
         borderColor: 'rgba(255, 99, 132, 1)',
         borderWidth: 1,

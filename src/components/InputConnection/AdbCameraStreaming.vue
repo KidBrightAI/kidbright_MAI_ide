@@ -193,7 +193,7 @@ defineExpose({
     class="w-100 d-flex text-white align-center justify-center"
     style="height: 200px;"
   >
-    <span v-if="status == 'disconnected'">กรุณาเชื่อมต่ออุปกรณ์</span>
+    <span v-if="status == 'disconnected'">{{ $t('capture.camera.connectDevice') }}</span>
     <VProgressCircular
       v-if="status == 'connecting'"
       :width="7"

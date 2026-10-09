@@ -1,7 +1,7 @@
 Blockly.defineBlocksWithJsonArray(
   [{
     "type": "image_draw_string",
-    "message0": "Image %1 draw text %2 at X %3 Y %4 color %5 %6 scale %7 thickness %8",
+    "message0": "%{BKY_KB_MAIPLUS_IMAGE_DRAW_STRING}",
     "args0": [
       {
         "type": "input_value",
@@ -51,7 +51,7 @@ Blockly.defineBlocksWithJsonArray(
   },
   {
     "type": "image_draw_line",
-    "message0": "Image %1 draw line at X1 %2 Y1 %3 to X2 %4 Y2 %5 color %6 %7 tickness %8",
+    "message0": "%{BKY_KB_MAIPLUS_IMAGE_DRAW_LINE}",
     "args0": [
       {
         "type": "input_value",
@@ -101,7 +101,7 @@ Blockly.defineBlocksWithJsonArray(
   },
   {
     "type": "image_draw_rectangle",
-    "message0": "Image %1 draw rectangle at X %2 Y %3 Width %4 Height %5 color %6 %7 tickness %8 (-1 to fill)",
+    "message0": "%{BKY_KB_MAIPLUS_IMAGE_DRAW_RECTANGLE}",
     "args0": [
       {
         "type": "input_value",
@@ -151,7 +151,7 @@ Blockly.defineBlocksWithJsonArray(
   },
   {
     "type": "image_draw_circle",
-    "message0": "Image %1 draw circle at X1 %2 Y1 %3 radius %4 color %5 %6 tickness %7 (-1 to fill)",
+    "message0": "%{BKY_KB_MAIPLUS_IMAGE_DRAW_CIRCLE}",
     "args0": [
       {
         "type": "input_value",
@@ -196,7 +196,7 @@ Blockly.defineBlocksWithJsonArray(
   },
   {
     "type": "image_draw_ellipse",
-    "message0": "Image %1 draw ellipse at X %2 Y %3 radius x %4 y %5 rotate %6 angle from %7 to %8 color %9 %10 tickness %11 (-1 to fill)",
+    "message0": "%{BKY_KB_MAIPLUS_IMAGE_DRAW_ELLIPSE}",
     "args0": [
       {
         "type": "input_value",
@@ -261,7 +261,7 @@ Blockly.defineBlocksWithJsonArray(
   },
   {
     "type": "image_crop",
-    "message0": "Crop Image %1 from X %2 Y %3 width %4 height %5",
+    "message0": "%{BKY_KB_MAIPLUS_IMAGE_CROP}",
     "args0": [
       {
         "type": "input_value",
@@ -297,7 +297,7 @@ Blockly.defineBlocksWithJsonArray(
   },
   {
     "type": "image_resize",
-    "message0": "Resize image %1 to width %2 height %3",
+    "message0": "%{BKY_KB_MAIPLUS_IMAGE_RESIZE}",
     "args0": [
       {
         "type": "input_value",
@@ -323,7 +323,7 @@ Blockly.defineBlocksWithJsonArray(
   },
   {
     "type": "image_flip",
-    "message0": "Flip image %1 direction %2",
+    "message0": "%{BKY_KB_MAIPLUS_IMAGE_FLIP}",
     "args0": [
       {
         "type": "input_value",
@@ -335,15 +335,15 @@ Blockly.defineBlocksWithJsonArray(
         "name": "direction",
         "options": [
           [
-            "horizontal",
+            "%{BKY_KB_MAIPLUS_IMAGE_FLIP_OPT_HORIZONTAL}",
             "1",
           ],
           [
-            "vertical",
+            "%{BKY_KB_MAIPLUS_IMAGE_FLIP_OPT_VERTICAL}",
             "0",
           ],
           [
-            "horizontal & vertical",
+            "%{BKY_KB_MAIPLUS_IMAGE_FLIP_OPT_HORIZONTAL_VERTICAL}",
             "-1",
           ],
         ],
@@ -357,7 +357,7 @@ Blockly.defineBlocksWithJsonArray(
   },
   {
     "type": "image_rotate",
-    "message0": "Rotate image %1 angle %2",
+    "message0": "%{BKY_KB_MAIPLUS_IMAGE_ROTATE}",
     "args0": [
       {
         "type": "input_value",
@@ -378,7 +378,7 @@ Blockly.defineBlocksWithJsonArray(
   },
   {
     "type": "image_copy",
-    "message0": "Copy image %1",
+    "message0": "%{BKY_KB_MAIPLUS_IMAGE_COPY}",
     "args0": [
       {
         "type": "input_value",
@@ -394,7 +394,7 @@ Blockly.defineBlocksWithJsonArray(
   },
   {
     "type": "image_save",
-    "message0": "Save image %1 to path %2",
+    "message0": "%{BKY_KB_MAIPLUS_IMAGE_SAVE}",
     "args0": [
       {
         "type": "input_value",
@@ -433,7 +433,7 @@ Blockly.defineBlocksWithJsonArray(
   // },
   {
     "type": "image_open",
-    "message0": "open image from path %1 to variable %2 %3",
+    "message0": "%{BKY_KB_MAIPLUS_IMAGE_OPEN}",
     "args0": [
       {
         "type": "field_input",
@@ -458,7 +458,7 @@ Blockly.defineBlocksWithJsonArray(
   },
   {
     "type": "image_new",
-    "message0": "New image width %1 height %2 color %3",
+    "message0": "%{BKY_KB_MAIPLUS_IMAGE_NEW}",
     "args0": [
       {
         "type": "input_value",
@@ -484,7 +484,7 @@ Blockly.defineBlocksWithJsonArray(
   },
   {
     "type": "image_draw_cross",
-    "message0": "Image %1 draw cross at X %2 Y %3 color %4 %5 size %6 thickness %7",
+    "message0": "%{BKY_KB_MAIPLUS_IMAGE_DRAW_CROSS}",
     "args0": [
       {
         "type": "input_value",
@@ -529,7 +529,7 @@ Blockly.defineBlocksWithJsonArray(
   },
   {
     "type": "image_draw_arrow",
-    "message0": "Image %1 draw arrow from X1 %2 Y1 %3 to X2 %4 Y2 %5 color %6 %7 thickness %8",
+    "message0": "%{BKY_KB_MAIPLUS_IMAGE_DRAW_ARROW}",
     "args0": [
       {
         "type": "input_value",
@@ -579,7 +579,7 @@ Blockly.defineBlocksWithJsonArray(
   },
   {
     "type": "image_draw_image",
-    "message0": "Image %1 draw image %2 at X %3 Y %4",
+    "message0": "%{BKY_KB_MAIPLUS_IMAGE_DRAW_IMAGE}",
     "args0": [
       {
         "type": "input_value",
@@ -611,7 +611,7 @@ Blockly.defineBlocksWithJsonArray(
   },
   {
     "type": "image_to_format",
-    "message0": "Image %1 to format %2",
+    "message0": "%{BKY_KB_MAIPLUS_IMAGE_TO_FORMAT}",
     "args0": [
       {
         "type": "input_value",
@@ -638,7 +638,7 @@ Blockly.defineBlocksWithJsonArray(
   },
   {
     "type": "image_to_bytes",
-    "message0": "Image %1 to bytes",
+    "message0": "%{BKY_KB_MAIPLUS_IMAGE_TO_BYTES}",
     "args0": [
       {
         "type": "input_value",
@@ -654,7 +654,7 @@ Blockly.defineBlocksWithJsonArray(
   },
   {
     "type": "image_from_bytes",
-    "message0": "Image from bytes %1 width %2 height %3 format %4",
+    "message0": "%{BKY_KB_MAIPLUS_IMAGE_FROM_BYTES}",
     "args0": [
       {
         "type": "input_value",

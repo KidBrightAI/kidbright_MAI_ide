@@ -1,34 +1,51 @@
+<script setup>
+import { Translation as I18nT } from 'vue-i18n'
+</script>
+
 <template>
   <div class="hint">
     <div class="main-hint txt">
       <p class="p-color font-weight-bold">
-        ขั้นตอนที่ 3 Training<br>(Object Detection)
+        {{ $t('instructions.object.train.title') }}<br>{{ $t('instructions.object.train.subtitle') }}
       </p>
       <p>
-        ขั้นตอนนี้เป็นการนำภาพที่ Annotate แล้วมาสร้างโมเดลรู้จำ โดยใช้
-        Google Colab ในการสร้างโมเดล
-        จึงจำเป็นต้องเชื่อมต่ออินเทอร์เน็ตให้เรียบร้อยก่อน
+        {{ $t('instructions.object.train.intro') }}
       </p>
       <p>
-        <br>1. กดปุ่ม
-        <span class="p-color">Create</span> เพื่อเรียกหน้า Colab
-        จากนั้นทำการ login โดยใช้ Google Account ทำตามกระบวนการที่ปรากฏ
-        เมื่อเสร็จสิ้นทำการคัดลอก URL
+        <br>
+        <I18nT
+          keypath="instructions.object.train.step1"
+          scope="global"
+        >
+          <template #create>
+            <span class="p-color">{{ $t('instructions.labels.create') }}</span>
+          </template>
+        </I18nT>
       </p>
       <p>
-        <br>2. เลือกหน้าเว็บ KidBright AI และนำ URL
-        ที่คัดลอกมาใส่ในกล่องข้อความสีเทา
+        <br>{{ $t('instructions.object.train.step2') }}
       </p>
       <p>
-        <br>3. กดปุ่ม
-        <span class="p-color">Train</span> เพื่อส่งภาพไปสร้างโมเดลที่
-        Colab รอจนกระบวนการสร้างโมเดลเสร็จสิ้น
+        <br>
+        <I18nT
+          keypath="instructions.object.train.step3"
+          scope="global"
+        >
+          <template #train>
+            <span class="p-color">{{ $t('instructions.labels.train') }}</span>
+          </template>
+        </I18nT>
       </p>
       <p>
-        <br>4. กดปุ่ม
-        <span class="p-color">Download</span> เพื่อนำโมเดลจาก Colab
-        มาเก็บที่ KidBright AI
-        เมื่อเสร็จขั้นตอนนี้โมเดลจะถูกเรียกใช้ได้ในขั้นตอนที่ 4 Coding
+        <br>
+        <I18nT
+          keypath="instructions.object.train.step4"
+          scope="global"
+        >
+          <template #download>
+            <span class="p-color">{{ $t('instructions.labels.download') }}</span>
+          </template>
+        </I18nT>
       </p>
     </div>
     <div class="mascot">

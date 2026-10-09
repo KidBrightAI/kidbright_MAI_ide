@@ -1,7 +1,10 @@
 export default {
   id: "OBJECT_DETECTION",
   name: "Object Detection",
-  title: "การตรวจจับวัตถุ (Object detection)",
+  title: {
+    th: "การตรวจจับวัตถุ (Object detection)",
+    en: "Object detection",
+  },
   type: "Detector",
   description: "",
   config: {}, // not use yet

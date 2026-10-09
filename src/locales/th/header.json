@@ -1,0 +1,17 @@
+{
+  "uploadToSimulator": "อัปโหลดไปยังซิมูเลเตอร์ (KMV)",
+  "connectBoard": "เชื่อมต่อบอร์ด",
+  "disconnectBoard": "ตัดการเชื่อมต่อบอร์ด",
+  "stopProgram": "หยุดโปรแกรมที่กำลังทำงาน",
+  "uploadAndRun": "อัปโหลดโค้ดและรันบนบอร์ด",
+  "ctrlClickDeployApp": "กด Ctrl ค้างขณะคลิกเพื่อติดตั้งเป็นแอปพลิเคชัน",
+  "fileBrowser": "จัดการไฟล์บนบอร์ด",
+  "connectWifi": "เชื่อมต่อ WiFi",
+  "wifiConnected": "เชื่อมต่อ WiFi แล้ว",
+  "aiModel": "โมเดล AI",
+  "plugins": "ปลั๊กอิน",
+  "newProject": "สร้างโปรเจคใหม่",
+  "openProject": "เปิดโปรเจค",
+  "saveProject": "บันทึกโปรเจค",
+  "projectNameSaved": "บันทึกชื่อโปรเจคแล้ว"
+}

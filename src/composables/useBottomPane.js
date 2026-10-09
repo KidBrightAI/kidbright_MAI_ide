@@ -2,6 +2,7 @@ import { ref, nextTick, onBeforeUnmount } from 'vue'
 import { Terminal } from 'xterm'
 import { FitAddon } from 'xterm-addon-fit'
 import { CanvasAddon } from 'xterm-addon-canvas'
+import { t } from '@/plugins/i18n'
 
 const DEFAULT_FOOTER_HEIGHT = 18
 
@@ -41,7 +42,7 @@ export function useBottomPane({ workspaceStore, boardStore, splitpanesRef, block
       bridgedHandler = handler
     } catch (err) {
       console.error(err)
-      serialMonitorCallback(`\r\nError bridging terminal: ${err.message}\r\n`)
+      serialMonitorCallback(`\r\n${t('board.terminalBridgeError', { message: err.message })}\r\n`)
     }
   }
 
