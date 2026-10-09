@@ -14,55 +14,58 @@ const terminalDiv = shallowRef()
 
 <template>
   <div class="footer-layout">
+    <!--
+      Everything that floats above the footer edge sits in one group
+      anchored bottom-right: undo/redo, the active board name, then
+      the terminal toggle. The board name used to float bottom-left,
+      where it covered the last toolbox category.
+    -->
     <div
       v-if="workspaceStore.currentBoard"
-      class="terminal-floating"
-      :class="{ disabled: !boardStore.isBoardConnected }"
-      :title="boardStore.isBoardConnected ? $t('footer.openTerminal') : $t('footer.connectBoardFirst')"
-      @click="boardStore.isBoardConnected && $emit('terminal')"
+      class="footer-floating-group"
     >
-      <span class="text-h5 text-white px-3">>_ {{ $t('footer.terminal') }}</span>
-    </div>
+      <div class="footer-control-btn-container">
+        <VBtn
+          icon
+          density="comfortable"
+          color="primary"
+          variant="tonal"
+          class="mx-1"
+          @click="$emit('undo')"
+        >
+          <VIcon>mdi-undo</VIcon>
+        </VBtn>
+        <VBtn
+          icon
+          density="comfortable"
+          color="primary"
+          variant="tonal"
+          class="mx-1"
+          @click="$emit('redo')"
+        >
+          <VIcon>mdi-redo</VIcon>
+        </VBtn>
+      </div>
 
-    <!-- Board Name Display -->
-    <div
-      v-if="workspaceStore.currentBoard"
-      class="board-info-floating"
-    >
-      <VIcon
-        color="white"
-        size="24"
-        class="me-2"
-      >
-        mdi-chip
-      </VIcon>
-      <span class="text-h6 text-white">{{ workspaceStore.currentBoard.name }}</span>
-    </div>
+      <div class="board-info-floating">
+        <VIcon
+          color="white"
+          size="24"
+          class="me-2"
+        >
+          mdi-chip
+        </VIcon>
+        <span class="text-h6 text-white">{{ workspaceStore.currentBoard.name }}</span>
+      </div>
 
-    <div
-      v-if="workspaceStore.currentBoard"
-      class="footer-control-btn-container"
-    >
-      <VBtn
-        icon
-        density="comfortable"
-        color="primary"
-        variant="tonal"
-        class="mx-1"
-        @click="$emit('undo')"
+      <div
+        class="terminal-floating"
+        :class="{ disabled: !boardStore.isBoardConnected }"
+        :title="boardStore.isBoardConnected ? $t('footer.openTerminal') : $t('footer.connectBoardFirst')"
+        @click="boardStore.isBoardConnected && $emit('terminal')"
       >
-        <VIcon>mdi-undo</VIcon>
-      </VBtn>
-      <VBtn
-        icon
-        density="comfortable"
-        color="primary"
-        variant="tonal"
-        class="mx-1"
-        @click="$emit('redo')"
-      >
-        <VIcon>mdi-redo</VIcon>
-      </VBtn>
+        <span class="text-h5 text-white px-3">>_ {{ $t('footer.terminal') }}</span>
+      </div>
     </div>
     <VFooter
       class="footer-panel"
@@ -142,16 +145,27 @@ const terminalDiv = shallowRef()
   flex-direction: column;  
   margin: 0;
 }
+.footer-floating-group{
+  position: absolute;
+  right: 0;
+  margin-top: -60px;
+  height: 60px;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 10px;
+  z-index: 9999;
+  pointer-events: none;
+}
+.footer-floating-group > *{
+  pointer-events: auto;
+}
 .footer-control-btn-container{
   display: flex;
   flex-direction: row;
   justify-content: start;
   align-items: center;
   padding: 5px;
-  position: absolute;
-  margin-top: -60px;
-  right: 200px;
-  z-index: 9999;
   background-color: #E4E4E4;
   border-radius: 8px;
 }
@@ -159,14 +173,10 @@ const terminalDiv = shallowRef()
   min-height: 18px; 
 }
 .terminal-floating{
-  position: absolute;
   height: 60px;
-  margin-top: -60px;
   border-radius: 10px 10px 0 0;
-  right: 0;
   padding: 15px 5px 5px 5px;
   background-color: #333333;
-  z-index: 9999;
   cursor: pointer;
   transition: opacity 0.2s;
 }
@@ -175,17 +185,13 @@ const terminalDiv = shallowRef()
   cursor: not-allowed;
 }
 .board-info-floating {
-  position: absolute;
   height: 60px;
-  margin-top: -60px;
-  border-radius: 0 10px 0 0;
-  left: 0;
+  border-radius: 10px 10px 0 0;
   padding: 15px 15px 5px 15px;
   background-color: #007E4E;
-  z-index: 9999;
   display: flex;
   align-items: center;
-  pointer-events: none; /* Let clicks pass through if needed, though it's display only */
+  pointer-events: none; /* display only, let clicks pass through */
 }
 .serial-monitor {
   background-color: #101214;

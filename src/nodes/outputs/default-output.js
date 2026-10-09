@@ -18,7 +18,7 @@ export const OutputNode = defineNode({
   inputs: {
     modelOutput: () => new NodeInterface(t("designer.field.modelOutput"), "").use(setType, modelOutput),
     validateMatrix : () => new SelectInterface(t("designer.field.validateMatrix"), "val_accuracy",[
-      {text : "Mean Average Precision", value : "mAP"},
+      {text: t("designer.option.meanAveragePrecision"), value : "mAP"},
       {text: t("designer.option.validationAccuracy"), value : "val_accuracy"},
       {text: t("designer.option.validationLoss"), value : "val_loss"},
     ]).setPort(false),
