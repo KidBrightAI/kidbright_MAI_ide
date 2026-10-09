@@ -3,6 +3,8 @@ import { sleep } from "@/engine/helper"
 import { useWorkspaceStore } from "@/store/workspace"
 import { useBoardStore } from "@/store/board"
 import { onBeforeMount, onUnmounted } from "vue"
+import { toast } from "vue3-toastify"
+import { useI18n } from "vue-i18n"
 
 /**
  * V2 (kidbright-mai-plus / websocket-shell) variant of AdbSoundCapture.
@@ -15,6 +17,7 @@ import { onBeforeMount, onUnmounted } from "vue"
  */
 
 const emits = defineEmits(["recorded"])
+const { t } = useI18n()
 const workspaceStore = useWorkspaceStore()
 const boardStore = useBoardStore()
 
@@ -40,7 +43,31 @@ const waveformCtx = ref(null)
 const mfcc = ref(null)
 const mfccCtx = ref(null)
 
+const DAEMON_PATH = "/root/scripts/voice_stream.py"
+const DAEMON_LOG = "/tmp/voice_stream.log"
+
+// Surgical kill: only the voice_stream.py daemon, not all python.
+// BusyBox killall matches process name (python3) not cmdline, and
+// pkill isn't on this image, so we go through ps | awk | kill.
+const KILL_DAEMON_CMD =
+  "ps -ef | awk '/voice_stream\\.py/ && !/awk/ {print $1}' | xargs -r kill -9 2>/dev/null; true"
+
+// How long to wait for the daemon's `#ready` once the relay is open.
+// Covers its ALSA open retries, which may first have to evict another
+// process from the microphone (see _open_capture in voice_stream.py).
+const READY_TIMEOUT_MS = 15000
+
 let relay = null
+
+// Pending init() waiting for the daemon's #ready, as {resolve, reject}.
+let readyWaiter = null
+
+// Set on unmount so a failure that lands afterwards stays silent.
+let disposed = false
+
+// init() owns the single readyWaiter slot; a second call while one is
+// still starting the daemon would orphan the first waiter's timer.
+let initializing = false
 const decoder = new TextDecoder()
 
 const RATE = 44100
@@ -79,13 +106,16 @@ const countdown = () => {
   }, 1000)
 }
 
-// Voice_stream.py emits `#uv,<n>` / `#rm,<n>` / `#rec_start` / `#rec_stop`
-// / `#process_start` / `#process_stop` / `#novoice`. The daemon sends
-// each as its own write() but the relay (and any TCP segment coalescing
-// on the way) can deliver several at once — split on `#` so we don't
-// drop messages when ws_shell batches them into a single chunk.
+// Voice_stream.py emits `#ready` (once it holds the mic) and then
+// `#uv,<n>` / `#rm,<n>` / `#rec_start` / `#rec_stop` / `#process_start`
+// / `#process_stop` / `#novoice`. The daemon sends each as its own
+// write() but the relay (and any TCP segment coalescing on the way)
+// can deliver several at once — split on `#` so we don't drop
+// messages when ws_shell batches them into a single chunk.
 const handleMsg = msg => {
-  if (msg.startsWith("uv,")) {
+  if (msg.startsWith("ready")) {
+    readyWaiter?.resolve()
+  } else if (msg.startsWith("uv,")) {
     drawUv(msg.slice(3))
   } else if (msg.startsWith("rm,")) {
     drawWaveform(parseInt(msg.slice(3)))
@@ -115,33 +145,93 @@ const processChunk = chunk => {
   }
 }
 
+// The daemon prints why it failed (ALSA errors, who was holding the
+// mic, a traceback) to DAEMON_LOG. Pull the tail into the toast so the
+// user sees the actual reason instead of a bare "connect board" caption.
+const reportDaemonFailure = async reason => {
+  let tail = ""
+  try {
+    const blob = await boardStore.readFile(DAEMON_LOG)
+    if (blob) {
+      tail = (await blob.text()).trim().split("\n").filter(Boolean).slice(-3).join(" | ")
+    }
+  } catch (e) {
+    // Log unreadable: still report, just without the detail.
+  }
+  console.error("voice_stream:", reason, tail)
+  toast.error(
+    tail
+      ? t("capture.sound.daemonFailure", { reason, tail })
+      : t("capture.sound.daemonFailureNoLog", { reason, log: DAEMON_LOG }),
+    { autoClose: 10000 },
+  )
+}
+
+const waitForReady = () => new Promise((resolve, reject) => {
+  const timer = setTimeout(() => {
+    readyWaiter = null
+    reject(new Error(`voice_stream sent no #ready within ${READY_TIMEOUT_MS} ms`))
+  }, READY_TIMEOUT_MS)
+  readyWaiter = {
+    resolve: () => {
+      clearTimeout(timer)
+      readyWaiter = null
+      resolve()
+    },
+    reject: err => {
+      clearTimeout(timer)
+      readyWaiter = null
+      reject(err)
+    },
+  }
+})
+
+// The daemon dropped the relay. Before #ready that is a failed mic
+// open and init() reports it; afterwards it is a crash mid-session.
+const onRelayClosed = () => {
+  relay = null
+  if (readyWaiter) {
+    readyWaiter.reject(new Error("voice_stream closed before #ready"))
+
+    return
+  }
+  if (disposed) return
+  status.value = "error"
+  reportDaemonFailure(t("capture.sound.daemonStopped"))
+}
+
 const init = async () => {
+  if (initializing) return
+  initializing = true
   try {
     status.value = "connecting"
     const handler = boardStore.handler
     if (!handler || !boardStore.capabilities.tcpRelay) {
       status.value = "error"
-      console.error("ws_shell tcp_relay not available")
+      const ver = boardStore.capabilities.boardVersion || t("common.unknown")
+      console.error("ws_shell tcp_relay not available, board version:", ver)
+      toast.error(t("capture.sound.wsShellTooOld", { ver }), { autoClose: 10000 })
+
       return
     }
+
+    // A first connect after an IDE update may still be replacing
+    // voice_stream.py on the board; don't launch a half-written copy.
+    await handler.scriptsSynced()
 
     // Kill any leftover voice_stream from a previous session, then
     // start fresh. The daemon binds 0.0.0.0:5000 but we connect via
     // 127.0.0.1 so it's effectively private to this board.
     await handler.interrupt()
-    // Surgical kill: only the voice_stream.py daemon, not all python.
-    // BusyBox killall matches process name (python3) not cmdline, and
-    // pkill isn't on this image, so we go through ps | awk | kill.
-    await handler.execShell(
-      "ps -ef | awk '/voice_stream\\.py/ && !/awk/ {print $1}' | xargs -r kill -9 2>/dev/null; true",
-    )
+    await handler.execShell(KILL_DAEMON_CMD)
     await sleep(500)
+
     // Absolute path + unbuffered + log redirect: daemon imports numpy /
     // PIL / alsaaudio + opens an ALSA capture handle, which adds up to
     // ~5 s of cold start on this board; if anything fails the log gives
     // us something to read instead of silent ECONNREFUSED.
     await handler.execShell(
-      "python3 -u /root/scripts/voice_stream.py > /tmp/voice_stream.log 2>&1 &",
+      `python3 -u ${DAEMON_PATH} > ${DAEMON_LOG} 2>&1 &`,
     )
 
     // Window covers cold start (~5 s import + ALSA) plus headroom for
@@ -153,7 +243,7 @@ const init = async () => {
       try {
         relay = await handler.tcpRelay(5000, {
           onData: processChunk,
-          onClose: () => { status.value = "disconnected" },
+          onClose: onRelayClosed,
         })
         break
       } catch (e) {
@@ -163,12 +253,23 @@ const init = async () => {
     }
     if (!relay) {
       status.value = "error"
+      await reportDaemonFailure(t("capture.sound.daemonStartFailed"))
+
       return
     }
+
+    // The relay only proves the daemon is listening. It says #ready
+    // once it actually holds the microphone, which can take a few
+    // seconds if it first has to evict another process from the device.
+    await waitForReady()
     status.value = "ready"
   } catch (e) {
-    console.log(e)
+    if (disposed) return
+    console.error(e)
     status.value = "error"
+    await reportDaemonFailure(t("capture.sound.micUnavailable"))
+  } finally {
+    initializing = false
   }
 }
 
@@ -250,14 +351,15 @@ onBeforeMount(() => {
 })
 
 onUnmounted(() => {
+  disposed = true
+  readyWaiter?.reject(new Error("recorder unmounted"))
   try { relay?.close() } catch (e) { /* ws may be gone */ }
   relay = null
+
   // Best-effort cleanup of the daemon. ws_shell.py also drops the
   // relay on socket close, but the python process keeps running until
   // we explicitly stop it; that's wasted RAM for the next session.
-  boardStore.handler?.execShell?.(
-    "ps -ef | awk '/voice_stream\\.py/ && !/awk/ {print $1}' | xargs -r kill -9 2>/dev/null; true",
-  )
+  boardStore.handler?.execShell?.(KILL_DAEMON_CMD)
   status.value = "disconnected"
 })
 

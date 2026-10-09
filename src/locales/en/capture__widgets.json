@@ -6,7 +6,13 @@
   },
   "sound": {
     "thresholdTitle": "Sound level that starts recording",
-    "thresholdHint": "Current level {rms} — set it above the level when silent"
+    "thresholdHint": "Current level {rms} — set it above the level when silent",
+    "daemonFailure": "{reason}: {tail}",
+    "daemonFailureNoLog": "{reason} (could not read {log})",
+    "daemonStopped": "The recorder on the board stopped",
+    "daemonStartFailed": "Could not start the recorder on the board",
+    "micUnavailable": "The board's microphone is not available",
+    "wsShellTooOld": "ws_shell on the board (version {ver}) does not support recording yet, 1.3.0 or newer is required. Reboot the board so the scripts the IDE updated take effect, then press Connect Board again."
   },
   "datasetList": {
     "keyboardHint": "press 'A' - 'D' or 'Left Arrow' - 'Right Arrow' to move select",

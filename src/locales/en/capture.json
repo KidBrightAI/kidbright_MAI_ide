@@ -21,7 +21,8 @@
       "initMic": "Initializing microphone...",
       "listening": "Listening for sound...",
       "recording": "Recording...",
-      "processing": "Processing audio..."
+      "processing": "Processing audio...",
+      "micUnavailable": "Microphone unavailable, press Connect Board to retry"
     }
   }
 }

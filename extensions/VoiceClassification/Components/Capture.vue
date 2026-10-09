@@ -219,10 +219,16 @@ onMounted(async () => {
         <!-- Record Button with status feedback -->
         <div class="center bottom-action d-flex flex-column align-center ga-2">
           <span
-            v-if="status === 'disconnected' || status === 'error'"
+            v-if="status === 'disconnected'"
             class="text-caption text-medium-emphasis"
           >
             {{ $t('capture.voice.status.needBoard') }}
+          </span>
+          <span
+            v-else-if="status === 'error'"
+            class="text-caption text-error"
+          >
+            {{ $t('capture.voice.status.micUnavailable') }}
           </span>
           <span
             v-else-if="status === 'connecting'"
