@@ -42,3 +42,4 @@
 - **`rule.md`** — Vue 3 `<script setup>`, `defineModel('isDialogVisible')` pattern, dialog placement (`src/components/dialog/`), Vuetify 3
 - **`Knowledge.md`** — domain logic เชิงลึกของโปรเจค ตรวจก่อนวิเคราะห์ปัญหาที่น่าสงสัย
 - **`README.md`** — architecture overview + dynamic module loading + AI training pipeline
+- **`I18N_PLAN.md`** — แผนและข้อตกลงระบบสองภาษา (ไทย/อังกฤษ): โครงไฟล์ locale, การตั้งชื่อ key, วิธีแปล block ของ Blockly, สถานะแต่ละเฟส อ่านก่อนแตะข้อความที่ผู้ใช้มองเห็น

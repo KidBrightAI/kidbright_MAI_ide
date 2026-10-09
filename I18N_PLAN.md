@@ -1,0 +1,159 @@
+# แผนระบบสองภาษา (i18n) สำหรับ KidBright mAI IDE
+
+เอกสารนี้คือแผนและข้อตกลงของการทำให้ IDE มีสองภาษา ไทยและอังกฤษ สลับได้จากปุ่มเดียว แทนสภาพเดิมที่ข้อความสองภาษาปนกันทั่วทั้งแอป อ่านคู่กับ `CLAUDE.md` และ `rule.md` ทุกครั้งที่แตะข้อความที่ผู้ใช้มองเห็น
+
+## สถานะล่าสุด
+
+| เฟส | สถานะ | หมายเหตุ |
+|---|---|---|
+| 0 โครงสร้างพื้นฐาน | กำลังทำ เริ่ม 2026-10-09 | branch `feat/i18n-phase0` |
+| 1 เปลือกหลักของ IDE | ยังไม่เริ่ม | |
+| 2 หน้า Capture / Annotate / Train | ยังไม่เริ่ม | |
+| 3 Blockly | ยังไม่เริ่ม | รอคำตอบว่าจะแปล block หรือไม่ |
+| 4 เนื้อหาและ metadata | ยังไม่เริ่ม | |
+| 5 กันถอยหลัง | ยังไม่เริ่ม | |
+
+อัปเดตตารางนี้ทุกครั้งที่ปิดเฟส พร้อมเลข commit หรือ tag ที่ปล่อย
+
+## เป้าหมายและขอบเขต
+
+- ผู้ใช้เลือกภาษาได้จาก Header ค่าที่เลือกจำไว้ข้ามการเปิดเว็บ
+- ข้อความทุกชิ้นที่ผู้ใช้มองเห็นมีทั้งไทยและอังกฤษ ได้แก่ ปุ่ม ป้าย dialog toast คำอธิบายขั้นตอน ชื่อหมวดและข้อความบน block ของ Blockly ชื่อและคำอธิบายของบอร์ด plugin และ extension
+- ไม่แปลสิ่งที่เป็นผลลัพธ์ของโปรแกรมผู้ใช้ เช่น `print("classifier loaded")` ที่ generator สร้าง, log ของสคริปต์บนบอร์ด, ชื่อไฟล์, ชื่อ label ใน dataset ที่ผู้ใช้ตั้งเอง
+- ไม่แตะ `boards/*/js/maixvision.js` ซึ่งเป็น bundle ของบุคคลที่สาม
+
+## สภาพก่อนเริ่ม (สำรวจ 2026-10-07 ที่ v1.2.5)
+
+สิ่งที่มีอยู่แล้ว
+
+- `vue-i18n` 9.2 และ `@intlify/vite-plugin-vue-i18n` อยู่ใน `package.json` และ `useI18n` อยู่ใน preset ของ unplugin-auto-import แต่ไม่มี `createI18n` ไม่มีไฟล์ locale และไม่ได้ `app.use` ที่ไหนเลย เป็นของที่ติดมากับ template Vuetify
+- Blockly 10 จาก npm มี `blockly/msg/th` และ `Blockly.setLocale` พร้อมใช้
+- Vuetify 3.4 มี locale `th` และ adapter `vuetify/locale/adapters/vue-i18n`
+- ทุกหน้าใน `src/pages` ใช้ `layout: blank` ดังนั้นข้อความใน `src/layouts/components/*` ของ template เช่น Profile, Pricing, Logout เป็นโค้ดตาย ไม่ต้องแปล
+
+ปริมาณข้อความโดยประมาณ
+
+| ส่วน | ปริมาณ |
+|---|---|
+| string ไทยไม่ซ้ำใน script ของ src และ extensions | 127 |
+| ข้อความไทยใน template | 93 |
+| ข้อความอังกฤษใน template | 150 |
+| string ใน attribute เช่น label, title, placeholder, text ของ tooltip | 53 |
+| จุดเรียก toast ใน store, engine, composables, components | 70 |
+| ข้อความ block ของ Blockly ใน 2 บอร์ด, `src/blocks` และ plugin ทุกตัว | 220 message, 80 appendField, 50 ชุด dropdown |
+| Instructions ที่เป็นข้อความสอน | 13 ไฟล์ 407 บรรทัด |
+| example readme | 4 ไฟล์ ภาษาไทย |
+
+ข้อจำกัดเชิงโครงสร้างที่กำหนดแนวทาง
+
+- ไฟล์ block ของบอร์ดและ plugin (`boards/*/blocks/*.js`, `plugins/*/blocks/*.js`) ถูก `fetch` ตอนรันแล้วเรียกผ่าน `new Function` ใน `src/engine/board.js` โดยส่ง `python`, `pythonGenerator`, `Blockly`, `workspaceStore` เข้าไป ไฟล์เหล่านี้ `import` อะไรไม่ได้ ช่องทางแปลจึงต้องผ่าน `Blockly.Msg`
+- `boards/*/toolbox.js` เป็น ES module ที่ Vite bundle ให้ คืน array ของหมวดที่มี `name` และ XML ที่มี `<label text>` จึงเรียกฟังก์ชันแปลได้โดยตรง
+- metadata หลายจุดเป็นข้อมูลไม่ใช่ template: `description` ของบอร์ดใน `boards/*/index.js`, `name` `description` `category` ของ plugin ใน `plugins/*/index.js`, `name` `title` และ `options.*.title` ของ extension ใน `extensions/*/config.js`, `title` ของ node ใน `src/nodes/**`
+- `workspaceStore.projectTypeTitle` ถูก persist เป็นข้อความแสดงผลตอนสร้างโปรเจค ถ้าแปลตรง ๆ โปรเจคเก่าจะค้างภาษาเดิม ต้องคำนวณจาก id ของ extension ตอน render แทน
+- `src/components/comfirm-dialog` มีค่า default ของปุ่มเป็น Cancel และ OK ฝังอยู่
+
+## การออกแบบ
+
+1. **vue-i18n แบบ composition API** (`legacy: false`, `globalInjection: true`) ข้อความกลางอยู่ที่ `src/locales/th.json` และ `src/locales/en.json` fallback เป็น `en` โมดูล JS ที่ไม่ใช่ component ใช้ `t` ที่ export จาก `src/plugins/i18n.js` ไม่ใช้ `<i18n>` block ใน SFC เพื่อให้สคริปต์ตรวจ key ทำงานกับไฟล์กลางอย่างเดียว
+2. **ภาษาที่เลือกเก็บใน localStorage** key `kbmai.locale` เพราะต้องรู้ภาษาก่อน Pinia และก่อน Blockly ถูกตั้งค่า ค่าเริ่มต้นคือ `th` เมื่อ `navigator.language` ขึ้นต้นด้วย th ไม่งั้นเป็น `en`
+3. **สลับภาษาแล้ว reload หน้า** เพราะ Blockly, toolbox และ block script ถูกสร้างตอนโหลด การสลับสดต้อง re-inject workspace ซึ่งยังไม่คุ้ม โปรเจคปัจจุบันถูก persist อยู่แล้วจึงไม่เสียงาน
+4. **Blockly** เรียก `Blockly.setLocale(th หรือ en)` ตอนเริ่มเพื่อให้ block มาตรฐานและเมนูของ Blockly เป็นภาษาที่เลือก block ของเราเปลี่ยน `message0`, `tooltip` และ dropdown เป็น `%{BKY_KEY}` แล้วเก็บข้อความใน `locales/{th,en}.js` ของแต่ละบอร์ด plugin และ `src/blocks` ซึ่ง `main.js` รวมเข้า `Blockly.Msg` ก่อน `loadBoard`
+5. **Vuetify** ใช้ `createVueI18nAdapter` และใส่ข้อความ `$vuetify` จาก `vuetify/locale` ลงใน messages ให้ component มาตรฐานตามภาษาด้วย
+6. **metadata รับได้ทั้ง string และ object `{ th, en }`** ผ่าน helper `localized()` string เดิมยังใช้ได้เพื่อไม่บังคับ plugin ของคนอื่น
+7. **Instructions** ใช้ key ใน `src/locales` ร่วมกับ `<i18n-t>` สำหรับย่อหน้าที่มี span สี ส่วน example ใช้ `readme.md` คู่กับ `readme.en.md` แล้ว fallback เป็นไฟล์เดิม
+8. **กันถอยหลัง** ด้วย `scripts/i18n-check.mjs` ที่ตรวจว่า key ครบทั้งสองภาษา ตรวจว่า `%{BKY_...}` ที่ block อ้างมีจริงในทั้งสองภาษา และรายงานอักษรไทยนอกไฟล์ locale ในเฟสท้ายเปิดโหมด strict ใน CI และเพิ่ม rule `no-raw-text` ของ `@intlify/eslint-plugin-vue-i18n` เฉพาะโค้ดใหม่ เพราะ lint ของ repo ยังไม่สะอาด
+
+โครงไฟล์
+
+```
+src/plugins/i18n.js                 createI18n, getInitialLocale, setLocale, t, localized, SUPPORTED_LOCALES
+src/locales/th.json                 ข้อความกลางภาษาไทย
+src/locales/en.json                 ข้อความกลางภาษาอังกฤษ
+src/components/LanguageSwitcher.vue ปุ่มสลับภาษาใน Header
+scripts/i18n-check.mjs              สคริปต์ตรวจ เรียกด้วย npm run i18n:check
+boards/<id>/locales/{th,en}.js      เฟส 3 ข้อความ Blockly.Msg ของบอร์ด
+plugins/<id>/locales/{th,en}.js     เฟส 3 ข้อความ Blockly.Msg ของ plugin
+src/blocks/locales/{th,en}.js       เฟส 3 ข้อความ Blockly.Msg ของ block กลาง
+```
+
+## ข้อตกลงสำหรับนักพัฒนา
+
+การเพิ่มข้อความใหม่
+
+- ใน template ใช้ `{{ $t('header.saveProject') }}` หรือ `:text="$t('header.saveProject')"` ใน `<script setup>` ใช้ `const { t } = useI18n()` ซึ่ง auto-import ให้แล้ว
+- ในโมดูล JS เช่น store, engine, composables ใช้ `import { t } from '@/plugins/i18n'`
+- เพิ่ม key ลงทั้ง `th.json` และ `en.json` พร้อมกันเสมอ ห้ามใส่ภาษาเดียวแล้วค่อยตามทีหลัง
+- ข้อความที่มีตัวแปรใช้ placeholder แบบ `{name}` เช่น `"อัปเดต {names} เรียบร้อย"` แล้วเรียก `t('board.scriptsUpdated', { names })`
+
+การตั้งชื่อ key ใน `src/locales`
+
+- แบ่งตามพื้นผิวของ UI เป็น namespace ชั้นแรก: `common`, `header`, `footer`, `sidePanel`, `dialog.<ชื่อ dialog>`, `page.<ชื่อหน้า>`, `capture`, `annotate`, `train`, `designer`, `board`, `project`, `plugin`, `wifi`, `file`, `voice`, `instructions.<extension>.<ขั้นตอน>`
+- ชื่อ key เป็น camelCase สั้น ๆ บอกความหมายไม่ใช่บอกข้อความ เช่น `board.notConnected` ไม่ใช่ `board.pleaseConnectBoardFirst`
+- `$vuetify` สงวนไว้ให้ Vuetify
+- ข้อความของ Blockly ไม่อยู่ใน JSON แต่อยู่ใน `Blockly.Msg`
+
+การตั้งชื่อ key ของ Blockly
+
+- บอร์ด: `KB_<BOARD>_<BLOCK_TYPE ตัวใหญ่>` เช่น `KB_MAIPLUS_MAIX3_NN_CLASSIFY_LOAD` tooltip ต่อท้ายด้วย `_TOOLTIP` ตัวเลือก dropdown ต่อท้ายด้วย `_OPT_<ชื่อ>` ป้ายใน toolbox ใช้ `KB_<BOARD>_LABEL_<ชื่อ>`
+- plugin: `KB_PLUGIN_<ID>_...` และ block กลางใน `src/blocks`: `KB_COMMON_...`
+- ใน JSON ของ block อ้างด้วย `"message0": "%{BKY_KB_MAIPLUS_MAIX3_NN_CLASSIFY_LOAD}"` Blockly จะแทนค่าตอนสร้าง block และรองรับการสลับลำดับ `%1 %2` ในคำแปลไทย
+
+metadata ของบอร์ด plugin และ extension
+
+- field ที่แสดงผลให้เขียนเป็น `{ th: "...", en: "..." }` และอ่านผ่าน `localized(value)` ซึ่งคืนภาษาปัจจุบัน แล้ว fallback เป็น `en` แล้ว `th` ตามลำดับ string เดิมยังใช้ได้
+
+สิ่งที่ไม่ต้องแปล
+
+- string ที่กลายเป็นโค้ด Python หรือ output ของโปรแกรมผู้ใช้
+- log และข้อความใน `boards/*/scripts/*.py` และ `boards/*/libs/*.py`
+- ค่าภายใน เช่น id, ชื่อไฟล์, ค่า field ของ block ที่ไม่ได้แสดงผล
+
+## แผนเป็นเฟส
+
+| เฟส | ขอบเขต | ขนาดโดยประมาณ | เวลา |
+|---|---|---|---|
+| 0 | plugin i18n, ไฟล์ locale, ปุ่มสลับภาษา, จำค่าและ reload, Vuetify adapter, Blockly setLocale, html lang, สคริปต์ตรวจ | โครงสร้าง | 1 วัน |
+| 1 | Header, Footer, SidePanel, dialog ทั้งหมดใน `src/components/dialog`, `src/pages`, toast ใน store, engine, composables | 350 key | 2 ถึง 3 วัน |
+| 2 | Capture, Annotate, Train ของ 3 extension และ `src/components/InputConnection`, `BoardImagePicker` | 100 key | 1 ถึง 2 วัน |
+| 3 | toolbox และ block ของ 2 บอร์ด, `src/blocks`, plugin ทุกตัว พร้อม locale ของแต่ละชุด | 350 key ของ Blockly.Msg | 2 ถึง 3 วัน |
+| 4 | Instructions 13 ไฟล์, example readme, metadata, `title` ของ node, แก้ `projectTypeTitle` | 150 key และเอกสาร | 1 ถึง 2 วัน |
+| 5 | lint rule, เปิด strict ใน CI, เขียน convention ลง `rule.md` และ `CLAUDE.md` | กันถอยหลัง | ครึ่งวัน |
+
+แต่ละเฟสปล่อยได้เอง หลังจบเฟส 2 เปลือกของ IDE จะเป็นสองภาษาสมบูรณ์โดย block ยังเป็นอังกฤษ ซึ่งเป็นจุดพักที่ยอมรับได้ งานหนักจริงคือการแปลประมาณ 800 ข้อความ
+
+รายการตรวจของเฟส 0
+
+- [ ] `src/plugins/i18n.js` และ `app.use(i18n)` ใน `main.js`
+- [ ] `src/locales/th.json` และ `en.json` พร้อม key ชุดแรกที่ปุ่มสลับภาษาใช้
+- [ ] ปุ่มสลับภาษาใน Header ข้าง Version เลือกแล้วจำค่าและ reload
+- [ ] `Blockly.setLocale` ตามภาษาก่อน block ทุกชุดถูกนิยาม
+- [ ] Vuetify ใช้ `createVueI18nAdapter`
+- [ ] `document.documentElement.lang` ตามภาษา
+- [ ] `scripts/i18n-check.mjs` และ `npm run i18n:check`
+- [ ] build ผ่าน และทดสอบสลับภาษาใน browser แล้ว block มาตรฐานของ Blockly เปลี่ยนภาษา
+
+## คำถามที่รอตัดสินใจ
+
+- ภาษาเริ่มต้นอิง browser ตามข้อ 2 ของการออกแบบ หรือบังคับไทยเสมอ
+- ยอมรับการ reload ตอนสลับภาษาหรือไม่ ถ้าต้องการสลับสดต้องเพิ่มงาน re-inject Blockly และสร้าง toolbox ใหม่
+- จะแปลข้อความบน block ด้วย หรือคง block เป็นอังกฤษทั้งสองภาษา ถ้าคงอังกฤษจะตัดเฟส 3 ทิ้งได้
+- ใครเป็นคนแปล และมี glossary คำศัพท์สำหรับนักเรียนหรือไม่ เช่น Annotate, Train, Capture, Deploy
+
+## ความเสี่ยงและวิธีรับมือ
+
+- ข้อความแสดงผลที่ถูก persist ไว้ในโปรเจคเก่า เช่น `projectTypeTitle` แก้ด้วยการคำนวณจาก id ตอน render และคง fallback ให้ข้อมูลเก่า
+- key `%{BKY_...}` ที่ขาดจะโชว์เป็นข้อความดิบบน block สคริปต์ตรวจต้องจับได้ก่อน merge
+- plugin จากผู้พัฒนาภายนอกยังเป็น string เดี่ยว `localized()` ต้องรับ string ได้เสมอ
+- block ภาษาไทยอาจต้องสลับลำดับ `%1 %2` ให้ถูกไวยากรณ์ ต้องรีวิวคำแปลบน workspace จริง ไม่ใช่ในไฟล์อย่างเดียว
+- ขนาด bundle เพิ่มจากข้อความ Blockly สองภาษา ถ้ามีนัยสำคัญให้ import เฉพาะภาษาที่เลือกแบบ dynamic
+
+## วิธีตรวจ
+
+```bash
+yarn install --frozen-lockfile          # ครั้งแรกบนเครื่องใหม่
+npm run i18n:check                      # key ครบทั้งสองภาษา และรายงานอักษรไทยนอก locale
+./node_modules/.bin/eslint -c .eslintrc.js --ext .js,.vue <ไฟล์ที่แก้>
+NODE_OPTIONS=--max-old-space-size=4096 ./node_modules/.bin/vite build
+```
+
+lint ของ repo ยังมี error เดิมค้างอยู่หลายสิบรายการ ให้เทียบจำนวน error ของไฟล์ที่แก้กับเวอร์ชันใน HEAD แทนการคาดหวังว่าจะเป็นศูนย์
