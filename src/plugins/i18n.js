@@ -37,7 +37,7 @@ export const FALLBACK_LOCALE = 'en'
 export const LOCALE_STORAGE_KEY = 'kbmai.locale'
 
 /** Native-script names for the switcher; these are never translated. */
-export const LOCALE_NAMES = { th: 'ไทย', en: 'English' }
+export const LOCALE_NAMES = { th: 'ไทย', en: 'English' } // i18n-ignore: native names
 
 function loadMessages(code) {
   const messages = {}

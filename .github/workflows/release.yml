@@ -22,6 +22,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Check translations
+        # Every locale key must exist in both languages, every Blockly
+        # %{BKY_KB_...} reference must resolve, and no Thai text may sit
+        # outside the locale files (comments excepted). See I18N_PLAN.md.
+        run: npm run i18n:check -- --strict
+
       - name: Build
         run: npm run build
 

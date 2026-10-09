@@ -18,7 +18,7 @@ const filenameRules = [
   // filename validation
   v => {
     if (v) {
-      let regex = /^[ก-๙a-zA-Z0-9_\- ]+$/
+      let regex = /^[ก-๙a-zA-Z0-9_\- ]+$/ // i18n-ignore: Thai character range, not UI text
 
       return regex.test(v) || t('dialog.saveProject.filenameInvalid')
     }

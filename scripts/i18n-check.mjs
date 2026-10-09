@@ -10,7 +10,7 @@
  *      (the file name is the top-level namespace)
  *   2. every %{BKY_KB_...} reference in a block file has a message in that unit's
  *      locales/<code>.json for every locale (boards/<id>, plugins/<id>, src/blocks)
- *   3. Thai characters outside locale files, reported per file
+ *   3. Thai characters outside locale files (comments and `i18n-ignore` lines excluded), reported per file
  */
 import fs from 'fs'
 import path from 'path'
@@ -158,11 +158,41 @@ for (const unit of units) {
 console.log(`Blockly message references checked: ${refTotal}`)
 
 // ----------------------------------------------- 3. Thai outside locale files
+// Comments may stay in Thai: block comments, HTML comments and lines that
+// are only a // comment are blanked before scanning, and so is the `th:`
+// member of a { th, en } metadata object. A line that must legitimately
+// hold Thai (a regex character range, for example) can opt out with an
+// `i18n-ignore` marker on the same line.
+function stripTrailingComment(line) {
+  // Drop a trailing `// ...` only when the `//` is outside quotes, so a
+  // URL inside a string survives. Lines that start with `#` are Python
+  // or shell comments inside template literals (board code templates).
+  if (/^\s*#/.test(line)) return ''
+  let index = line.indexOf('//')
+  while (index !== -1) {
+    const before = line.slice(0, index)
+    const balanced = ["'", '"', '`'].every(q => (before.split(q).length - 1) % 2 === 0)
+    if (balanced) return before
+    index = line.indexOf('//', index + 2)
+  }
+
+  return line
+}
+
+function stripComments(text) {
+  return text
+    .replace(/\/\*[\s\S]*?\*\//g, block => block.replace(/[^\n]/g, ' '))
+    .replace(/<!--[\s\S]*?-->/g, block => block.replace(/[^\n]/g, ' '))
+    .split('\n')
+    .map(line => (/^\s*th\s*:/.test(line) || line.includes('i18n-ignore') ? '' : stripTrailingComment(line)))
+    .join('\n')
+}
+
 const offenders = []
 for (const dir of SCAN_DIRS) {
   for (const file of walk(path.join(ROOT, dir))) {
     if (!SCAN_EXT.has(path.extname(file))) continue
-    const count = fs.readFileSync(file, 'utf8').split('\n').filter(line => THAI.test(line)).length
+    const count = stripComments(fs.readFileSync(file, 'utf8')).split('\n').filter(line => THAI.test(line)).length
     if (count > 0) offenders.push([rel(file), count])
   }
 }

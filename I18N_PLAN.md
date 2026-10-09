@@ -6,14 +6,14 @@
 
 | เฟส | สถานะ | หมายเหตุ |
 |---|---|---|
-| 0 โครงสร้างพื้นฐาน | เสร็จ 2026-10-09 รอ merge | branch `feat/i18n-phase0` ทดสอบสลับภาษาใน browser แล้ว |
-| 1 เปลือกหลักของ IDE | ยังไม่เริ่ม | |
-| 2 หน้า Capture / Annotate / Train | ยังไม่เริ่ม | |
-| 3 Blockly | ยังไม่เริ่ม | รอคำตอบว่าจะแปล block หรือไม่ |
-| 4 เนื้อหาและ metadata | ยังไม่เริ่ม | |
-| 5 กันถอยหลัง | ยังไม่เริ่ม | |
+| 0 โครงสร้างพื้นฐาน | เสร็จ 2026-10-09 | commit 78e7b4c ทดสอบสลับภาษาใน browser แล้ว |
+| 1 เปลือกหลักของ IDE | เสร็จ 2026-10-09 | commit e64844c Header, Footer, SidePanel, dialog ทุกตัว, pages, toast ใน store/engine/composables |
+| 2 หน้า Capture / Annotate / Train | เสร็จ 2026-10-09 | commit e64844c รวม InputConnection, BoardImagePicker และกราฟเทรน |
+| 3 Blockly | เสร็จ 2026-10-09 | commit e64844c toolbox, block ของ 2 บอร์ด, while_loop, plugin 9 ตัว รวม 377 ข้อความต่อภาษา คำแปลไทยของ block ควรให้ครูเจ้าของภาษาทบทวน (ดูหัวข้อท้ายเอกสาร) |
+| 4 เนื้อหาและ metadata | เสร็จ 2026-10-09 | commit e64844c Instructions 13 ไฟล์, metadata ของบอร์ด/plugin/extension, node ใน designer, projectTypeTitle |
+| 5 กันถอยหลัง | เสร็จ 2026-10-09 | `npm run i18n:check -- --strict` ผ่าน และ CI รันก่อน build, กฎข้อ 6 ใน rule.md |
 
-อัปเดตตารางนี้ทุกครั้งที่ปิดเฟส พร้อมเลข commit หรือ tag ที่ปล่อย ทุกเฟสทำต่อกันบน branch `feat/i18n-phase0` และจะพิจารณา merge เข้า main เมื่อครบทุกเฟสแล้วเท่านั้น (ตัดสินใจ 2026-10-09)
+ทุกเฟสเสร็จบน branch `feat/i18n-phase0` แล้ว รวมถึง merge งานแก้ไมค์ 1.2.5 (commit ffec9b1) ที่ commit "add KMV" บน main เคย revert ไป สิ่งที่ยังไม่ได้ทำในรอบนี้คือทดสอบหน้า designer ในขั้นเทรนบน browser (ต้องมีชุดข้อมูลก่อน) และการทบทวนคำแปลไทยของ block โดยครู อัปเดตตารางนี้ทุกครั้งที่ปิดเฟส พร้อมเลข commit หรือ tag ที่ปล่อย ทุกเฟสทำต่อกันบน branch `feat/i18n-phase0` และจะพิจารณา merge เข้า main เมื่อครบทุกเฟสแล้วเท่านั้น (ตัดสินใจ 2026-10-09)
 
 ## เป้าหมายและขอบเขต
 
@@ -192,3 +192,20 @@ NODE_OPTIONS=--max-old-space-size=4096 ./node_modules/.bin/vite build
 ```
 
 lint ของ repo ยังมี error เดิมค้างอยู่หลายสิบรายการ ให้เทียบจำนวน error ของไฟล์ที่แก้กับเวอร์ชันใน HEAD แทนการคาดหวังว่าจะเป็นศูนย์
+
+## ข้อสังเกตระหว่างทำ (ยังไม่ได้แก้ เพราะนอกขอบเขต i18n)
+
+บั๊กและโค้ดตายที่เจอระหว่างไล่ไฟล์ทั้ง repo ควรเปิดเป็นงานแยก
+
+- `boards/*/blocks/blocks_ai.js` block `maix3_nn_voice_get_result` ตัวเลือก class id สลับ label กับ value (`["class_id", "class id"]`) ต่างจาก block อื่น ทำให้เลือกแล้วได้ข้อความแทนเลขคลาส
+- `src/components/InputConnection/ImageDatasetList.vue` อ้าง `props.value` ที่ไม่ได้ประกาศ และ `item.id == value` ที่ `value` ไม่มีอยู่ จะ ReferenceError ตอนลบในโหมดเลือกเดี่ยว
+- `src/components/dialog/ImportObjectDetectDialog.vue` tab เริ่มต้นเป็น `"PASCAL VOL"` ที่ไม่ตรงกับค่าใด และ import แบบ KidBright AI น่าจะพังเพราะ VFileInput คืนไฟล์เดี่ยวไม่ใช่ array
+- `src/pages/index.vue` เรียก `boardStore.upload()` โดยไม่มี try/catch ทำให้ toast อัปโหลดไม่สำเร็จไม่เคยขึ้นในโหมด Run และการเปิด dialog WiFi โดยไม่มีบอร์ดทำให้เกิด unhandled rejection
+- `src/engine/protocols/web-adb.js` `rebootBoard()` ไม่ได้เรียก `SingletonShell.destroyInstance()` ต่างจาก disconnect
+- โค้ดตาย: `src/components/InputConnection/SoundCapture.vue`, ไฟล์ขนาด 0 ไบต์ใน InputConnection และ `DeleteProjectDialog.vue`, block ส่วนใหญ่ใน `src/blocks` และ `blocks_pin.js`/`blocks_maix_v4.js` ของบอร์ดที่ไม่อยู่ใน toolbox, ตัวแปรและ import ที่ไม่ใช้ใน Header, Footer, SidePanel, NewProjectDialog และ Train.vue ทั้งสามชุดที่เป็นไฟล์เหมือนกันทุกไบต์
+- ตัวอย่างใน `boards/*/examples` ทั้ง 4 ชุดเป็น placeholder (main.py คือ hello world และ readme เป็นข้อความชุดหุ่นยนต์) และปุ่มเปิดตัวอย่างใน Header ถูกคอมเมนต์ไว้ จึงยังไม่ได้เขียน readme ภาษาอังกฤษ แต่ `parseExamples` รองรับ `readme.en.md` แล้ว
+- พิมพ์ผิดเดิมที่ตอนนี้แก้ได้ที่เดียวใน en.json ของบอร์ด: "tickness", "drawellipse" และชื่อ block `maix3_display_dislay`
+
+## คำแปล block ที่ควรให้ครูทบทวน
+
+agent ที่แปล block บันทึกคำที่ไม่แน่ใจไว้ เช่น threshold เป็น "เกณฑ์ความมั่นใจ", forever เป็น "ทำซ้ำตลอดไป", is tapped เป็น "บอร์ดถูกเคาะ", Buzzer beep tone/delay เป็น "บัซเซอร์ส่งเสียง … นาน …", Servo motor set pin/angle เป็น "หมุน servo ขา … ไปที่มุม …", get … เป็นวลีนาม "ผลการจำแนก …", publish/subscribe เป็น "ส่ง (publish)" / "สมัครรับ (subscribe)", การสะกด ดิจิทัล/แอนะล็อก ตามราชบัณฑิตยสภา และ class id ที่ยังคงเป็นอังกฤษ ทบทวนได้ที่ `boards/<id>/locales/th.json` และ `plugins/<id>/locales/th.json` โดยไม่ต้องแตะโค้ด
