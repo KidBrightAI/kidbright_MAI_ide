@@ -1,6 +1,9 @@
 export default {
   name: "NETPIE",
-  description: "Connect device to NETPIE IoT platform",
+  description: {
+    en: "Connect device to NETPIE IoT platform",
+    th: "เชื่อมต่ออุปกรณ์กับแพลตฟอร์ม IoT ของ NETPIE",
+  },
   category: "Communication",
   author: "Chavee Issariyapat",
   version: "1.0.6",

@@ -8,7 +8,9 @@ import NewLabelDialog from "@/components/dialog/NewLabelDialog.vue"
 import { useDatasetStore } from "@/store/dataset"
 import { useWorkspaceStore } from "@/store/workspace"
 import { useConfirm } from "@/components/comfirm-dialog"
+import { useI18n } from "vue-i18n"
 
+const { t } = useI18n()
 const confirm = useConfirm()
 const datasetStore = useDatasetStore()
 const workspaceStore = useWorkspaceStore()
@@ -28,7 +30,7 @@ const selecteLabel = label => {
 }
 const onRemoveLabel = async label => {
   try{
-    await confirm({ title: "ยืนยันการลบป้ายกำกับ", content: `หากลบ '${label}' ภาพที่ใช้ป้ายกำกับนี้จะถูกล้างค่า`, dialogProps: { width: 'auto' } })
+    await confirm({ title: t('annotate.shared.removeLabelTitle'), content: t('annotate.shared.removeLabelContent', { label }), dialogProps: { width: 'auto' } })
     datasetStore.changeClassData({oldLabel : label, newLabel : null})
     workspaceStore.removeLabel(label)
   }catch(e){
@@ -63,20 +65,20 @@ const onRemoveAnnotatedLabel = label => {
             v-if="!current.length"
             class="view-img-desc"
           >
-            No selected image, please click on the image below to select.
+            {{ $t('annotate.shared.noImageSelected') }}
           </p>
           <DatasetCounter
             class="second-counter"
-            prefix="Labeled"
-            seperator="of"
+            :prefix="$t('annotate.shared.counter.labeled')"
+            :seperator="$t('annotate.shared.counter.of')"
             :current="datasetStore.getLabeledLength"
-            suffix="Image"
+            :suffix="$t('annotate.shared.counter.image')"
           />
           <DatasetCounter
-            prefix="Selected"
-            seperator="of"
+            :prefix="$t('annotate.shared.counter.selected')"
+            :seperator="$t('annotate.shared.counter.of')"
             :current="current.length"
-            suffix="Image"
+            :suffix="$t('annotate.shared.counter.image')"
           />
         </div>
         <SoundDatasetList
@@ -88,7 +90,7 @@ const onRemoveAnnotatedLabel = label => {
       <div class="side-panel">
         <div class="w-100">
           <h4 class="side-panel-ttl">
-            LABEL
+            {{ $t('annotate.shared.labelHeading') }}
           </h4>
           <div class="feature-wrap">
             <VBtn
@@ -96,7 +98,7 @@ const onRemoveAnnotatedLabel = label => {
               rounded="xl"
             >
               <NewLabelDialog @newLabel="onNewLabel" />
-              <VIcon>mdi-plus</VIcon> New label
+              <VIcon>mdi-plus</VIcon> {{ $t('annotate.shared.newLabel') }}
             </VBtn>
             <div class="pills w-100">
               <button
@@ -127,7 +129,7 @@ const onRemoveAnnotatedLabel = label => {
             </div>
           </div>
           <h4 class="side-panel-ttl">
-            ANNOTATE
+            {{ $t('annotate.shared.annotateHeading') }}
           </h4>
           <div class="feature-wrap">
             <div class="annotate-cn-list w-100">
@@ -163,7 +165,7 @@ const onRemoveAnnotatedLabel = label => {
     >
       <VCard>
         <VToolbar density="compact">
-          <VToolbarTitle>แก้ไขป้ายกำกับ</VToolbarTitle>
+          <VToolbarTitle>{{ $t('annotate.shared.editLabel') }}</VToolbarTitle>
           <VSpacer /> 
           <VBtn
             icon
@@ -176,7 +178,7 @@ const onRemoveAnnotatedLabel = label => {
         <VCardText>
           <VTextField
             v-model="tobeChangeLabel"
-            :label="`เปลี่ยนชื่อป้ายกำกับจาก ${changeLabelName} ใหม่เป็น`"
+            :label="$t('annotate.shared.renameLabelFrom', { name: changeLabelName })"
             outlined
           />
         </VCardText>
@@ -188,7 +190,7 @@ const onRemoveAnnotatedLabel = label => {
             :disabled="!tobeChangeLabel.length"
             @click="onChangeLabel(changeLabelName)"
           >
-            แก้ไขป้ายกำกับ
+            {{ $t('annotate.shared.editLabel') }}
           </VBtn>
         </VCardActions>
       </VCard>

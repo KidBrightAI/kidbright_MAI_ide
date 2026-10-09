@@ -17,17 +17,17 @@ const openSecureLink = () => {
   >
     <VCard>
       <VCardTitle class="text-h5 bg-primary text-white d-flex align-center">
-        <span>การตั้งค่าความปลอดภัย (Secure Connect)</span>
+        <span>{{ $t('dialog.secureConnect.title') }}</span>
         <VSpacer />
       </VCardTitle>
 
       <VCardText class="pa-4">
         <div class="text-h6 mb-2">
-          ยืนยันความปลอดภัย
+          {{ $t('dialog.secureConnect.heading') }}
         </div>
         <div class="text-body-1 mb-2">
-          เนื่องจากเป็นการเชื่อมต่อผ่าน HTTPS บน Local Network<br>
-          Browser จะบล็อกการทำงาน ต้องทำการอนุญาตก่อน (ทำครั้งเดียว):
+          {{ $t('dialog.secureConnect.httpsNotice') }}<br>
+          {{ $t('dialog.secureConnect.allowOnce') }}
         </div>
 
         <div
@@ -37,7 +37,7 @@ const openSecureLink = () => {
           <img
             :src="SecureConnectImage"
             style="max-width: 100%; max-height: 500px; border: 1px solid #ddd; border-radius: 8px;"
-            alt="Click to open secure link"
+            :alt="$t('dialog.secureConnect.imageAlt')"
           >
         </div>
 
@@ -49,10 +49,10 @@ const openSecureLink = () => {
           @click="openSecureLink"
           class="mb-2"
         >
-          กดปุ่มนี้เพื่อเปิดแท็บยืนยัน
+          {{ $t('dialog.secureConnect.openTab') }}
         </VBtn>
         <div class="text-caption text-center">
-          (Target: https://{{ boardStore.boardIp }}:5050)
+          {{ $t('dialog.secureConnect.target', { url: 'https://' + boardStore.boardIp + ':5050' }) }}
         </div>
       </VCardText>
 
@@ -65,7 +65,7 @@ const openSecureLink = () => {
           variant="text"
           @click="boardStore.showSecureConnectDialog = false"
         >
-          ปิดหน้าต่าง
+          {{ $t('dialog.secureConnect.closeWindow') }}
         </VBtn>
       </VCardActions>
     </VCard>

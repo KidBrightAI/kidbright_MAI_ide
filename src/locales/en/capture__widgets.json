@@ -1,0 +1,30 @@
+{
+  "camera": {
+    "connectDevice": "Please connect the device",
+    "websocketFailed": "Could not connect to the WebSocket",
+    "cameraStream": "Camera Stream"
+  },
+  "sound": {
+    "thresholdTitle": "Sound level that starts recording",
+    "thresholdHint": "Current level {rms} — set it above the level when silent"
+  },
+  "datasetList": {
+    "keyboardHint": "press 'A' - 'D' or 'Left Arrow' - 'Right Arrow' to move select",
+    "holdCtrlToDelete": "Hold CTRL to delete the selected items",
+    "confirmDeleteImages": "Delete the {count} selected images?",
+    "confirmDeleteSoundsTitle": "Delete the selected sounds",
+    "confirmDeleteSoundsContent": "Delete the {count} selected sounds",
+    "pluralOf": "{word}s"
+  },
+  "boardImagePicker": {
+    "fileBrowserUnsupported": "This board model does not support browsing files",
+    "connectBoardFirst": "Please connect the board first",
+    "goUp": "Up one level",
+    "listView": "List view",
+    "gridView": "Thumbnail view",
+    "emptyFolder": "No files found in this folder",
+    "selectAllInFolder": "Select all in folder",
+    "selectedCount": "{count} selected",
+    "clearSelection": "Clear"
+  }
+}

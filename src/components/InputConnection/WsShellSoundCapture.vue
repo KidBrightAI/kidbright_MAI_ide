@@ -310,7 +310,7 @@ defineExpose({ init, listen, stop, clearCanvas })
         </template>
         <VList>
           <VListItem>
-            <VListItemTitle>ระดับเสียงที่เริ่มอัด</VListItemTitle>
+            <VListItemTitle>{{ $t('capture.sound.thresholdTitle') }}</VListItemTitle>
             <VListItem>
               <VSlider
                 v-model="threshold"
@@ -322,7 +322,7 @@ defineExpose({ init, listen, stop, clearCanvas })
               />
             </VListItem>
             <VListItem class="threshold-hint">
-              เสียงตอนนี้ {{ lastRms }} — ตั้งให้สูงกว่าเสียงตอนเงียบ
+              {{ $t('capture.sound.thresholdHint', { rms: lastRms }) }}
             </VListItem>
           </VListItem>
         </VList>

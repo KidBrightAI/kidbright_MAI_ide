@@ -1,9 +1,10 @@
 import { useWorkspaceStore } from "@/store/workspace"
+import { t } from "@/plugins/i18n"
 
 //const workspaceStore = useWorkspaceStore();
 
 const blockAIObjectDetection = `
-<label text="Object detection"></label>
+<label text="${t('toolbox.label.objectDetection')}"></label>
 <block type="maix3_nn_yolo_load"></block>
 <block type="maix3_nn_yolo_detect"></block>
 <block type="variables_set">
@@ -30,7 +31,7 @@ const blockAIObjectDetection = `
 </value>
 </block>`
 const blockAIImageClassification = `
-<label text="Image classification"></label>
+<label text="${t('toolbox.label.imageClassification')}"></label>
 <block type="maix3_nn_classify_load"></block>            
 <block type="maix3_nn_classify_classify"></block>
 <block type="maix3_nn_classify_get_result">
@@ -38,7 +39,7 @@ const blockAIImageClassification = `
 </block>
 `
 const blockAIVoiceClassification = `
-<label text="Voice classification"></label>
+<label text="${t('toolbox.label.voiceClassification')}"></label>
 <block type="maix3_nn_voice_load"></block>
 <block type="maix3_nn_voice_get_rms"></block>
 <block type="maix3_nn_voice_classify"></block>
@@ -74,7 +75,7 @@ export default function () {
 
   return [
     {
-      name: "Basic",
+      name: t("toolbox.category.basic"),
       color: "#5BA58C",
       icon: `images/icons/basic_block_icon.svg`,
       blocks: [
@@ -125,7 +126,7 @@ export default function () {
     },
     isHasAI() ?
       {
-        name: "AI",
+        name: t("toolbox.category.ai"),
         color: "#5ba58c",
         icon: `images/icons/ai.png`,
         blocks: [
@@ -135,7 +136,7 @@ export default function () {
         ],
       } : {},
     {
-      name: "Display & Camera",
+      name: t("toolbox.category.displayCamera"),
       color: "#9fa55b",
       icon: `images/icons/lcd.png`,
       blocks: [
@@ -158,7 +159,7 @@ export default function () {
           <block type="display_show"></block>`,
         },
         {
-          xml: `<label text="Camera"></label>
+          xml: `<label text="${t('toolbox.label.camera')}"></label>
             <block type="camera_width"></block>
             <block type="camera_height"></block>
             <block type="camera_resolution">
@@ -202,7 +203,7 @@ export default function () {
             <block type="camera_capture"></block>
             </value>
           </block>
-        <label text="Image Manipulation"></label>
+        <label text="${t('toolbox.label.imageManipulation')}"></label>
         <block type="image_copy">
           <value name="image">
             <block type="variables_get">
@@ -270,7 +271,7 @@ export default function () {
             </shadow>
           </value>
         </block>
-        <label text="Image drawing"></label>
+        <label text="${t('toolbox.label.imageDrawing')}"></label>
         <block type="image_draw_string">
           <field name="color">#ff0000</field>
           <value name="image">
@@ -510,7 +511,7 @@ export default function () {
         `,
         },
         {
-          xml: `<label text="load / save / format image"></label> 
+          xml: `<label text="${t('toolbox.label.loadSaveFormatImage')}"></label> 
           <block type="image_open">
             <field name="path">./tmp.png</field>
             <value name="var">
@@ -554,7 +555,7 @@ export default function () {
       ],
     },
     {
-      name: "Loops",
+      name: t("toolbox.category.loops"),
       color: "#56A668",
       icon: `images/icons/loop.png`,
       blocks: [
@@ -605,7 +606,7 @@ export default function () {
       ],
     },
     {
-      name: "Logic",
+      name: t("toolbox.category.logic"),
       color: "#617E95",
       icon: `images/icons/logn.png`,
       blocks: [
@@ -637,7 +638,7 @@ export default function () {
       ],
     },
     {
-      name: "Math",
+      name: t("toolbox.category.math"),
       color: "#3A4F8B",
       icon: `images/icons/math.png`,
       blocks: [
@@ -729,7 +730,7 @@ export default function () {
       ],
     },
     {
-      name: "GPIO I/O",
+      name: t("toolbox.category.gpio"),
       color: "#a5745b",
       icon: `images/icons/gpio.png`,
       blocks: [
@@ -737,7 +738,7 @@ export default function () {
           // <block type="maixpy3_gpio_when_switch">
           //   <field name="switch">S1</field>
           // </block>            
-          xml: `<label text="GPIO / Sensors"></label>
+          xml: `<label text="${t('toolbox.label.gpioSensors')}"></label>
             <block type="maixpy3_gpio_switch">
               <field name="switch">S1</field>
             </block>
@@ -820,7 +821,7 @@ export default function () {
       ],
     },
     {
-      name: "Text",
+      name: t("toolbox.category.text"),
       color: "#5ba593",
       icon: `images/icons/font.png`,
       blocks: [
@@ -912,7 +913,7 @@ export default function () {
       ],
     },
     {
-      name: "List",
+      name: t("toolbox.category.list"),
       color: "#745ba5",
       icon: `images/icons/list.png`,
       blocks: [
@@ -1017,13 +1018,13 @@ export default function () {
       ],
     },
     {
-      name: "Variables",
+      name: t("toolbox.category.variables"),
       color: "#a55b80",
       icon: `images/icons/var.png`,
       blocks: "VARIABLE",
     },
     {
-      name: "Functions",
+      name: t("toolbox.category.functions"),
       color: "#995ba5",
       icon: `images/icons/function.png`,
       blocks: "PROCEDURE",

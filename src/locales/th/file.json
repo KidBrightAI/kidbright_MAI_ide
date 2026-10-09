@@ -1,0 +1,8 @@
+{
+  "cannotDeleteEmptyPath": "ไม่สามารถลบไฟล์หรือโฟลเดอร์ที่ว่างเปล่าได้",
+  "cannotDeleteRoot": "ไม่สามารถลบโฟลเดอร์หลักได้",
+  "cannotCreateEmptyFolder": "ไม่สามารถสร้างโฟลเดอร์ที่ว่างเปล่าได้",
+  "downloadFailed": "ดาวน์โหลดไฟล์ไม่สำเร็จ: {path}",
+  "uploading": "กำลังอัปโหลด {name} ({size} MB)...",
+  "uploadFailed": "อัปโหลดไฟล์ไม่สำเร็จ: {path}"
+}

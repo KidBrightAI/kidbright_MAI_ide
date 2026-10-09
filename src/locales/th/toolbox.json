@@ -1,0 +1,27 @@
+{
+  "category": {
+    "basic": "พื้นฐาน",
+    "ai": "AI",
+    "displayImage": "จอแสดงผล / รูปภาพ",
+    "displayCamera": "จอแสดงผลและกล้อง",
+    "loops": "การวนซ้ำ",
+    "logic": "ตรรกะ",
+    "math": "คณิตศาสตร์",
+    "gpio": "GPIO I/O",
+    "text": "ข้อความ",
+    "list": "รายการ",
+    "variables": "ตัวแปร",
+    "functions": "ฟังก์ชัน"
+  },
+  "label": {
+    "objectDetection": "ตรวจจับวัตถุ",
+    "imageClassification": "จำแนกรูปภาพ",
+    "voiceClassification": "จำแนกเสียง",
+    "imageManipulation": "ปรับแต่งรูปภาพ",
+    "imageDrawing": "วาดบนรูปภาพ",
+    "loadSaveImage": "โหลดและบันทึกรูปภาพ",
+    "loadSaveFormatImage": "โหลด / บันทึก / แปลงรูปแบบรูปภาพ",
+    "gpioSensors": "GPIO / เซนเซอร์",
+    "camera": "กล้อง"
+  }
+}

@@ -2,6 +2,7 @@ import { sleep } from "@/engine/helper"
 import { defineStore } from "pinia"
 import { markRaw } from "vue"
 import { toast } from "vue3-toastify"
+import { t } from "@/plugins/i18n"
 import { useWorkspaceStore } from "./workspace"
 import { WebAdbHandler } from "@/engine/protocols/web-adb.js"
 import { WebSocketShellHandler } from "@/engine/protocols/websocket-shell.js"
@@ -88,7 +89,7 @@ export const useBoardStore = defineStore({
       const workspaceStore = useWorkspaceStore()
       const currentBoard = workspaceStore.currentBoard
       if (!currentBoard) {
-        toast.error("กรุณาเลือกบอร์ดก่อน")
+        toast.error(t("board.selectBoardFirst"))
 
         return null
       }
@@ -101,7 +102,7 @@ export const useBoardStore = defineStore({
           this.handler = markRaw(new WebSocketShellHandler())
           break
         default:
-          toast.error(`ไม่รองรับโปรโตคอล: ${currentBoard.protocol}`)
+          toast.error(t("board.unsupportedProtocol", { protocol: currentBoard.protocol }))
           this.handler = null
 
           return null
@@ -264,7 +265,7 @@ export const useBoardStore = defineStore({
 
     async rebootBoard() {
       if (!this.connected) {
-        toast.error("ไม่ได้เชื่อมต่อบอร์ด")
+        toast.error(t("board.notConnected"))
         return
       }
       await this.handler.rebootBoard()

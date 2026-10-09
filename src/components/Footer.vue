@@ -18,10 +18,10 @@ const terminalDiv = shallowRef()
       v-if="workspaceStore.currentBoard"
       class="terminal-floating"
       :class="{ disabled: !boardStore.isBoardConnected }"
-      :title="boardStore.isBoardConnected ? 'Open terminal' : 'Connect a board first'"
+      :title="boardStore.isBoardConnected ? $t('footer.openTerminal') : $t('footer.connectBoardFirst')"
       @click="boardStore.isBoardConnected && $emit('terminal')"
     >
-      <span class="text-h5 text-white px-3">>_ Terminal</span>
+      <span class="text-h5 text-white px-3">>_ {{ $t('footer.terminal') }}</span>
     </div>
 
     <!-- Board Name Display -->

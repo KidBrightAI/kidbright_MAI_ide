@@ -1,7 +1,7 @@
 Blockly.defineBlocksWithJsonArray(
   [{
     "type": "display_get_width",
-    "message0": "display width",
+    "message0": "%{BKY_KB_MAIPLUS_DISPLAY_GET_WIDTH}",
     "output": "Number",
     "colour": 65,
     "tooltip": "",
@@ -9,7 +9,7 @@ Blockly.defineBlocksWithJsonArray(
   },
   {
     "type": "display_get_height",
-    "message0": "display height",
+    "message0": "%{BKY_KB_MAIPLUS_DISPLAY_GET_HEIGHT}",
     "output": "Number",
     "colour": 65,
     "tooltip": "",
@@ -17,7 +17,7 @@ Blockly.defineBlocksWithJsonArray(
   },
   {
     "type": "display_resolution",
-    "message0": "display set resolution %1 width %2 height %3",
+    "message0": "%{BKY_KB_MAIPLUS_DISPLAY_RESOLUTION}",
     "args0": [
       {
         "type": "input_dummy",
@@ -42,7 +42,7 @@ Blockly.defineBlocksWithJsonArray(
   },
   {
     "type": "display_get_image",
-    "message0": "get image from display",
+    "message0": "%{BKY_KB_MAIPLUS_DISPLAY_GET_IMAGE}",
     "inputsInline": true,
     "output": "Image",
     "colour": 65,
@@ -51,7 +51,7 @@ Blockly.defineBlocksWithJsonArray(
   },
   {
     "type": "display_show",
-    "message0": "display %1 %2",
+    "message0": "%{BKY_KB_MAIPLUS_DISPLAY_SHOW}",
     "args0": [
       {
         "type": "input_dummy",

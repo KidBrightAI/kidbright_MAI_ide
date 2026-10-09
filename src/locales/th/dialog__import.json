@@ -1,0 +1,66 @@
+{
+  "importObjectDetect": {
+    "title": "นำเข้ารูปภาพ",
+    "tabImage": "นำเข้ารูปภาพ",
+    "imageOnlyHeading": "นำเข้าเฉพาะรูปภาพ",
+    "selectImageFolder": "เลือก Folder รูปภาพ",
+    "selectXmlFolder": "เลือก Folder XML Annotation",
+    "moreFiles": "+{count} ไฟล์",
+    "kbaiHeading": "นำเข้า Dataset จากโปรเจค KidBright AI IDE",
+    "selectKbaiZip": "เลือกไฟล์ .zip ของโปรเจค KidBright AI IDE",
+    "importing": "กำลังนำเข้า ...",
+    "done": "นำเข้าสำเร็จ",
+    "success": "นำเข้าข้อมูลสำเร็จ",
+    "partialSuccess": "นำเข้าข้อมูลสำเร็จเพียงบางส่วน ดาวน์โหลดไม่สำเร็จจำนวน {count} ไฟล์",
+    "zipRequired": "กรุณาเลือกไฟล์ .zip ของโปรเจค KidBright AI IDE",
+    "classifyProjectTitle": "โปรเจคนี้เป็นโปรเจคประเภทการจำแนกรูปภาพ",
+    "classifyProjectContent": "การนำเข้าจะทำได้เฉพาะรูปภาพอย่างเดียว",
+    "noImagesInProject": "ไม่พบไฟล์รูปภาพในโปรเจค",
+    "notObjectDetectProject": "โปรเจคนี้ไม่ใช่โปรเจคที่ใช้ในการตรวจจับวัตถุ",
+    "xmlCountMismatch": "จำนวนไฟล์รูปภาพ และไฟล์ XML Annotation ไม่ตรงกัน"
+  },
+  "importImageClassify": {
+    "title": "นำเข้ารูปภาพ",
+    "tabPc": "เครื่อง PC",
+    "selectImageFolder": "เลือก Folder รูปภาพ",
+    "moreFiles": "+{count} ไฟล์",
+    "importWithLabel": "นำเข้าพร้อมกับชื่อโฟลเดอร์",
+    "importWithLabelNote": "ภาพทั้งหมดจะตั้งชื่อตามโฟลเดอร์หลักที่เลือก",
+    "importing": "กำลังนำเข้า ...",
+    "done": "นำเข้าสำเร็จ",
+    "success": "นำเข้าข้อมูลสำเร็จ",
+    "partialSuccess": "นำเข้าข้อมูลสำเร็จเพียงบางส่วน ดาวน์โหลดไม่สำเร็จจำนวน {count} ไฟล์"
+  },
+  "fileExplorer": {
+    "title": "ตัวจัดการไฟล์",
+    "upOneLevel": "ขึ้นหนึ่งระดับ",
+    "newFolder": "สร้างโฟลเดอร์ใหม่",
+    "folderName": "ชื่อโฟลเดอร์",
+    "uploadFile": "อัปโหลดไฟล์",
+    "emptyFolder": "โฟลเดอร์ว่างเปล่า",
+    "confirmDeleteTitle": "ยืนยันการลบ",
+    "confirmDeleteContent": "ลบ \"{name}\" ใช่หรือไม่?",
+    "deleted": "ลบ \"{name}\" แล้ว",
+    "folderCreated": "สร้างโฟลเดอร์ \"{name}\"",
+    "uploaded": "อัปโหลด \"{name}\" แล้ว"
+  },
+  "deployAsApp": {
+    "title": "ติดตั้งเป็นแอปพลิเคชัน",
+    "subtitle": "ติดตั้งโปรเจคนี้ลงในบอร์ดเป็นแอปพลิเคชัน เพื่อเปิดใช้งานจากเมนูบนหน้าจอบอร์ดได้ทุกครั้ง",
+    "appName": "ชื่อแอปพลิเคชัน",
+    "appNameRequired": "กรุณากรอกชื่อแอปพลิเคชัน",
+    "appId": "รหัสแอปพลิเคชัน",
+    "appIdHint": "ใช้ตัวอักษรภาษาอังกฤษ ตัวเลข และเครื่องหมายขีดล่าง",
+    "appIdRequired": "กรุณากรอกรหัสแอปพลิเคชัน",
+    "appIdPattern": "ใช้ a-z, 0-9 และ _ เท่านั้น",
+    "author": "ผู้สร้าง",
+    "icon": "ไอคอนแอปพลิเคชัน",
+    "iconHint": "แนะนำ PNG ขนาด 96×96 px หากไม่เลือก จะใช้ไอคอนเริ่มต้น",
+    "autoStart": "ตั้งให้แอปพลิเคชันนี้เริ่มทำงานทันทีเมื่อเปิดเครื่อง",
+    "deploying": "กำลังติดตั้ง...",
+    "deploy": "ติดตั้งแอปพลิเคชัน"
+  },
+  "confirm": {
+    "title": "คุณแน่ใจหรือไม่?"
+  }
+}

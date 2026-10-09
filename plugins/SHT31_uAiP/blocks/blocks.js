@@ -1,7 +1,7 @@
 Blockly.defineBlocksWithJsonArray([
   {
     "type": "sht31_i2c_sensor_uAiP",
-    "message0": "SHT31 address %1 read %2",
+    "message0": "%{BKY_KB_PLUGIN_SHT31_UAIP_SHT31_I2C_SENSOR_UAIP}",
     "args0": [
       {
         "type": "field_dropdown",
@@ -22,11 +22,11 @@ Blockly.defineBlocksWithJsonArray([
         "name": "type",
         "options": [
           [
-            "temperature (°C)",
+            "%{BKY_KB_PLUGIN_SHT31_UAIP_SHT31_I2C_SENSOR_UAIP_OPT_0}",
             "0",
           ],
           [
-            "humidity (%RH)",
+            "%{BKY_KB_PLUGIN_SHT31_UAIP_SHT31_I2C_SENSOR_UAIP_OPT_1}",
             "1",
           ],
         ],

@@ -9,6 +9,7 @@ import {
 import { setType } from "@baklavajs/interface-types"
 import { modelInput, modelOutput } from "../interfaces/interface-types"
 import { getDefault, filterChoices } from "@/engine/board-node-options"
+import { t } from "@/plugins/i18n"
 
 const MODEL_TYPES = [
   { text: "MobileNet-100", value: "mobilenet-100" },
@@ -21,9 +22,9 @@ const MODEL_TYPES = [
 
 export const ImageClassificationNode = defineNode({
   type: "ImageClassification",
-  title: "Image classification model",
+  title: t("designer.node.imageClassification"),
   inputs: {
-    modelInput: () => new NodeInterface("Model Input").use(setType, modelInput),
+    modelInput: () => new NodeInterface(t("designer.field.modelInput")).use(setType, modelInput),
     modelType: () => new SelectInterface(
       "Model Type",
       getDefault("ImageClassification", "modelType", "mobilenet-100"),
@@ -31,7 +32,7 @@ export const ImageClassificationNode = defineNode({
     ).setPort(false),
   },
   outputs: {
-    result: () => new NodeInterface("Model Output").use(setType, modelOutput),
+    result: () => new NodeInterface(t("designer.field.modelOutput")).use(setType, modelOutput),
   },
   calculate({ modelInput, modelType }) {
     return {

@@ -18,7 +18,7 @@
             off it as a fallback so returning users don't see the
             "haven't selected" message after the upgrade.
           -->
-          {{ workspaceStore.projectTypeTitle || workspaceStore.extension?.name || 'คุณยังไม่ได้เลือกประเภทโปรเจค' }}
+          {{ workspaceStore.extension ? localized(workspaceStore.extension.title) || workspaceStore.extension.name : $t('sidePanel.noProjectType') }}
         </div>
         <div class="d-flex flex-row mt-2 mb-2 justify-space-between">
           <VBtn 
@@ -30,7 +30,7 @@
             <VIcon class="me-1">
               mdi-chevron-left
             </VIcon>
-            Back to Coding
+            {{ $t('sidePanel.backToCoding') }}
           </VBtn>
           <VBtn 
             class="text-red font-weight-bold" 
@@ -41,7 +41,7 @@
             <VIcon class="me-1">
               mdi-delete
             </VIcon>
-            Reset
+            {{ $t('sidePanel.reset') }}
           </VBtn>
         </div>
       </div>
@@ -61,7 +61,7 @@
             <VIcon class="me-2">
               mdi-camera
             </VIcon>
-            Capture
+            {{ $t('sidePanel.capture') }}
             <div
               class="step-text"
               :style="{ backgroundColor: selectedMenu === 1 ? '#007e4e' : '#5c5433' }"
@@ -84,7 +84,7 @@
             <VIcon class="me-2">
               mdi-tag
             </VIcon>
-            Annotate
+            {{ $t('sidePanel.annotate') }}
             <div
               class="step-text"
               :style="{ backgroundColor: selectedMenu === 2 ? '#007e4e' : '#5c5433' }"
@@ -107,7 +107,7 @@
             <VIcon class="me-2">
               mdi-robot
             </VIcon>
-            Train
+            {{ $t('sidePanel.train') }}
             <div
               class="step-text"
               :style="{ backgroundColor: selectedMenu === 3 ? '#007e4e' : '#5c5433' }"
@@ -132,7 +132,7 @@
               width="42"
               height="42"
             >
-            Model is Ready!
+            {{ $t('sidePanel.modelReady') }}
             <div
               class="step-text"
               style="background-color: #007e4e;"
@@ -195,6 +195,7 @@
 </template>
 
 <script setup>
+import { localized } from "@/plugins/i18n"
 import { computed } from "vue"
 import InstructionAsyncComponent from "@/components/InstructionAsyncComponent.vue"
 import ExtensionAsyncComponent from "@/components/ExtensionAsyncComponent.vue"

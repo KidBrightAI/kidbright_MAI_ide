@@ -5,8 +5,8 @@
   <div class="misc-wrapper">
     <ErrorHeader
       error-code="404"
-      error-title="Page Not Found ⚠️"
-      error-description="We couldn't find the page you are looking for."
+      :error-title="$t('page.notFound.title')"
+      :error-description="$t('page.notFound.description')"
     />
 
     <!-- 👉 Image -->
@@ -15,7 +15,7 @@
         to="/"
         class="mt-10"
       >
-        Back to Home
+        {{ $t('page.notFound.backHome') }}
       </VBtn>
     </div>
     <!-- 👉 Footer -->

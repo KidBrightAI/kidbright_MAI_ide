@@ -1,4 +1,5 @@
 <script setup>
+import { localized } from "@/plugins/i18n"
 import DialogCloseBtn from "@/components/dialog/DialogCloseBtn.vue"
 import { useBoardStore } from "@/store/board"
 import { toast } from "vue3-toastify"
@@ -15,7 +16,7 @@ const boardStore = useBoardStore()
 const workspaceStore = useWorkspaceStore()
 
 const extensions = inject('extensions')
-const models = extensions.map(el => ({title : el.title, value : el.id}))
+const models = extensions.map(el => ({ title: localized(el.title), value: el.id }))
 const selectType = ref(extensions[0].id)
 
 const refVForm = ref({})
@@ -57,7 +58,7 @@ const onFormSubmit = async() => {
       />
       <VCardItem>
         <VCardTitle class="text-h5">
-          เลือกประเภทโมเดลให้กับโปรเจคนี้
+          {{ $t('dialog.newModel.title') }}
         </VCardTitle>
       </VCardItem>
       <VCardText class="pt-0">
@@ -70,7 +71,7 @@ const onFormSubmit = async() => {
               <VSelect
                 v-model="selectType"
                 :items="models"
-                label="ประเภทการเรียนรู้"
+                :label="$t('dialog.newModel.learningType')"
               />
             </VCol>
             <VCol
@@ -82,17 +83,17 @@ const onFormSubmit = async() => {
                 v-if="selectedExtension.options[configName].type == 'select'" 
                 v-model="selectedExtension.options[configName].value" 
                 :items="selectedExtension.options[configName].options" 
-                :label="selectedExtension.options[configName].title"
+                :label="localized(selectedExtension.options[configName].title)"
               />
               <VTextField 
                 v-else-if="selectedExtension.options[configName].type == 'text'" 
                 v-model="selectedExtension.options[configName].value" 
-                :label="selectedExtension.options[configName].title"
+                :label="localized(selectedExtension.options[configName].title)"
               />
               <VTextField 
                 v-else-if="selectedExtension.options[configName].type == 'number'" 
                 v-model.number="selectedExtension.options[configName].value" 
-                :label="selectedExtension.options[configName].title"
+                :label="localized(selectedExtension.options[configName].title)"
                 type="number"
               />
             </VCol>
@@ -107,7 +108,7 @@ const onFormSubmit = async() => {
                 class="me-3"
                 color="primary"
               >
-                เลือกโมเดล
+                {{ $t('dialog.newModel.select') }}
               </VBtn>
             </VCol>
           </VRow>

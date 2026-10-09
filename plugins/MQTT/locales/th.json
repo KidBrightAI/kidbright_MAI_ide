@@ -1,0 +1,12 @@
+{
+  "KB_PLUGIN_MQTT_MQTT_CONFIG": "เชื่อมต่อ MQTT %1 Host %2 Port %3 Client Id %4 ชื่อผู้ใช้ %5 รหัสผ่าน %6 รออินเทอร์เน็ต %7",
+  "KB_PLUGIN_MQTT_MQTT_ON_CONNECTED": "เมื่อ MQTT เชื่อมต่อแล้ว %1 %2",
+  "KB_PLUGIN_MQTT_MQTT_IS_CONNECT": "MQTT เชื่อมต่ออยู่หรือไม่",
+  "KB_PLUGIN_MQTT_MQTT_PUBLISH": "MQTT ส่ง (publish) topic %1 ข้อมูล %2",
+  "KB_PLUGIN_MQTT_MQTT_SUBSCRIBE": "MQTT สมัครรับ (subscribe) topic %1",
+  "KB_PLUGIN_MQTT_MQTT_ON_MESSAGE": "เมื่อ MQTT ได้รับข้อความ %1 %2",
+  "KB_PLUGIN_MQTT_MQTT_LOOP": "ประมวลผล MQTT (loop)",
+  "KB_PLUGIN_MQTT_MQTT_GET_TOPIC": "MQTT topic ที่ได้รับ",
+  "KB_PLUGIN_MQTT_MQTT_GET_NUMBER": "MQTT ข้อมูลที่ได้รับเป็นตัวเลข",
+  "KB_PLUGIN_MQTT_MQTT_GET_TEXT": "MQTT ข้อมูลที่ได้รับเป็นข้อความ"
+}

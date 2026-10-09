@@ -1,4 +1,5 @@
 import { toast } from "vue3-toastify"
+import { t } from "@/plugins/i18n"
 import { useBoardStore } from "@/store/board"
 import { useWorkspaceStore } from "@/store/workspace"
 import { appPath } from "@/engine/board-paths"
@@ -90,7 +91,7 @@ export class WebSocketShellHandler extends BoardProtocol {
 
   async connect(board) {
     if (!board.wsShell) {
-      toast.error("WebSocket Shell URL (wsShell) is not configured for this board.")
+      toast.error(t("board.wsShellNotConfigured"))
       return false
     }
     if (this.isConnected()) return true
@@ -102,7 +103,7 @@ export class WebSocketShellHandler extends BoardProtocol {
       this.socket.onopen = () => {
         this.connected = true
         this.boardStore.connected = true
-        toast.success("Connected to Shell")
+        toast.success(t("board.shellConnected"))
         this.socket.send('\r')
         // Probe first so _boardVersion is known by the time
         // _uploadBoardScripts decides whether to nag for a reboot.
@@ -231,7 +232,7 @@ export class WebSocketShellHandler extends BoardProtocol {
 
   async deleteFileOrFolder(path) {
     if (!path || path === "/" || path === "/root" || path === "/maixapp") {
-      toast.error("ไม่สามารถลบโฟลเดอร์หลักได้")
+      toast.error(t("file.cannotDeleteRoot"))
       return false
     }
     await this.interrupt()
@@ -281,7 +282,7 @@ export class WebSocketShellHandler extends BoardProtocol {
   async downloadFile(path) {
     const blob = await this.readFile(path)
     if (!blob) {
-      toast.error(`ดาวน์โหลดไฟล์ไม่สำเร็จ: ${path}`)
+      toast.error(t("file.downloadFailed", { path }))
       return false
     }
     triggerBrowserDownload(blob, path.split("/").pop())
@@ -459,7 +460,7 @@ export class WebSocketShellHandler extends BoardProtocol {
     if (needsReboot) {
       const names = upgraded.filter(s => s.needsReboot).map(s => s.name).join(", ")
       toast.info(
-        `อัปเดต ${names} เรียบร้อย กรุณารีสตาร์ทบอร์ดเพื่อให้การเปลี่ยนแปลงมีผล`,
+        t("board.scriptsUpdatedReboot", { names }),
         { autoClose: 8000 },
       )
     }
@@ -565,7 +566,7 @@ export class WebSocketShellHandler extends BoardProtocol {
     if (buf.byteLength > LARGE_FILE_THRESHOLD) {
       const name = path.split("/").pop()
       const mb = (buf.byteLength / 1024 / 1024).toFixed(2)
-      toast.info(`กำลังอัปโหลด ${name} (${mb} MB)...`)
+      toast.info(t("file.uploading", { name, size: mb }))
     }
     await this._uploadFileChunked(path, buf)
   }
@@ -615,7 +616,7 @@ export class WebSocketShellHandler extends BoardProtocol {
         match: m => m.type === "uploaded" && m.path === path,
         timeoutMs: 15000,
       })
-      if (!ack) throw new Error(`upload chunk failed: ${path}`)
+      if (!ack) throw new Error(t("file.uploadFailed", { path }))
     }
 
     // Empty content still needs one round-trip (mode=wb) so the file
@@ -666,7 +667,7 @@ export class WebSocketShellHandler extends BoardProtocol {
     // python invocation; see _armRunEndWatcher for why.
     const sentinel = this._armRunEndWatcher()
     await this.execShell(`python3 ${runPy}; ${sentinel}`)
-    toast.success("อัปโหลดโค้ดและกำลังรันบนบอร์ด")
+    toast.success(t("board.codeUploadedRunning"))
   }
 
   // Register a one-shot listener that flips boardStore.running back

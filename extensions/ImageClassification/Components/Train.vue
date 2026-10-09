@@ -22,13 +22,13 @@
       >          
         <VTabs v-model="tab">
           <VTab value="Message">
-            Message log {{ serverStore.epoch && serverStore.totalEpoch ? `(${serverStore.epoch}/${serverStore.totalEpoch})` : '' }}              
+            {{ $t('train.shared.messageLog') }} {{ serverStore.epoch && serverStore.totalEpoch ? `(${serverStore.epoch}/${serverStore.totalEpoch})` : '' }}              
           </VTab>
           <VTab value="Accuracy">
-            Accuracy
+            {{ $t('train.shared.accuracy') }}
           </VTab>
           <VTab value="Loss">
-            Loss
+            {{ $t('train.shared.loss') }}
           </VTab>
         </VTabs>
         <div class="h-100">
@@ -69,6 +69,7 @@
 import { useWorkspaceStore } from '@/store/workspace'
 import { useServerStore } from '@/store/server'
 import { toast } from "vue3-toastify"
+import { useI18n } from "vue-i18n"
 import ModelDesigner from "@/components/ModelDesigner.vue"
 import TrainingToolbar from "@/components/TrainingToolbar.vue"
 import AccuracyMatrixChart from "@/components/charts/AccuracyMatrixChart.vue"
@@ -81,6 +82,7 @@ import { onMounted } from 'vue'
 
 const workspaceStore = useWorkspaceStore()
 const serverStore = useServerStore()
+const { t } = useI18n()
 
 const tab = ref(0)
 const selectedMenu = ref(0)
@@ -95,7 +97,7 @@ const train = async () => {
     }
     serverStore.trainColab()
   } else {
-    toast.error("Please connect to Google Colab first")
+    toast.error(t('train.shared.colabNotConnected'))
   }
 }
 
@@ -103,7 +105,7 @@ const test = async () => {
   if (workspaceStore.isColabConnected) {
     workspaceStore.test()
   } else {
-    toast.error("Please connect to Google Colab first")
+    toast.error(t('train.shared.colabNotConnected'))
   }
 }
 

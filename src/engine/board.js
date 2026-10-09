@@ -1,3 +1,4 @@
+import { currentLocale } from '@/plugins/i18n'
 import Blockly from 'blockly'
 import "blockly/blocks_compressed.js"
 import python, { pythonGenerator } from 'blockly/python'
@@ -55,7 +56,11 @@ function execScript(code, context) {
 export async function parseExamples(examples) {
   let parsedExamples = []
   for (const example in examples) {
-    let contentResponse = await fetch(example)
+    // readme.<locale>.md wins when the example ships one next to the
+    // Thai readme.md; the glob only lists readme.md, so the sibling is
+    // fetched by name and a missing file falls back silently.
+    let contentResponse = await fetch(example.replace(/readme\.md$/, `readme.${currentLocale()}.md`))
+    if (!contentResponse.ok) contentResponse = await fetch(example)
     let contentData = await contentResponse.text()
     let parsedExample = {
       content: contentData,

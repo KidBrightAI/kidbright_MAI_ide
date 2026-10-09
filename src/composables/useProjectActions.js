@@ -1,4 +1,5 @@
 import { toast } from 'vue3-toastify'
+import { t } from '@/plugins/i18n'
 import { writePinToKMV } from '@/store/simulator'
 
 export function useProjectActions({
@@ -24,13 +25,13 @@ export function useProjectActions({
 
       const res = await workspaceStore.createNewProject(projectInfo)
       if (res) {
-        toast.success('สร้างโปรเจคเสร็จเรียบร้อย')
+        toast.success(t('project.created'))
         setTimeout(() => location.reload(), 1000)
       } else {
-        toast.error('สร้างโปรเจคไม่สำเร็จ')
+        toast.error(t('project.createFailed'))
       }
     } catch (err) {
-      toast.error(`มีข้อผิดพลาด: ${err.message}`)
+      toast.error(t('project.createError', { message: err.message }))
     } finally {
       dialogs.value.newProject = false
       dialogs.value.selectBoard = false
@@ -40,8 +41,8 @@ export function useProjectActions({
   const newProjectConfirm = async () => {
     try {
       await confirm({
-        title: 'ยืนยันการสร้างโปรเจค',
-        content: 'ข้อมูลโปรเจคปัจจุบันจะถูกลบทั้งหมด คุณต้องการสร้างโปรเจคใหม่หรือไม่',
+        title: t('project.confirmNewTitle'),
+        content: t('project.confirmNewText'),
         dialogProps: { width: 'auto' },
       })
       dialogs.value.selectBoard = true
@@ -53,8 +54,8 @@ export function useProjectActions({
   const openProject = async () => {
     try {
       await confirm({
-        title: 'ยืนยันการเปิดโปรเจค',
-        content: 'ข้อมูลโปรเจคปัจจุบันจะถูกลบทั้งหมด คุณต้องการเปิดโปรเจคใหม่หรือไม่',
+        title: t('project.confirmOpenTitle'),
+        content: t('project.confirmOpenText'),
         dialogProps: { width: 'auto' },
       })
       if (await workspaceStore.openProjectFromZip()) {
@@ -79,8 +80,8 @@ export function useProjectActions({
   const deleteProject = async () => {
     try {
       await confirm({
-        title: 'ยืนยันการลบโปรเจค',
-        content: 'ข้อมูลโปรเจคปัจจุบันจะถูกลบทั้งหมด คุณต้องการลบโปรเจคหรือไม่',
+        title: t('project.confirmDeleteTitle'),
+        content: t('project.confirmDeleteText'),
         dialogProps: { width: 'auto' },
       })
       selectedMenu.value = 0
@@ -96,15 +97,15 @@ export function useProjectActions({
     if (await workspaceStore.selectProjectType(selectedType)) {
       router.push('/ai')
     } else {
-      toast.error('เลือกประเภทโมเดลไม่สำเร็จ')
+      toast.error(t('project.selectModelTypeFailed'))
     }
   }
 
   const onExampleOpen = async (mode, example) => {
     try {
       await confirm({
-        title: 'Confirm open example',
-        content: 'All code in this project will be deleted, please save first!',
+        title: t('project.confirmExampleTitle'),
+        content: t('project.confirmExampleText'),
         dialogProps: { width: 'auto' },
       })
       dialogs.value.example = false

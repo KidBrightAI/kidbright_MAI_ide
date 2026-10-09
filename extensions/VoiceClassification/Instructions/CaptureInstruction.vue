@@ -1,18 +1,26 @@
+<script setup>
+import { Translation as I18nT } from 'vue-i18n'
+</script>
+
 <template>
   <div class="hint">
     <div class="main-hint txt">
       <p class="p-color font-weight-bold">
-        ขั้นตอนที่ 1 Capture (Voice Classification)
+        {{ $t('instructions.voice.capture.title') }}
       </p>
-      <p>
-        ขั้นตอนนี้เป็นการใช้ไมโครโฟนในการบันทึกเสียงที่ต้องการ โดยกดปุ่ม
-        <img
-          src="@/assets/images/png/Group_200.png"
-          alt=""
-          srcset=""
-        >
-        เพื่อบันทึกเสียง (ควรบันทึกเสียงอย่างน้อย 20 เสียงต่อคำหรือมากกว่า)
-      </p>
+      <I18nT
+        keypath="instructions.voice.capture.intro"
+        tag="p"
+        scope="global"
+      >
+        <template #button>
+          <img
+            src="@/assets/images/png/Group_200.png"
+            alt=""
+            srcset=""
+          >
+        </template>
+      </I18nT>
     </div>
     <div class="mascot">
       <img

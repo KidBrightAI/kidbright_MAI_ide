@@ -1,7 +1,7 @@
 Blockly.Blocks['ikb1_select_i2c_address'] = {
   init: function () {
     this.appendDummyInput()
-      .appendField("select I2C address")
+      .appendField(Blockly.Msg["KB_PLUGIN_IKB1_IKB1_SELECT_I2C_ADDRESS"])
       .appendField(new Blockly.FieldDropdown([["0x48", "0x48"], ["0x49", "0x49"]]), "addr")
     this.setPreviousStatement(true, null)
     this.setNextStatement(true, null)
@@ -14,7 +14,7 @@ Blockly.Blocks['ikb1_select_i2c_address'] = {
 Blockly.Blocks['ikb1_digital_read'] = {
   init: function() {
     this.appendDummyInput()
-      .appendField("digital read pin")
+      .appendField(Blockly.Msg["KB_PLUGIN_IKB1_IKB1_DIGITAL_READ"])
       .appendField(new Blockly.FieldDropdown([["0","0"], ["1","1"], ["2","2"], ["3","3"], ["4","4"], ["5","5"], ["6","6"], ["7","7"]]), "ch")
     this.setOutput(true, ["Number", "Boolean"])
     this.setColour("#191e3e")
@@ -26,11 +26,11 @@ Blockly.Blocks['ikb1_digital_read'] = {
 Blockly.Blocks['ikb1_digital_write'] = {
   init: function() {
     this.appendDummyInput()
-      .appendField("digital write pin")
+      .appendField(Blockly.Msg["KB_PLUGIN_IKB1_IKB1_DIGITAL_WRITE"])
       .appendField(new Blockly.FieldDropdown([["0","0"], ["1","1"], ["2","2"], ["3","3"], ["4","4"], ["5","5"], ["6","6"], ["7","7"]]), "ch")
     this.appendValueInput("value")
       .setCheck(["Number", "Boolean"])
-      .appendField("to")
+      .appendField(Blockly.Msg["KB_PLUGIN_IKB1_IKB1_DIGITAL_WRITE_LABEL_TO"])
     this.setInputsInline(true)
     this.setPreviousStatement(true, null)
     this.setNextStatement(true, null)
@@ -43,7 +43,7 @@ Blockly.Blocks['ikb1_digital_write'] = {
 Blockly.Blocks['ikb1_analog_read'] = {
   init: function() {
     this.appendDummyInput()
-      .appendField("analog read pin")
+      .appendField(Blockly.Msg["KB_PLUGIN_IKB1_IKB1_ANALOG_READ"])
       .appendField(new Blockly.FieldDropdown([["0","0"], ["1","1"], ["2","2"], ["3","3"], ["4","4"], ["5","5"], ["6","6"], ["7","7"]]), "ch")
     this.setOutput(true, "Number")
     this.setColour("#191e3e")
@@ -55,13 +55,13 @@ Blockly.Blocks['ikb1_analog_read'] = {
 Blockly.Blocks['ikb1_motor'] = {
   init: function() {
     this.appendDummyInput()
-      .appendField("set motor")
+      .appendField(Blockly.Msg["KB_PLUGIN_IKB1_IKB1_MOTOR"])
       .appendField(new Blockly.FieldDropdown([["1","1"], ["2","2"], ["3","3"], ["4","4"]]), "ch")
-      .appendField("direction")
-      .appendField(new Blockly.FieldDropdown([["Forward","FORWARD"], ["Backward", "BACKWARD"]]), "dir")
+      .appendField(Blockly.Msg["KB_PLUGIN_IKB1_IKB1_MOTOR_LABEL_DIRECTION"])
+      .appendField(new Blockly.FieldDropdown([[Blockly.Msg["KB_PLUGIN_IKB1_IKB1_MOTOR_OPT_FORWARD"],"FORWARD"], [Blockly.Msg["KB_PLUGIN_IKB1_IKB1_MOTOR_OPT_BACKWARD"], "BACKWARD"]]), "dir")
     this.appendValueInput("speed")
       .setCheck("Number")
-      .appendField("speed")
+      .appendField(Blockly.Msg["KB_PLUGIN_IKB1_IKB1_MOTOR_LABEL_SPEED"])
     this.appendDummyInput()
       .appendField("%")
     this.setInputsInline(true)
@@ -76,11 +76,11 @@ Blockly.Blocks['ikb1_motor'] = {
 Blockly.Blocks['ikb1_servo'] = {
   init: function() {
     this.appendDummyInput()
-      .appendField("set servo")
+      .appendField(Blockly.Msg["KB_PLUGIN_IKB1_IKB1_SERVO"])
       .appendField(new Blockly.FieldDropdown([["1","1"], ["2","2"], ["3","3"], ["4","4"], ["5","5"], ["6","6"]]), "ch")
     this.appendValueInput("angle")
       .setCheck("Number")
-      .appendField("degree")
+      .appendField(Blockly.Msg["KB_PLUGIN_IKB1_IKB1_SERVO_LABEL_DEGREE"])
     this.setInputsInline(true)
     this.setPreviousStatement(true, null)
     this.setNextStatement(true, null)
@@ -93,13 +93,13 @@ Blockly.Blocks['ikb1_servo'] = {
 Blockly.Blocks['ikb1_servo2'] = {
   init: function() {
     this.appendDummyInput()
-      .appendField("set servo")
+      .appendField(Blockly.Msg["KB_PLUGIN_IKB1_IKB1_SERVO2"])
       .appendField(new Blockly.FieldDropdown([["1","1"], ["2","2"], ["3","3"], ["4","4"], ["5","5"], ["6","6"]]), "ch")
-      .appendField("direction")
-      .appendField(new Blockly.FieldDropdown([["Forward","1"], ["Backward", "2"]]), "dir")
+      .appendField(Blockly.Msg["KB_PLUGIN_IKB1_IKB1_SERVO2_LABEL_DIRECTION"])
+      .appendField(new Blockly.FieldDropdown([[Blockly.Msg["KB_PLUGIN_IKB1_IKB1_SERVO2_OPT_1"],"1"], [Blockly.Msg["KB_PLUGIN_IKB1_IKB1_SERVO2_OPT_2"], "2"]]), "dir")
     this.appendValueInput("speed")
       .setCheck("Number")
-      .appendField("speed")
+      .appendField(Blockly.Msg["KB_PLUGIN_IKB1_IKB1_SERVO2_LABEL_SPEED"])
     this.appendDummyInput()
       .appendField("%")
     this.setInputsInline(true)
@@ -114,7 +114,7 @@ Blockly.Blocks['ikb1_servo2'] = {
 Blockly.Blocks['ikb1_serial_config'] = {
   init: function() {
     this.appendDummyInput()
-      .appendField("serial set baud rate to")
+      .appendField(Blockly.Msg["KB_PLUGIN_IKB1_IKB1_SERIAL_CONFIG"])
       .appendField(new Blockly.FieldDropdown([["9600","9600"], ["2400","2400"], ["57600","57600"], ["115200","115200"]]), "baud")
     this.setInputsInline(true)
     this.setPreviousStatement(true, null)
@@ -129,7 +129,7 @@ Blockly.Blocks['ikb1_serial_write'] = {
   init: function() {
     this.appendValueInput("data")
       .setCheck(["String", "Number", "Boolean"])
-      .appendField("serial write")
+      .appendField(Blockly.Msg["KB_PLUGIN_IKB1_IKB1_SERIAL_WRITE"])
     this.setInputsInline(true)
     this.setPreviousStatement(true, null)
     this.setNextStatement(true, null)
@@ -143,7 +143,7 @@ Blockly.Blocks['ikb1_serial_write_line'] = {
   init: function() {
     this.appendValueInput("data")
       .setCheck(["String", "Number", "Boolean"])
-      .appendField("serial write line")
+      .appendField(Blockly.Msg["KB_PLUGIN_IKB1_IKB1_SERIAL_WRITE_LINE"])
     this.setInputsInline(true)
     this.setPreviousStatement(true, null)
     this.setNextStatement(true, null)
@@ -156,7 +156,7 @@ Blockly.Blocks['ikb1_serial_write_line'] = {
 Blockly.Blocks['ikb1_serial_available'] = {
   init: function() {
     this.appendDummyInput()
-      .appendField("serial available")
+      .appendField(Blockly.Msg["KB_PLUGIN_IKB1_IKB1_SERIAL_AVAILABLE"])
     this.setInputsInline(true)
     this.setOutput(true, ["Number", "Boolean"])
     this.setColour("#191e3e")
@@ -168,7 +168,7 @@ Blockly.Blocks['ikb1_serial_available'] = {
 Blockly.Blocks['ikb1_serial_read_one_byte'] = {
   init: function() {
     this.appendDummyInput()
-      .appendField("serial read one byte")
+      .appendField(Blockly.Msg["KB_PLUGIN_IKB1_IKB1_SERIAL_READ_ONE_BYTE"])
     this.setInputsInline(true)
     this.setOutput(true, "Number")
     this.setColour("#191e3e")
@@ -181,9 +181,9 @@ Blockly.Blocks['ikb1_serial_read'] = {
   init: function() {
     this.appendValueInput("count")
       .setCheck("Number")
-      .appendField("serial read")
+      .appendField(Blockly.Msg["KB_PLUGIN_IKB1_IKB1_SERIAL_READ"])
     this.appendDummyInput()
-      .appendField("characters")
+      .appendField(Blockly.Msg["KB_PLUGIN_IKB1_IKB1_SERIAL_READ_LABEL_CHARACTERS"])
     this.setInputsInline(true)
     this.setOutput(true, "String")
     this.setColour("#191e3e")
@@ -195,7 +195,7 @@ Blockly.Blocks['ikb1_serial_read'] = {
 Blockly.Blocks['ikb1_serial_read_string'] = {
   init: function() {
     this.appendDummyInput()
-      .appendField("serial read string")
+      .appendField(Blockly.Msg["KB_PLUGIN_IKB1_IKB1_SERIAL_READ_STRING"])
     this.setInputsInline(true)
     this.setOutput(true, "String")
     this.setColour("#191e3e")
@@ -207,7 +207,7 @@ Blockly.Blocks['ikb1_serial_read_string'] = {
 Blockly.Blocks['ikb1_serial_read_line'] = {
   init: function() {
     this.appendDummyInput()
-      .appendField("serial read line")
+      .appendField(Blockly.Msg["KB_PLUGIN_IKB1_IKB1_SERIAL_READ_LINE"])
     this.setInputsInline(true)
     this.setOutput(true, "String")
     this.setColour("#191e3e")
@@ -219,7 +219,7 @@ Blockly.Blocks['ikb1_serial_read_line'] = {
 Blockly.Blocks['ikb1_serial_read_until'] = {
   init: function() {
     this.appendDummyInput()
-      .appendField("serial read until")
+      .appendField(Blockly.Msg["KB_PLUGIN_IKB1_IKB1_SERIAL_READ_UNTIL"])
       .appendField(new Blockly.FieldTextInput("$"), "until")
     this.setInputsInline(true)
     this.setOutput(true, "String")
@@ -234,7 +234,7 @@ var whellLogo = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADwAAAA0CAQAAAB8p
 Blockly.Blocks['ikb1_motor_forward'] = {
   init: function() {
     this.jsonInit({
-      "message0": "%1 Move Forward at speed %2 %%",
+      "message0": "%{BKY_KB_PLUGIN_IKB1_IKB1_MOTOR_FORWARD}",
       "args0": [{
         "type": "field_image",
         "src": whellLogo,
@@ -260,7 +260,7 @@ Blockly.Blocks['ikb1_motor_forward'] = {
 Blockly.Blocks['ikb1_motor_backward'] = {
   init: function() {
     this.jsonInit({
-      "message0": "%1 Move Backward at speed %2 %%",
+      "message0": "%{BKY_KB_PLUGIN_IKB1_IKB1_MOTOR_BACKWARD}",
       "args0": [{
         "type": "field_image",
         "src": whellLogo,
@@ -286,7 +286,7 @@ Blockly.Blocks['ikb1_motor_backward'] = {
 Blockly.Blocks['ikb1_motor_forward2'] = {
   init: function() {
     this.jsonInit({
-      "message0": "%1 Move Forward left wheel at speed %2 %% and right wheel at speed %3 %%",
+      "message0": "%{BKY_KB_PLUGIN_IKB1_IKB1_MOTOR_FORWARD2}",
       "args0": [{
         "type": "field_image",
         "src": whellLogo,
@@ -316,7 +316,7 @@ Blockly.Blocks['ikb1_motor_forward2'] = {
 Blockly.Blocks['ikb1_motor_backward2'] = {
   init: function() {
     this.jsonInit({
-      "message0": "%1 Move Backward left wheel at speed %2 %% and right wheel at speed %3 %%",
+      "message0": "%{BKY_KB_PLUGIN_IKB1_IKB1_MOTOR_BACKWARD2}",
       "args0": [{
         "type": "field_image",
         "src": whellLogo,
@@ -346,7 +346,7 @@ Blockly.Blocks['ikb1_motor_backward2'] = {
 Blockly.Blocks['ikb1_motor_turn_left'] = {
   init: function() {
     this.jsonInit({
-      "message0": "%1 Turn Left at speed %2 %%",
+      "message0": "%{BKY_KB_PLUGIN_IKB1_IKB1_MOTOR_TURN_LEFT}",
       "args0": [{
         "type": "field_image",
         "src": whellLogo,
@@ -372,7 +372,7 @@ Blockly.Blocks['ikb1_motor_turn_left'] = {
 Blockly.Blocks['ikb1_motor_turn_right'] = {
   init: function() {
     this.jsonInit({
-      "message0": "%1 Turn Right at speed %2 %%",
+      "message0": "%{BKY_KB_PLUGIN_IKB1_IKB1_MOTOR_TURN_RIGHT}",
       "args0": [{
         "type": "field_image",
         "src": whellLogo,
@@ -398,7 +398,7 @@ Blockly.Blocks['ikb1_motor_turn_right'] = {
 Blockly.Blocks['ikb1_motor_spin_left'] = {
   init: function() {
     this.jsonInit({
-      "message0": "%1 Spin Left at speed %2 %%",
+      "message0": "%{BKY_KB_PLUGIN_IKB1_IKB1_MOTOR_SPIN_LEFT}",
       "args0": [{
         "type": "field_image",
         "src": whellLogo,
@@ -424,7 +424,7 @@ Blockly.Blocks['ikb1_motor_spin_left'] = {
 Blockly.Blocks['ikb1_motor_spin_right'] = {
   init: function() {
     this.jsonInit({
-      "message0": "%1 Spin Right at speed %2 %%",
+      "message0": "%{BKY_KB_PLUGIN_IKB1_IKB1_MOTOR_SPIN_RIGHT}",
       "args0": [{
         "type": "field_image",
         "src": whellLogo,
@@ -450,7 +450,7 @@ Blockly.Blocks['ikb1_motor_spin_right'] = {
 Blockly.Blocks['ikb1_motor_stop'] = {
   init: function() {
     this.jsonInit({
-      "message0": "%1 Stop Moving",
+      "message0": "%{BKY_KB_PLUGIN_IKB1_IKB1_MOTOR_STOP}",
       "args0": [{
         "type": "field_image",
         "src": whellLogo,

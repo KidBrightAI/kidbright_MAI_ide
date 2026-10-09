@@ -1,0 +1,18 @@
+{
+  "shared": {
+    "noImageSelected": "ยังไม่ได้เลือกภาพ กรุณาคลิกที่ภาพด้านล่างเพื่อเลือก",
+    "labelHeading": "ป้ายกำกับ",
+    "annotateHeading": "กำกับข้อมูล",
+    "newLabel": "เพิ่มป้ายกำกับ",
+    "counter": {
+      "labeled": "กำกับแล้ว",
+      "selected": "เลือกแล้ว",
+      "of": "จาก",
+      "image": "ภาพ"
+    },
+    "editLabel": "แก้ไขป้ายกำกับ",
+    "renameLabelFrom": "เปลี่ยนชื่อป้ายกำกับจาก {name} ใหม่เป็น",
+    "removeLabelTitle": "ยืนยันการลบป้ายกำกับ",
+    "removeLabelContent": "หากลบ '{label}' ภาพที่ใช้ป้ายกำกับนี้จะถูกล้างค่า"
+  }
+}

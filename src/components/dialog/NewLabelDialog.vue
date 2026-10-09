@@ -24,7 +24,7 @@ const submitLabel = () => {
   >
     <VCard>
       <VToolbar density="compact">
-        <VToolbarTitle>เพิ่มป้ายกำกับใหม่</VToolbarTitle>
+        <VToolbarTitle>{{ $t('dialog.newLabel.title') }}</VToolbarTitle>
         <VSpacer /> 
         <VBtn
           icon
@@ -37,7 +37,7 @@ const submitLabel = () => {
       <VCardText>
         <VTextField
           v-model="labelName"
-          label="ตั้งชื่อป้ายกำกับ"
+          :label="$t('dialog.newLabel.name')"
           outlined
         />
       </VCardText>
@@ -49,7 +49,7 @@ const submitLabel = () => {
           :disabled="!labelName.length"
           @click="submitLabel"
         >
-          เพิ่มป้ายกำกับ
+          {{ $t('dialog.newLabel.add') }}
         </VBtn>
       </VCardActions>
     </VCard>

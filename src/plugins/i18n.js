@@ -1,7 +1,25 @@
 import { createI18n } from 'vue-i18n'
 import { en as vuetifyEn, th as vuetifyTh } from 'vuetify/locale'
-import th from '@/locales/th.json'
-import en from '@/locales/en.json'
+
+// Messages live in src/locales/<code>/<namespace>.json: the file name is
+// the top-level key (header.json -> header.*). A big namespace can be
+// split into <namespace>__<part>.json files that are deep-merged, so
+// dialog__project.json and dialog__import.json both feed dialog.*.
+// See I18N_PLAN.md for the naming rules.
+const localeFiles = import.meta.glob('@/locales/*/*.json', { eager: true })
+const LOCALE_FILE = /\/locales\/([a-z]+)\/([A-Za-z0-9-]+)(?:__[A-Za-z0-9-]+)?\.json$/
+
+function deepMerge(target, source) {
+  for (const [key, value] of Object.entries(source)) {
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      target[key] = deepMerge(target[key] && typeof target[key] === 'object' ? target[key] : {}, value)
+    } else {
+      target[key] = value
+    }
+  }
+
+  return target
+}
 
 /**
  * Single source of truth for the UI language. See I18N_PLAN.md for
@@ -21,6 +39,17 @@ export const LOCALE_STORAGE_KEY = 'kbmai.locale'
 /** Native-script names for the switcher; these are never translated. */
 export const LOCALE_NAMES = { th: 'ไทย', en: 'English' }
 
+function loadMessages(code) {
+  const messages = {}
+  for (const [file, mod] of Object.entries(localeFiles).sort(([a], [b]) => a.localeCompare(b))) {
+    const match = file.match(LOCALE_FILE)
+    if (!match || match[1] !== code) continue
+    messages[match[2]] = deepMerge(messages[match[2]] || {}, mod.default ?? mod)
+  }
+
+  return messages
+}
+
 export function getInitialLocale() {
   try {
     const saved = localStorage.getItem(LOCALE_STORAGE_KEY)
@@ -39,8 +68,8 @@ export const i18n = createI18n({
   locale: getInitialLocale(),
   fallbackLocale: FALLBACK_LOCALE,
   messages: {
-    th: { ...th, $vuetify: vuetifyTh },
-    en: { ...en, $vuetify: vuetifyEn },
+    th: { ...loadMessages('th'), $vuetify: vuetifyTh },
+    en: { ...loadMessages('en'), $vuetify: vuetifyEn },
   },
   missingWarn: import.meta.env.DEV,
   fallbackWarn: false,

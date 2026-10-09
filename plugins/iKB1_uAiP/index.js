@@ -1,6 +1,9 @@
 export default {
   name: "iKB uAiP",
-  description: "Universal I/O board For uAI plus",
+  description: {
+    en: "Universal I/O board For uAI plus",
+    th: "บอร์ดอินพุต/เอาต์พุตอเนกประสงค์สำหรับ uAI plus",
+  },
   category: "Signal Input/Output",    
   author: "comdet",
   version: "1.0.0",

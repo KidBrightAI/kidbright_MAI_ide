@@ -2,23 +2,23 @@ Blockly.defineBlocksWithJsonArray([
   // Camera Blocks
   {
     "type": "maix4_camera_width",
-    "message0": "get camera width",
+    "message0": "%{BKY_KB_MAI_MAIX4_CAMERA_WIDTH}",
     "output": "Number",
     "colour": 20,
-    "tooltip": "Get the width of the camera frame",
+    "tooltip": "%{BKY_KB_MAI_MAIX4_CAMERA_WIDTH_TOOLTIP}",
     "helpUrl": "",
   },
   {
     "type": "maix4_camera_height",
-    "message0": "get camera height",
+    "message0": "%{BKY_KB_MAI_MAIX4_CAMERA_HEIGHT}",
     "output": "Number",
     "colour": 20,
-    "tooltip": "Get the height of the camera frame",
+    "tooltip": "%{BKY_KB_MAI_MAIX4_CAMERA_HEIGHT_TOOLTIP}",
     "helpUrl": "",
   },
   {
     "type": "maix4_camera_resolution",
-    "message0": "set camera resolution %1 width %2 height %3",
+    "message0": "%{BKY_KB_MAI_MAIX4_CAMERA_RESOLUTION}",
     "args0": [
       {
         "type": "input_dummy",
@@ -38,49 +38,49 @@ Blockly.defineBlocksWithJsonArray([
     "previousStatement": null,
     "nextStatement": null,
     "colour": 20,
-    "tooltip": "Set the camera resolution",
+    "tooltip": "%{BKY_KB_MAI_MAIX4_CAMERA_RESOLUTION_TOOLTIP}",
     "helpUrl": "",
   },
   {
     "type": "maix4_camera_capture",
-    "message0": "camera capture",
+    "message0": "%{BKY_KB_MAI_MAIX4_CAMERA_CAPTURE}",
     "inputsInline": true,
     "output": "Image",
     "colour": 20,
-    "tooltip": "Capture an image from the camera",
+    "tooltip": "%{BKY_KB_MAI_MAIX4_CAMERA_CAPTURE_TOOLTIP}",
     "helpUrl": "",
   },
   {
     "type": "maix4_camera_close",
-    "message0": "camera close",
+    "message0": "%{BKY_KB_MAI_MAIX4_CAMERA_CLOSE}",
     "inputsInline": true,
     "previousStatement": null,
     "nextStatement": null,
     "colour": 20,
-    "tooltip": "Close the camera",
+    "tooltip": "%{BKY_KB_MAI_MAIX4_CAMERA_CLOSE_TOOLTIP}",
     "helpUrl": "",
   },
 
   // Display Blocks
   {
     "type": "maix4_display_width",
-    "message0": "display width",
+    "message0": "%{BKY_KB_MAI_MAIX4_DISPLAY_WIDTH}",
     "output": "Number",
     "colour": 65,
-    "tooltip": "Get display width",
+    "tooltip": "%{BKY_KB_MAI_MAIX4_DISPLAY_WIDTH_TOOLTIP}",
     "helpUrl": "",
   },
   {
     "type": "maix4_display_height",
-    "message0": "display height",
+    "message0": "%{BKY_KB_MAI_MAIX4_DISPLAY_HEIGHT}",
     "output": "Number",
     "colour": 65,
-    "tooltip": "Get display height",
+    "tooltip": "%{BKY_KB_MAI_MAIX4_DISPLAY_HEIGHT_TOOLTIP}",
     "helpUrl": "",
   },
   {
     "type": "maix4_display_resolution",
-    "message0": "display set resolution %1 width %2 height %3",
+    "message0": "%{BKY_KB_MAI_MAIX4_DISPLAY_RESOLUTION}",
     "args0": [
       {
         "type": "input_dummy",
@@ -100,12 +100,12 @@ Blockly.defineBlocksWithJsonArray([
     "previousStatement": null,
     "nextStatement": null,
     "colour": 65,
-    "tooltip": "Set display resolution",
+    "tooltip": "%{BKY_KB_MAI_MAIX4_DISPLAY_RESOLUTION_TOOLTIP}",
     "helpUrl": "",
   },
   {
     "type": "maix4_display_show",
-    "message0": "display show %1 %2",
+    "message0": "%{BKY_KB_MAI_MAIX4_DISPLAY_SHOW}",
     "args0": [
       {
         "type": "input_dummy",
@@ -120,14 +120,14 @@ Blockly.defineBlocksWithJsonArray([
     "previousStatement": null,
     "nextStatement": null,
     "colour": 65,
-    "tooltip": "Show image on display",
+    "tooltip": "%{BKY_KB_MAI_MAIX4_DISPLAY_SHOW_TOOLTIP}",
     "helpUrl": "",
   },
 
   // Image Blocks (Basic Drawing)
   {
     "type": "maix4_image_draw_string",
-    "message0": "Image %1 draw text %2 at X %3 Y %4 color %5 %6 scale %7 thickness %8",
+    "message0": "%{BKY_KB_MAI_MAIX4_IMAGE_DRAW_STRING}",
     "args0": [
       {
         "type": "input_value",
@@ -177,7 +177,7 @@ Blockly.defineBlocksWithJsonArray([
   },
   {
     "type": "maix4_image_new",
-    "message0": "New image width %1 height %2 color %3",
+    "message0": "%{BKY_KB_MAI_MAIX4_IMAGE_NEW}",
     "args0": [
       {
         "type": "input_value",
@@ -203,16 +203,16 @@ Blockly.defineBlocksWithJsonArray([
   // Basic Blocks
   {
     "type": "maix4_display_camera",
-    "message0": "display camera",
+    "message0": "%{BKY_KB_MAI_MAIX4_DISPLAY_CAMERA}",
     "previousStatement": null,
     "nextStatement": null,
     "colour": "#5BA58C",
-    "tooltip": "Continuously display camera feed",
+    "tooltip": "%{BKY_KB_MAI_MAIX4_DISPLAY_CAMERA_TOOLTIP}",
     "helpUrl": "",
   },
   {
     "type": "maix4_set_display_color",
-    "message0": "set display color %1",
+    "message0": "%{BKY_KB_MAI_MAIX4_SET_DISPLAY_COLOR}",
     "args0": [
       {
         "type": "field_colour",
@@ -223,12 +223,12 @@ Blockly.defineBlocksWithJsonArray([
     "previousStatement": null,
     "nextStatement": null,
     "colour": "#5BA58C",
-    "tooltip": "Fill display with color",
+    "tooltip": "%{BKY_KB_MAI_MAIX4_SET_DISPLAY_COLOR_TOOLTIP}",
     "helpUrl": "",
   },
   {
     "type": "maix4_draw_string",
-    "message0": "draw text %1 at X %2 Y %3 color %4 scale %5",
+    "message0": "%{BKY_KB_MAI_MAIX4_DRAW_STRING}",
     "args0": [
       {
         "type": "input_value",
@@ -265,7 +265,7 @@ Blockly.defineBlocksWithJsonArray([
   },
   {
     "type": "maix4_forever",
-    "message0": "forever %1 %2",
+    "message0": "%{BKY_KB_MAI_MAIX4_FOREVER}",
     "args0": [
       {
         "type": "input_dummy",

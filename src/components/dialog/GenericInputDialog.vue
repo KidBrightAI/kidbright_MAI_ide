@@ -1,17 +1,21 @@
 <script setup>
+import { t } from "@/plugins/i18n"
+
 const isDialogVisible = defineModel('isDialogVisible', { type: Boolean, default: false })
 
+// Prop defaults are resolved before setup() runs, so they use the
+// module-level translator instead of useI18n().
 const props = defineProps({  title : {
     type : String,
-    default : 'Dialog Title',
+    default : () => t('dialog.genericInput.title'),
   },
   label : {
     type : String,
-    default : 'Label',
+    default : () => t('dialog.genericInput.label'),
   },
   buttonName : {
     type : String,
-    default : 'Submit',
+    default : () => t('dialog.genericInput.submit'),
   },
 })
 

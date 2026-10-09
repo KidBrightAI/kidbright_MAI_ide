@@ -7,7 +7,7 @@ Blockly.defineBlocksWithJsonArray(
     // on/off (>=128 = on). See generators_gpio.js for details.
     {
       "type": "maixpy3_gpio_rgb_hex",
-      "message0": "Set RGB LED color %1 on pins R %2 G %3 B %4",
+      "message0": "%{BKY_KB_MAIPLUS_MAIXPY3_GPIO_RGB_HEX}",
       "args0": [
         {
           "type": "field_colour",
@@ -58,12 +58,12 @@ Blockly.defineBlocksWithJsonArray(
       "previousStatement": null,
       "nextStatement": null,
       "colour": "#a5745b",
-      "tooltip": "Drive an external RGB LED from 3 GPIO pins (digital on/off).",
+      "tooltip": "%{BKY_KB_MAIPLUS_MAIXPY3_GPIO_RGB_HEX_TOOLTIP}",
       "helpUrl": "",
     },
     {
       "type": "maixpy3_gpio_rgb",
-      "message0": "Set RGB LED red %1 green %2 blue %3 on pins R %4 G %5 B %6",
+      "message0": "%{BKY_KB_MAIPLUS_MAIXPY3_GPIO_RGB}",
       "args0": [
         {
           "type": "input_value",
@@ -124,7 +124,7 @@ Blockly.defineBlocksWithJsonArray(
       "previousStatement": null,
       "nextStatement": null,
       "colour": "#a5745b",
-      "tooltip": "Drive an external RGB LED from 3 GPIO pins with red/green/blue values (0-255, on/off).",
+      "tooltip": "%{BKY_KB_MAIPLUS_MAIXPY3_GPIO_RGB_TOOLTIP}",
       "helpUrl": "",
     },
     // ---- On-board user LED (KidBright block) : led-user via sysfs ----
@@ -132,7 +132,7 @@ Blockly.defineBlocksWithJsonArray(
     // 255 = on. Named "Board LED" so it is not confused with the RGB LED above.
     {
       "type": "board_led",
-      "message0": "Board LED brightness %1",
+      "message0": "%{BKY_KB_MAIPLUS_BOARD_LED}",
       "args0": [
         {
           "type": "input_value",
@@ -144,12 +144,12 @@ Blockly.defineBlocksWithJsonArray(
       "previousStatement": null,
       "nextStatement": null,
       "colour": "#a5745b",
-      "tooltip": "Turn the on-board user LED on/off. 0 = off, 255 = on (this LED is on/off only).",
+      "tooltip": "%{BKY_KB_MAIPLUS_BOARD_LED_TOOLTIP}",
       "helpUrl": "",
     },
     {
       "type": "maixpy3_delay",
-      "message0": "delay %1 second(s)",
+      "message0": "%{BKY_KB_MAIPLUS_MAIXPY3_DELAY}",
       "args0": [
         {
           "type": "input_value",
@@ -165,7 +165,7 @@ Blockly.defineBlocksWithJsonArray(
     },
     {
       "type": "maixpy3_gpio_when_switch",
-      "message0": "When Switch %1 pressed %2 %3",
+      "message0": "%{BKY_KB_MAIPLUS_MAIXPY3_GPIO_WHEN_SWITCH}",
       "args0": [
         {
           "type": "field_dropdown",
@@ -197,7 +197,7 @@ Blockly.defineBlocksWithJsonArray(
     },
     {
       "type": "maixpy3_gpio_switch",
-      "message0": "switch %1 pressed",
+      "message0": "%{BKY_KB_MAIPLUS_MAIXPY3_GPIO_SWITCH}",
       "args0": [
         {
           "type": "field_dropdown",
@@ -221,7 +221,7 @@ Blockly.defineBlocksWithJsonArray(
     },
     {
       "type": "maixpy3_gpio_buzzer",
-      "message0": "Buzzer beep tone %1 delay %2",
+      "message0": "%{BKY_KB_MAIPLUS_MAIXPY3_GPIO_BUZZER}",
       "args0": [
         {
           "type": "input_dummy",
@@ -241,7 +241,7 @@ Blockly.defineBlocksWithJsonArray(
     },
     {
       "type": "board_get_acc",
-      "message0": "get acceleration %1",
+      "message0": "%{BKY_KB_MAIPLUS_BOARD_GET_ACC}",
       "args0": [
         {
           "type": "field_dropdown",
@@ -269,7 +269,7 @@ Blockly.defineBlocksWithJsonArray(
     },
     {
       "type": "board_get_gyro",
-      "message0": "get gyroscope %1",
+      "message0": "%{BKY_KB_MAIPLUS_BOARD_GET_GYRO}",
       "args0": [
         {
           "type": "field_dropdown",
@@ -297,7 +297,7 @@ Blockly.defineBlocksWithJsonArray(
     },
     {
       "type": "board_get_acc_tap",
-      "message0": "is tapped",
+      "message0": "%{BKY_KB_MAIPLUS_BOARD_GET_ACC_TAP}",
       "output": "Boolean",
       "colour": "#a5745b",
       "tooltip": "",
@@ -305,7 +305,7 @@ Blockly.defineBlocksWithJsonArray(
     },
     {
       "type": "maixpy3_gpio_get",
-      "message0": "read pin %1",
+      "message0": "%{BKY_KB_MAIPLUS_MAIXPY3_GPIO_GET}",
       "args0": [
         {
           "type": "field_dropdown",
@@ -349,7 +349,7 @@ Blockly.defineBlocksWithJsonArray(
     },
     {
       "type": "maixpy3_gpio_set",
-      "message0": "write pin %1 %2 value %3",
+      "message0": "%{BKY_KB_MAIPLUS_MAIXPY3_GPIO_SET}",
       "args0": [
         {
           "type": "field_dropdown",
@@ -408,7 +408,7 @@ Blockly.defineBlocksWithJsonArray(
     // servo block for gpio
     {
       "type": "maixpy3_gpio_servo",
-      "message0": "Servo motor set pin %1 angle %2",
+      "message0": "%{BKY_KB_MAIPLUS_MAIXPY3_GPIO_SERVO}",
       "args0": [
         {
           "type": "field_dropdown",

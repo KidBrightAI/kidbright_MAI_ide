@@ -1,0 +1,17 @@
+{
+  "uploadToSimulator": "Upload to Simulator (KMV)",
+  "connectBoard": "Connect Board",
+  "disconnectBoard": "Disconnect Board",
+  "stopProgram": "Stop the running program",
+  "uploadAndRun": "Upload the code and run it on the board",
+  "ctrlClickDeployApp": "Hold Ctrl while clicking to install as an app",
+  "fileBrowser": "File Browser",
+  "connectWifi": "Connect WiFi",
+  "wifiConnected": "WiFi connected",
+  "aiModel": "AI Model",
+  "plugins": "Plugins",
+  "newProject": "New Project",
+  "openProject": "Open Project",
+  "saveProject": "Save Project",
+  "projectNameSaved": "Project name saved"
+}

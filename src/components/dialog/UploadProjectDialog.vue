@@ -11,7 +11,7 @@ const serverStore = useServerStore()
   >
     <VCard width="480">
       <VCardTitle class="bg-primary d-flex flex-row">
-        อัพโหลดโปรเจค        
+        {{ $t('dialog.uploadProject.title') }}
       </VCardTitle>
       <VCardItem class="d-flex align-center justify-center">
         <VProgressCircular
@@ -25,7 +25,7 @@ const serverStore = useServerStore()
             class="my-3 text-center"
             text-black
           >
-            กำลังอัพโหลด ...<br> {{ serverStore.uploadProgress.toFixed(1) }}%
+            {{ $t('dialog.uploadProject.uploading') }}<br> {{ serverStore.uploadProgress.toFixed(1) }}%
           </h4>
         </VProgressCircular>
       </VCardItem>

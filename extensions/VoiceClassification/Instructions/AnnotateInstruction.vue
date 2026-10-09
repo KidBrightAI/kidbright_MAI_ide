@@ -1,28 +1,44 @@
+<script setup>
+import { Translation as I18nT } from 'vue-i18n'
+</script>
+
 <template>
   <div class="hint">
     <div class="main-hint txt">
       <p class="p-color font-weight-bold">
-        ขั้นตอนที่ 2 Annotate (Voice Classification)
+        {{ $t('instructions.voice.annotate.title') }}
       </p>
-      <p>ขั้นตอนนี้ใช้สำหรับติดป้ายกำกับให้กับเสียง</p>
+      <p>{{ $t('instructions.voice.annotate.intro') }}</p>
       <p>
-        <br>1. กดปุ่ม
-        <img
-          src="@/assets/images/png/Group_97.png"
-          alt=""
-          srcset=""
+        <br>
+        <I18nT
+          keypath="instructions.voice.annotate.step1"
+          scope="global"
         >
-        เพื่อตั้งชื่อป้ายกำกับให้กับเสียงแต่ละประเภท
+          <template #button>
+            <img
+              src="@/assets/images/png/Group_97.png"
+              alt=""
+              srcset=""
+            >
+          </template>
+        </I18nT>
       </p>
       <p>
-        <br>2. กดปุ่ม
-        <img
-          src="@/assets/images/png/interface.png"
-          alt=""
-          srcset=""
+        <br>
+        <I18nT
+          keypath="instructions.voice.annotate.step2"
+          scope="global"
         >
-        หลังชื่อป้ายกำกับ เมื่อต้องการใช้ชื่อที่ตั้งไว้เเล้ว จะปรากฏป้ายกำกับบริเวณขวามือ
-      </p>              
+          <template #button>
+            <img
+              src="@/assets/images/png/interface.png"
+              alt=""
+              srcset=""
+            >
+          </template>
+        </I18nT>
+      </p>
     </div>
     <div class="mascot">
       <img

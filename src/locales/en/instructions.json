@@ -1,0 +1,99 @@
+{
+  "labels": {
+    "train": "Train",
+    "download": "Download",
+    "create": "Create"
+  },
+  "generic": {
+    "capture": {
+      "title": "Step 1: Capture",
+      "intro": "In this step you use the camera to collect the pictures you need. Press the {button} button to take a picture."
+    },
+    "annotate": {
+      "title": "Step 2: Annotate",
+      "intro": "In this step you add labels to your pictures.",
+      "step1": "1. Press the {button} button to name a label for each kind of picture.",
+      "step2": "2. Press the {button} button next to a label name to use that label. The label will then appear on the right-hand side."
+    },
+    "train": {
+      "title": "Step 3: Training",
+      "intro": "In this step the annotated pictures are used to build an AI model.",
+      "step1": "1. Press the {train} button to build the model, then wait until training is finished.",
+      "step2": "2. Press the {download} button. When this step is done, the model can be used in Step 4: Coding."
+    },
+    "coding": {
+      "title": "Step 4: Coding",
+      "intro": "In this step you build a program by dragging blocks from the toolbox. If you do not have a recognition model yet, create one first by following these steps in order:",
+      "step1": "Step 1 (Capture)",
+      "step2": "Step 2 (Annotate)",
+      "step3": "Step 3 (Training)",
+      "blocksTitle": "Related Blockly blocks",
+      "blockObject": "Start object detector and get objects",
+      "blockImage": "Start Image classification and get classes",
+      "blockVoice": "Start wake word detector and get sound"
+    }
+  },
+  "image": {
+    "capture": {
+      "title": "Step 1: Capture (Image Classification)",
+      "intro": "In this step you use the camera to collect the pictures you need. Press the {button} button to take a picture.",
+      "note": "Each picture must contain only one kind of object or pattern."
+    },
+    "annotate": {
+      "title": "Step 2: Annotate (Image Classification)",
+      "intro": "In this step you add labels to your pictures.",
+      "step1": "1. Press the {button} button to name a label for each kind of picture.",
+      "step2": "2. Press the {button} button next to a label name to use that label. The label will then appear on the right-hand side."
+    },
+    "train": {
+      "title": "Step 3: Training",
+      "subtitle": "(Image Classification)",
+      "intro": "In this step the annotated pictures are used to build an AI model that can tell different pictures apart.",
+      "step1": "1. Press the {train} button to build the model, then wait until training is finished.",
+      "step2": "2. Press the {download} button. When this step is done, the model can be used in Step 4: Coding."
+    }
+  },
+  "object": {
+    "capture": {
+      "title": "Step 1: Capture (Object Detection)",
+      "intro": "In this step you use the camera to collect the pictures you need. Press the {button} button to take a picture.",
+      "note": "Take pictures of each object from different angles, about 50 pictures per object or more. One picture may contain several kinds of objects or several objects at once, with no limit, but the outline of each object must be clearly visible and separate from the others."
+    },
+    "annotate": {
+      "title": "Step 2: Annotate (Object Detection)",
+      "intro": "In this step you mark the area of each object and give it a label.",
+      "step1": "1. Press the {button} button to name a label for each kind of object.",
+      "step2": "2. Mark the area of the object by dragging a rectangle {box} around it so that the box fits the object exactly, not too big and not too small.",
+      "step3": "3. Press the {button} button next to a label name to use that label. The label and its position will then appear on the right-hand side.",
+      "note": "Note: a picture can have more than one label, depending on how many objects are in it."
+    },
+    "train": {
+      "title": "Step 3: Training",
+      "subtitle": "(Object Detection)",
+      "intro": "In this step the annotated pictures are used to build a recognition model. The model is built on Google Colab, so make sure you are connected to the internet first.",
+      "step1": "1. Press the {create} button to open the Colab page, then log in with your Google Account and follow the steps shown. When it is done, copy the URL.",
+      "step2": "2. Go back to the KidBright AI web page and paste the copied URL into the grey text box.",
+      "step3": "3. Press the {train} button to send the pictures to Colab to build the model, then wait until training is finished.",
+      "step4": "4. Press the {download} button to bring the model from Colab into KidBright AI. When this step is done, the model can be used in Step 4: Coding."
+    }
+  },
+  "voice": {
+    "capture": {
+      "title": "Step 1: Capture (Voice Classification)",
+      "intro": "In this step you use the microphone to record the sounds you need. Press the {button} button to record a sound (record at least 20 sounds for each word, or more)."
+    },
+    "annotate": {
+      "title": "Step 2: Annotate (Voice Classification)",
+      "intro": "In this step you add labels to your sounds.",
+      "step1": "1. Press the {button} button to name a label for each kind of sound.",
+      "step2": "2. Press the {button} button next to a label name to use that label. The label will then appear on the right-hand side."
+    },
+    "train": {
+      "title": "Step 3: Training",
+      "subtitle": "(Voice Classification)",
+      "intro": "In this step the annotated sounds are used to build an AI model that can tell different sounds apart.",
+      "step1": "1. Press the {train} button to build the model, then wait until training is finished.",
+      "step2": "2. Press the {download} button. When this step is done, the model can be used in Step 4: Coding."
+    }
+  }
+}

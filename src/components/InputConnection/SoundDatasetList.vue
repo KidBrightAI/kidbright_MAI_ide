@@ -3,6 +3,7 @@ import WaveFormPlayer from '@/components/InputConnection/WaveFormPlayer.vue'
 import { useDatasetStore } from '@/store/dataset'
 import { useWorkspaceStore } from '@/store/workspace'
 import { useConfirm } from "@/components/comfirm-dialog"
+import { useI18n } from "vue-i18n"
 
 const props = defineProps({
   multiple: {
@@ -33,6 +34,7 @@ const value = defineModel({
 const showMFCCDialog = ref(false)
 const targetMFCC = ref(null)
 const confirm = useConfirm()
+const { t } = useI18n()
 
 const lastSelectedIndex = ref(0)
 const selected = ref([])
@@ -137,7 +139,7 @@ const removeItem = async (e, item) => {
     if (e.ctrlKey) {
       if (selected.value.length > 1) {
         try {
-          await confirm({ title: "ยืนยันการลบเสียงที่เลือก", content: `ต้องการลบรูปที่เลือก ${selected.value.length} รูป`, dialogProps: { width: 'auto' } })
+          await confirm({ title: t("capture.datasetList.confirmDeleteSoundsTitle"), content: t("capture.datasetList.confirmDeleteSoundsContent", { count: selected.value.length }), dialogProps: { width: 'auto' } })
           await datasetStore.deleteDatasetItems(selected.value)
           selected.value = []
           value.value = []
@@ -183,7 +185,7 @@ const playHandler = id => {
         <VCardActions>
           <VSpacer />
           <VBtn @click="showMFCCDialog = false">
-            Close
+            {{ $t('common.close') }}
           </VBtn>
         </VCardActions>
       </VCard>
@@ -252,7 +254,7 @@ const playHandler = id => {
               >              
             </div>
             <img
-              title="กดปุ่ม CTRL ค้างไว้ เพื่อทำการลบรูปที่เลือก"
+              :title="$t('capture.datasetList.holdCtrlToDelete')"
               class="cancel-btn"
               src="@/assets/images/png/cancel.png"
               @click.stop="removeItem($event,item)"

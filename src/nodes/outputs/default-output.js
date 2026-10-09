@@ -10,22 +10,23 @@ import {
 
 import { setType } from "@baklavajs/interface-types"
 import { modelOutput } from "../interfaces/interface-types"
+import { t } from "@/plugins/i18n"
 
 export const OutputNode = defineNode({
   type: "OutputNode",
-  title: "Output", 
+  title: t("designer.node.output"), 
   inputs: {
-    modelOutput: () => new NodeInterface("Model Output", "").use(setType, modelOutput),
-    validateMatrix : () => new SelectInterface("Validate Matrix", "val_accuracy",[
+    modelOutput: () => new NodeInterface(t("designer.field.modelOutput"), "").use(setType, modelOutput),
+    validateMatrix : () => new SelectInterface(t("designer.field.validateMatrix"), "val_accuracy",[
       {text : "Mean Average Precision", value : "mAP"},
-      {text: "Validation Accuracy", value : "val_accuracy"},
-      {text: "Validation Loss", value : "val_loss"},
+      {text: t("designer.option.validationAccuracy"), value : "val_accuracy"},
+      {text: t("designer.option.validationLoss"), value : "val_loss"},
     ]).setPort(false),
-    saveMethod : () => new SelectInterface("Save Method", "best", 
+    saveMethod : () => new SelectInterface(t("designer.field.saveMethod"), "best", 
       [
-        {text: "Best value", value : "best"},
-        {text: "Last epoch", value : "last"},
-        {text: "Best value after n epoch", value : "best_after_n"},
+        {text: t("designer.option.bestValue"), value : "best"},
+        {text: t("designer.option.lastEpoch"), value : "last"},
+        {text: t("designer.option.bestAfterN"), value : "best_after_n"},
       ]).setPort(false),        
   },
   calculate({ modelOutput, validateMatrix, saveMethod }) {        

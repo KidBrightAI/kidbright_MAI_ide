@@ -1,4 +1,5 @@
 import Blockly from "blockly"
+import { localized } from "@/plugins/i18n"
 
 export function randomId(count = 7) {
   let text = ""
@@ -54,7 +55,7 @@ export let updateBlockCategory = (toolboxTree, rootPath='') => {
       continue
     }
     let actualRootPath = rootPath || category.path || ''
-    toolboxTextXML += `<category name="${category.name}" icon="${actualRootPath}${category.icon}" colour="${category.color}"${typeof category.blocks === "string" ? ` custom="${category.blocks}"` : ''}>`
+    toolboxTextXML += `<category name="${localized(category.name)}" icon="${actualRootPath}${category.icon}" colour="${category.color}"${typeof category.blocks === "string" ? ` custom="${category.blocks}"` : ''}>`
     if (typeof category.blocks === "object") {
       for (let block of category.blocks) {
         if (typeof block === "object") {

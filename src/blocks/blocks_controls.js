@@ -57,7 +57,7 @@ Blockly.defineBlocksWithJsonArray([
   },
   {
     "type": "while_loop",
-    "message0": "while %1 do %2",
+    "message0": "%{BKY_KB_COMMON_WHILE_LOOP}",
     "args0": [
       {
         "type": "input_value",

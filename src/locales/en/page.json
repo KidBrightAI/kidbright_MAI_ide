@@ -1,0 +1,27 @@
+{
+  "home": {
+    "newProject": "Create a new project",
+    "createProjectFailed": "Failed to create the project",
+    "writingStartupScript": "Also writing the startup script",
+    "uploadSuccess": "Upload complete",
+    "uploadFailed": "Upload failed",
+    "programStopped": "Program stopped",
+    "stopFailed": "Failed to stop the program: {error}",
+    "deployUnsupported": "This board does not support installing as an app",
+    "deploySuccess": "App “{name}” installed",
+    "deployFailed": "Installation failed — check the board connection and try again",
+    "deployError": "Failed to install the app: {error}",
+    "pluginInstalled": "Install plugin success",
+    "pluginUninstalled": "Uninstall plugin success"
+  },
+  "ai": {
+    "resetModelTitle": "Confirm model reset",
+    "resetModelContent": "All data of the current model will be deleted. Do you want to start a new model?",
+    "emptyHint": "Create a new project or pick a menu on the left"
+  },
+  "notFound": {
+    "title": "Page Not Found ⚠️",
+    "description": "We couldn't find the page you are looking for.",
+    "backHome": "Back to Home"
+  }
+}

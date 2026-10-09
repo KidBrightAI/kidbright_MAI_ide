@@ -1,19 +1,35 @@
+<script setup>
+import { Translation as I18nT } from 'vue-i18n'
+</script>
+
 <template>
   <div class="hint">
     <div class="main-hint txt">
       <p class="p-color font-weight-bold">
-        ขั้นตอนที่ 3 Training<br>(Voice Classification)
+        {{ $t('instructions.voice.train.title') }}<br>{{ $t('instructions.voice.train.subtitle') }}
       </p>
-      <p>ขั้นตอนนี้เป็นการนำเสียงที่ Annotate แล้วมาสร้างโมเดลปัญญาประดิษฐ์เพื่อแยกแยะเสียง</p>
+      <p>{{ $t('instructions.voice.train.intro') }}</p>
       <p>
-        <br>1. กดปุ่ม
-        <span class="p-color">Train</span> เพื่อสร้างโมเดล
-        รอจนกระบวนการสร้างโมเดลแล้วเสร็จ
+        <br>
+        <I18nT
+          keypath="instructions.voice.train.step1"
+          scope="global"
+        >
+          <template #train>
+            <span class="p-color">{{ $t('instructions.labels.train') }}</span>
+          </template>
+        </I18nT>
       </p>
       <p>
-        <br>2. กดปุ่ม
-        <span class="p-color">Download</span>
-        เมื่อเสร็จขั้นตอนนี้โมเดลจะถูกเรียกใช้ได้ในขั้นตอนที่ 4 Coding
+        <br>
+        <I18nT
+          keypath="instructions.voice.train.step2"
+          scope="global"
+        >
+          <template #download>
+            <span class="p-color">{{ $t('instructions.labels.download') }}</span>
+          </template>
+        </I18nT>
       </p>
     </div>
     <div class="mascot">

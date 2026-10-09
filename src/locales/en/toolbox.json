@@ -1,0 +1,27 @@
+{
+  "category": {
+    "basic": "Basic",
+    "ai": "AI",
+    "displayImage": "Display / Image",
+    "displayCamera": "Display & Camera",
+    "loops": "Loops",
+    "logic": "Logic",
+    "math": "Math",
+    "gpio": "GPIO I/O",
+    "text": "Text",
+    "list": "List",
+    "variables": "Variables",
+    "functions": "Functions"
+  },
+  "label": {
+    "objectDetection": "Object detection",
+    "imageClassification": "Image classification",
+    "voiceClassification": "Voice classification",
+    "imageManipulation": "Image Manipulation",
+    "imageDrawing": "Image drawing",
+    "loadSaveImage": "load and save image",
+    "loadSaveFormatImage": "load / save / format image",
+    "gpioSensors": "GPIO / Sensors",
+    "camera": "Camera"
+  }
+}

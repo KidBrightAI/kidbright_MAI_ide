@@ -13,7 +13,7 @@
 | 4 เนื้อหาและ metadata | ยังไม่เริ่ม | |
 | 5 กันถอยหลัง | ยังไม่เริ่ม | |
 
-อัปเดตตารางนี้ทุกครั้งที่ปิดเฟส พร้อมเลข commit หรือ tag ที่ปล่อย
+อัปเดตตารางนี้ทุกครั้งที่ปิดเฟส พร้อมเลข commit หรือ tag ที่ปล่อย ทุกเฟสทำต่อกันบน branch `feat/i18n-phase0` และจะพิจารณา merge เข้า main เมื่อครบทุกเฟสแล้วเท่านั้น (ตัดสินใจ 2026-10-09)
 
 ## เป้าหมายและขอบเขต
 
@@ -54,10 +54,10 @@
 
 ## การออกแบบ
 
-1. **vue-i18n แบบ composition API** (`legacy: false`, `globalInjection: true`) ข้อความกลางอยู่ที่ `src/locales/th.json` และ `src/locales/en.json` fallback เป็น `en` โมดูล JS ที่ไม่ใช่ component ใช้ `t` ที่ export จาก `src/plugins/i18n.js` ไม่ใช้ `<i18n>` block ใน SFC เพื่อให้สคริปต์ตรวจ key ทำงานกับไฟล์กลางอย่างเดียว
+1. **vue-i18n แบบ composition API** (`legacy: false`, `globalInjection: true`) ข้อความกลางอยู่ที่ `src/locales/th/*.json` และ `src/locales/en/*.json` แยกไฟล์ตาม namespace ชั้นแรกและรวมอัตโนมัติด้วย Vite glob fallback เป็น `en` โมดูล JS ที่ไม่ใช่ component ใช้ `t` ที่ export จาก `src/plugins/i18n.js` ไม่ใช้ `<i18n>` block ใน SFC เพื่อให้สคริปต์ตรวจ key ทำงานกับไฟล์กลางอย่างเดียว
 2. **ภาษาที่เลือกเก็บใน localStorage** key `kbmai.locale` เพราะต้องรู้ภาษาก่อน Pinia และก่อน Blockly ถูกตั้งค่า ค่าเริ่มต้นคือ `th` เมื่อ `navigator.language` ขึ้นต้นด้วย th ไม่งั้นเป็น `en`
 3. **สลับภาษาแล้ว reload หน้า** เพราะ Blockly, toolbox และ block script ถูกสร้างตอนโหลด การสลับสดต้อง re-inject workspace ซึ่งยังไม่คุ้ม โปรเจคปัจจุบันถูก persist อยู่แล้วจึงไม่เสียงาน
-4. **Blockly** เรียก `Blockly.setLocale(th หรือ en)` ตอนเริ่มเพื่อให้ block มาตรฐานและเมนูของ Blockly เป็นภาษาที่เลือก block ของเราเปลี่ยน `message0`, `tooltip` และ dropdown เป็น `%{BKY_KEY}` แล้วเก็บข้อความใน `locales/{th,en}.js` ของแต่ละบอร์ด plugin และ `src/blocks` ซึ่ง `main.js` รวมเข้า `Blockly.Msg` ก่อน `loadBoard`
+4. **Blockly** เรียก `Blockly.setLocale(th หรือ en)` ตอนเริ่มเพื่อให้ block มาตรฐานและเมนูของ Blockly เป็นภาษาที่เลือก block ของเราเปลี่ยน `message0`, `tooltip` และ dropdown เป็น `%{BKY_KEY}` แล้วเก็บข้อความใน `locales/{th,en}.json` ของแต่ละบอร์ด plugin และ `src/blocks` ซึ่ง `main.js` รวมเข้า `Blockly.Msg` ก่อน `loadBoard` ใช้ JSON ไม่ใช่ `.js` เพราะ `package.json` ไม่ได้ประกาศ `type: module` สคริปต์ตรวจจึงอ่านได้ตรง ๆ
 5. **Vuetify** ใช้ `createVueI18nAdapter` และใส่ข้อความ `$vuetify` จาก `vuetify/locale` ลงใน messages ให้ component มาตรฐานตามภาษาด้วย
 6. **metadata รับได้ทั้ง string และ object `{ th, en }`** ผ่าน helper `localized()` string เดิมยังใช้ได้เพื่อไม่บังคับ plugin ของคนอื่น
 7. **Instructions** ใช้ key ใน `src/locales` ร่วมกับ `<i18n-t>` สำหรับย่อหน้าที่มี span สี ส่วน example ใช้ `readme.md` คู่กับ `readme.en.md` แล้ว fallback เป็นไฟล์เดิม
@@ -67,13 +67,13 @@
 
 ```
 src/plugins/i18n.js                 createI18n, getInitialLocale, setLocale, t, localized, SUPPORTED_LOCALES
-src/locales/th.json                 ข้อความกลางภาษาไทย
-src/locales/en.json                 ข้อความกลางภาษาอังกฤษ
+src/locales/th/<namespace>.json     ข้อความกลางภาษาไทย ชื่อไฟล์คือ key ชั้นแรก เช่น header.json คือ header.*
+src/locales/en/<namespace>.json     ข้อความกลางภาษาอังกฤษ โครงเดียวกัน
 src/components/LanguageSwitcher.vue ปุ่มสลับภาษาใน Header
 scripts/i18n-check.mjs              สคริปต์ตรวจ เรียกด้วย npm run i18n:check
-boards/<id>/locales/{th,en}.js      เฟส 3 ข้อความ Blockly.Msg ของบอร์ด
-plugins/<id>/locales/{th,en}.js     เฟส 3 ข้อความ Blockly.Msg ของ plugin
-src/blocks/locales/{th,en}.js       เฟส 3 ข้อความ Blockly.Msg ของ block กลาง
+boards/<id>/locales/{th,en}.json    เฟส 3 ข้อความ Blockly.Msg ของบอร์ด
+plugins/<id>/locales/{th,en}.json   เฟส 3 ข้อความ Blockly.Msg ของ plugin
+src/blocks/locales/{th,en}.json     เฟส 3 ข้อความ Blockly.Msg ของ block กลาง
 ```
 
 ## ข้อตกลงสำหรับนักพัฒนา
@@ -82,13 +82,15 @@ src/blocks/locales/{th,en}.js       เฟส 3 ข้อความ Blockly.Ms
 
 - ใน template ใช้ `{{ $t('header.saveProject') }}` หรือ `:text="$t('header.saveProject')"` ใน `<script setup>` ใช้ `const { t } = useI18n()` ซึ่ง auto-import ให้แล้ว
 - ในโมดูล JS เช่น store, engine, composables ใช้ `import { t } from '@/plugins/i18n'`
-- เพิ่ม key ลงทั้ง `th.json` และ `en.json` พร้อมกันเสมอ ห้ามใส่ภาษาเดียวแล้วค่อยตามทีหลัง
+- เพิ่ม key ลงทั้ง `src/locales/th/<namespace>.json` และ `src/locales/en/<namespace>.json` พร้อมกันเสมอ ห้ามใส่ภาษาเดียวแล้วค่อยตามทีหลัง ชื่อไฟล์ต้องตรงกับ namespace ชั้นแรกของ key
 - ข้อความที่มีตัวแปรใช้ placeholder แบบ `{name}` เช่น `"อัปเดต {names} เรียบร้อย"` แล้วเรียก `t('board.scriptsUpdated', { names })`
 
 การตั้งชื่อ key ใน `src/locales`
 
 - แบ่งตามพื้นผิวของ UI เป็น namespace ชั้นแรก: `common`, `header`, `footer`, `sidePanel`, `dialog.<ชื่อ dialog>`, `page.<ชื่อหน้า>`, `capture`, `annotate`, `train`, `designer`, `board`, `project`, `plugin`, `wifi`, `file`, `voice`, `instructions.<extension>.<ขั้นตอน>`
 - ชื่อ key เป็น camelCase สั้น ๆ บอกความหมายไม่ใช่บอกข้อความ เช่น `board.notConnected` ไม่ใช่ `board.pleaseConnectBoardFirst`
+- namespace ใหญ่แยกเป็นหลายไฟล์ได้ด้วยชื่อ `<namespace>__<part>.json` เช่น `dialog__project.json` กับ `dialog__import.json` ซึ่ง loader รวมเป็น `dialog.*` ให้ และสคริปต์ตรวจจะฟ้องถ้า key ซ้ำกันระหว่างไฟล์
+- key ทั่วไปอยู่ใน `common.json` เช่น `common.ok`, `common.cancel`, `common.connect` ใช้ซ้ำได้จากทุกที่ ถ้าคำนั้นมีความหมายเฉพาะในหน้าใดหน้าหนึ่ง ให้ตั้ง key ใน namespace ของหน้านั้นแทน
 - `$vuetify` สงวนไว้ให้ Vuetify
 - ข้อความของ Blockly ไม่อยู่ใน JSON แต่อยู่ใน `Blockly.Msg`
 
@@ -96,11 +98,36 @@ src/blocks/locales/{th,en}.js       เฟส 3 ข้อความ Blockly.Ms
 
 - บอร์ด: `KB_<BOARD>_<BLOCK_TYPE ตัวใหญ่>` เช่น `KB_MAIPLUS_MAIX3_NN_CLASSIFY_LOAD` tooltip ต่อท้ายด้วย `_TOOLTIP` ตัวเลือก dropdown ต่อท้ายด้วย `_OPT_<ชื่อ>` ป้ายใน toolbox ใช้ `KB_<BOARD>_LABEL_<ชื่อ>`
 - plugin: `KB_PLUGIN_<ID>_...` และ block กลางใน `src/blocks`: `KB_COMMON_...`
+- ชื่อหมวดและป้ายใน toolbox ของบอร์ดไม่ได้อยู่ใน `Blockly.Msg` แต่อยู่ใน `src/locales/<code>/toolbox.json` เพราะ `boards/*/toolbox.js` ถูก bundle และเรียก `t()` ได้ตรง ๆ ส่วนชื่อหมวดของ plugin มาจาก `name` ใน `plugins/<id>/index.js` ซึ่ง `updateBlockCategory` อ่านผ่าน `localized()`
 - ใน JSON ของ block อ้างด้วย `"message0": "%{BKY_KB_MAIPLUS_MAIX3_NN_CLASSIFY_LOAD}"` Blockly จะแทนค่าตอนสร้าง block และรองรับการสลับลำดับ `%1 %2` ในคำแปลไทย
 
 metadata ของบอร์ด plugin และ extension
 
 - field ที่แสดงผลให้เขียนเป็น `{ th: "...", en: "..." }` และอ่านผ่าน `localized(value)` ซึ่งคืนภาษาปัจจุบัน แล้ว fallback เป็น `en` แล้ว `th` ตามลำดับ string เดิมยังใช้ได้
+
+glossary คำที่ต้องใช้ให้ตรงกันทุกที่
+
+| English | ไทย | หมายเหตุ |
+|---|---|---|
+| Board | บอร์ด | |
+| Connect / Disconnect | เชื่อมต่อ / ตัดการเชื่อมต่อ | |
+| Upload / Download | อัปโหลด / ดาวน์โหลด | |
+| Project | โปรเจค | สะกดตามที่ใช้ในโค้ดเดิม |
+| Model | โมเดล | |
+| Dataset | ชุดข้อมูล | |
+| Label / Class | ป้ายกำกับ | ชื่อคลาสของการจำแนก |
+| Capture | เก็บข้อมูล | ขั้นตอนที่ 1 |
+| Annotate | กำกับข้อมูล | ขั้นตอนที่ 2 |
+| Train | เทรน | ขั้นตอนที่ 3 |
+| Coding | เขียนโค้ด | ขั้นตอนที่ 4 |
+| Deploy | ติดตั้งลงบอร์ด | |
+| Plugin / Extension | ปลั๊กอิน / ส่วนขยาย | |
+| Simulator | ซิมูเลเตอร์ | KMV |
+| Terminal | เทอร์มินัล | |
+| Camera / Microphone | กล้อง / ไมโครโฟน | |
+| Reboot the board | รีสตาร์ทบอร์ด | |
+| Example | ตัวอย่าง | |
+| Save / Open / Create / Delete | บันทึก / เปิด / สร้าง / ลบ | |
 
 สิ่งที่ไม่ต้องแปล
 
@@ -138,6 +165,7 @@ metadata ของบอร์ด plugin และ extension
 - `blockly/msg/th` เป็น UMD ใช้ `import BlocklyMsgTh from 'blockly/msg/th'` แบบ default import แล้วส่งให้ `Blockly.setLocale` ได้ทั้งใน dev และ build
 - การสลับภาษาทดสอบผ่าน `vite preview` ด้วย browser จริง: เลือกไทยแล้วหน้า reload, `html lang` เป็น th, block ใน Logic แสดง "ถ้า / ทำ / นอกเหนือจากนี้" และหัวเมนูเป็น "ภาษา"
 - `npm run i18n:check` ในโหมดรายงานนับอักษรไทยนอก locale ได้ 354 บรรทัดใน 57 ไฟล์ ซึ่งคือปริมาณงานของเฟส 1 ถึง 4 รวมทั้งคอมเมนต์ภาษาไทยใน `src/store/simulator.js`
+- block กลางใน `src/blocks` ส่วนใหญ่เป็นโค้ดตายจากยุค ESP32 เช่น RTC, DS18x20, deep sleep, dashboard ไม่ถูกอ้างถึงใน toolbox ใด และ `pin_*` ถูกนิยามทับโดย `blocks_pin.js` ของแต่ละบอร์ด เฟส 3 จึงแปลเฉพาะ `while_loop` ที่ตัวอย่างใช้ ที่เหลือควรพิจารณาลบทิ้งในภายหลัง
 
 ## คำถามที่รอตัดสินใจ
 

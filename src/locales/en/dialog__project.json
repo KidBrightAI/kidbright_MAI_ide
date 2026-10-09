@@ -1,0 +1,96 @@
+{
+  "newProject": {
+    "title": "New Project",
+    "defaultName": "KidBright Micro AI Project",
+    "name": "Project name",
+    "nameRequired": "Project name is required",
+    "nameTooLong": "Project name must be under 60 characters",
+    "create": "Create Project"
+  },
+  "saveProject": {
+    "title": "File Name",
+    "filename": "File name",
+    "filenameRequired": "File name is required",
+    "filenameTooLong": "File name must be under 128 characters",
+    "filenameInvalid": "File name may only contain letters, numbers, spaces, _ and -",
+    "save": "Save Project"
+  },
+  "openingProject": {
+    "title": "Opening Project",
+    "importing": "Importing data ..."
+  },
+  "savingProject": {
+    "title": "Saving Project",
+    "saving": "Saving ..."
+  },
+  "uploadProject": {
+    "title": "Uploading Project",
+    "uploading": "Uploading ..."
+  },
+  "selectBoard": {
+    "title": "Select a Board"
+  },
+  "newModel": {
+    "title": "Choose a model type for this project",
+    "learningType": "Learning type",
+    "select": "Select Model"
+  },
+  "newLabel": {
+    "title": "Add New Label",
+    "name": "Label name",
+    "add": "Add Label"
+  },
+  "addEditLabel": {
+    "addTitle": "Add New Label",
+    "editTitle": "Edit Label",
+    "name": "Label name",
+    "editName": "Edit label name",
+    "add": "Add Label",
+    "edit": "Edit Label"
+  },
+  "genericInput": {
+    "title": "Dialog Title",
+    "label": "Label",
+    "submit": "Submit"
+  },
+  "example": {
+    "title": "Board Example",
+    "subtitle": "Select example to load",
+    "openBlock": "Open Block",
+    "openCode": "Open Code"
+  },
+  "plugin": {
+    "title": "Manage Plugin",
+    "subtitle": "Select plugin to install",
+    "installed": "Installed Plugins",
+    "categories": {
+      "all": "All Plugins",
+      "communication": "Communication",
+      "dataProcessing": "Data Processing",
+      "dataStorage": "Data Storage",
+      "display": "Display",
+      "sensors": "Sensors",
+      "signalIo": "Signal Input/Output",
+      "timing": "Timing",
+      "other": "Other"
+    }
+  },
+  "secureConnect": {
+    "title": "Security Settings (Secure Connect)",
+    "heading": "Confirm the secure connection",
+    "httpsNotice": "This connection uses HTTPS on the local network,",
+    "allowOnce": "so the browser will block it until you allow it first (only once):",
+    "imageAlt": "Click to open secure link",
+    "openTab": "Press this button to open the confirmation tab",
+    "target": "(Target: {url})",
+    "closeWindow": "Close"
+  },
+  "connectWifi": {
+    "title": "Connect WiFi",
+    "network": "Select WiFi",
+    "password": "WiFi password",
+    "connect": "Connect",
+    "connected": "WiFi connected",
+    "connectFailed": "Failed to connect to WiFi"
+  }
+}

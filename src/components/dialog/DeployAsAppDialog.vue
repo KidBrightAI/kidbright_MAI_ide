@@ -93,9 +93,9 @@ const onSubmit = async () => {
     <VCard class="pa-sm-3 pa-3 bg-background">
       <DialogCloseBtn variant="text" size="small" @click="resetForm" />
       <VCardItem>
-        <VCardTitle class="text-h5">ติดตั้งเป็นแอปพลิเคชัน</VCardTitle>
+        <VCardTitle class="text-h5">{{ $t('dialog.deployAsApp.title') }}</VCardTitle>
         <VCardSubtitle class="text-wrap">
-          ติดตั้งโปรเจคนี้ลงในบอร์ดเป็นแอปพลิเคชัน เพื่อเปิดใช้งานจากเมนูบนหน้าจอบอร์ดได้ทุกครั้ง
+          {{ $t('dialog.deployAsApp.subtitle') }}
         </VCardSubtitle>
       </VCardItem>
       <VCardText class="pt-0">
@@ -108,19 +108,19 @@ const onSubmit = async () => {
             <VCol cols="12" md="7">
               <VTextField
                 v-model="form.name"
-                label="ชื่อแอปพลิเคชัน"
-                :rules="[v => !!v || 'กรุณากรอกชื่อแอปพลิเคชัน']"
+                :label="$t('dialog.deployAsApp.appName')"
+                :rules="[v => !!v || $t('dialog.deployAsApp.appNameRequired')]"
                 outlined dense clearable
               />
             </VCol>
             <VCol cols="12" md="5">
               <VTextField
                 v-model="form.id"
-                label="รหัสแอปพลิเคชัน"
-                hint="ใช้ตัวอักษรภาษาอังกฤษ ตัวเลข และเครื่องหมายขีดล่าง"
+                :label="$t('dialog.deployAsApp.appId')"
+                :hint="$t('dialog.deployAsApp.appIdHint')"
                 :rules="[
-                  v => !!v || 'กรุณากรอกรหัสแอปพลิเคชัน',
-                  v => /^[a-z0-9_]+$/.test(v) || 'ใช้ a-z, 0-9 และ _ เท่านั้น',
+                  v => !!v || $t('dialog.deployAsApp.appIdRequired'),
+                  v => /^[a-z0-9_]+$/.test(v) || $t('dialog.deployAsApp.appIdPattern'),
                 ]"
                 outlined dense
                 @input="idEdited = true"
@@ -129,22 +129,22 @@ const onSubmit = async () => {
           </VRow>
           <VRow>
             <VCol cols="6">
-              <VTextField v-model="form.version" label="เวอร์ชัน" outlined dense />
+              <VTextField v-model="form.version" :label="$t('common.version')" outlined dense />
             </VCol>
             <VCol cols="6">
-              <VTextField v-model="form.author" label="ผู้สร้าง" outlined dense />
+              <VTextField v-model="form.author" :label="$t('dialog.deployAsApp.author')" outlined dense />
             </VCol>
           </VRow>
           <VRow>
             <VCol cols="12">
-              <VTextField v-model="form.desc" label="คำอธิบาย" outlined dense />
+              <VTextField v-model="form.desc" :label="$t('common.description')" outlined dense />
             </VCol>
           </VRow>
           <VRow class="align-center">
             <VCol cols="9">
               <VFileInput
-                label="ไอคอนแอปพลิเคชัน"
-                hint="แนะนำ PNG ขนาด 96×96 px หากไม่เลือก จะใช้ไอคอนเริ่มต้น"
+                :label="$t('dialog.deployAsApp.icon')"
+                :hint="$t('dialog.deployAsApp.iconHint')"
                 persistent-hint
                 accept="image/png,image/jpeg"
                 density="compact"
@@ -170,7 +170,7 @@ const onSubmit = async () => {
             <VCol cols="12">
               <VCheckbox
                 v-model="form.autoStart"
-                label="ตั้งให้แอปพลิเคชันนี้เริ่มทำงานทันทีเมื่อเปิดเครื่อง"
+                :label="$t('dialog.deployAsApp.autoStart')"
                 density="compact"
               />
             </VCol>
@@ -185,7 +185,7 @@ const onSubmit = async () => {
                 :loading="boardStore.uploading"
                 :disabled="boardStore.uploading"
               >
-                {{ boardStore.uploading ? 'กำลังติดตั้ง...' : 'ติดตั้งแอปพลิเคชัน' }}
+                {{ boardStore.uploading ? $t('dialog.deployAsApp.deploying') : $t('dialog.deployAsApp.deploy') }}
               </VBtn>
             </VCol>
           </VRow>

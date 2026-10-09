@@ -1,0 +1,17 @@
+{
+  "selectBoardFirst": "กรุณาเลือกบอร์ดก่อน",
+  "unsupportedProtocol": "ไม่รองรับโปรโตคอล: {protocol}",
+  "notConnected": "ไม่ได้เชื่อมต่อบอร์ด",
+  "webUsbUnsupported": "เบราว์เซอร์ของคุณไม่รองรับ WebUSB",
+  "usbNotAuthorized": "ยังไม่เคยขอสิทธิ์ใช้งาน USB หรือไม่ได้เสียบบอร์ดเข้ากับคอมพิวเตอร์มาก่อน",
+  "selectUsbDevice": "กรุณาเลือกอุปกรณ์ USB ที่ต้องการเชื่อมต่อ",
+  "noDeviceSelected": "คุณไม่ได้เลือกอุปกรณ์",
+  "connectSuccess": "เชื่อมต่อบอร์ดสำเร็จ",
+  "disconnected": "ตัดการเชื่อมต่อบอร์ดแล้ว",
+  "scriptsUpdatedReboot": "อัปเดต {names} เรียบร้อย กรุณารีสตาร์ทบอร์ดเพื่อให้การเปลี่ยนแปลงมีผล",
+  "wsShellNotConfigured": "บอร์ดนี้ยังไม่ได้ตั้งค่า WebSocket Shell URL (wsShell)",
+  "shellConnected": "เชื่อมต่อ Shell แล้ว",
+  "codeUploadedRunning": "อัปโหลดโค้ดและกำลังรันบนบอร์ด",
+  "shellNotReady": "Shell ยังไม่พร้อมใช้งาน",
+  "terminalBridgeError": "เชื่อมต่อเทอร์มินัลกับบอร์ดไม่สำเร็จ: {message}"
+}

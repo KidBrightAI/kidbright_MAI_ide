@@ -6,14 +6,15 @@
  *   node scripts/i18n-check.mjs --strict   also fails when Thai text is found outside locale files
  *
  * Checks
- *   1. every key in src/locales/*.json exists in every locale with a non-empty string
+ *   1. every key in src/locales/<code>/*.json exists in every locale with a non-empty string
+ *      (the file name is the top-level namespace)
  *   2. every %{BKY_KB_...} reference in a block file has a message in that unit's
- *      locales/<code>.js for every locale (boards/<id>, plugins/<id>, src/blocks)
+ *      locales/<code>.json for every locale (boards/<id>, plugins/<id>, src/blocks)
  *   3. Thai characters outside locale files, reported per file
  */
 import fs from 'fs'
 import path from 'path'
-import { fileURLToPath, pathToFileURL } from 'url'
+import { fileURLToPath } from 'url'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const SUPPORTED = ['th', 'en']
@@ -22,7 +23,10 @@ const SKIP_DIRS = new Set(['node_modules', 'dist', '.git', 'locales', 'js', 'sta
 const SKIP_FILES = new Set(['maixvision.js'])
 const SCAN_EXT = new Set(['.vue', '.js', '.mjs', '.ts'])
 const THAI = /[฀-๿]/
-const BKY_REF = /%\{BKY_(KB_[A-Z0-9_]+)\}/g
+
+// %{BKY_KB_...} inside JSON block definitions, and Blockly.Msg.KB_... /
+// Blockly.Msg["KB_..."] lookups inside JS-defined blocks (appendField).
+const BKY_REFS = [/%\{BKY_(KB_[A-Z0-9_]+)\}/g, /Blockly\.Msg(?:\.|\[["'])(KB_[A-Z0-9_]+)/g]
 const strict = process.argv.includes('--strict')
 const rel = file => path.relative(ROOT, file)
 
@@ -68,12 +72,36 @@ function listDirs(parent) {
 // ---------------------------------------------------------------- 1. key parity
 const messages = {}
 for (const code of SUPPORTED) {
-  const file = path.join(ROOT, 'src', 'locales', `${code}.json`)
-  if (!fs.existsSync(file)) {
-    fail(`missing ${rel(file)}`)
+  const dir = path.join(ROOT, 'src', 'locales', code)
+  if (!fs.existsSync(dir)) {
+    fail(`missing ${rel(dir)}/`)
     continue
   }
-  messages[code] = flatten(JSON.parse(fs.readFileSync(file, 'utf8')))
+
+  // <namespace>.json or <namespace>__<part>.json; parts merge into one
+  // namespace and must not define the same key twice.
+  const flat = {}
+  const owner = {}
+  for (const file of fs.readdirSync(dir).filter(f => f.endsWith('.json')).sort()) {
+    const match = file.match(/^([A-Za-z0-9-]+)(?:__[A-Za-z0-9-]+)?\.json$/)
+    if (!match) {
+      fail(`${rel(path.join(dir, file))}: file name must be <namespace>.json or <namespace>__<part>.json`)
+      continue
+    }
+    let parsed
+    try {
+      parsed = JSON.parse(fs.readFileSync(path.join(dir, file), 'utf8'))
+    } catch (e) {
+      fail(`${rel(path.join(dir, file))} is not valid JSON: ${e.message}`)
+      continue
+    }
+    for (const [key, value] of Object.entries(flatten({ [match[1]]: parsed }))) {
+      if (key in flat) fail(`${code}: "${key}" is defined in both ${owner[key]} and ${file}`)
+      flat[key] = value
+      owner[key] = file
+    }
+  }
+  messages[code] = flat
 }
 const allKeys = new Set(Object.values(messages).flatMap(m => Object.keys(m)))
 for (const [code, flat] of Object.entries(messages)) {
@@ -87,7 +115,7 @@ console.log(`locale keys: ${allKeys.size} across ${Object.keys(messages).join(',
 
 // ------------------------------------------- 2. Blockly message references
 // Units are the directories that own block files plus a locales/ folder
-// holding `export default { KB_...: "..." }` per language.
+// holding <code>.json with { "KB_...": "..." } per language.
 const units = [
   path.join(ROOT, 'src', 'blocks'),
   ...listDirs('boards'),
@@ -101,18 +129,25 @@ for (const unit of units) {
   for (const file of fs.readdirSync(blockDir)) {
     if (!file.endsWith('.js')) continue
     const text = fs.readFileSync(path.join(blockDir, file), 'utf8')
-    for (const match of text.matchAll(BKY_REF)) refs.add(match[1])
+    for (const pattern of BKY_REFS) {
+      for (const match of text.matchAll(pattern)) refs.add(match[1])
+    }
   }
   if (refs.size === 0) continue
   refTotal += refs.size
   for (const code of SUPPORTED) {
-    const localeFile = path.join(unit, 'locales', `${code}.js`)
+    const localeFile = path.join(unit, 'locales', `${code}.json`)
     if (!fs.existsSync(localeFile)) {
       fail(`${rel(unit)} references ${refs.size} KB_ messages but has no ${rel(localeFile)}`)
       continue
     }
-    const mod = await import(pathToFileURL(localeFile).href)
-    const table = mod.default || {}
+    let table
+    try {
+      table = JSON.parse(fs.readFileSync(localeFile, 'utf8'))
+    } catch (e) {
+      fail(`${rel(localeFile)} is not valid JSON: ${e.message}`)
+      continue
+    }
     for (const key of refs) {
       if (typeof table[key] !== 'string' || table[key].trim() === '') {
         fail(`${rel(localeFile)} is missing "${key}"`)

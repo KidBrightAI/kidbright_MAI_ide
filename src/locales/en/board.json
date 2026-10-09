@@ -1,0 +1,17 @@
+{
+  "selectBoardFirst": "Please select a board first",
+  "unsupportedProtocol": "Unsupported protocol: {protocol}",
+  "notConnected": "The board is not connected",
+  "webUsbUnsupported": "Your browser doesn't support WebUSB",
+  "usbNotAuthorized": "USB access has not been granted yet, or the board has never been plugged into this computer",
+  "selectUsbDevice": "Please select the USB device to connect",
+  "noDeviceSelected": "No device was selected",
+  "connectSuccess": "Board connected successfully",
+  "disconnected": "Board disconnected",
+  "scriptsUpdatedReboot": "{names} updated. Please reboot the board for the changes to take effect",
+  "wsShellNotConfigured": "WebSocket Shell URL (wsShell) is not configured for this board.",
+  "shellConnected": "Connected to Shell",
+  "codeUploadedRunning": "Code uploaded and now running on the board",
+  "shellNotReady": "shell is not ready",
+  "terminalBridgeError": "Error bridging terminal: {message}"
+}

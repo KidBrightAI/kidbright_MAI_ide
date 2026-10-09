@@ -1,7 +1,10 @@
 export default {
   id: "kidbright-mai",
   name: "KidBright uAI",
-  description: "บอร์ดสมองกลเพื่อการเรียนรู้ปัญญาประดิษฐ์",
+  description: {
+    th: "บอร์ดสมองกลเพื่อการเรียนรู้ปัญญาประดิษฐ์",
+    en: "A microcontroller board for learning artificial intelligence",
+  },
   image: "images/board.png",
   protocol: "web-adb",
   pictureDir: "/root",

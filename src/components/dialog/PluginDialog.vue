@@ -1,4 +1,5 @@
 <script setup>
+import { localized } from "@/plugins/i18n"
 import DialogCloseBtn from "@/components/dialog/DialogCloseBtn.vue"
 
 import { useBoardStore } from "@/store/board"
@@ -8,10 +9,13 @@ import { usePluginStore } from "@/store/plugin"
 import { onMounted } from "vue"
 import { useConfirm } from "@/components/comfirm-dialog"
 import { toast } from "vue3-toastify"
+import { useI18n } from "vue-i18n"
 
 const isDialogVisible = defineModel('isDialogVisible', { type: Boolean, default: false })
 
 const emit = defineEmits(['installPlugin', 'uninstallPlugin'])
+
+const { t } = useI18n()
 
 const boardStore = useBoardStore()
 const workspaceStore = useWorkspaceStore()
@@ -20,16 +24,18 @@ const confirm = useConfirm()
 
 const refVForm = ref({})
 const tab = ref("all")
-const categories = ref([
-  {title:"All Plugins", icon:"mdi-puzzle", value:"all"},
-  {title:"Communication", icon:"mdi-serial-port", value:"Communication"},
-  {title:"Data Processing", icon:"mdi-code-braces", value:"Data Processing"},
-  {title:"Data Storage", icon:"mdi-database", value:"Data Storage"},
-  {title:"Display", icon:"mdi-monitor", value:"Display"},
-  {title:"Sensors", icon:"mdi-thermometer", value:"Sensors"},
-  {title:"Signal Input/Output", icon:"mdi-swap-horizontal", value:"Signal Input/Output"},
-  {title:"Timing", icon:"mdi-clock", value:"Timing"},
-  {title:"Other", icon:"mdi-dots-horizontal", value:"Other"},
+
+// value is matched against plugin.category, so only the titles are translated
+const categories = computed(() => [
+  {title:t('dialog.plugin.categories.all'), icon:"mdi-puzzle", value:"all"},
+  {title:t('dialog.plugin.categories.communication'), icon:"mdi-serial-port", value:"Communication"},
+  {title:t('dialog.plugin.categories.dataProcessing'), icon:"mdi-code-braces", value:"Data Processing"},
+  {title:t('dialog.plugin.categories.dataStorage'), icon:"mdi-database", value:"Data Storage"},
+  {title:t('dialog.plugin.categories.display'), icon:"mdi-monitor", value:"Display"},
+  {title:t('dialog.plugin.categories.sensors'), icon:"mdi-thermometer", value:"Sensors"},
+  {title:t('dialog.plugin.categories.signalIo'), icon:"mdi-swap-horizontal", value:"Signal Input/Output"},
+  {title:t('dialog.plugin.categories.timing'), icon:"mdi-clock", value:"Timing"},
+  {title:t('dialog.plugin.categories.other'), icon:"mdi-dots-horizontal", value:"Other"},
 ])
 
 const resetForm = () => {
@@ -81,10 +87,10 @@ const listPluginByCategory = category => {
         @click="resetForm"
       />
       <VCardTitle class="text-h5 text-center">
-        Manage Plugin
+        {{ $t('dialog.plugin.title') }}
       </VCardTitle>
       <VCardSubtitle class="text-center mb-2">
-        Select plugin to install
+        {{ $t('dialog.plugin.subtitle') }}
       </VCardSubtitle>
       <VCardItem>        
         <div class="d-flex flex-row">
@@ -97,7 +103,7 @@ const listPluginByCategory = category => {
               <VIcon class="mr-2">
                 mdi-download-box
               </VIcon>
-              Installed Plugins
+              {{ $t('dialog.plugin.installed') }}
             </VTab>
             <VDivider class="my-1" />
             <VTab
@@ -133,7 +139,7 @@ const listPluginByCategory = category => {
                       <div>{{ plugin.name }}</div>
                       <VSpacer />  
                       <div class="me-3">
-                        Version : {{ plugin.version }}
+                        {{ $t('common.version') }} : {{ plugin.version }}
                       </div>
                     </VToolbar>
                     <VCardText class="d-flex align-center">
@@ -147,7 +153,7 @@ const listPluginByCategory = category => {
                     <VCardText>
                       <div class="d-flex flex-row">
                         <div class="d-flex flex-column">                 
-                          <span class="text-caption">{{ plugin.description }}</span>
+                          <span class="text-caption">{{ localized(plugin.description) }}</span>
                         </div>
                         <VSpacer />
                         <VBtn
@@ -212,7 +218,7 @@ const listPluginByCategory = category => {
                       <div>{{ plugin.name }}</div>
                       <VSpacer />  
                       <div class="me-3">
-                        Version : {{ plugin.version }}
+                        {{ $t('common.version') }} : {{ plugin.version }}
                       </div>
                     </VToolbar>
                     <VCardText class="d-flex align-center">
@@ -226,7 +232,7 @@ const listPluginByCategory = category => {
                     <VCardText>
                       <div class="d-flex flex-row">
                         <div class="d-flex flex-column">                 
-                          <span class="text-caption">{{ plugin.description }}</span>
+                          <span class="text-caption">{{ localized(plugin.description) }}</span>
                         </div>
                         <VSpacer />
                         <VBtn

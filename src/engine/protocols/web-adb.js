@@ -1,5 +1,6 @@
 import { sleep } from "@/engine/helper"
 import { toast } from "vue3-toastify"
+import { t } from "@/plugins/i18n"
 import { useWorkspaceStore } from "@/store/workspace"
 import { BOARD_APP_DIR, appPath } from "@/engine/board-paths"
 import BoardProtocol from "./base"
@@ -101,7 +102,7 @@ export class WebAdbHandler extends BoardProtocol {
     console.log("Connecting via web-adb")
     const Manager = AdbDaemonWebUsbDeviceManager.BROWSER
     if (!Manager) {
-      toast.error("Your browser doesn't support WebUSB")
+      toast.error(t("board.webUsbUnsupported"))
       return false
     }
     // Idempotent: the boardStore treats the return value as
@@ -119,12 +120,12 @@ export class WebAdbHandler extends BoardProtocol {
     }
     if (!device) {
       if (devices.length === 0) {
-        toast.warning("ยังไม่เคยขอสิทธิ์ใช้งาน USB หรือไม่ได้เสียบบอร์ดเข้ากับคอมพิวเตอร์มาก่อน")
-        toast.warning("กรุณาเลือกอุปกรณ์ USB ที่ต้องการเชื่อมต่อ")
+        toast.warning(t("board.usbNotAuthorized"))
+        toast.warning(t("board.selectUsbDevice"))
       }
       device = await Manager.requestDevice()
       if (!device) {
-        toast.error("คุณไม่ได้เลือกอุปกรณ์")
+        toast.error(t("board.noDeviceSelected"))
         return false
       }
     }
@@ -146,7 +147,7 @@ export class WebAdbHandler extends BoardProtocol {
     } finally {
       await this.endBulkWrite()
     }
-    toast.success("เชื่อมต่อบอร์ดสำเร็จ")
+    toast.success(t("board.connectSuccess"))
     return true
   }
 
@@ -156,7 +157,7 @@ export class WebAdbHandler extends BoardProtocol {
       this.transport = null
       this.adb = null
       SingletonShell.destroyInstance()
-      toast.warning("ตัดการเชื่อมต่อบอร์ดแล้ว")
+      toast.warning(t("board.disconnected"))
     }
   }
 
@@ -332,7 +333,7 @@ export class WebAdbHandler extends BoardProtocol {
     if (needsReboot) {
       const names = upgraded.filter(s => s.needsReboot).map(s => s.name).join(", ")
       toast.info(
-        `อัปเดต ${names} เรียบร้อย กรุณารีสตาร์ทบอร์ดเพื่อให้การเปลี่ยนแปลงมีผล`,
+        t("board.scriptsUpdatedReboot", { names }),
         { autoClose: 8000 },
       )
     }
@@ -415,11 +416,11 @@ export class WebAdbHandler extends BoardProtocol {
     SingletonShell.write("\x03")
     await sleep(300)
     if (path == "") {
-      toast.error("ไม่สามารถลบไฟล์หรือโฟลเดอร์ที่ว่างเปล่าได้")
+      toast.error(t("file.cannotDeleteEmptyPath"))
       return
     }
     if (path == "/" || path == "/root" || path == BOARD_APP_DIR) {
-      toast.error("ไม่สามารถลบไฟล์หรือโฟลเดอร์หลักได้")
+      toast.error(t("file.cannotDeleteRoot"))
       return
     }
     SingletonShell.write(`rm -rf "${path}"\n`)
@@ -431,7 +432,7 @@ export class WebAdbHandler extends BoardProtocol {
     SingletonShell.write("\x03")
     await sleep(300)
     if (path == "") {
-      toast.error("ไม่สามารถสร้างโฟลเดอร์ที่ว่างเปล่าได้")
+      toast.error(t("file.cannotCreateEmptyFolder"))
       return
     }
     SingletonShell.write(`mkdir -p "${path}"\n`)

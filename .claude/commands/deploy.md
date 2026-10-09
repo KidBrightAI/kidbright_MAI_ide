@@ -29,10 +29,11 @@ Decide MAJOR / MINOR / PATCH against the existing version:
 - **PATCH**: bug fixes, doc-only commits, refactors with no observable
   behaviour change.
 
-## 3. Update version in three places (must stay in sync)
+## 3. Update version in two places (must stay in sync)
 
-- `package.json` → top-level `"version"`.
-- `src/components/Header.vue` → the `Version X.Y.Z` span.
+- `package.json` → top-level `"version"`. The header reads it at build
+  time (`import { version } from "../../package.json"` in
+  `src/components/Header.vue`), so there is no span to edit any more.
 - `README.md` → the `## Version` section: prepend a new
   `### X.Y.Z — <one-line theme>` block with **Added** / **Fixed** /
   **Changed** subsections (Keep-a-Changelog style). Keep the previous
@@ -44,7 +45,7 @@ here is what the world sees on the Releases page. Write it for them.
 
 ## 3.5. PAUSE for user approval (mandatory gate)
 
-Before touching `package.json` / `Header.vue` / `README.md`, before any
+Before touching `package.json` / `README.md`, before any
 commit, tag, release, or deploy, **stop and surface the plan**:
 
 - The proposed version number.
@@ -62,7 +63,7 @@ Only after explicit approval, continue with steps 4-5.
 ## 4. Commit + push the version bump
 
 ```bash
-git add package.json src/components/Header.vue README.md
+git add package.json README.md
 git -c user.name="comdet" -c user.email="listzone@hotmail.com" \
   commit -m "chore(release): X.Y.Z — <one-line theme>"
 git push

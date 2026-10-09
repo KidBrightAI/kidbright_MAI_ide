@@ -1,7 +1,7 @@
 Blockly.defineBlocksWithJsonArray([
   {
     "type": "_i2c_init",
-    "message0": "Initial I2C Device",
+    "message0": "%{BKY_KB_PLUGIN_I2C_UAIP_I2C_INIT}",
     "output": "I2CDevice",
     "colour": 45,
     "tooltip": "",
@@ -9,7 +9,7 @@ Blockly.defineBlocksWithJsonArray([
   },
   {
     "type": "_i2c_write",
-    "message0": "I2C device  %1 internal addr %2 write data %3",
+    "message0": "%{BKY_KB_PLUGIN_I2C_UAIP_I2C_WRITE}",
     "args0": [
       {
         "type": "input_value",
@@ -35,7 +35,7 @@ Blockly.defineBlocksWithJsonArray([
   },
   {
     "type": "_i2c_read",
-    "message0": "I2C device  %1 internal addr %2 read data # %3 byte(s)",
+    "message0": "%{BKY_KB_PLUGIN_I2C_UAIP_I2C_READ}",
     "args0": [
       {
         "type": "input_value",
@@ -60,10 +60,10 @@ Blockly.defineBlocksWithJsonArray([
   },
   {
     "type": "_i2c_scan",
-    "message0": "I2C Scan device",
+    "message0": "%{BKY_KB_PLUGIN_I2C_UAIP_I2C_SCAN}",
     "output": null,
     "colour": 260,
-    "tooltip": "Get item from i2c_device list",
+    "tooltip": "%{BKY_KB_PLUGIN_I2C_UAIP_I2C_SCAN_TOOLTIP}",
     "helpUrl": ""
   },
 

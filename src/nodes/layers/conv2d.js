@@ -8,17 +8,18 @@ import {
 
 import { setType } from "@baklavajs/interface-types"
 import { modelInput, modelOutput, tensor } from "../interfaces/interface-types"
+import { t } from "@/plugins/i18n"
 
 export const Conv2dNode = defineNode({
   type: "Conv2d",
-  title: "Convolutional Layer",
+  title: t("designer.node.conv2d"),
   inputs: {        
-    modelInput : () => new NodeInterface("Model Input | Tensor").use(setType, [modelInput, tensor]),
-    filters : () => new IntegerInterface("Number of Filters", 2).setPort(false),
-    kernel_size : () => new IntegerInterface("Kernel Size", 3).setPort(false),
-    strides : () => new IntegerInterface("Strides", 1).setPort(false),
-    padding : () => new IntegerInterface("Padding", 0).setPort(false),
-    activation : () => new SelectInterface("Activation", "ReLU",
+    modelInput : () => new NodeInterface(t("designer.field.modelInputTensor")).use(setType, [modelInput, tensor]),
+    filters : () => new IntegerInterface(t("designer.field.numberOfFilters"), 2).setPort(false),
+    kernel_size : () => new IntegerInterface(t("designer.field.kernelSize"), 3).setPort(false),
+    strides : () => new IntegerInterface(t("designer.field.strides"), 1).setPort(false),
+    padding : () => new IntegerInterface(t("designer.field.padding"), 0).setPort(false),
+    activation : () => new SelectInterface(t("designer.field.activation"), "ReLU",
       [
         { text: "ReLU", value : "ReLU" },
         { text: "Sigmoid", value : "Sigmoid" },
@@ -30,7 +31,7 @@ export const Conv2dNode = defineNode({
       ]).setPort(false),
   },
   outputs: {
-    result: () => new NodeInterface("Tensor").use(setType, tensor),
+    result: () => new NodeInterface(t("designer.field.tensor")).use(setType, tensor),
   },
   calculate({ modelInput, filters, kernel_size, strides, padding, activation})  {
     let activationCode = "torch.nn." + activation + "()\n"

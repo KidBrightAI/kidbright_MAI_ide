@@ -1,0 +1,20 @@
+{
+  "shared": {
+    "messageLog": "Message log",
+    "accuracy": "Accuracy",
+    "loss": "Loss",
+    "colabNotConnected": "Please connect to Google Colab first"
+  },
+  "chart": {
+    "accuracySeries": "Accuracy {'|'} mAP",
+    "lossSeries": "Loss"
+  },
+  "toolbar": {
+    "converting": "Converting",
+    "downloading": "Downloading {done}/{total}",
+    "tunnelUrlPlaceholder": "Put TUNNEL URL here ...",
+    "train": "Train",
+    "terminate": "Terminate",
+    "test": "Test"
+  }
+}

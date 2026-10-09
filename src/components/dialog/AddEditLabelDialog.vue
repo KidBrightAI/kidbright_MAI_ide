@@ -35,7 +35,7 @@ watch(isDialogVisible, newVal => {
   >
     <VCard>
       <VToolbar density="compact">
-        <VToolbarTitle>{{ !props.labelName? 'เพิ่ม' : 'แก้ไข' }} ป้ายกำกับใหม่</VToolbarTitle>
+        <VToolbarTitle>{{ !props.labelName ? $t('dialog.addEditLabel.addTitle') : $t('dialog.addEditLabel.editTitle') }}</VToolbarTitle>
         <VSpacer /> 
         <VBtn
           icon
@@ -48,7 +48,7 @@ watch(isDialogVisible, newVal => {
       <VCardText>
         <VTextField
           v-model="labelName"
-          :label="!props.labelName? 'ตั้งชื่อป้ายกำกับ' : 'แก้ไขชื่อป้ายกำกับ'"
+          :label="!props.labelName ? $t('dialog.addEditLabel.name') : $t('dialog.addEditLabel.editName')"
           outlined
         />
       </VCardText>
@@ -60,7 +60,7 @@ watch(isDialogVisible, newVal => {
           :disabled="!labelName.length"
           @click="submitLabel"
         >
-          {{ !props.labelName? 'เพิ่ม' : 'แก้ไข' }}ป้ายกำกับ
+          {{ !props.labelName ? $t('dialog.addEditLabel.add') : $t('dialog.addEditLabel.edit') }}
         </VBtn>
       </VCardActions>
     </VCard>

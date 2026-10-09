@@ -25,7 +25,7 @@
             v-if="!current.length"
             class="view-img-desc"
           >
-            No selected image, please click on the image below to select.
+            {{ $t('annotate.shared.noImageSelected') }}
           </p>
         </div>
         <ImageDatasetList
@@ -37,7 +37,7 @@
       <div class="side-panel">
         <div class="w-100">
           <h4 class="side-panel-ttl">
-            LABEL
+            {{ $t('annotate.shared.labelHeading') }}
           </h4>
           <div class="feature-wrap">
             <VBtn
@@ -45,7 +45,7 @@
               rounded="xl"
               @click="onLabelInputDialog = true"
             >
-              <VIcon>mdi-plus</VIcon> New label
+              <VIcon>mdi-plus</VIcon> {{ $t('annotate.shared.newLabel') }}
             </VBtn>
             <div class="pills w-100">
               <button
@@ -80,7 +80,7 @@
             </div>
           </div>
           <h4 class="side-panel-ttl">
-            ANNOTATE
+            {{ $t('annotate.shared.annotateHeading') }}
           </h4>
           <div class="feature-wrap">
             <div class="annotate-cn-list w-100">
@@ -127,16 +127,16 @@
           </div>
           <DatasetCounter
             class="second-counter"
-            prefix="Labeled"
-            seperator="of"
+            :prefix="$t('annotate.shared.counter.labeled')"
+            :seperator="$t('annotate.shared.counter.of')"
             :current="datasetStore.getLabeledLength"
-            suffix="Image"
+            :suffix="$t('annotate.shared.counter.image')"
           />
           <DatasetCounter
-            prefix="Selected"
-            seperator="of"
+            :prefix="$t('annotate.shared.counter.selected')"
+            :seperator="$t('annotate.shared.counter.of')"
             :current="current.length"
-            suffix="Image"
+            :suffix="$t('annotate.shared.counter.image')"
           />
           <AddEditLabelDialog
             v-model:isDialogVisible="onLabelInputDialog"
@@ -158,6 +158,7 @@
 import { useDatasetStore } from '@/store/dataset'
 import { useWorkspaceStore } from '@/store/workspace'
 import { useConfirm } from "@/components/comfirm-dialog"
+import { useI18n } from "vue-i18n"
 
 import ImageDisplay from '@/components/InputConnection/ImageDisplay.vue'
 import ImageDatasetList from "@/components/InputConnection/ImageDatasetList.vue"
@@ -169,6 +170,7 @@ import AddEditLabelDialog from '../../../src/components/dialog/AddEditLabelDialo
 const datasetStore = useDatasetStore()
 const workspaceStore = useWorkspaceStore()
 const confirm = useConfirm()
+const { t } = useI18n()
 
 const currentLabel = ref("")
 const current = ref([])
@@ -203,7 +205,7 @@ const selectLabel = label => {
 
 const onRemoveLabel = async label => {
   try{
-    await confirm({ title: "ยืนยันการลบป้ายกำกับ", content: `หากลบ '${label}' ภาพที่ใช้ป้ายกำกับนี้จะถูกล้างค่า`, dialogProps: { width: 'auto' } })
+    await confirm({ title: t('annotate.shared.removeLabelTitle'), content: t('annotate.shared.removeLabelContent', { label }), dialogProps: { width: 'auto' } })
     datasetStore.removeAllDataAnnotationByLabel(label)
     workspaceStore.removeLabel(label)
     currentLabel.value = ""

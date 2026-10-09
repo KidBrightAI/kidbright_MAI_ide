@@ -27,15 +27,16 @@ import {
 
 import { setType } from "@baklavajs/interface-types"
 import { modelInput, modelOutput, tensor } from "../interfaces/interface-types"
+import { t } from "@/plugins/i18n"
 
 export const FlattenNode = defineNode({
   type: "Flatten",
-  title: "Flatten Layer",
+  title: t("designer.node.flatten"),
   inputs: {        
-    modelInput : () => new NodeInterface("Model Input | Tensor").use(setType, [modelInput, tensor]),
+    modelInput : () => new NodeInterface(t("designer.field.modelInputTensor")).use(setType, [modelInput, tensor]),
   },
   outputs: {
-    result: () => new NodeInterface("Tensor").use(setType, tensor),
+    result: () => new NodeInterface(t("designer.field.tensor")).use(setType, tensor),
   },
   calculate({ modelInput }) {
     let flatten = "torch.nn.Flatten(start_dim=1)\n"

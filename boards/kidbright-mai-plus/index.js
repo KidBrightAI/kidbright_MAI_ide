@@ -1,7 +1,10 @@
 export default {
   id: "kidbright-mai-plus",
   name: "KidBright uAI plus",
-  description: "บอร์ดสมองกลเพื่อการเรียนรู้ปัญญาประดิษฐ์",
+  description: {
+    th: "บอร์ดสมองกลเพื่อการเรียนรู้ปัญญาประดิษฐ์",
+    en: "A microcontroller board for learning artificial intelligence",
+  },
   wsUrl: "ws://10.155.55.1:7899",
   wsShell: "wss://10.155.55.1:5050",
   pictureDir: "/maixapp/share/picture/",

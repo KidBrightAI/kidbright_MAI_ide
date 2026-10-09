@@ -1,6 +1,7 @@
 <script setup>
 import { useServerStore } from "@/store/server"
 import { computed, onMounted } from "vue"
+import { useI18n } from "vue-i18n"
 
 let props = defineProps({
   colabUrl : {
@@ -11,6 +12,7 @@ let props = defineProps({
 
 let emits = defineEmits(['train', 'terminate', 'test', 'download'])
 
+const { t } = useI18n()
 const serverStore = useServerStore()
 
 const serverUrl = ref('')
@@ -38,11 +40,11 @@ const onColab = async focused => {
 }
 const resolveDownloadMessage = computed(() => {
   if(serverStore.isConverting){
-    return "Converting"
+    return t("train.toolbar.converting")
   }else if(serverStore.isDownloading){
-    return `Downloading ${serverStore.downloadingFiles}/${serverStore.totalDownloadingFiles}`
+    return t("train.toolbar.downloading", { done: serverStore.downloadingFiles, total: serverStore.totalDownloadingFiles })
   }else{
-    return "Download"
+    return t("common.download")
   }
 })
 
@@ -70,13 +72,13 @@ onMounted(() => {
         class="me-0 rounded-0 rounded-s-lg"       
         @click="openColab" 
       >
-        Create
+        {{ $t('common.create') }}
       </VBtn>
       <VTextField 
         v-model="serverUrl"                 
         class="ms-0 colab-url-input"
         color="white"
-        label="Put TUNNEL URL here ..."
+        :label="$t('train.toolbar.tunnelUrlPlaceholder')"
         hide-details
         variant="solo"
         single-line
@@ -96,7 +98,7 @@ onMounted(() => {
         :disabled="!serverStore.isColabConnected"
         @click="$emit('train')"
       >
-        Train
+        {{ $t('train.toolbar.train') }}
       </VBtn>
       <VBtn
         v-if="serverStore.isTraining"
@@ -109,7 +111,7 @@ onMounted(() => {
         :disabled="!serverStore.isTraining || serverStore.isDownloading || serverStore.isConverting"
         @click="$emit('terminate')"
       >
-        Terminate
+        {{ $t('train.toolbar.terminate') }}
       </VBtn>
       <VBtn
         rounded
@@ -121,7 +123,7 @@ onMounted(() => {
         :disabled="true"
         @click="$emit('test')"
       >
-        Test
+        {{ $t('train.toolbar.test') }}
       </VBtn>
       <VBtn
         rounded

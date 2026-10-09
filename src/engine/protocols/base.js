@@ -1,4 +1,5 @@
 import { toast } from "vue3-toastify"
+import { t } from "@/plugins/i18n"
 import { useWorkspaceStore } from "@/store/workspace"
 import { usePluginStore } from "@/store/plugin"
 import { pickByType } from "@/engine/model-formats"
@@ -184,10 +185,10 @@ export default class BoardProtocol {
 
     try {
       await Format.uploadToBoard({ writeFile, statFile }, model.hash, blobs)
-      toast.success("อัพโหลดโมเดลสำเร็จ")
+      toast.success(t("model.uploadSuccess"))
     } catch (e) {
       console.error("Model upload error:", e)
-      toast.error("อัพโหลดโมเดลไม่สำเร็จ")
+      toast.error(t("model.uploadFailed"))
     }
   }
 

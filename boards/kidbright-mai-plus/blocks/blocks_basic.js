@@ -1,16 +1,16 @@
 Blockly.defineBlocksWithJsonArray([
   {
     "type": "display_camera",
-    "message0": "display camera",
+    "message0": "%{BKY_KB_MAIPLUS_DISPLAY_CAMERA}",
     "previousStatement": null,
     "nextStatement": null,
     "colour": "#5BA58C",
-    "tooltip": "Continuously display camera feed",
+    "tooltip": "%{BKY_KB_MAIPLUS_DISPLAY_CAMERA_TOOLTIP}",
     "helpUrl": "",
   },
   {
     "type": "display_fill_color",
-    "message0": "set display color %1",
+    "message0": "%{BKY_KB_MAIPLUS_DISPLAY_FILL_COLOR}",
     "args0": [
       {
         "type": "field_colour",
@@ -21,12 +21,12 @@ Blockly.defineBlocksWithJsonArray([
     "previousStatement": null,
     "nextStatement": null,
     "colour": "#5BA58C",
-    "tooltip": "Fill display with color",
+    "tooltip": "%{BKY_KB_MAIPLUS_DISPLAY_FILL_COLOR_TOOLTIP}",
     "helpUrl": "",
   },
   {
     "type": "display_draw_string",
-    "message0": "draw text %1 at X %2 Y %3 color %4 scale %5",
+    "message0": "%{BKY_KB_MAIPLUS_DISPLAY_DRAW_STRING}",
     "args0": [
       {
         "type": "input_value",
@@ -63,7 +63,7 @@ Blockly.defineBlocksWithJsonArray([
   },
   {
     'type': 'text_print',
-    'message0': "print console %1",
+    'message0': "%{BKY_KB_MAIPLUS_TEXT_PRINT}",
     'args0': [
       {
         'type': 'input_value',
@@ -73,12 +73,12 @@ Blockly.defineBlocksWithJsonArray([
     'previousStatement': null,
     'nextStatement': null,
     'style': 'text_blocks',
-    'tooltip': 'Print the specified text, number or other value to serial.',
+    'tooltip': '%{BKY_KB_MAIPLUS_TEXT_PRINT_TOOLTIP}',
     'helpUrl': '',
   },
   {
     "type": "main_forever",
-    "message0": "forever %1 %2",
+    "message0": "%{BKY_KB_MAIPLUS_MAIN_FOREVER}",
     "args0": [
       {
         "type": "input_dummy",

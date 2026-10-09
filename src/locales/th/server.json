@@ -1,0 +1,6 @@
+{
+  "trainSuccess": "เทรนโมเดลสำเร็จ",
+  "trainCancelled": "ยกเลิกการเทรนแล้ว",
+  "modelDownloaded": "ดาวน์โหลดโมเดลสำเร็จ",
+  "convertFailed": "แปลงโมเดลไม่สำเร็จ"
+}

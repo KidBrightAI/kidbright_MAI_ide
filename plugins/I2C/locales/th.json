@@ -1,0 +1,5 @@
+{
+  "KB_PLUGIN_I2C_PYLIBI2C_INIT": "เริ่มต้นอุปกรณ์ I2C %1 address %2",
+  "KB_PLUGIN_I2C_PYLIBI2C_WRITE": "อุปกรณ์ I2C %1 address ภายใน %2 เขียนข้อมูล %3",
+  "KB_PLUGIN_I2C_PYLIBI2C_READ": "อุปกรณ์ I2C %1 address ภายใน %2 อ่านข้อมูล %3 ไบต์"
+}

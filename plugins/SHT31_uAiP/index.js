@@ -1,6 +1,9 @@
 export default {
   name: "SHT31 uAiP",    
-  description: "Humidity and Temperature Sensor",
+  description: {
+    en: "Humidity and Temperature Sensor",
+    th: "เซนเซอร์วัดความชื้นและอุณหภูมิ",
+  },
   category: "Sensors",    
   author: "comdet",
   version: "1.0.0",
