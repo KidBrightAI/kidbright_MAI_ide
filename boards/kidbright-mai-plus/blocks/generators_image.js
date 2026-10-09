@@ -1,7 +1,18 @@
+// maix.image takes int coordinates, sizes and thickness, and pybind11
+// refuses floats with "incompatible function arguments", stopping the
+// student's program. Any division in a Blockly expression is a float in
+// Python 3 (the centre of a detected object, half the screen width), so
+// every such value goes through int(). Order.NONE is enough because the
+// int(...) call already delimits the expression; Blockly's own repeat
+// block uses the same pattern. Angles stay as they are: maix takes them
+// as float.
+const intArg = (block, generator, name, fallback = '0') =>
+  `int(${generator.valueToCode(block, name, python.Order.NONE) || fallback})`
+
 python.pythonGenerator.forBlock['image_new'] = function (block, generator) {
   generator.definitions_['from_maix_import_image'] = 'from maix import image'
-  var w = generator.valueToCode(block, 'width', python.Order.ATOMIC)
-  var h = generator.valueToCode(block, 'height', python.Order.ATOMIC)
+  var w = intArg(block, generator, 'width')
+  var h = intArg(block, generator, 'height')
   var c = block.getFieldValue('color')
   var code = `image.Image(${w}, ${h})` // Simplified
 
@@ -9,32 +20,34 @@ python.pythonGenerator.forBlock['image_new'] = function (block, generator) {
 }
 
 python.pythonGenerator.forBlock['image_draw_string'] = function (block, generator) {
+  // The colour below uses maix.image; import it here like the other
+  // drawing blocks do, so a program whose image comes straight from the
+  // camera does not stop with NameError the first time it draws text.
+  generator.definitions_['from_maix_import_image'] = 'from maix import image'
   var img = generator.valueToCode(block, 'image', python.Order.ATOMIC)
   var text = generator.valueToCode(block, 'text', python.Order.ATOMIC)
-  var x = generator.valueToCode(block, 'x', python.Order.NONE) || '0'
-  var y = generator.valueToCode(block, 'y', python.Order.NONE) || '0'
+  var x = intArg(block, generator, 'x')
+  var y = intArg(block, generator, 'y')
   var color = block.getFieldValue('color')
   var scale = generator.valueToCode(block, 'scale', python.Order.ATOMIC) || "1"
-  var thickness = generator.valueToCode(block, 'thickness', python.Order.NONE) || "1"
+  var thickness = intArg(block, generator, 'thickness', '1')
 
   var r = parseInt(color.substring(1, 3), 16)
   var g = parseInt(color.substring(3, 5), 16)
   var b = parseInt(color.substring(5, 7), 16)
 
-  // draw_string takes int x / y / thickness; see display_draw_string in
-  // generators_basic.js for why the values are wrapped in int().
-  return `${img}.draw_string(int(${x}), int(${y}), str(${text}), scale=${scale}, thickness=int(${thickness}), color=image.Color.from_rgb(${r}, ${g}, ${b}))\n`
+  return `${img}.draw_string(${x}, ${y}, str(${text}), scale=${scale}, thickness=${thickness}, color=image.Color.from_rgb(${r}, ${g}, ${b}))\n`
 }
 
 python.pythonGenerator.forBlock['image_draw_line'] = function (block, generator) {
   generator.definitions_['from_maix_import_image'] = 'from maix import image'
   var value_image = generator.valueToCode(block, 'image', python.Order.NONE)
-  var value_x1 = generator.valueToCode(block, 'x1', python.Order.ATOMIC)
-  var value_y1 = generator.valueToCode(block, 'y1', python.Order.ATOMIC)
-  var value_x2 = generator.valueToCode(block, 'x2', python.Order.ATOMIC)
-  var value_y2 = generator.valueToCode(block, 'y2', python.Order.ATOMIC)
+  var value_x1 = intArg(block, generator, 'x1')
+  var value_y1 = intArg(block, generator, 'y1')
+  var value_x2 = intArg(block, generator, 'x2')
+  var value_y2 = intArg(block, generator, 'y2')
   var colour_color = block.getFieldValue('color')
-  var value_thickness = generator.valueToCode(block, 'thickness', python.Order.ATOMIC)
+  var value_thickness = intArg(block, generator, 'thickness', '1')
 
   // extract color rgb from color hex
   var r = parseInt(colour_color.substring(1, 3), 16)
@@ -47,17 +60,17 @@ python.pythonGenerator.forBlock['image_draw_line'] = function (block, generator)
 python.pythonGenerator.forBlock['image_draw_rectangle'] = function (block, generator) {
   generator.definitions_['from_maix_import_image'] = 'from maix import image'
   var value_image = generator.valueToCode(block, 'image', python.Order.NONE)
-  var value_x = generator.valueToCode(block, 'x', python.Order.ATOMIC)
-  var value_y = generator.valueToCode(block, 'y', python.Order.ATOMIC)
-  var value_w = generator.valueToCode(block, 'w', python.Order.ATOMIC)
-  var value_h = generator.valueToCode(block, 'h', python.Order.ATOMIC)
+  var value_x = intArg(block, generator, 'x')
+  var value_y = intArg(block, generator, 'y')
+  var value_w = intArg(block, generator, 'w')
+  var value_h = intArg(block, generator, 'h')
   var colour_color = block.getFieldValue('color')
 
   // extract color rgb from color hex
   var r = parseInt(colour_color.substring(1, 3), 16)
   var g = parseInt(colour_color.substring(3, 5), 16)
   var b = parseInt(colour_color.substring(5, 7), 16)
-  var value_thickness = generator.valueToCode(block, 'thickness', python.Order.ATOMIC)
+  var value_thickness = intArg(block, generator, 'thickness', '1')
 
   return `${value_image}.draw_rect(${value_x}, ${value_y}, ${value_w}, ${value_h}, color=image.Color.from_rgb(${r}, ${g}, ${b}), thickness=${value_thickness})\n`
 }
@@ -65,11 +78,11 @@ python.pythonGenerator.forBlock['image_draw_rectangle'] = function (block, gener
 python.pythonGenerator.forBlock['image_draw_circle'] = function (block, generator) {
   generator.definitions_['from_maix_import_image'] = 'from maix import image'
   var value_image = generator.valueToCode(block, 'image', python.Order.NONE)
-  var value_x1 = generator.valueToCode(block, 'x1', python.Order.ATOMIC)
-  var value_y1 = generator.valueToCode(block, 'y1', python.Order.ATOMIC)
-  var value_radius = generator.valueToCode(block, 'radius', python.Order.ATOMIC)
+  var value_x1 = intArg(block, generator, 'x1')
+  var value_y1 = intArg(block, generator, 'y1')
+  var value_radius = intArg(block, generator, 'radius')
   var colour_color = block.getFieldValue('color')
-  var value_thickness = generator.valueToCode(block, 'thickness', python.Order.ATOMIC)
+  var value_thickness = intArg(block, generator, 'thickness', '1')
 
   // extract color rgb from color hex
   var r = parseInt(colour_color.substring(1, 3), 16)
@@ -82,15 +95,15 @@ python.pythonGenerator.forBlock['image_draw_circle'] = function (block, generato
 python.pythonGenerator.forBlock['image_draw_ellipse'] = function (block, generator) {
   generator.definitions_['from_maix_import_image'] = 'from maix import image'
   var value_image = generator.valueToCode(block, 'image', python.Order.NONE)
-  var value_x1 = generator.valueToCode(block, 'x1', python.Order.ATOMIC)
-  var value_y1 = generator.valueToCode(block, 'y1', python.Order.ATOMIC)
-  var value_radius_x = generator.valueToCode(block, 'radius_x', python.Order.ATOMIC)
-  var value_radius_y = generator.valueToCode(block, 'radius_y', python.Order.ATOMIC)
+  var value_x1 = intArg(block, generator, 'x1')
+  var value_y1 = intArg(block, generator, 'y1')
+  var value_radius_x = intArg(block, generator, 'radius_x')
+  var value_radius_y = intArg(block, generator, 'radius_y')
   var value_rotate = generator.valueToCode(block, 'rotate', python.Order.ATOMIC)
   var value_angle_start = generator.valueToCode(block, 'angle_start', python.Order.ATOMIC)
   var value_angle_end = generator.valueToCode(block, 'angle_end', python.Order.ATOMIC)
   var colour_color = block.getFieldValue('color')
-  var value_thickness = generator.valueToCode(block, 'thickness', python.Order.ATOMIC)
+  var value_thickness = intArg(block, generator, 'thickness', '1')
 
   // extract color rgb from color hex
   var r = parseInt(colour_color.substring(1, 3), 16)
@@ -104,10 +117,10 @@ python.pythonGenerator.forBlock['image_draw_ellipse'] = function (block, generat
 python.pythonGenerator.forBlock['image_crop'] = function (block, generator) {
   generator.definitions_['from_maix_import_image'] = 'from maix import image'
   var value_image = generator.valueToCode(block, 'image', python.Order.NONE)
-  var value_x = generator.valueToCode(block, 'x', python.Order.ATOMIC)
-  var value_y = generator.valueToCode(block, 'y', python.Order.ATOMIC)
-  var value_w = generator.valueToCode(block, 'w', python.Order.ATOMIC)
-  var value_h = generator.valueToCode(block, 'h', python.Order.ATOMIC)
+  var value_x = intArg(block, generator, 'x')
+  var value_y = intArg(block, generator, 'y')
+  var value_w = intArg(block, generator, 'w')
+  var value_h = intArg(block, generator, 'h')
   var code = `${value_image}.crop(${value_x}, ${value_y}, ${value_w}, ${value_h})`
 
   return [code, python.Order.NONE]
@@ -116,8 +129,8 @@ python.pythonGenerator.forBlock['image_crop'] = function (block, generator) {
 python.pythonGenerator.forBlock['image_resize'] = function (block, generator) {
   generator.definitions_['from_maix_import_image'] = 'from maix import image'
   var value_image = generator.valueToCode(block, 'image', python.Order.NONE)
-  var value_width = generator.valueToCode(block, 'width', python.Order.ATOMIC)
-  var value_height = generator.valueToCode(block, 'height', python.Order.ATOMIC)
+  var value_width = intArg(block, generator, 'width')
+  var value_height = intArg(block, generator, 'height')
   var code = `${value_image}.resize(${value_width}, ${value_height})`
 
   return [code, python.Order.NONE]
@@ -169,8 +182,8 @@ python.pythonGenerator.forBlock['image_open'] = function (block, generator) {
 
 python.pythonGenerator.forBlock['image_new_maix3'] = function (block, generator) {
   generator.definitions_['from_maix_import_image'] = 'from maix import image'
-  var value_width = generator.valueToCode(block, 'width', python.Order.ATOMIC)
-  var value_height = generator.valueToCode(block, 'height', python.Order.ATOMIC)
+  var value_width = intArg(block, generator, 'width')
+  var value_height = intArg(block, generator, 'height')
   var colour_color = block.getFieldValue('color')
 
   //extract hex color to rgb
@@ -185,11 +198,11 @@ python.pythonGenerator.forBlock['image_new_maix3'] = function (block, generator)
 python.pythonGenerator.forBlock['image_draw_cross'] = function (block, generator) {
   generator.definitions_['from_maix_import_image'] = 'from maix import image'
   var value_image = generator.valueToCode(block, 'image', python.Order.NONE)
-  var value_x = generator.valueToCode(block, 'x', python.Order.ATOMIC)
-  var value_y = generator.valueToCode(block, 'y', python.Order.ATOMIC)
+  var value_x = intArg(block, generator, 'x')
+  var value_y = intArg(block, generator, 'y')
   var colour_color = block.getFieldValue('color')
-  var value_size = generator.valueToCode(block, 'size', python.Order.ATOMIC)
-  var value_thickness = generator.valueToCode(block, 'thickness', python.Order.ATOMIC)
+  var value_size = intArg(block, generator, 'size', '5')
+  var value_thickness = intArg(block, generator, 'thickness', '1')
 
   var r = parseInt(colour_color.substring(1, 3), 16)
   var g = parseInt(colour_color.substring(3, 5), 16)
@@ -201,12 +214,12 @@ python.pythonGenerator.forBlock['image_draw_cross'] = function (block, generator
 python.pythonGenerator.forBlock['image_draw_arrow'] = function (block, generator) {
   generator.definitions_['from_maix_import_image'] = 'from maix import image'
   var value_image = generator.valueToCode(block, 'image', python.Order.NONE)
-  var value_x1 = generator.valueToCode(block, 'x1', python.Order.ATOMIC)
-  var value_y1 = generator.valueToCode(block, 'y1', python.Order.ATOMIC)
-  var value_x2 = generator.valueToCode(block, 'x2', python.Order.ATOMIC)
-  var value_y2 = generator.valueToCode(block, 'y2', python.Order.ATOMIC)
+  var value_x1 = intArg(block, generator, 'x1')
+  var value_y1 = intArg(block, generator, 'y1')
+  var value_x2 = intArg(block, generator, 'x2')
+  var value_y2 = intArg(block, generator, 'y2')
   var colour_color = block.getFieldValue('color')
-  var value_thickness = generator.valueToCode(block, 'thickness', python.Order.ATOMIC)
+  var value_thickness = intArg(block, generator, 'thickness', '1')
 
   var r = parseInt(colour_color.substring(1, 3), 16)
   var g = parseInt(colour_color.substring(3, 5), 16)
@@ -219,8 +232,8 @@ python.pythonGenerator.forBlock['image_draw_image'] = function (block, generator
   generator.definitions_['from_maix_import_image'] = 'from maix import image'
   var value_image = generator.valueToCode(block, 'image', python.Order.NONE)
   var value_image2 = generator.valueToCode(block, 'image2', python.Order.NONE)
-  var value_x = generator.valueToCode(block, 'x', python.Order.ATOMIC)
-  var value_y = generator.valueToCode(block, 'y', python.Order.ATOMIC)
+  var value_x = intArg(block, generator, 'x')
+  var value_y = intArg(block, generator, 'y')
 
   return `${value_image}.draw_image(${value_x}, ${value_y}, ${value_image2})\n`
 }
@@ -245,8 +258,8 @@ python.pythonGenerator.forBlock['image_to_bytes'] = function (block, generator) 
 python.pythonGenerator.forBlock['image_from_bytes'] = function (block, generator) {
   generator.definitions_['from_maix_import_image'] = 'from maix import image'
   var value_data = generator.valueToCode(block, 'data', python.Order.NONE)
-  var value_width = generator.valueToCode(block, 'width', python.Order.ATOMIC)
-  var value_height = generator.valueToCode(block, 'height', python.Order.ATOMIC)
+  var value_width = intArg(block, generator, 'width')
+  var value_height = intArg(block, generator, 'height')
   var dropdown_format = block.getFieldValue('format')
 
   var code = `image.from_bytes(${value_width}, ${value_height}, ${dropdown_format}, ${value_data})`
