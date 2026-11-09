@@ -1,17 +1,13 @@
+const path = require("path")
+require("dotenv").config({ path: path.resolve(__dirname, "../.env") })
 const mariadb = require("mariadb")
 
 const pool = mariadb.createPool({
-  /*host : process.env.MYSQL_HOST || 'localhost',
-  port : process.env.MYSQL_PORT ? parseInt(process.env.MYSQL_PORT) : 3306, 
-  user : process.env.MYSQL_USER ||'user',
-  password :  process.env.MYSQL_PASSWORD ||'password',
-  database : process.env.MYSQL_DATABASE || 'stat'
-  */
-  host : process.env.MYSQL_HOST || '203.185.145.17',
-  port : process.env.MYSQL_PORT || 6666,
-  user : process.env.MYSQL_USER || 'simulator',
-  password :  process.env.MYSQL_PASSWORD ||'3CEZcbqx5cKU',
-  database : process.env.MYSQL_DATABASE || 'simulator_stat',
+  host: process.env.MYSQL_HOST || 'localhost',
+  port: process.env.MYSQL_PORT ? parseInt(process.env.MYSQL_PORT) : 3306,
+  user: process.env.MYSQL_USER || 'user',
+  password: process.env.MYSQL_PASSWORD || 'password',
+  database: process.env.MYSQL_DATABASE || 'stat'
 
 })
 
@@ -37,10 +33,10 @@ async function query(sql, params) {
   let conn
   try {
     conn = await pool.getConnection()
-    
+
     return await conn.query(sql, params)  // Return query result
   } catch (err) {
-    console.log("query error: ",err)
+    console.log("query error: ", err)
     throw err  // Throw error if query fails
   } finally {
     if (conn) conn.release()  // Release connection back to the pool
@@ -59,7 +55,7 @@ async function insertDataImpact(ip, userid, email, duration, sessionid, ssid) {
     }
 
   } catch (err) {
-    console.log("Insert data error: ",err)
+    console.log("Insert data error: ", err)
     throw err
   }
 }
@@ -116,7 +112,7 @@ async function insertDataIDE(ip, userid, sessionid, duration, status, blockname,
   }
 }*/
 
-async function ipImpact(){
+async function ipImpact() {
 
   return 'userIP'
 }
