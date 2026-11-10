@@ -13,7 +13,7 @@ import { useRouter } from 'vue-router'
 
 import { randomId } from "@/components/utils"
 
-import { onMounted, ref, shallowRef, nextTick, watch, onBeforeUnmount, onBeforeMount } from "vue"; //Simulator Add {onBeforeUnmount, onBeforeMoun}
+import { onMounted, ref, shallowRef, nextTick, watch, onBeforeUnmount } from "vue"; //Simulator Add {onBeforeUnmount, onBeforeMoun}
 
 import { Splitpanes, Pane } from 'splitpanes'
 import 'splitpanes/dist/splitpanes.css'
@@ -81,15 +81,7 @@ function generateRandomSessionID(length) {
   return result;
 }
 setInterval(() => { aev.duration++ }, 1000);
-onBeforeMount(() => {
-  aev.sessionid = generateRandomSessionID(15);
-  fetch('https://api.ipify.org?format=json')
-    .then(res => res.json())
-    .then(data => { aev.ip = data.ip })
-    .catch(() => { aev.ip = 'none' })
 
-    console.log("Init KMV:" + aev.email + ", " + aev.sessionid);
-})
 
 const generateSimCode = () => {
   if (!blocklyComp.value?.workspace) return ""
