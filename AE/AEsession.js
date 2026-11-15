@@ -2,7 +2,7 @@ const internalState = {
   sessionid: "",
   item: "",
   userid: "",
-  email: "ning.trat@gmail.com",
+  email: "",
   ssid: "",
   project:null,
   datasetCount: 0,
