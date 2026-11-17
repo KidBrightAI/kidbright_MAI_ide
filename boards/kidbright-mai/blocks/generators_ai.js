@@ -35,7 +35,12 @@ python.pythonGenerator.forBlock['maix3_nn_classify_get_result'] = function (bloc
     : (data === 'probability') ? 'probability'
     : 'label'
   block.setOutput(true, key === 'label' ? 'String' : 'Number')
-  return [`_result["${key}"] if _result else ${key === 'label' ? '"None"' : (key === 'class_id' ? '-1' : '0.0')}`, python.Order.ATOMIC]
+  // The value is a conditional expression, so it must report
+  // Order.CONDITIONAL: with ATOMIC, a compare block emitted
+  // `_result["label"] if _result else "None" == 'cat'`, which Python
+  // reads as `_result["label"] if _result else ("None" == 'cat')` and is
+  // true for every label, so an if/elif chain only ever ran its first branch.
+  return [`_result["${key}"] if _result else ${key === 'label' ? '"None"' : (key === 'class_id' ? '-1' : '0.0')}`, python.Order.CONDITIONAL]
 }
 
 
